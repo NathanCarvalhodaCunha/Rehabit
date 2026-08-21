@@ -46,14 +46,9 @@
       <header class="patient-header">
         <div class="avatar-lg" aria-hidden="true"></div>
         <div>
-          <h1>Ana Carolina Silva</h1>
-          <p class="patient-meta desktop-only">
-            28 anos – Feminino – Lesão de Manguito Rotador<br/>
-            Início do tratamento: <strong>15/03/2026</strong> – Fisioterapia <strong>Dr. Marcelo Silva</strong>
-          </p>
-          <p class="patient-meta mobile-only">
-            28 anos – Feminino<br/>Lesão de Manguito Rotador
-          </p>
+          <h1></h1>
+          <p class="patient-meta desktop-only"></p>
+          <p class="patient-meta mobile-only"></p>
         </div>
       </header>
 
@@ -65,11 +60,11 @@
       <div class="info-strip mobile-only">
         <div>
           <div class="k">Início do tratamento</div>
-          <div class="v">15/03/2026</div>
+          <div class="v"></div>
         </div>
         <div>
           <div class="k">Profissional</div>
-          <div class="v">Dr. Marcelo Silva</div>
+          <div class="v"></div>
         </div>
       </div>
 
@@ -84,61 +79,24 @@
                 <th>Avanço</th>
               </tr>
             </thead>
-            <tbody>
-                <tr>
-                  <td><span class="desktop-only">07/05/2026</span><span class="mobile-only">07/05</span></td>
-                  <td>45 min</td>
-                  <td>135°</td>
-                  <td class="pos">+10°</td>
-                </tr>
-                <tr>
-                  <td><span class="desktop-only">30/04/2026</span><span class="mobile-only">30/04</span></td>
-                  <td>40 min</td>
-                  <td>125°</td>
-                  <td class="pos">+13°</td>
-                </tr>
-                <tr>
-                  <td><span class="desktop-only">23/04/2026</span><span class="mobile-only">23/04</span></td>
-                  <td>42 min</td>
-                  <td>112°</td>
-                  <td class="pos">+16°</td>
-                </tr>
-                <tr>
-                  <td><span class="desktop-only">16/04/2026</span><span class="mobile-only">16/04</span></td>
-                  <td>35 min</td>
-                  <td>96°</td>
-                  <td class="pos">+6°</td>
-                </tr>
-                <tr>
-                  <td><span class="desktop-only">09/04/2026</span><span class="mobile-only">09/04</span></td>
-                  <td>40 min</td>
-                  <td>90°</td>
-                  <td class="">0°</td>
-                </tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-                <tr class="empty desktop-only"><td></td><td></td><td></td><td></td></tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
 
-        <form class="card add-manual-card" onsubmit="event.preventDefault();">
+        <form id="cadastrarSessaoForm" class="card add-manual-card">
           <h3>Adicionar dados manualmente</h3>
           <p class="sub">Registre os dados de uma sessão</p>
           <div class="field">
             <label for="s-data">Data</label>
-            <input id="s-data" type="text" />
+            <input id="s-data" type="date" required />
           </div>
           <div class="field">
-            <label for="s-dur">Duração</label>
-            <input id="s-dur" type="text" />
+            <label for="s-dur">Duração (minutos)</label>
+            <input id="s-dur" type="number" min="1" required />
           </div>
           <div class="field">
-            <label for="s-amp">Amplitude média</label>
-            <input id="s-amp" type="text" />
+            <label for="s-amp">Amplitude média (graus)</label>
+            <input id="s-amp" type="number" step="0.01" />
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Cadastrar sessão</button>
@@ -160,5 +118,6 @@
     </nav>
   </div>
   <script src="./script.js"></script>
+  <script src="./pages/cadastrar-sessao.js"></script>
 </body>
 </html>

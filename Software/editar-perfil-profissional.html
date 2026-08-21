@@ -50,9 +50,9 @@
         <section class="card edit-avatar-card">
           <div class="avatar-lg" aria-hidden="true"></div>
           <button type="button" class="btn-outline">Alterar foto</button>
-          <h2 class="edit-name">Dr. Marcelo da Silva</h2>
-          <p class="edit-role">Fisioterapeuta Ortopédico</p>
-          <p class="edit-id">ID-XXXX</p>
+          <h2 class="edit-name"></h2>
+          <p class="edit-role"></p>
+          <p class="edit-id"></p>
         </section>
 
         <section class="card edit-info-card">
@@ -60,20 +60,20 @@
           <div class="edit-section">
             <div class="field">
               <label for="p-coffito">COFFITO</label>
-              <input id="p-coffito" type="text" value="" />
+              <input id="p-coffito" type="text" value="" disabled />
             </div>
             <div class="field">
               <label for="p-nome">Nome completo</label>
-              <input id="p-nome" type="text" value="Dr. Marcelo da Silva" />
+              <input id="p-nome" type="text" value="" />
             </div>
             <div class="two-col">
               <div class="field">
                 <label for="p-email">E-mail</label>
-                <input id="p-email" type="email" value="marcelo.silva@gmail.com" />
+                <input id="p-email" type="email" value="" />
               </div>
               <div class="field">
                 <label for="p-tel">Telefone</label>
-                <input id="p-tel" type="tel" value="(11) 99999-9999" />
+                <input id="p-tel" type="tel" value="" />
               </div>
             </div>
           </div>
@@ -82,16 +82,30 @@
             <div class="two-col">
               <div class="field">
                 <label for="p-esp">Especialidade</label>
-                <input id="p-esp" type="text" value="Fisioterapeuta Ortopédico" />
+                <input id="p-esp" type="text" value="" />
               </div>
               <div class="field">
                 <label for="p-loc">Localidade</label>
-                <input id="p-loc" type="text" value="São Paulo, SP" />
+                <input id="p-loc" type="text" value="" />
               </div>
             </div>
             <div class="field">
               <label for="p-desc">Descrição</label>
-              <textarea id="p-desc" rows="4">Fisioterapeuta com 8 anos de experiência em reabilitação ortopédica e esportiva. Especialista em recuperação pós-cirúrgica de joelho e ombro.</textarea>
+              <textarea id="p-desc" rows="4"></textarea>
+            </div>
+          </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <p class="caption">Deixe em branco para manter a senha atual</p>
+            <div class="two-col">
+              <div class="field">
+                <label for="p-senha-atual">Senha atual</label>
+                <input id="p-senha-atual" type="password" autocomplete="current-password" />
+              </div>
+              <div class="field">
+                <label for="p-senha-nova">Nova senha</label>
+                <input id="p-senha-nova" type="password" autocomplete="new-password" />
+              </div>
             </div>
           </div>
           <div class="edit-actions">
@@ -114,5 +128,6 @@
     </nav>
   </div>
   <script src="./script.js"></script>
+  <script src="./pages/editar-perfil-profissional.js"></script>
 </body>
 </html>

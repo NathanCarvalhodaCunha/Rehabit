@@ -27,7 +27,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/fisioterapeutas/**", "/api/uploads/**", "/uploads/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/fisioterapeutas/**", "/api/uploads/**", "/uploads/**",
+                        "/api/clinicas/**", "/api/pacientes/**", "/api/goniometro/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();
