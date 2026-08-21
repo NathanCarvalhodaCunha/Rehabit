@@ -1,0 +1,44 @@
+/* Rehabit Auth — tema escuro (aplica-se com <body class="dark">) */
+body.dark {
+  --ink: #FFFFFF;
+  --ink-muted: #9AA4BD;
+  --hairline: #24305C;
+  --dark-bg: #060D22;
+  --dark-field: #1A2247;
+  background: var(--dark-bg);
+  color: #fff;
+}
+
+body.dark .form-side { background: var(--dark-bg); }
+body.dark .divider { color: var(--dark-bg); }
+
+body.dark h1 { color: #fff; }
+body.dark .subtitle { color: var(--ink-muted); }
+
+body.dark .field label { color: #fff; }
+body.dark .field input {
+  color: #fff;
+  background: var(--dark-field);
+  border-color: var(--dark-field);
+}
+body.dark .field input::placeholder { color: rgba(154,164,189,.7); }
+body.dark .field input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(21,101,216,.25);
+}
+
+body.dark .account-type-label { color: var(--brand); }
+body.dark .account-type {
+  background: var(--dark-field);
+  border-color: #2B3A6B;
+}
+body.dark .account-type button {
+  background: transparent;
+  color: var(--ink-muted);
+}
+body.dark .account-type button:hover { color: #fff; }
+body.dark .account-type button.active { background: var(--brand); color: #fff; }
+
+body.dark .footer-link { color: var(--ink-muted); }
+body.dark .footer-link a { color: var(--brand); }
+body.dark .footer-link a:hover { color: #4E8BEE; }

@@ -1,0 +1,234 @@
+/* Rehabit — tema escuro para as telas internas (aplica-se com <body class="dark">) */
+body.dark {
+  --ink: #E6EAF5;
+  --ink-strong: #FFFFFF;
+  --ink-muted: #98A2BC;
+  --hairline: #1F2A50;
+  --card-border: #1F2A50;
+  --bg: #060D22;
+  --sidebar-bg: #060D22;
+  --shadow-card: none;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body.dark .app { background: var(--bg); }
+body.dark .sidebar { background: var(--sidebar-bg); border-color: var(--hairline); }
+body.dark .sidebar .nav a { color: var(--ink-muted); }
+body.dark .sidebar .nav a:hover,
+body.dark .sidebar .nav a.active { color: #fff; background: rgba(21,101,216,.14); }
+body.dark .sidebar .logout { color: var(--ink-muted); }
+body.dark .sidebar .logout:hover { background: rgba(255,255,255,.06); color: #fff; }
+
+body.dark .main { background: var(--bg); }
+body.dark .page-title { color: #fff; }
+
+body.dark .card {
+  background: #101A38;
+  border-color: #1B2647;
+  box-shadow: none;
+}
+body.dark .settings-title { color: #fff; }
+body.dark .settings-sub { color: var(--ink-muted); }
+body.dark .settings-panel { border-color: #1B2647; }
+body.dark .settings-icon-brand,
+body.dark .settings-icon-plain { background: rgba(21,101,216,.16); color: #2F80FF; }
+body.dark .settings-check { color: var(--ink-muted); }
+body.dark .settings-check .box { background: #26306B; border-color: #26306B; }
+body.dark .chev { color: var(--ink-muted); }
+
+body.dark .mobile-bottomnav {
+  background: #0A1330;
+  border-color: #1B2647;
+}
+body.dark .mobile-bottomnav a { color: var(--ink-muted); }
+body.dark .mobile-bottomnav a.active { color: #2F80FF; }
+
+body.dark input,
+body.dark textarea,
+body.dark select {
+  background: #1A2247;
+  border-color: #1A2247;
+  color: #fff;
+}
+
+/* Tela Dispositivo (escuro) */
+body.dark .page-header h1 { color: #fff; }
+body.dark .page-header p { color: var(--ink-muted); }
+body.dark .mobile-topbar { background: var(--bg); border-color: var(--hairline); }
+body.dark .mobile-topbar button { color: var(--ink-muted); }
+body.dark .mobile-title { color: #fff; }
+body.dark .device-col + .device-col { border-color: #1B2647; }
+body.dark .device-col h3 { color: #fff; }
+body.dark .device-image { background: #1B2450; }
+body.dark .device-name, body.dark .device-card-mobile h3 { color: #fff; }
+body.dark .device-sub, body.dark .device-serial { color: var(--ink-muted); }
+body.dark .device-serial strong { color: #fff; }
+body.dark .info-row { border-color: #1B2647; }
+body.dark .info-row .k { color: var(--ink-muted); }
+body.dark .info-row .v { color: #fff; }
+body.dark .battery-icon { border-color: #3A4675; }
+body.dark .btn-outline {
+  background: transparent;
+  border-color: #2A3564;
+  color: #2F80FF;
+}
+body.dark .btn-outline:hover { background: rgba(47,128,255,.10); border-color: #2F80FF; }
+body.dark .status-ok { color: #2BD17E; }
+body.dark .tip-t { color: #fff; }
+body.dark .tip-s { color: var(--ink-muted); }
+
+/* Tela Instituição (escuro) */
+body.dark .inst-greeting h1 { color: #fff; }
+body.dark .inst-greeting p, body.dark .inst-user-meta .role { color: var(--ink-muted); }
+body.dark .inst-user-meta .name { color: #fff; }
+body.dark .inst-avatar, body.dark .mobile-avatar,
+body.dark .avatar-sm, body.dark .avatar-lg { background: #1B2450; }
+body.dark .list-card h2, body.dark .card h2 { color: #fff; }
+body.dark .list-search, body.dark .list-filter select { background: #1A2247; border-color: #1A2247; color: #fff; }
+body.dark .list-columns, body.dark .list-head { color: var(--ink-muted); border-color: #1B2647; }
+body.dark .fisio-item { border-color: #1B2647; }
+body.dark .fisio-name { color: #fff; }
+body.dark .fisio-spec { color: var(--ink-muted); }
+body.dark .fisio-count, body.dark .fisio-count .num { color: #fff; }
+body.dark .show-more { color: #2F80FF; }
+body.dark .select-wrap { border-color: #1A2247; }
+body.dark .fab { background: #1565D8; color: #fff; }
+
+/* Editar perfil (escuro) */
+body.dark .edit-header h1 { color: #fff; }
+body.dark .edit-header p { color: var(--ink-muted); }
+body.dark .edit-name { color: #fff; }
+body.dark .edit-role, body.dark .edit-id { color: var(--ink-muted); }
+body.dark .edit-avatar-card { background: #0E1733; }
+body.dark .edit-sep { border-color: #1B2647; background: #1B2647; }
+body.dark .field label, body.dark .lbl { color: var(--ink-muted); }
+body.dark .btn-primary { background: #1565D8; color: #fff; }
+body.dark .btn-primary:hover { background: #0F56BC; }
+body.dark .register-pro-card {
+  margin-top: 18px;
+  max-width: 300px;
+  padding: 18px;
+}
+body.dark .register-pro-card h3 { margin: 0; font-size: 15px; color: #fff; }
+body.dark .register-pro-card p { margin: 4px 0 14px; font-size: 12px; color: var(--ink-muted); }
+body.dark .register-pro-card .btn-primary { font-size: 13px; padding: 10px 14px; border-radius: 8px; }
+
+/* Tela Paciente (escuro) */
+body.dark .patient-header h1 { color: #fff; }
+body.dark .patient-meta { color: var(--ink-muted); }
+body.dark .patient-meta strong { color: #fff; }
+body.dark .tabs { border-color: #1B2647; }
+body.dark .tab { color: var(--ink-muted); }
+body.dark .tab.active { color: #2F80FF; border-color: #2F80FF; }
+body.dark .info-strip { background: #101A38; border-color: #1B2647; }
+body.dark .info-strip .k { color: var(--ink-muted); }
+body.dark .info-strip .v { color: #fff; }
+body.dark .chart-card h3 { color: #fff; }
+body.dark .chart-card .sub { color: var(--ink-muted); }
+body.dark .big-num { color: #fff; }
+body.dark .delta { color: #2BD17E; }
+body.dark .section-title { color: #fff; }
+body.dark .sessions-table th { color: var(--ink-muted); border-color: #1B2647; }
+body.dark .sessions-table td { color: #fff; border-color: #1B2647; }
+body.dark .add-card h3 { color: #fff; }
+body.dark .add-card p { color: var(--ink-muted); }
+body.dark .tab { background: transparent; border-color: #1F2A50; }
+body.dark .tab.active { background: rgba(47,128,255,.12); border-color: #2F80FF; color: #2F80FF; }
+body.dark .sessions-table thead { background: #0E1733; }
+@media (min-width: 992px) {
+  body.dark .info-strip.mobile-only { display: none !important; }
+}
+
+/* Telas de Perfil (escuro) */
+body.dark .profile-header h1, body.dark .identity h1 { color: #fff; }
+body.dark .identity .role, body.dark .identity .id { color: var(--ink-muted); }
+body.dark .identity .contact .row { color: var(--ink-muted); }
+body.dark .avatar { background: #1B2450; }
+body.dark .divider { background: #1F2A50; border-color: #1F2A50; }
+body.dark .btn-edit {
+  background: #16224A;
+  border-color: #22305F;
+  color: #fff;
+}
+body.dark .btn-edit:hover { background: #1D2C5C; }
+body.dark .description-card h3 { color: #fff; }
+body.dark .description-card p { color: var(--ink-muted); }
+body.dark .contact-card-mobile .row { color: var(--ink-muted); }
+body.dark .contact-card-mobile .k { color: #fff; }
+body.dark .contact-card-mobile .v { color: var(--ink-muted); }
+body.dark .stat .value { color: #fff; }
+body.dark .stat .label { color: var(--ink-muted); }
+body.dark .stat .delta { color: #2BD17E; }
+body.dark .access-card .t { color: #fff; }
+body.dark .access-card .s { color: var(--ink-muted); }
+
+/* Home do profissional (escuro) */
+body.dark .pat-columns { color: var(--ink-muted); border-color: #1B2647; }
+body.dark .pat-item { border-color: #1B2647; }
+body.dark .pat-name { color: #fff; }
+body.dark .pat-date { color: #fff; }
+body.dark .pat-meta-m { color: var(--ink-muted); }
+body.dark .badge.evoluindo { background: #7BE8A8; color: #06301B; }
+body.dark .badge.estavel { background: #79B8FF; color: #06214A; }
+body.dark .badge.instavel { background: #FF8E8E; color: #4A0A0A; }
+
+/* Telas de cadastro (V5 escuro) */
+body.dark .form-header h1,
+body.dark .form-mobile-head h1 { color: #fff; }
+body.dark .form-header p,
+body.dark .form-mobile-head p { color: var(--ink-muted); }
+body.dark .form-card h3,
+body.dark .form-col-title { color: #fff; }
+body.dark .form-avatar { background: #1F2A55; }
+body.dark .form-avatar-col .caption { color: var(--ink-muted); }
+body.dark .btn-outline-brand {
+  background: #101A38; border-color: #22305F; color: #2F80FF;
+}
+body.dark .btn-outline-brand:hover { background: #16224A; }
+body.dark .form-sep { border-top-color: #1B2647; }
+body.dark .field label,
+body.dark .field > span { color: var(--ink-muted); }
+body.dark .field input,
+body.dark .field textarea,
+body.dark .field select {
+  background-color: #1B2450; border-color: #22305F; color: #fff;
+}
+body.dark .field select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C6D0E6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px 18px;
+}
+body.dark .field input::placeholder,
+body.dark .field textarea::placeholder { color: #C6D0E6; }
+body.dark .field input:focus,
+body.dark .field textarea:focus,
+body.dark .field select:focus { border-color: #2F80FF; }
+body.dark .add-manual-card h3 { color: #fff; }
+body.dark .add-manual-card .sub { color: var(--ink-muted); }
+body.dark .session-grid .sessions-table td.pos { color: #2BD17E; }
+
+/* Ajustes visuais V6 escuro */
+body.dark .mobile-list-controls .list-search,
+body.dark .mobile-list-controls .list-filter {
+  background: #1B2450;
+  border-color: #1B2450;
+  color: var(--ink-muted);
+}
+
+body.dark .edit-section {
+  background: #101A38;
+  border-color: #1B2647;
+  box-shadow: none;
+}
+
+body.dark .edit-info-card {
+  background: #101A38;
+}
+
+@media (max-width: 991px) {
+  body.dark .edit-info-card {
+    background: transparent;
+  }
+}

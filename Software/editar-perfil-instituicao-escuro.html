@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editar perfil da instituição — Rehabit</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dark.css" />
+</head>
+<body class="dark">
+  <div class="app">
+    <aside class="sidebar">
+      <a href="#" class="logo"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
+      <nav class="nav">
+        <a href="./instituicao-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          Home
+        </a>
+        <a href="./dispositivo-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Dispositivo
+        </a>
+        <a href="./perfil-instituicao.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Perfil
+        </a>
+        <a href="./configuracoes-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Configurações
+        </a>
+      </nav>
+      <a href="./login.html" class="logout" data-action="logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </a>
+    </aside>
+
+    <div class="mobile-topbar">
+      <button data-action="back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+
+    <main class="main edit-main">
+      <header class="edit-header">
+        <h1>Editar Perfil</h1>
+        <p>Atualize suas informações</p>
+      </header>
+
+      <form class="edit-grid" onsubmit="event.preventDefault();">
+        <section class="card edit-avatar-card">
+          <div class="avatar-lg" aria-hidden="true"></div>
+          <button type="button" class="btn-outline">Alterar foto</button>
+          <h2 class="edit-name">CER Atibaia</h2>
+          <p class="edit-role">Excelência em reabilitação</p>
+          <p class="edit-id">ID-XXXX</p>
+        </section>
+
+        <section class="card edit-info-card">
+          <h3>Informações</h3>
+          <div class="edit-section">
+            <div class="field">
+              <label for="i-cnpj">CNPJ</label>
+              <input id="i-cnpj" type="text" value="" />
+            </div>
+            <div class="field">
+              <label for="i-nome">Nome</label>
+              <input id="i-nome" type="text" value="CER Atibaia" />
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="i-email">E-mail</label>
+                <input id="i-email" type="email" value="ceratibaia.contato@gmail.com" />
+              </div>
+              <div class="field">
+                <label for="i-tel">Telefone</label>
+                <input id="i-tel" type="tel" value="(11) 3333-3333" />
+              </div>
+            </div>
+          </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <div class="two-col">
+              <div class="field">
+                <label for="i-sub">Subtítulo</label>
+                <input id="i-sub" type="text" value="Excelência em reabilitação" />
+              </div>
+              <div class="field">
+                <label for="i-loc">Localidade</label>
+                <input id="i-loc" type="text" value="São Paulo, SP" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="i-desc">Descrição</label>
+              <textarea id="i-desc" rows="4">A CER Atibaia é referência em atendimento fisioterapêutico, com uma equipe especializada em diversas áreas de reabilitação. Nosso objetivo é proporcionar tratamento humanizado e baseado em evidências.</textarea>
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button type="submit" class="btn-primary">Salvar alterações</button>
+          </div>
+        </section>
+      </form>
+    </main>
+
+    <nav class="mobile-bottomnav">
+      <a href="./dispositivo-escuro.html" aria-label="Dispositivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      </a>
+      <a href="./instituicao-escuro.html" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+      </a>
+      <a href="./configuracoes-escuro.html" aria-label="Configurações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </a>
+    </nav>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

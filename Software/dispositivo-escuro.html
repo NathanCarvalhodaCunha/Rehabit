@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dispositivo — Rehabit</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dark.css" />
+</head>
+<body class="dark">
+  <div class="app">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar">
+      <a href="#" class="logo"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
+      <nav class="nav">
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          Home
+        </a>
+        <a href="./dispositivo-escuro.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Dispositivo
+        </a>
+        <a href="./perfil-profissional.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Perfil
+        </a>
+        <a href="./configuracoes-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Configurações
+        </a>
+      </nav>
+      <a href="../rehabit-auth/login-escuro.html" class="logout" data-action="logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </a>
+    </aside>
+
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <button data-action="back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h2 class="mobile-title">Dispositivo</h2>
+      <span aria-hidden="true" style="width:32px"></span>
+    </div>
+
+    <main class="main">
+      <header class="page-header desktop-only">
+        <h1>Dispositivo</h1>
+        <p>Conecte seu dispositivo para sincronizar dados em tempo real</p>
+      </header>
+
+      <!-- Desktop layout: two columns inside one card -->
+      <section class="card device-card desktop-only">
+        <div class="device-grid">
+          <div class="device-col">
+            <h3>Status da conexão</h3>
+            <div class="device-image" aria-hidden="true"></div>
+            <p class="device-name">Dispositivo conectado</p>
+            <p class="device-sub">Rehabit Goniômetro</p>
+            <button class="btn-outline" data-action="disconnect" type="button">Desconectar</button>
+          </div>
+          <div class="device-col right">
+            <h3>Informações do dispositivo</h3>
+            <div class="info-row">
+              <span class="k">Número de série</span>
+              <span class="v">XXXX-XXXX</span>
+            </div>
+            <div class="info-row">
+              <span class="k">Bateria</span>
+              <span class="v battery"><span class="battery-num">78%</span>
+                <span class="battery-icon" aria-hidden="true"><span class="battery-fill" style="width:78%"></span></span>
+              </span>
+            </div>
+            <div class="info-row">
+              <span class="k">Última sincronização</span>
+              <span class="v">07/05/2026 09:15:23</span>
+            </div>
+            <button class="btn-outline center" data-action="sync" type="button">Sincronizar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mobile layout -->
+      <section class="card device-card-mobile mobile-only">
+        <div class="mheader">
+          <h3>Status da conexão</h3>
+          <span class="status-ok">Conectado</span>
+        </div>
+        <div class="device-image" aria-hidden="true"></div>
+        <p class="device-name center">Rehabit Goniômetro</p>
+        <p class="device-serial">Número de série<br/><strong>XXXX-XXXX</strong></p>
+        <div class="info-row">
+          <span class="k">Bateria</span>
+          <span class="v battery"><span class="battery-num">78%</span>
+            <span class="battery-icon" aria-hidden="true"><span class="battery-fill" style="width:78%"></span></span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="k">Última Sincronização</span>
+          <span class="v">07/05/2026 09:15:23</span>
+        </div>
+        <button class="btn-outline block" data-action="sync" type="button">Sincronizar</button>
+        <button class="btn-outline block" data-action="disconnect" type="button">Desconectar</button>
+      </section>
+
+      <section class="card tip-card">
+        <p class="tip-t">Dica:</p>
+        <p class="tip-s">Mantenha o dispositivo fixado, conectado corretamente e com bateria carregada para uma melhor experiência</p>
+      </section>
+    </main>
+
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-bottomnav">
+      <a href="./dispositivo-escuro.html" aria-label="Dispositivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      </a>
+      <a href="#" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+      </a>
+      <a href="#" aria-label="Configurações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </a>
+    </nav>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

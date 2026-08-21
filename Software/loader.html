@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rehabit — Loader (pump do bíceps)</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="loader.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, sans-serif;
+        background: #f5f7fb;
+        color: #2f3b52;
+      }
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      p.lead {
+        color: #5f6c7b;
+        margin: 0 0 28px;
+      }
+      .demos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .card {
+        border-radius: 14px;
+        border: 1px solid #e3e8f2;
+        background: #fff;
+        overflow: hidden;
+      }
+      .card--dark {
+        background: #060d22;
+        border-color: #1b2450;
+      }
+      .card h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e3e8f2;
+        color: #5f6c7b;
+      }
+      .card--dark h2 {
+        color: #c6d0e6;
+        border-color: #1b2450;
+      }
+      .btns {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        flex-wrap: wrap;
+      }
+      button {
+        height: 44px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 10px;
+        background: #1565d8;
+        color: #fff;
+        font: 600 15px "Inter", sans-serif;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: #fff;
+        color: #1565d8;
+        border: 1px solid #cfd8ea;
+      }
+      pre {
+        background: #0b1330;
+        color: #d8e2f7;
+        padding: 16px;
+        border-radius: 12px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      @media (max-width: 991px) {
+        .demos {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Loader Rehabit</h1>
+      <p class="lead">
+        Ícone do bíceps fazendo o “pump”, com anel pulsante. Pronto para usar em
+        qualquer tela do TCC.
+      </p>
+
+      <div class="demos">
+        <div class="card">
+          <h2>Tema claro</h2>
+          <div class="rh-loader rh-loader--inline">
+            <div class="rh-loader__box">
+              <div class="rh-loader__ring">
+                <img
+                  class="rh-loader__icon"
+                  src="assets/rehabit-icon.png"
+                  alt=""
+                />
+              </div>
+              <p class="rh-loader__text">
+                Carregando<span class="rh-dots"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card--dark">
+          <h2>Tema escuro</h2>
+          <div class="rh-loader rh-loader--inline rh-loader--dark">
+            <div class="rh-loader__box">
+              <div class="rh-loader__ring">
+                <img
+                  class="rh-loader__icon"
+                  src="assets/rehabit-icon-dark.png"
+                  alt=""
+                />
+              </div>
+              <p class="rh-loader__text">
+                Carregando<span class="rh-dots"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button onclick="RehabitLoader.show('Carregando dados')">
+          Mostrar em tela cheia
+        </button>
+        <button
+          class="ghost"
+          onclick="RehabitLoader.during(new Promise(r=>setTimeout(r,2500)),'Salvando')"
+        >
+          Simular requisição (2,5s)
+        </button>
+      </div>
+
+      <h2 style="margin-top: 40px; font-size: 18px">Como usar</h2>
+      <pre>&lt;link rel="stylesheet" href="loader.css"&gt;
+&lt;script src="loader.js" defer&gt;&lt;/script&gt;
+
+&lt;!-- opção A: overlay já no HTML (esconde sozinho ao carregar) --&gt;
+&lt;div class="rh-loader" data-rh-loader&gt;
+  &lt;div class="rh-loader__box"&gt;
+    &lt;div class="rh-loader__ring"&gt;
+      &lt;img class="rh-loader__icon" src="assets/rehabit-icon.png" alt=""&gt;
+    &lt;/div&gt;
+    &lt;p class="rh-loader__text"&gt;Carregando&lt;span class="rh-dots"&gt;&lt;/span&gt;&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- opção B: via JS --&gt;
+RehabitLoader.show('Carregando');
+RehabitLoader.hide();
+RehabitLoader.during(fetch('/api/x'), 'Buscando');
+
+&lt;!-- tema escuro: classe rh-loader--dark + rehabit-icon-dark.png --&gt;
+&lt;!-- dentro de um card: adicione rh-loader--inline --&gt;</pre>
+    </div>
+
+    <script src="loader.js" defer></script>
+  </body>
+</html>

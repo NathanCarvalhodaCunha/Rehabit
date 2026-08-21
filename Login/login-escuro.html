@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrar — Rehabit</title>
+  <meta name="description" content="Faça login na Rehabit para acessar sua conta." />
+  <meta property="og:title" content="Entrar — Rehabit" />
+  <meta property="og:description" content="Faça login na Rehabit para acessar sua conta." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="dark.css" />
+</head>
+<body class="dark">
+  <main class="shell image-left">
+    <!-- Photo panel (left on desktop) -->
+    <div class="photo">
+      <img src="assets/physio.png" alt="Fisioterapeuta manipulando o joelho de um paciente" />
+      <!-- Curved divider on the right (form-facing) edge -->
+      <div class="divider right" aria-hidden="true">
+        <svg viewBox="0 0 120 1000" preserveAspectRatio="none">
+          <path d="M120,0 L60,0 C90,250 20,500 50,750 C70,900 100,950 120,1000 Z" fill="currentColor" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Form panel -->
+    <section class="form-side">
+      <div class="form-wrap">
+        <form id="loginForm" class="form-content" novalidate>
+          <img class="logo" src="assets/rehabit-logo-dark.png" alt="Rehabit" />
+
+          <h1>Bem-vindo de volta</h1>
+          <p class="subtitle">Faça login para acessar sua conta</p>
+
+          <div class="fields">
+            <div class="field">
+              <label for="email">E-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field">
+              <label for="password">Senha</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+          </div>
+
+          <button class="btn-primary" type="submit">Entrar</button>
+
+          <p class="footer-link">
+            Não possui uma conta? <a href="register-escuro.html">Cadastre-se</a>
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

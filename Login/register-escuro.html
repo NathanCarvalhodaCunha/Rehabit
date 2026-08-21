@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Criar conta — Rehabit</title>
+  <meta name="description" content="Crie sua conta Rehabit como profissional ou instituição." />
+  <meta property="og:title" content="Criar conta — Rehabit" />
+  <meta property="og:description" content="Crie sua conta Rehabit como profissional ou instituição." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="modal.css" />
+  <link rel="stylesheet" href="dark.css" />
+</head>
+<body class="dark">
+  <main class="shell image-right">
+    <!-- Photo panel (right on desktop) -->
+    <div class="photo">
+      <img src="assets/physio.png" alt="Fisioterapeuta manipulando o joelho de um paciente" />
+      <!-- Curved white divider on the left (form-facing) edge -->
+      <div class="divider left" aria-hidden="true">
+        <svg viewBox="0 0 120 1000" preserveAspectRatio="none">
+          <path d="M0,0 L60,0 C30,250 100,500 70,750 C50,900 20,950 0,1000 Z" fill="currentColor" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Form panel -->
+    <section class="form-side">
+      <div class="form-wrap">
+        <form id="registerForm" class="form-content" novalidate>
+          <img class="logo" src="assets/rehabit-logo-dark.png" alt="Rehabit" />
+
+          <h1>Crie sua conta</h1>
+          <p class="subtitle">Preencha os dados para começar</p>
+
+          <div class="account-type-wrap">
+            <p class="account-type-label">Criar conta como:</p>
+            <div class="account-type" role="tablist" aria-label="Tipo de conta">
+              <button type="button" role="tab" aria-selected="true"  class="active" data-type="profissional">Profissional</button>
+              <button type="button" role="tab" aria-selected="false"                data-type="instituicao">Instituição</button>
+            </div>
+          </div>
+
+          <div class="fields after-account">
+            <div class="field">
+              <label for="name">Nome completo</label>
+              <input id="name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="email">E-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field">
+              <label for="password">Senha</label>
+              <input id="password" name="password" type="password" autocomplete="new-password" required />
+            </div>
+            <div class="field">
+              <label for="confirm">Confirmar senha</label>
+              <input id="confirm" name="confirm" type="password" autocomplete="new-password" required />
+            </div>
+          </div>
+
+          <button class="btn-primary" type="submit">Cadastrar</button>
+
+          <p class="footer-link">
+            Já tem uma conta? <a href="login-escuro.html">Entrar</a>
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="modal.js"></script>
+</body>
+</html>

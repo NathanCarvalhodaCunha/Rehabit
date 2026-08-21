@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paciente — Rehabit</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dark.css" />
+</head>
+<body class="dark">
+  <div class="app">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar">
+      <a href="#" class="logo"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
+      <nav class="nav">
+        <a href="./instituicao-escuro.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          Home
+        </a>
+        <a href="./dispositivo-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Dispositivo
+        </a>
+        <a href="./editar-perfil-profissional-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Perfil
+        </a>
+        <a href="./configuracoes-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Configurações
+        </a>
+      </nav>
+      <a href="#" class="logout" data-action="logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </a>
+    </aside>
+
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <button data-action="back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span></span>
+    </div>
+
+    <main class="main">
+      <header class="patient-header">
+        <div class="avatar-lg" aria-hidden="true"></div>
+        <div>
+          <h1>Ana Carolina Silva</h1>
+          <p class="patient-meta desktop-only">
+            28 anos – Feminino – Lesão de Manguito Rotador<br/>
+            Início do tratamento: <strong>15/03/2026</strong> – Fisioterapia <strong>Dr. Marcelo Silva</strong>
+          </p>
+          <p class="patient-meta mobile-only">
+            28 anos – Feminino<br/>Lesão de Manguito Rotador
+          </p>
+        </div>
+      </header>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">Visão Geral</button>
+        <button class="tab" data-tab="sessions">Sessões</button>
+      </div>
+
+      <!-- Mobile info strip -->
+      <div class="info-strip mobile-only">
+        <div>
+          <div class="k">Início do tratamento</div>
+          <div class="v">15/03/2026</div>
+        </div>
+        <div>
+          <div class="k">Profissional</div>
+          <div class="v">Dr. Marcelo Silva</div>
+        </div>
+      </div>
+
+      <section class="two-col">
+        <!-- ROM chart -->
+        <div class="card chart-card">
+          <h3>Amplitude de Movimento</h3>
+          <p class="sub">Evolução do ombro</p>
+          <div class="big-num">135°</div>
+          <div class="delta">+10° desde a Última Sessão</div>
+          <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="romFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#2F80FF" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#2F80FF" stop-opacity="0.02"/>
+              </linearGradient>
+            </defs>
+            <!-- y-axis labels -->
+            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC">
+              <text x="4" y="24">135°</text>
+              <text x="4" y="58">124°</text>
+              <text x="4" y="92">113°</text>
+              <text x="4" y="126">102°</text>
+              <text x="4" y="160">90°</text>
+            </g>
+            <!-- vertical guide lines -->
+            <g stroke="#2A3564" stroke-dasharray="2 3">
+              <line x1="60"  y1="14" x2="60"  y2="162"/>
+              <line x1="120" y1="14" x2="120" y2="162"/>
+              <line x1="180" y1="14" x2="180" y2="162"/>
+              <line x1="240" y1="14" x2="240" y2="162"/>
+              <line x1="300" y1="14" x2="300" y2="162"/>
+            </g>
+            <!-- area -->
+            <path d="M60,158 L120,150 L180,90 L240,58 L300,20 L300,162 L60,162 Z" fill="url(#romFill)"/>
+            <!-- line -->
+            <polyline points="60,158 120,150 180,90 240,58 300,20"
+                      fill="none" stroke="#2F80FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- dots -->
+            <g fill="#2F80FF">
+              <circle cx="60"  cy="158" r="3.5"/>
+              <circle cx="120" cy="150" r="3.5"/>
+              <circle cx="180" cy="90"  r="3.5"/>
+              <circle cx="240" cy="58"  r="3.5"/>
+              <circle cx="300" cy="20"  r="3.5"/>
+            </g>
+            <!-- x labels -->
+            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC" text-anchor="middle">
+              <text x="60"  y="180">09/04</text>
+              <text x="120" y="180">16/04</text>
+              <text x="180" y="180">23/04</text>
+              <text x="240" y="180">30/04</text>
+              <text x="300" y="180">07/05</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Sessions bar chart -->
+        <div class="card chart-card">
+          <h3>Sessões anteriores</h3>
+          <p class="sub">Comparecimento</p>
+          <div class="big-num">90%</div>
+          <div class="delta">+10% desde o mês passado</div>
+          <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
+            <!-- y labels -->
+            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC">
+              <text x="4" y="24">100%</text>
+              <text x="4" y="60">75%</text>
+              <text x="4" y="96">50%</text>
+              <text x="4" y="132">25%</text>
+              <text x="4" y="162">0%</text>
+            </g>
+            <!-- vertical guide lines behind bars -->
+            <g stroke="#2A3564" stroke-dasharray="2 3">
+              <line x1="70"  y1="14" x2="70"  y2="162"/>
+              <line x1="120" y1="14" x2="120" y2="162"/>
+              <line x1="170" y1="14" x2="170" y2="162"/>
+              <line x1="220" y1="14" x2="220" y2="162"/>
+              <line x1="270" y1="14" x2="270" y2="162"/>
+            </g>
+            <!-- Bars (light bg full, dark fill portion). Y range 20 (100%) to 160 (0%) => 140 units for 100%. -->
+            <g>
+              <!-- Jan 100/95 -->
+              <rect x="52" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
+              <rect x="52" y="27" width="36" height="135" rx="4" fill="#2F80FF"/>
+              <!-- Fev 100/95 -->
+              <rect x="102" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
+              <rect x="102" y="27" width="36" height="135" rx="4" fill="#2F80FF"/>
+              <!-- Mar 100/55 -->
+              <rect x="152" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
+              <rect x="152" y="82" width="36" height="80" rx="4" fill="#2F80FF"/>
+              <!-- Abr 100/85 -->
+              <rect x="202" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
+              <rect x="202" y="41" width="36" height="121" rx="4" fill="#2F80FF"/>
+              <!-- Mai 100/98 -->
+              <rect x="252" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
+              <rect x="252" y="23" width="36" height="139" rx="4" fill="#2F80FF"/>
+            </g>
+            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC" text-anchor="middle">
+              <text x="70"  y="180">Jan</text>
+              <text x="120" y="180">Fev</text>
+              <text x="170" y="180">Mar</text>
+              <text x="220" y="180">Abr</text>
+              <text x="270" y="180">Mai</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <h2 class="section-title desktop-only">Últimas sessões</h2>
+      <section class="bottom-grid desktop-only">
+        <div class="card sessions-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Duração</th>
+                <th>Amplitude média</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>07/05/2026</td>
+                <td>45 min</td>
+                <td>135°</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card add-card">
+          <h3>Adicionar dados manualmente</h3>
+          <p>Registre os dados de uma sessão</p>
+          <button class="btn-primary" data-action="add-session" type="button">Cadastrar sessão</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-bottomnav">
+      <a href="./dispositivo-escuro.html" aria-label="Dispositivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      </a>
+      <a href="./instituicao-escuro.html" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+      </a>
+      <a href="./configuracoes-escuro.html" aria-label="Configurações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </a>
+    </nav>
+  </div>
+  <script src="./script.js"></script>
+  <script>
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    }));
+  </script>
+</body>
+</html>

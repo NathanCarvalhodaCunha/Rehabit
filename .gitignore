@@ -1,0 +1,22 @@
+# Build output
+target/
+*.class
+
+# Eclipse / IDE workspace metadata
+.metadata/
+.settings/
+.classpath
+.project
+.idea/
+*.iml
+
+# Runtime-generated (uploaded photos, etc.)
+rehabit-api/rehabit-api/uploads/*
+!rehabit-api/rehabit-api/uploads/.gitkeep
+
+# Local tooling state (Claude Code session cache, not project source)
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
