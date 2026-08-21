@@ -48,31 +48,26 @@
       <header class="patient-header">
         <div class="avatar-lg" aria-hidden="true"></div>
         <div>
-          <h1>Ana Carolina Silva</h1>
-          <p class="patient-meta desktop-only">
-            28 anos – Feminino – Lesão de Manguito Rotador<br/>
-            Início do tratamento: <strong>15/03/2026</strong> – Fisioterapia <strong>Dr. Marcelo Silva</strong>
-          </p>
-          <p class="patient-meta mobile-only">
-            28 anos – Feminino<br/>Lesão de Manguito Rotador
-          </p>
+          <h1></h1>
+          <p class="patient-meta desktop-only"></p>
+          <p class="patient-meta mobile-only"></p>
         </div>
       </header>
 
       <div class="tabs">
-        <button class="tab active" data-tab="overview">Visão Geral</button>
-        <button class="tab" data-tab="sessions">Sessões</button>
+        <button class="tab active">Visão Geral</button>
+        <a class="tab" href="./cadastrar-sessao.html">Sessões</a>
       </div>
 
       <!-- Mobile info strip -->
       <div class="info-strip mobile-only">
         <div>
           <div class="k">Início do tratamento</div>
-          <div class="v">15/03/2026</div>
+          <div class="v"></div>
         </div>
         <div>
           <div class="k">Profissional</div>
-          <div class="v">Dr. Marcelo Silva</div>
+          <div class="v"></div>
         </div>
       </div>
 
@@ -81,104 +76,16 @@
         <div class="card chart-card">
           <h3>Amplitude de Movimento</h3>
           <p class="sub">Evolução do ombro</p>
-          <div class="big-num">135°</div>
-          <div class="delta">+10° desde a Última Sessão</div>
-          <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="romFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#2F80FF" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#2F80FF" stop-opacity="0.02"/>
-              </linearGradient>
-            </defs>
-            <!-- y-axis labels -->
-            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC">
-              <text x="4" y="24">135°</text>
-              <text x="4" y="58">124°</text>
-              <text x="4" y="92">113°</text>
-              <text x="4" y="126">102°</text>
-              <text x="4" y="160">90°</text>
-            </g>
-            <!-- vertical guide lines -->
-            <g stroke="#2A3564" stroke-dasharray="2 3">
-              <line x1="60"  y1="14" x2="60"  y2="162"/>
-              <line x1="120" y1="14" x2="120" y2="162"/>
-              <line x1="180" y1="14" x2="180" y2="162"/>
-              <line x1="240" y1="14" x2="240" y2="162"/>
-              <line x1="300" y1="14" x2="300" y2="162"/>
-            </g>
-            <!-- area -->
-            <path d="M60,158 L120,150 L180,90 L240,58 L300,20 L300,162 L60,162 Z" fill="url(#romFill)"/>
-            <!-- line -->
-            <polyline points="60,158 120,150 180,90 240,58 300,20"
-                      fill="none" stroke="#2F80FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- dots -->
-            <g fill="#2F80FF">
-              <circle cx="60"  cy="158" r="3.5"/>
-              <circle cx="120" cy="150" r="3.5"/>
-              <circle cx="180" cy="90"  r="3.5"/>
-              <circle cx="240" cy="58"  r="3.5"/>
-              <circle cx="300" cy="20"  r="3.5"/>
-            </g>
-            <!-- x labels -->
-            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC" text-anchor="middle">
-              <text x="60"  y="180">09/04</text>
-              <text x="120" y="180">16/04</text>
-              <text x="180" y="180">23/04</text>
-              <text x="240" y="180">30/04</text>
-              <text x="300" y="180">07/05</text>
-            </g>
-          </svg>
+          <div class="big-num">-</div>
+          <div class="delta">Carregando…</div>
         </div>
 
-        <!-- Sessions bar chart -->
+        <!-- Duration chart -->
         <div class="card chart-card">
-          <h3>Sessões anteriores</h3>
-          <p class="sub">Comparecimento</p>
-          <div class="big-num">90%</div>
-          <div class="delta">+10% desde o mês passado</div>
-          <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
-            <!-- y labels -->
-            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC">
-              <text x="4" y="24">100%</text>
-              <text x="4" y="60">75%</text>
-              <text x="4" y="96">50%</text>
-              <text x="4" y="132">25%</text>
-              <text x="4" y="162">0%</text>
-            </g>
-            <!-- vertical guide lines behind bars -->
-            <g stroke="#2A3564" stroke-dasharray="2 3">
-              <line x1="70"  y1="14" x2="70"  y2="162"/>
-              <line x1="120" y1="14" x2="120" y2="162"/>
-              <line x1="170" y1="14" x2="170" y2="162"/>
-              <line x1="220" y1="14" x2="220" y2="162"/>
-              <line x1="270" y1="14" x2="270" y2="162"/>
-            </g>
-            <!-- Bars (light bg full, dark fill portion). Y range 20 (100%) to 160 (0%) => 140 units for 100%. -->
-            <g>
-              <!-- Jan 100/95 -->
-              <rect x="52" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
-              <rect x="52" y="27" width="36" height="135" rx="4" fill="#2F80FF"/>
-              <!-- Fev 100/95 -->
-              <rect x="102" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
-              <rect x="102" y="27" width="36" height="135" rx="4" fill="#2F80FF"/>
-              <!-- Mar 100/55 -->
-              <rect x="152" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
-              <rect x="152" y="82" width="36" height="80" rx="4" fill="#2F80FF"/>
-              <!-- Abr 100/85 -->
-              <rect x="202" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
-              <rect x="202" y="41" width="36" height="121" rx="4" fill="#2F80FF"/>
-              <!-- Mai 100/98 -->
-              <rect x="252" y="20" width="36" height="142" rx="4" fill="#1E2A55"/>
-              <rect x="252" y="23" width="36" height="139" rx="4" fill="#2F80FF"/>
-            </g>
-            <g font-family="Inter, sans-serif" font-size="10" fill="#98A2BC" text-anchor="middle">
-              <text x="70"  y="180">Jan</text>
-              <text x="120" y="180">Fev</text>
-              <text x="170" y="180">Mar</text>
-              <text x="220" y="180">Abr</text>
-              <text x="270" y="180">Mai</text>
-            </g>
-          </svg>
+          <h3>Duração das sessões</h3>
+          <p class="sub">Minutos por sessão</p>
+          <div class="big-num">-</div>
+          <div class="delta">Carregando…</div>
         </div>
       </section>
 
@@ -193,13 +100,7 @@
                 <th>Amplitude média</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>07/05/2026</td>
-                <td>45 min</td>
-                <td>135°</td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
         <div class="card add-card">
@@ -224,11 +125,6 @@
     </nav>
   </div>
   <script src="./script.js"></script>
-  <script>
-    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-    }));
-  </script>
+  <script src="./pages/paciente.js"></script>
 </body>
 </html>
