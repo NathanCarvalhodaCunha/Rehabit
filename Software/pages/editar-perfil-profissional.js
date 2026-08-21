@@ -73,7 +73,7 @@
       );
 
       alert("Perfil atualizado com sucesso.");
-      window.location.href = "./perfil-profissional.html";
+      window.location.href = paginaTema("perfil-profissional");
     } catch (err) {
       alert(err.message);
     } finally {

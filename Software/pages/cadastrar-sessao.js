@@ -12,8 +12,8 @@
     return;
   }
 
-  document.querySelectorAll('.tabs a.tab[href^="./paciente.html"]').forEach((a) => {
-    a.href = `./paciente.html?id=${idPaciente}`;
+  document.querySelectorAll(".tabs a.tab").forEach((a) => {
+    a.href = `${paginaTema("paciente")}?id=${idPaciente}`;
   });
 
   function formatarDataLonga(dataIso) {
@@ -59,6 +59,7 @@
               const diferenca = Number(s.amplitudeMedia) - Number(anterior.amplitudeMedia);
               avancoTexto = `${diferenca >= 0 ? "+" : ""}${diferenca.toFixed(0)}°`;
               if (diferenca > 0) avancoClasse = "pos";
+              else if (diferenca < 0) avancoClasse = "neg";
             }
             return `
               <tr>

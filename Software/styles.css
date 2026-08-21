@@ -702,6 +702,7 @@ button { font-family: inherit; cursor: pointer; }
 .chart-card .sub { margin: 0; color: var(--ink-muted); font-weight: 600; font-size: 14px; }
 .big-num { font-size: 36px; font-weight: 800; color: var(--ink-strong); margin: 12px 0 4px; letter-spacing: -0.01em; }
 .delta { color: #22C55E; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.delta.negative { color: #E57373; }
 .chart-svg { display: block; width: 100%; height: 190px; }
 
 .section-title { margin: 28px 0 12px; font-size: 20px; font-weight: 800; color: var(--ink-strong); }
@@ -961,6 +962,7 @@ button.form-avatar {
 /* Cadastrar sessão */
 .session-grid { display: grid; grid-template-columns: 1fr 300px; gap: 22px; align-items: stretch; }
 .session-grid .sessions-table td.pos { color: var(--success); font-weight: 700; }
+.session-grid .sessions-table td.neg { color: #E57373; font-weight: 700; }
 .session-grid .sessions-table tr.empty td { height: 43px; }
 .add-manual-card { padding: 22px 22px 20px; display: flex; flex-direction: column; }
 .add-manual-card h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); }

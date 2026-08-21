@@ -37,7 +37,7 @@
         idFisioterapeuta: sessao.id,
       });
       alert("Paciente cadastrado com sucesso.");
-      window.location.href = `./paciente.html?id=${paciente.id}`;
+      window.location.href = `${paginaTema("paciente")}?id=${paciente.id}`;
     } catch (err) {
       alert(err.message);
     } finally {

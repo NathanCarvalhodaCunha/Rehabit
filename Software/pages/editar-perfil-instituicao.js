@@ -74,7 +74,7 @@
       );
 
       alert("Perfil atualizado com sucesso.");
-      window.location.href = "./perfil-instituicao.html";
+      window.location.href = paginaTema("perfil-instituicao");
     } catch (err) {
       alert(err.message);
     } finally {

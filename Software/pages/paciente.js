@@ -82,14 +82,14 @@ function formatarDataLonga(dataIso) {
     return;
   }
 
-  document.querySelectorAll('.tabs a.tab[href^="./cadastrar-sessao.html"]').forEach((a) => {
-    a.href = `./cadastrar-sessao.html?id=${idPaciente}`;
+  document.querySelectorAll(".tabs a.tab").forEach((a) => {
+    a.href = `${paginaTema("cadastrar-sessao")}?id=${idPaciente}`;
   });
   const addSessionBtn = document.querySelector('[data-action="add-session"]');
   if (addSessionBtn) {
     addSessionBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      window.location.href = `./cadastrar-sessao.html?id=${idPaciente}`;
+      window.location.href = `${paginaTema("cadastrar-sessao")}?id=${idPaciente}`;
     });
   }
 
@@ -124,10 +124,13 @@ function formatarDataLonga(dataIso) {
         const ultima = pontosAmplitude.length ? pontosAmplitude[pontosAmplitude.length - 1].valor : null;
         const anterior = pontosAmplitude.length > 1 ? pontosAmplitude[pontosAmplitude.length - 2].valor : null;
         cartoes[0].querySelector(".big-num").textContent = ultima != null ? `${ultima}°` : "-";
-        cartoes[0].querySelector(".delta").textContent =
-          ultima != null && anterior != null
-            ? `${ultima - anterior >= 0 ? "+" : ""}${(ultima - anterior).toFixed(0)}° desde a última sessão`
+        const deltaAmplitudeEl = cartoes[0].querySelector(".delta");
+        const diferencaAmplitude = ultima != null && anterior != null ? ultima - anterior : null;
+        deltaAmplitudeEl.textContent =
+          diferencaAmplitude != null
+            ? `${diferencaAmplitude >= 0 ? "+" : ""}${diferencaAmplitude.toFixed(0)}° desde a última sessão`
             : "Sem histórico suficiente";
+        deltaAmplitudeEl.classList.toggle("negative", diferencaAmplitude != null && diferencaAmplitude < 0);
         cartoes[0].insertAdjacentHTML("beforeend", construirGraficoLinha(pontosAmplitude));
       }
       if (cartoes[1]) {

@@ -30,7 +30,7 @@
 
   listaEl.addEventListener("click", (e) => {
     const item = e.target.closest(".pat-item[data-id]");
-    if (item) window.location.href = `./paciente.html?id=${item.dataset.id}`;
+    if (item) window.location.href = `${paginaTema("paciente")}?id=${item.dataset.id}`;
   });
 
   apiGet(`/pacientes?idFisioterapeuta=${sessao.id}`)

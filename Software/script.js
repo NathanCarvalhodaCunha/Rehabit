@@ -11,6 +11,13 @@ function getSessao() {
   }
 }
 
+// Resolve o nome de um arquivo interno para a variante do tema atual
+// (claro/escuro), para que a navegação nunca derrube um usuário do
+// tema escuro de volta para uma tela clara.
+function paginaTema(nomeBase) {
+  return document.body.classList.contains("dark") ? `./${nomeBase}-escuro.html` : `./${nomeBase}.html`;
+}
+
 async function apiGet(caminho) {
   const resposta = await fetch(`${API_BASE_URL}${caminho}`);
   const dados = await resposta.json().catch(() => ({}));
@@ -103,20 +110,25 @@ document.addEventListener("click", (e) => {
   if (!target) return;
   const action = target.getAttribute("data-action");
   switch (action) {
-    case "edit-profile":
-      alert("Editar perfil");
+    case "edit-profile": {
+      const sessaoAtual = getSessao();
+      window.location.href =
+        sessaoAtual && sessaoAtual.tipo === "CLINICA"
+          ? paginaTema("editar-perfil-instituicao")
+          : paginaTema("editar-perfil-profissional");
       break;
+    }
     case "go-list": {
       const sessaoAtual = getSessao();
       window.location.href =
-        sessaoAtual && sessaoAtual.tipo === "CLINICA" ? "./instituicao.html" : "./profissional.html";
+        sessaoAtual && sessaoAtual.tipo === "CLINICA" ? paginaTema("instituicao") : paginaTema("profissional");
       break;
     }
     case "back":
       history.length > 1 ? history.back() : (window.location.href = "./");
       break;
     case "add-fisio":
-      window.location.href = "./cadastrar-profissional.html";
+      window.location.href = paginaTema("cadastrar-profissional");
       break;
     case "logout":
       e.preventDefault();
@@ -124,10 +136,10 @@ document.addEventListener("click", (e) => {
       window.location.href = "../Login/login.html";
       break;
     case "add-patient":
-      window.location.href = "./cadastrar-paciente.html";
+      window.location.href = paginaTema("cadastrar-paciente");
       break;
     case "add-session":
-      window.location.href = "./cadastrar-sessao.html";
+      window.location.href = paginaTema("cadastrar-sessao");
       break;
     default:
       break;
@@ -212,7 +224,7 @@ if (cadastrarProfissionalForm) {
       }
 
       alert("Profissional cadastrado com sucesso.");
-      window.location.href = "./instituicao.html";
+      window.location.href = paginaTema("instituicao");
     } catch (err) {
       alert("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
     } finally {
