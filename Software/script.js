@@ -106,9 +106,12 @@ document.addEventListener("click", (e) => {
     case "edit-profile":
       alert("Editar perfil");
       break;
-    case "go-list":
-      alert("Ir para a lista");
+    case "go-list": {
+      const sessaoAtual = getSessao();
+      window.location.href =
+        sessaoAtual && sessaoAtual.tipo === "CLINICA" ? "./instituicao.html" : "./profissional.html";
       break;
+    }
     case "back":
       history.length > 1 ? history.back() : (window.location.href = "./");
       break;
