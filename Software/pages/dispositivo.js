@@ -29,13 +29,15 @@
     document.querySelectorAll(".battery-num").forEach((el) => (el.textContent = `${bateria}%`));
     document.querySelectorAll(".battery-fill").forEach((el) => (el.style.width = `${bateria}%`));
     definirValorPorRotulo("última sincronização", sincronizacao);
-    document.querySelectorAll(".device-name").forEach((el) => (el.textContent = "Dispositivo conectado"));
+    document.querySelectorAll(".device-card .device-name").forEach((el) => (el.textContent = "Dispositivo conectado"));
+    document.querySelectorAll(".device-card-mobile .status-ok").forEach((el) => (el.textContent = "Conectado"));
   }
 
   function semDados() {
-    document.querySelectorAll(".device-name").forEach(
+    document.querySelectorAll(".device-card .device-name").forEach(
       (el) => (el.textContent = "Nenhum dispositivo sincronizado ainda")
     );
+    document.querySelectorAll(".device-card-mobile .status-ok").forEach((el) => (el.textContent = "Desconectado"));
     document.querySelectorAll(".battery-num").forEach((el) => (el.textContent = "-"));
     document.querySelectorAll(".battery-fill").forEach((el) => (el.style.width = "0%"));
     definirValorPorRotulo("última sincronização", "-");
@@ -62,5 +64,8 @@
         }
       });
     });
+  }).catch((err) => {
+    semDados();
+    alert(err.message);
   });
 })();
