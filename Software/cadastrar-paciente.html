@@ -56,7 +56,7 @@
         <button type="button" class="btn-outline-brand">Alterar foto</button>
       </div>
 
-      <form class="card form-card" onsubmit="event.preventDefault();">
+      <form id="cadastrarPacienteForm" class="card form-card">
         <h3>Informações</h3>
         <div class="form-split">
           <div class="form-avatar-col">
@@ -64,14 +64,19 @@
             <button type="button" class="btn-outline-brand">Alterar foto</button>
           </div>
           <div>
+            <div class="field field-id">
+              <label for="cpf">CPF</label>
+              <input id="cpf" type="text" required />
+            </div>
+            <hr class="form-sep" />
             <div class="two-col">
               <div class="field">
                 <label for="nome">Nome</label>
-                <input id="nome" type="text" placeholder="Ex: Ana Carolina Silva" />
+                <input id="nome" type="text" placeholder="Ex: Ana Carolina Silva" required />
               </div>
               <div class="field">
                 <label for="nasc">Data de nascimento</label>
-                <input id="nasc" type="text" placeholder="dd/mm/aaaa" />
+                <input id="nasc" type="date" />
               </div>
             </div>
             <div class="two-col">
@@ -111,5 +116,6 @@
     </nav>
   </div>
   <script src="./script.js"></script>
+  <script src="./pages/cadastrar-paciente.js"></script>
 </body>
 </html>
