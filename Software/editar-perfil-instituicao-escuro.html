@@ -51,9 +51,9 @@
         <section class="card edit-avatar-card">
           <div class="avatar-lg" aria-hidden="true"></div>
           <button type="button" class="btn-outline">Alterar foto</button>
-          <h2 class="edit-name">CER Atibaia</h2>
-          <p class="edit-role">Excelência em reabilitação</p>
-          <p class="edit-id">ID-XXXX</p>
+          <h2 class="edit-name"></h2>
+          <p class="edit-role"></p>
+          <p class="edit-id"></p>
         </section>
 
         <section class="card edit-info-card">
@@ -65,16 +65,16 @@
             </div>
             <div class="field">
               <label for="i-nome">Nome</label>
-              <input id="i-nome" type="text" value="CER Atibaia" />
+              <input id="i-nome" type="text" value="" />
             </div>
             <div class="two-col">
               <div class="field">
                 <label for="i-email">E-mail</label>
-                <input id="i-email" type="email" value="ceratibaia.contato@gmail.com" />
+                <input id="i-email" type="email" value="" />
               </div>
               <div class="field">
                 <label for="i-tel">Telefone</label>
-                <input id="i-tel" type="tel" value="(11) 3333-3333" />
+                <input id="i-tel" type="tel" value="" />
               </div>
             </div>
           </div>
@@ -83,16 +83,30 @@
             <div class="two-col">
               <div class="field">
                 <label for="i-sub">Subtítulo</label>
-                <input id="i-sub" type="text" value="Excelência em reabilitação" />
+                <input id="i-sub" type="text" value="" />
               </div>
               <div class="field">
                 <label for="i-loc">Localidade</label>
-                <input id="i-loc" type="text" value="São Paulo, SP" />
+                <input id="i-loc" type="text" value="" />
               </div>
             </div>
             <div class="field">
               <label for="i-desc">Descrição</label>
-              <textarea id="i-desc" rows="4">A CER Atibaia é referência em atendimento fisioterapêutico, com uma equipe especializada em diversas áreas de reabilitação. Nosso objetivo é proporcionar tratamento humanizado e baseado em evidências.</textarea>
+              <textarea id="i-desc" rows="4"></textarea>
+            </div>
+          </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <p class="caption">Deixe em branco para manter a senha atual</p>
+            <div class="two-col">
+              <div class="field">
+                <label for="i-senha-atual">Senha atual</label>
+                <input id="i-senha-atual" type="password" autocomplete="current-password" />
+              </div>
+              <div class="field">
+                <label for="i-senha-nova">Nova senha</label>
+                <input id="i-senha-nova" type="password" autocomplete="new-password" />
+              </div>
             </div>
           </div>
           <div class="edit-actions">
@@ -115,5 +129,6 @@
     </nav>
   </div>
   <script src="./script.js"></script>
+  <script src="./pages/editar-perfil-instituicao.js"></script>
 </body>
 </html>
