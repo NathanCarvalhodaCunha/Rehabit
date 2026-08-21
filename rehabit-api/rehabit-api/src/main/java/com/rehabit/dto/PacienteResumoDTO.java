@@ -1,0 +1,61 @@
+package com.rehabit.dto;
+
+public class PacienteResumoDTO {
+
+    private Integer id;
+    private String nome;
+    private String situacao;
+    private String ultimaSessao;
+    private String selo;
+
+    public PacienteResumoDTO() {
+    }
+
+    public PacienteResumoDTO(Integer id, String nome, String situacao, String ultimaSessao, String selo) {
+        this.id = id;
+        this.nome = nome;
+        this.situacao = situacao;
+        this.ultimaSessao = ultimaSessao;
+        this.selo = selo;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getSituacao() {
+        return situacao;
+    }
+
+    public void setSituacao(String situacao) {
+        this.situacao = situacao;
+    }
+
+    public String getUltimaSessao() {
+        return ultimaSessao;
+    }
+
+    public void setUltimaSessao(String ultimaSessao) {
+        this.ultimaSessao = ultimaSessao;
+    }
+
+    public String getSelo() {
+        return selo;
+    }
+
+    public void setSelo(String selo) {
+        this.selo = selo;
+    }
+}
