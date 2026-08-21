@@ -86,7 +86,9 @@ public class PacienteService {
 
     private PacienteResumoDTO paraResumoDTO(Paciente paciente) {
         List<Sessao> sessoes = sessaoRepository.findByIdPacienteOrderByDataSessaoDescHoraSessaoDesc(paciente.getId());
-        String ultimaSessao = sessoes.isEmpty() ? null : sessoes.get(0).getDataSessao().format(FORMATO_DATA);
+        String ultimaSessao = !sessoes.isEmpty() && sessoes.get(0).getDataSessao() != null
+                ? sessoes.get(0).getDataSessao().format(FORMATO_DATA)
+                : null;
         return new PacienteResumoDTO(paciente.getId(), paciente.getNome(), paciente.getSituacao(),
                 ultimaSessao, calcularSelo(sessoes));
     }
