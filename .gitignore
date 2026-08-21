@@ -20,3 +20,6 @@ rehabit-api/rehabit-api/uploads/*
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Local git worktrees (superpowers:using-git-worktrees)
+.worktrees/
