@@ -3,30 +3,30 @@ setlocal
 cd /d "%~dp0"
 
 echo ============================================
-echo   Rehabit - iniciando MySQL + backend + site
+echo   Rehabit - iniciando backend + site
 echo ============================================
 echo.
 
-REM 1) Garante que o MySQL (XAMPP) esta rodando na porta 3306
-powershell -NoProfile -Command "if (Test-NetConnection -ComputerName localhost -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>&1
-if errorlevel 1 (
-    if exist "C:\xampp\mysql_start.bat" (
-        echo Iniciando MySQL do XAMPP...
-        start "Rehabit - MySQL" "C:\xampp\mysql_start.bat"
-        echo Aguardando o MySQL subir...
-        :waitmysql
-        timeout /t 2 /nobreak >nul
-        powershell -NoProfile -Command "if (Test-NetConnection -ComputerName localhost -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>&1
-        if errorlevel 1 goto waitmysql
-    ) else (
-        echo AVISO: MySQL nao encontrado em C:\xampp e nao esta rodando na porta 3306.
-        echo Inicie o MySQL manualmente ^(XAMPP, servico, etc.^) e rode este script de novo.
-        pause
-        exit /b 1
-    )
-) else (
-    echo MySQL ja esta rodando.
-)
+REM 1) Confere se ha um JDK (nao so um JRE) disponivel no PATH.
+REM    Precisa do JDK para compilar (javac), nao so para rodar.
+where java >nul 2>&1
+if errorlevel 1 goto nojava
+where javac >nul 2>&1
+if errorlevel 1 goto nojava
+goto javaok
+
+:nojava
+echo ERRO: nao encontrei um JDK (Java 17 ou superior) instalado nesta maquina.
+echo.
+echo Baixe e instale o JDK 17 gratuito em:
+echo   https://adoptium.net/temurin/releases/?version=17
+echo.
+echo Depois de instalar, feche esta janela e rode o iniciar-rehabit.bat de novo.
+pause
+exit /b 1
+
+:javaok
+echo Java encontrado.
 echo.
 
 REM 2) Compila o backend (Maven Wrapper - nao precisa de IDE nem Maven instalado)
@@ -40,7 +40,7 @@ if errorlevel 1 (
 )
 echo.
 
-REM 3) Roda o backend (jar ja compilado) em uma janela separada
+REM 3) Roda o backend (jar ja compilado, com banco de dados embutido) em uma janela separada
 echo Iniciando o backend (Spring Boot)...
 start "Rehabit - Backend" cmd /k "cd /d "%~dp0rehabit-api\rehabit-api" && java -jar target\rehabit-api-1.0.0.jar"
 

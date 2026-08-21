@@ -14,6 +14,9 @@ target/
 rehabit-api/rehabit-api/uploads/*
 !rehabit-api/rehabit-api/uploads/.gitkeep
 
+# Embedded H2 database files (local runtime data)
+rehabit-api/rehabit-api/data/
+
 # Local tooling state (Claude Code session cache, not project source)
 .claude/
 
