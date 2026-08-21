@@ -59,7 +59,8 @@ public class ClinicaService {
                 .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
 
         if (!clinica.getEmail().equalsIgnoreCase(dados.getEmail())
-                && clinicaRepository.existsByEmail(dados.getEmail())) {
+                && (clinicaRepository.existsByEmail(dados.getEmail())
+                || fisioterapeutaRepository.existsByEmail(dados.getEmail()))) {
             throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
         }
         if (!clinica.getCnpj().equals(dados.getCnpj())
@@ -75,6 +76,8 @@ public class ClinicaService {
                 throw new AuthException("A nova senha deve ter ao menos 6 caracteres.", HttpStatus.BAD_REQUEST);
             }
             clinica.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+        } else if (dados.getSenhaAtual() != null && !dados.getSenhaAtual().isBlank()) {
+            throw new AuthException("Informe a nova senha para trocar de senha.", HttpStatus.BAD_REQUEST);
         }
 
         clinica.setNome(dados.getNome());
