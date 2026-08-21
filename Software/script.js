@@ -11,6 +11,46 @@ function getSessao() {
   }
 }
 
+async function apiGet(caminho) {
+  const resposta = await fetch(`${API_BASE_URL}${caminho}`);
+  const dados = await resposta.json().catch(() => ({}));
+  if (!resposta.ok) {
+    throw new Error(dados.mensagem || "Não foi possível carregar os dados.");
+  }
+  return dados;
+}
+
+async function apiPost(caminho, corpo) {
+  const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+  const dados = await resposta.json().catch(() => ({}));
+  if (!resposta.ok) {
+    throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+  }
+  return dados;
+}
+
+async function apiPut(caminho, corpo) {
+  const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+  const dados = await resposta.json().catch(() => ({}));
+  if (!resposta.ok) {
+    throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+  }
+  return dados;
+}
+
+function urlFoto(caminhoFoto) {
+  if (!caminhoFoto) return null;
+  return API_BASE_URL.replace(/\/api$/, "") + caminhoFoto;
+}
+
 // Protege as páginas internas: sem sessão, volta para o login.
 (function protegerPagina() {
   if (!getSessao()) {
@@ -79,6 +119,12 @@ document.addEventListener("click", (e) => {
       e.preventDefault();
       localStorage.removeItem("rehabit_usuario");
       window.location.href = "../Login/login.html";
+      break;
+    case "add-patient":
+      window.location.href = "./cadastrar-paciente.html";
+      break;
+    case "add-session":
+      window.location.href = "./cadastrar-sessao.html";
       break;
     default:
       break;
