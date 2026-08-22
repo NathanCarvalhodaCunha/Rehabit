@@ -18,39 +18,59 @@ function paginaTema(nomeBase) {
   return document.body.classList.contains("dark") ? `./${nomeBase}-escuro.html` : `./${nomeBase}.html`;
 }
 
+// Mesma ideia do paginaTema(), mas para o login, que fica fora de Software/.
+function paginaLogin() {
+  return document.body.classList.contains("dark") ? "../Login/login-escuro.html" : "../Login/login.html";
+}
+
 async function apiGet(caminho) {
-  const resposta = await fetch(`${API_BASE_URL}${caminho}`);
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) {
-    throw new Error(dados.mensagem || "Não foi possível carregar os dados.");
+  RehabitLoader.show();
+  try {
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`);
+    const dados = await resposta.json().catch(() => ({}));
+    if (!resposta.ok) {
+      throw new Error(dados.mensagem || "Não foi possível carregar os dados.");
+    }
+    return dados;
+  } finally {
+    RehabitLoader.hide();
   }
-  return dados;
 }
 
 async function apiPost(caminho, corpo) {
-  const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(corpo),
-  });
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) {
-    throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+  RehabitLoader.show();
+  try {
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(corpo),
+    });
+    const dados = await resposta.json().catch(() => ({}));
+    if (!resposta.ok) {
+      throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+    }
+    return dados;
+  } finally {
+    RehabitLoader.hide();
   }
-  return dados;
 }
 
 async function apiPut(caminho, corpo) {
-  const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(corpo),
-  });
-  const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) {
-    throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+  RehabitLoader.show();
+  try {
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(corpo),
+    });
+    const dados = await resposta.json().catch(() => ({}));
+    if (!resposta.ok) {
+      throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
+    }
+    return dados;
+  } finally {
+    RehabitLoader.hide();
   }
-  return dados;
 }
 
 function urlFoto(caminhoFoto) {
@@ -61,7 +81,7 @@ function urlFoto(caminhoFoto) {
 // Protege as páginas internas: sem sessão, volta para o login.
 (function protegerPagina() {
   if (!getSessao()) {
-    window.location.href = "../Login/login.html";
+    window.location.href = paginaLogin();
   }
 })();
 
@@ -124,6 +144,12 @@ document.addEventListener("click", (e) => {
         sessaoAtual && sessaoAtual.tipo === "CLINICA" ? paginaTema("instituicao") : paginaTema("profissional");
       break;
     }
+    case "go-profile": {
+      const sessaoAtual = getSessao();
+      window.location.href =
+        sessaoAtual && sessaoAtual.tipo === "CLINICA" ? paginaTema("perfil-instituicao") : paginaTema("perfil-profissional");
+      break;
+    }
     case "back":
       history.length > 1 ? history.back() : (window.location.href = "./");
       break;
@@ -133,7 +159,7 @@ document.addEventListener("click", (e) => {
     case "logout":
       e.preventDefault();
       localStorage.removeItem("rehabit_usuario");
-      window.location.href = "../Login/login.html";
+      window.location.href = paginaLogin();
       break;
     case "add-patient":
       window.location.href = paginaTema("cadastrar-paciente");
@@ -181,6 +207,7 @@ if (cadastrarProfissionalForm) {
     submitBtn.disabled = true;
     const textoOriginal = submitBtn.textContent;
     submitBtn.textContent = "Cadastrando...";
+    RehabitLoader.show("Cadastrando");
 
     try {
       let foto = null;
@@ -228,8 +255,25 @@ if (cadastrarProfissionalForm) {
     } catch (err) {
       alert("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
     } finally {
+      RehabitLoader.hide();
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;
     }
   });
 }
+
+// Configurações — o checkbox "Tema Escuro" navega para a variante
+// clara/escura da própria tela de configurações (o projeto usa páginas
+// HTML estáticas separadas por tema, sem alternância dinâmica).
+(function configurarToggleTema() {
+  const darkThemeToggle = document.getElementById("darkTheme");
+  if (!darkThemeToggle) return;
+
+  darkThemeToggle.addEventListener("change", () => {
+    const atual = window.location.pathname;
+    const destino = darkThemeToggle.checked
+      ? atual.replace(/\.html$/, "-escuro.html")
+      : atual.replace(/-escuro\.html$/, ".html");
+    if (destino !== atual) window.location.href = destino;
+  });
+})();

@@ -136,6 +136,7 @@
 
     var base = window.API_BASE_URL || '';
     var foto = null;
+    RehabitLoader.show('Cadastrando');
     if (arquivoSelecionado) {
       try {
         var formData = new FormData();
@@ -144,6 +145,7 @@
         var uploadData = await uploadRes.json().catch(function () { return {}; });
         if (!uploadRes.ok) {
           alert(uploadData.mensagem || 'Não foi possível enviar a foto de perfil.');
+          RehabitLoader.hide();
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           return;
@@ -151,6 +153,7 @@
         foto = uploadData.url;
       } catch (err) {
         alert('Não foi possível enviar a foto de perfil. Verifique sua conexão.');
+        RehabitLoader.hide();
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         return;
@@ -175,10 +178,11 @@
       }
       alert('Cadastro realizado com sucesso.');
       close();
-      window.location.href = 'login.html';
+      window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
     } catch (err) {
       alert('Não foi possível conectar ao servidor. Verifique sua conexão.');
     } finally {
+      RehabitLoader.hide();
       submitBtn.disabled = false;
       submitBtn.textContent = originalText;
     }

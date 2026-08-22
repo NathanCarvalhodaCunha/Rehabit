@@ -1,0 +1,215 @@
+/* ==========================================================================
+   Rehabit — Loader (pump do bíceps)
+   Uso:
+     <link rel="stylesheet" href="loader.css">
+     <script src="loader.js" defer></script>
+     ...
+     <div class="rh-loader" data-rh-loader>            <!-- overlay -->
+       <div class="rh-loader__box">
+         <div class="rh-loader__ring">
+           <img class="rh-loader__icon" src="assets/rehabit-icon.png" alt="">
+         </div>
+         <p class="rh-loader__text">Carregando<span class="rh-dots"></span></p>
+       </div>
+     </div>
+   Tema escuro: adicione a classe "rh-loader--dark" no overlay
+   (e use assets/rehabit-icon-dark.png).
+   ========================================================================== */
+
+.rh-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(3px);
+  opacity: 1;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.rh-loader--dark {
+  background: rgba(6, 13, 34, 0.94);
+}
+
+/* estado escondido (adicionado via JS) */
+.rh-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* inline: usa o loader dentro de um card em vez de tela cheia */
+.rh-loader--inline {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  min-height: 220px;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.rh-loader__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ---------- anel pulsante ---------- */
+.rh-loader__ring {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(21, 101, 216, 0.07);
+}
+
+.rh-loader--dark .rh-loader__ring {
+  background: rgba(47, 128, 255, 0.12);
+}
+
+.rh-loader__ring::before,
+.rh-loader__ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(21, 101, 216, 0.35);
+  animation: rh-pulse 1.6s ease-out infinite;
+}
+
+.rh-loader__ring::after {
+  animation-delay: 0.8s;
+}
+
+.rh-loader--dark .rh-loader__ring::before,
+.rh-loader--dark .rh-loader__ring::after {
+  border-color: rgba(47, 128, 255, 0.45);
+}
+
+@keyframes rh-pulse {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+/* ---------- o "pump" do bíceps ---------- */
+.rh-loader__icon {
+  position: relative;
+  width: 72px;
+  height: auto;
+  transform-origin: 22% 78%; /* base do braço: gira/contrai a partir do ombro */
+  animation: rh-pump 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  will-change: transform;
+}
+
+@keyframes rh-pump {
+  0% {
+    transform: rotate(-9deg) scale(0.9);
+  }
+  30% {
+    transform: rotate(3deg) scale(1.14);
+  }
+  45% {
+    transform: rotate(0deg) scale(1.04);
+  }
+  60% {
+    transform: rotate(2deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(-9deg) scale(0.9);
+  }
+}
+
+/* ---------- texto + reticências animadas ---------- */
+.rh-loader__text {
+  margin: 0;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #2f3b52;
+}
+
+.rh-loader--dark .rh-loader__text {
+  color: #e6ecf8;
+}
+
+.rh-dots::after {
+  content: "";
+  animation: rh-dots 1.2s steps(1, end) infinite;
+}
+
+@keyframes rh-dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
+/* ---------- responsividade padrão do projeto ---------- */
+@media (max-width: 991px) {
+  .rh-loader__ring {
+    width: 120px;
+    height: 120px;
+  }
+  .rh-loader__icon {
+    width: 66px;
+  }
+  .rh-loader__text {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .rh-loader__box {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 575px) {
+  .rh-loader__ring {
+    width: 104px;
+    height: 104px;
+  }
+  .rh-loader__icon {
+    width: 56px;
+  }
+  .rh-loader__text {
+    font-size: 14px;
+  }
+}
+
+/* acessibilidade: sem animação para quem prefere movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  .rh-loader__icon,
+  .rh-loader__ring::before,
+  .rh-loader__ring::after,
+  .rh-dots::after {
+    animation: none;
+  }
+  .rh-dots::after {
+    content: "...";
+  }
+}

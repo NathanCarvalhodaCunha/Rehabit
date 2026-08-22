@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Entrar — Rehabit</title>
-  <meta name="description" content="Faça login na Rehabit para acessar sua conta." />
-  <meta property="og:title" content="Entrar — Rehabit" />
-  <meta property="og:description" content="Faça login na Rehabit para acessar sua conta." />
+  <title>Esqueci minha senha — Rehabit</title>
+  <meta name="description" content="Redefina a senha da sua conta Rehabit." />
+  <meta property="og:title" content="Esqueci minha senha — Rehabit" />
+  <meta property="og:description" content="Redefina a senha da sua conta Rehabit." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="dark.css" />
   <link rel="stylesheet" href="loader.css" />
@@ -27,11 +27,11 @@
     <!-- Form panel -->
     <section class="form-side">
       <div class="form-wrap">
-        <form id="loginForm" class="form-content" novalidate>
+        <form id="esqueciSenhaForm" class="form-content" novalidate>
           <img class="logo" src="assets/rehabit-logo-dark.png" alt="Rehabit" />
 
-          <h1>Bem-vindo de volta</h1>
-          <p class="subtitle">Faça login para acessar sua conta</p>
+          <h1>Esqueceu a senha?</h1>
+          <p class="subtitle">Confirme seus dados para definir uma nova senha</p>
 
           <div class="fields">
             <div class="field">
@@ -39,17 +39,24 @@
               <input id="email" name="email" type="email" autocomplete="email" required />
             </div>
             <div class="field">
-              <label for="password">Senha</label>
-              <input id="password" name="password" type="password" autocomplete="current-password" required />
+              <label for="documento">CNPJ (instituição) ou COFFITO (profissional)</label>
+              <input id="documento" name="documento" type="text" required />
+              <p class="form-hint">Usamos esse dado só para confirmar que a conta é sua.</p>
+            </div>
+            <div class="field">
+              <label for="novaSenha">Nova senha</label>
+              <input id="novaSenha" name="novaSenha" type="password" autocomplete="new-password" required />
+            </div>
+            <div class="field">
+              <label for="confirmarSenha">Confirmar nova senha</label>
+              <input id="confirmarSenha" name="confirmarSenha" type="password" autocomplete="new-password" required />
             </div>
           </div>
 
-          <p class="forgot-link"><a href="esqueci-senha-escuro.html">Esqueceu a senha?</a></p>
-
-          <button class="btn-primary" type="submit">Entrar</button>
+          <button class="btn-primary" type="submit">Redefinir senha</button>
 
           <p class="footer-link">
-            Não possui uma conta? <a href="register-escuro.html">Cadastre-se</a>
+            Lembrou a senha? <a href="login-escuro.html">Voltar para o login</a>
           </p>
         </form>
       </div>

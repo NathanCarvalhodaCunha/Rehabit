@@ -67,6 +67,7 @@ if (loginForm) {
     submitBtn.disabled = true;
     const textoOriginal = submitBtn.textContent;
     submitBtn.textContent = 'Entrando...';
+    RehabitLoader.show('Entrando');
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -84,11 +85,67 @@ if (loginForm) {
 
       localStorage.setItem('rehabit_usuario', JSON.stringify(dados));
 
-      const destino = dados.tipo === 'CLINICA' ? '../Software/instituicao.html' : '../Software/profissional.html';
+      const sufixo = document.body.classList.contains('dark') ? '-escuro' : '';
+      const destino =
+        dados.tipo === 'CLINICA' ? `../Software/instituicao${sufixo}.html` : `../Software/profissional${sufixo}.html`;
       window.location.href = destino;
     } catch (err) {
       alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
     } finally {
+      RehabitLoader.hide();
+      submitBtn.disabled = false;
+      submitBtn.textContent = textoOriginal;
+    }
+  });
+}
+
+// Esqueci minha senha — redefinição direta (sem e-mail): confirma a posse
+// da conta pelo CNPJ/COFFITO e já salva a nova senha.
+const esqueciSenhaForm = document.getElementById('esqueciSenhaForm');
+if (esqueciSenhaForm) {
+  esqueciSenhaForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = esqueciSenhaForm.querySelector('.btn-primary');
+    const email = document.getElementById('email').value.trim();
+    const documento = document.getElementById('documento').value.trim();
+    const novaSenha = document.getElementById('novaSenha').value;
+    const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+    if (!email || !documento || !novaSenha) return;
+    if (novaSenha.length < 6) {
+      alert('A nova senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    if (novaSenha !== confirmarSenha) {
+      alert('As senhas não conferem.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const textoOriginal = submitBtn.textContent;
+    submitBtn.textContent = 'Redefinindo...';
+    RehabitLoader.show('Redefinindo senha');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/redefinir-senha`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, documento, novaSenha }),
+      });
+
+      if (!response.ok) {
+        const dados = await response.json().catch(() => ({}));
+        alert(dados.mensagem || 'Não foi possível redefinir sua senha.');
+        return;
+      }
+
+      alert('Senha redefinida com sucesso. Faça login com a nova senha.');
+      window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
+    } catch (err) {
+      alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+    } finally {
+      RehabitLoader.hide();
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;
     }

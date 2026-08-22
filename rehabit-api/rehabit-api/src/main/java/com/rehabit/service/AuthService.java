@@ -2,6 +2,7 @@ package com.rehabit.service;
 
 import com.rehabit.dto.AuthResponseDTO;
 import com.rehabit.dto.LoginRequestDTO;
+import com.rehabit.dto.RedefinirSenhaRequestDTO;
 import com.rehabit.dto.RegisterRequestDTO;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Clinica;
@@ -101,6 +102,45 @@ public class AuthService {
 
         Clinica salva = clinicaRepository.save(clinica);
         return new AuthResponseDTO(salva.getId(), "CLINICA", salva.getNome(), salva.getEmail(), salva.getFoto());
+    }
+
+    /**
+     * Redefinição direta de senha (sem e-mail): identifica a conta pelo
+     * e-mail e confirma a posse dela através do CNPJ (clínica) ou COFFITO
+     * (fisioterapeuta), únicos por conta e não expostos publicamente.
+     * A mensagem de erro é sempre a mesma para não revelar qual dado
+     * (e-mail ou documento) estava incorreto.
+     */
+    @Transactional
+    public void redefinirSenha(RedefinirSenhaRequestDTO dados) {
+        String documentoInformado = dados.getDocumento().trim();
+        AuthException dadosInvalidos = new AuthException(
+                "Não foi possível verificar seus dados. Confira o e-mail e o CNPJ/COFFITO informados.",
+                HttpStatus.BAD_REQUEST);
+
+        Optional<Clinica> clinica = clinicaRepository.findByEmail(dados.getEmail());
+        if (clinica.isPresent()) {
+            Clinica c = clinica.get();
+            if (c.getCnpj() == null || !documentoInformado.equalsIgnoreCase(c.getCnpj().trim())) {
+                throw dadosInvalidos;
+            }
+            c.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            clinicaRepository.save(c);
+            return;
+        }
+
+        Optional<Fisioterapeuta> fisioterapeuta = fisioterapeutaRepository.findByEmail(dados.getEmail());
+        if (fisioterapeuta.isPresent()) {
+            Fisioterapeuta f = fisioterapeuta.get();
+            if (f.getCoffito() == null || !documentoInformado.equalsIgnoreCase(f.getCoffito().trim())) {
+                throw dadosInvalidos;
+            }
+            f.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            fisioterapeutaRepository.save(f);
+            return;
+        }
+
+        throw dadosInvalidos;
     }
 
     private String vazioParaNulo(String valor) {

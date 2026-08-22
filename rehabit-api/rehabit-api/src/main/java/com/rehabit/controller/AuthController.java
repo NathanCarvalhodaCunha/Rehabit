@@ -2,6 +2,7 @@ package com.rehabit.controller;
 
 import com.rehabit.dto.AuthResponseDTO;
 import com.rehabit.dto.LoginRequestDTO;
+import com.rehabit.dto.RedefinirSenhaRequestDTO;
 import com.rehabit.dto.RegisterRequestDTO;
 import com.rehabit.service.AuthService;
 import jakarta.validation.Valid;
@@ -29,5 +30,11 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> registrar(@Valid @RequestBody RegisterRequestDTO dados) {
         AuthResponseDTO resposta = authService.registrar(dados);
         return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<Void> redefinirSenha(@Valid @RequestBody RedefinirSenhaRequestDTO dados) {
+        authService.redefinirSenha(dados);
+        return ResponseEntity.ok().build();
     }
 }
