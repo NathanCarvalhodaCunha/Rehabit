@@ -70,6 +70,7 @@
               </tr>`;
           })
           .join("");
+        RehabitAnim.staggerList(tbody);
       }
     );
   }

@@ -156,6 +156,7 @@ function formatarDataLonga(dataIso) {
               )
               .join("")
           : '<tr><td colspan="3">Ainda não há sessões registradas.</td></tr>';
+        RehabitAnim.staggerList(tbody);
       }
     })
     .catch((err) => {

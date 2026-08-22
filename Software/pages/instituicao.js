@@ -42,6 +42,7 @@
           </li>`;
         })
         .join("");
+      RehabitAnim.staggerList(listaEl);
     })
     .catch((err) => {
       listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${err.message}</li>`;
