@@ -240,3 +240,15 @@ body.dark .edit-info-card {
     background: transparent;
   }
 }
+
+body.dark .notif-bell { color: var(--ink-muted); }
+body.dark .notif-bell:hover { background: rgba(255,255,255,.06); color: #fff; }
+body.dark .notif-dropdown {
+  background: #0E1733;
+  border-color: #1B2647;
+  box-shadow: none;
+}
+body.dark .notif-item:not(:last-child) { border-color: #1B2647; }
+body.dark .notif-item .msg { color: #fff; }
+body.dark .notif-item .quando { color: var(--ink-muted); }
+body.dark .notif-item.is-unread { background: rgba(21,101,216,.14); }

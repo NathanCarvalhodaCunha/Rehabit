@@ -23,12 +23,14 @@ public class SessaoService {
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
     private final PacienteRepository pacienteRepository;
+    private final NotificacaoService notificacaoService;
 
     public SessaoService(SessaoRepository sessaoRepository, MedicaoRepository medicaoRepository,
-                          PacienteRepository pacienteRepository) {
+                          PacienteRepository pacienteRepository, NotificacaoService notificacaoService) {
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
         this.pacienteRepository = pacienteRepository;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
@@ -50,6 +52,8 @@ public class SessaoService {
         medicao.setHoraMedicao(LocalTime.now().withNano(0));
         medicao.setIdSessao(sessaoSalva.getId());
         Medicao medicaoSalva = medicaoRepository.save(medicao);
+        notificacaoService.criar(paciente.getIdClinica(), "NOVA_SESSAO",
+                "Nova sessão registrada para " + paciente.getNome());
 
         return new SessaoDTO(sessaoSalva.getId(), sessaoSalva.getDataSessao(), sessaoSalva.getDuracao(),
                 medicaoSalva.getAmplitudeMedia());
