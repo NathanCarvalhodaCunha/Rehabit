@@ -12,6 +12,7 @@ import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
+import com.rehabit.security.PosseChecker;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,8 @@ public class PacienteService {
     }
 
     @Transactional
-    public PacienteDetalheDTO cadastrar(PacienteCreateDTO dados) {
+    public PacienteDetalheDTO cadastrar(PacienteCreateDTO dados, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirFisioterapeutaDono(dados.getIdFisioterapeuta(), usuarioId, usuarioTipo);
         Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(dados.getIdFisioterapeuta())
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.BAD_REQUEST));
 
@@ -74,19 +76,29 @@ public class PacienteService {
         return paraDetalheDTO(salvo, fisioterapeuta.getNome());
     }
 
-    public List<PacienteResumoDTO> listarPorFisioterapeuta(Integer idFisioterapeuta) {
+    public List<PacienteResumoDTO> listarPorFisioterapeuta(Integer idFisioterapeuta, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirFisioterapeutaDono(idFisioterapeuta, usuarioId, usuarioTipo);
         return pacienteRepository.findByIdFisioterapeutaOrderByNomeAsc(idFisioterapeuta).stream()
                 .map(this::paraResumoDTO)
                 .collect(Collectors.toList());
     }
 
-    public PacienteDetalheDTO buscar(Integer id) {
+    public PacienteDetalheDTO buscar(Integer id, Integer usuarioId, String usuarioTipo) {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Paciente não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirDonoOuClinicaDona(paciente.getIdFisioterapeuta(), paciente.getIdClinica(), usuarioId, usuarioTipo);
         String nomeFisioterapeuta = fisioterapeutaRepository.findById(paciente.getIdFisioterapeuta())
                 .map(Fisioterapeuta::getNome)
                 .orElse(null);
         return paraDetalheDTO(paciente, nomeFisioterapeuta);
+    }
+
+    /** Carrega o paciente e confirma que usuarioId/usuarioTipo tem posse dele; usado por SessaoService também. */
+    public Paciente carregarComPosse(Integer idPaciente, Integer usuarioId, String usuarioTipo) {
+        Paciente paciente = pacienteRepository.findById(idPaciente)
+                .orElseThrow(() -> new AuthException("Paciente não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirDonoOuClinicaDona(paciente.getIdFisioterapeuta(), paciente.getIdClinica(), usuarioId, usuarioTipo);
+        return paciente;
     }
 
     private PacienteResumoDTO paraResumoDTO(Paciente paciente) {

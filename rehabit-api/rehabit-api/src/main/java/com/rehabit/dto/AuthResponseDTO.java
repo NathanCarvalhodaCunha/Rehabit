@@ -8,6 +8,7 @@ public class AuthResponseDTO {
     private String email;
     private String foto;
     private boolean tutorialVisto;
+    private String token; // null na resposta de /auth/register (não faz login automático)
 
     public AuthResponseDTO() {
     }
@@ -19,6 +20,12 @@ public class AuthResponseDTO {
         this.email = email;
         this.foto = foto;
         this.tutorialVisto = tutorialVisto;
+    }
+
+    public AuthResponseDTO(Integer id, String tipo, String nome, String email, String foto, boolean tutorialVisto,
+                            String token) {
+        this(id, tipo, nome, email, foto, tutorialVisto);
+        this.token = token;
     }
 
     public Integer getId() {
@@ -67,5 +74,13 @@ public class AuthResponseDTO {
 
     public void setTutorialVisto(boolean tutorialVisto) {
         this.tutorialVisto = tutorialVisto;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
