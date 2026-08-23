@@ -23,15 +23,35 @@ function paginaLogin() {
   return document.body.classList.contains("dark") ? "../Login/login-escuro.html" : "../Login/login.html";
 }
 
+function cabecalhosAutenticados(extras) {
+  const sessao = getSessao();
+  const cabecalhos = Object.assign({}, extras || {});
+  if (sessao && sessao.token) {
+    cabecalhos["Authorization"] = `Bearer ${sessao.token}`;
+  }
+  return cabecalhos;
+}
+
+async function tratarResposta(resposta, mensagemPadrao) {
+  const dados = await resposta.json().catch(() => ({}));
+  if (resposta.status === 401) {
+    localStorage.removeItem("rehabit_usuario");
+    window.location.href = paginaLogin();
+    throw new Error("Sessão expirada.");
+  }
+  if (!resposta.ok) {
+    throw new Error(dados.mensagem || mensagemPadrao);
+  }
+  return dados;
+}
+
 async function apiGet(caminho) {
   RehabitLoader.show();
   try {
-    const resposta = await fetch(`${API_BASE_URL}${caminho}`);
-    const dados = await resposta.json().catch(() => ({}));
-    if (!resposta.ok) {
-      throw new Error(dados.mensagem || "Não foi possível carregar os dados.");
-    }
-    return dados;
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+      headers: cabecalhosAutenticados(),
+    });
+    return await tratarResposta(resposta, "Não foi possível carregar os dados.");
   } finally {
     RehabitLoader.hide();
   }
@@ -42,14 +62,10 @@ async function apiPost(caminho, corpo) {
   try {
     const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: cabecalhosAutenticados({ "Content-Type": "application/json" }),
       body: JSON.stringify(corpo),
     });
-    const dados = await resposta.json().catch(() => ({}));
-    if (!resposta.ok) {
-      throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
-    }
-    return dados;
+    return await tratarResposta(resposta, "Não foi possível salvar os dados.");
   } finally {
     RehabitLoader.hide();
   }
@@ -60,14 +76,10 @@ async function apiPut(caminho, corpo) {
   try {
     const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: cabecalhosAutenticados({ "Content-Type": "application/json" }),
       body: JSON.stringify(corpo),
     });
-    const dados = await resposta.json().catch(() => ({}));
-    if (!resposta.ok) {
-      throw new Error(dados.mensagem || "Não foi possível salvar os dados.");
-    }
-    return dados;
+    return await tratarResposta(resposta, "Não foi possível salvar os dados.");
   } finally {
     RehabitLoader.hide();
   }
@@ -80,7 +92,8 @@ function urlFoto(caminhoFoto) {
 
 // Protege as páginas internas: sem sessão, volta para o login.
 (function protegerPagina() {
-  if (!getSessao()) {
+  const sessao = getSessao();
+  if (!sessao || !sessao.token) {
     window.location.href = paginaLogin();
   }
 })();
@@ -228,7 +241,7 @@ if (cadastrarProfissionalForm) {
 
       const response = await fetch(`${API_BASE_URL}/fisioterapeutas`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosAutenticados({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           idClinica: sessao.id,
           nome,
