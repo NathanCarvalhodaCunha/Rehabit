@@ -31,15 +31,18 @@ public class PacienteService {
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
+    private final NotificacaoService notificacaoService;
 
     public PacienteService(PacienteRepository pacienteRepository,
                             FisioterapeutaRepository fisioterapeutaRepository,
                             SessaoRepository sessaoRepository,
-                            MedicaoRepository medicaoRepository) {
+                            MedicaoRepository medicaoRepository,
+                            NotificacaoService notificacaoService) {
         this.pacienteRepository = pacienteRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
@@ -66,6 +69,8 @@ public class PacienteService {
         paciente.setIdFisioterapeuta(fisioterapeuta.getId());
 
         Paciente salvo = pacienteRepository.save(paciente);
+        notificacaoService.criar(fisioterapeuta.getIdClinica(), "NOVO_PACIENTE",
+                "Novo paciente cadastrado: " + salvo.getNome() + " (por " + fisioterapeuta.getNome() + ")");
         return paraDetalheDTO(salvo, fisioterapeuta.getNome());
     }
 
