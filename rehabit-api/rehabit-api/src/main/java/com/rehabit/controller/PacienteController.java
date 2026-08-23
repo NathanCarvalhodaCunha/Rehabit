@@ -5,8 +5,10 @@ import com.rehabit.dto.PacienteDetalheDTO;
 import com.rehabit.dto.PacienteResumoDTO;
 import com.rehabit.dto.SessaoCreateDTO;
 import com.rehabit.dto.SessaoDTO;
+import com.rehabit.security.AuthContext;
 import com.rehabit.service.PacienteService;
 import com.rehabit.service.SessaoService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,28 +30,36 @@ public class PacienteController {
     }
 
     @PostMapping
-    public ResponseEntity<PacienteDetalheDTO> cadastrar(@Valid @RequestBody PacienteCreateDTO dados) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(pacienteService.cadastrar(dados));
+    public ResponseEntity<PacienteDetalheDTO> cadastrar(@Valid @RequestBody PacienteCreateDTO dados,
+                                                            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                pacienteService.cadastrar(dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @GetMapping
-    public ResponseEntity<List<PacienteResumoDTO>> listar(@RequestParam Integer idFisioterapeuta) {
-        return ResponseEntity.ok(pacienteService.listarPorFisioterapeuta(idFisioterapeuta));
+    public ResponseEntity<List<PacienteResumoDTO>> listar(@RequestParam Integer idFisioterapeuta,
+                                                              HttpServletRequest request) {
+        return ResponseEntity.ok(pacienteService.listarPorFisioterapeuta(
+                idFisioterapeuta, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PacienteDetalheDTO> buscar(@PathVariable Integer id) {
-        return ResponseEntity.ok(pacienteService.buscar(id));
+    public ResponseEntity<PacienteDetalheDTO> buscar(@PathVariable Integer id, HttpServletRequest request) {
+        return ResponseEntity.ok(pacienteService.buscar(
+                id, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @PostMapping("/{id}/sessoes")
     public ResponseEntity<SessaoDTO> cadastrarSessao(@PathVariable Integer id,
-                                                        @Valid @RequestBody SessaoCreateDTO dados) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(sessaoService.cadastrar(id, dados));
+                                                        @Valid @RequestBody SessaoCreateDTO dados,
+                                                        HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessaoService.cadastrar(
+                id, dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @GetMapping("/{id}/sessoes")
-    public ResponseEntity<List<SessaoDTO>> listarSessoes(@PathVariable Integer id) {
-        return ResponseEntity.ok(sessaoService.listarPorPaciente(id));
+    public ResponseEntity<List<SessaoDTO>> listarSessoes(@PathVariable Integer id, HttpServletRequest request) {
+        return ResponseEntity.ok(sessaoService.listarPorPaciente(
+                id, AuthContext.id(request), AuthContext.tipo(request)));
     }
 }

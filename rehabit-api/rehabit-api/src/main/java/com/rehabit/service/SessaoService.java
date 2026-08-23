@@ -2,14 +2,11 @@ package com.rehabit.service;
 
 import com.rehabit.dto.SessaoCreateDTO;
 import com.rehabit.dto.SessaoDTO;
-import com.rehabit.exception.AuthException;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Paciente;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.MedicaoRepository;
-import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,21 +19,20 @@ public class SessaoService {
 
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
-    private final PacienteRepository pacienteRepository;
+    private final PacienteService pacienteService;
     private final NotificacaoService notificacaoService;
 
     public SessaoService(SessaoRepository sessaoRepository, MedicaoRepository medicaoRepository,
-                          PacienteRepository pacienteRepository, NotificacaoService notificacaoService) {
+                          PacienteService pacienteService, NotificacaoService notificacaoService) {
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
-        this.pacienteRepository = pacienteRepository;
+        this.pacienteService = pacienteService;
         this.notificacaoService = notificacaoService;
     }
 
     @Transactional
-    public SessaoDTO cadastrar(Integer idPaciente, SessaoCreateDTO dados) {
-        Paciente paciente = pacienteRepository.findById(idPaciente)
-                .orElseThrow(() -> new AuthException("Paciente não encontrado.", HttpStatus.NOT_FOUND));
+    public SessaoDTO cadastrar(Integer idPaciente, SessaoCreateDTO dados, Integer usuarioId, String usuarioTipo) {
+        Paciente paciente = pacienteService.carregarComPosse(idPaciente, usuarioId, usuarioTipo);
 
         Sessao sessao = new Sessao();
         sessao.setDataSessao(dados.getData());
@@ -59,7 +55,8 @@ public class SessaoService {
                 medicaoSalva.getAmplitudeMedia());
     }
 
-    public List<SessaoDTO> listarPorPaciente(Integer idPaciente) {
+    public List<SessaoDTO> listarPorPaciente(Integer idPaciente, Integer usuarioId, String usuarioTipo) {
+        pacienteService.carregarComPosse(idPaciente, usuarioId, usuarioTipo);
         return sessaoRepository.findByIdPacienteOrderByDataSessaoDescHoraSessaoDesc(idPaciente).stream()
                 .map(s -> {
                     Medicao medicao = medicaoRepository.findByIdSessao(s.getId());
