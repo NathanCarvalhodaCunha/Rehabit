@@ -38,6 +38,9 @@ public class Clinica {
     @Column(name = "tb01_foto_clinica", length = 255)
     private String foto;
 
+    @Column(name = "tb01_tutorial_visto", columnDefinition = "boolean not null default false")
+    private boolean tutorialVisto;
+
     public Clinica() {
     }
 
@@ -121,5 +124,13 @@ public class Clinica {
 
     public void setFoto(String foto) {
         this.foto = foto;
+    }
+
+    public boolean isTutorialVisto() {
+        return tutorialVisto;
+    }
+
+    public void setTutorialVisto(boolean tutorialVisto) {
+        this.tutorialVisto = tutorialVisto;
     }
 }
