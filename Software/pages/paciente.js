@@ -1,61 +1,106 @@
-function construirGraficoLinha(pontos) {
-  if (pontos.length === 0) {
-    return '<p style="color:var(--ink-muted);font-size:13px;margin-top:8px;">Ainda não há sessões registradas.</p>';
-  }
-  const valores = pontos.map((p) => p.valor);
-  const max = Math.max(...valores);
-  const min = Math.min(...valores);
-  const amplitude = max - min || 1;
-  const esquerda = 50, direita = 300, topo = 14, base = 162;
-  const passoX = pontos.length > 1 ? (direita - esquerda) / (pontos.length - 1) : 0;
-
-  const coords = pontos.map((p, i) => ({
-    x: esquerda + passoX * i,
-    y: base - ((p.valor - min) / amplitude) * (base - topo),
-    rotulo: p.rotulo,
-  }));
-
-  const linha = coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
-  const pontosSvg = coords.map((c) => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5"/>`).join("");
-  const labels = coords
-    .map((c) => `<text x="${c.x.toFixed(1)}" y="180" text-anchor="middle">${c.rotulo}</text>`)
-    .join("");
-
-  return `
-    <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points="${linha}" fill="none" stroke="#1565D8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <g fill="#1565D8">${pontosSvg}</g>
-      <g font-family="Inter, sans-serif" font-size="10" fill="#5F6C7B" text-anchor="middle">${labels}</g>
-    </svg>`;
+// Cores do gráfico seguem o tema atual (claro/escuro), mesmo par de azul
+// usado no resto do app.
+function coresGrafico() {
+  const escuro = document.body.classList.contains("dark");
+  return {
+    marca: escuro ? "#2F80FF" : "#1565D8",
+    preenchimento: escuro ? "rgba(47,128,255,.14)" : "rgba(21,101,216,.08)",
+    grade: escuro ? "#1B2647" : "#E5E7EB",
+    texto: escuro ? "#98A2BC" : "#6B7280",
+  };
 }
 
-function construirGraficoBarras(pontos) {
+function construirGraficoLinha(cartao, pontos) {
   if (pontos.length === 0) {
-    return '<p style="color:var(--ink-muted);font-size:13px;margin-top:8px;">Ainda não há sessões registradas.</p>';
+    cartao.insertAdjacentHTML(
+      "beforeend",
+      '<p style="color:var(--ink-muted);font-size:13px;margin-top:8px;">Ainda não há sessões registradas.</p>'
+    );
+    return;
   }
-  const max = Math.max(...pontos.map((p) => p.valor), 1);
-  const topo = 20, base = 162, larguraBarra = 36, espaco = 50, inicioX = 52;
+  const cores = coresGrafico();
+  const canvas = document.createElement("canvas");
+  canvas.className = "chart-canvas";
+  cartao.appendChild(canvas);
 
-  const barras = pontos
-    .map((p, i) => {
-      const x = inicioX + i * espaco;
-      const alturaBarra = (p.valor / max) * (base - topo);
-      const y = base - alturaBarra;
-      return `<rect x="${x}" y="${y.toFixed(1)}" width="${larguraBarra}" height="${alturaBarra.toFixed(1)}" rx="4" fill="#1565D8"/>`;
-    })
-    .join("");
-  const labels = pontos
-    .map((p, i) => {
-      const x = inicioX + i * espaco + larguraBarra / 2;
-      return `<text x="${x}" y="180" text-anchor="middle">${p.rotulo}</text>`;
-    })
-    .join("");
+  new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: pontos.map((p) => p.rotulo),
+      datasets: [
+        {
+          data: pontos.map((p) => p.valor),
+          borderColor: cores.marca,
+          backgroundColor: cores.preenchimento,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: cores.marca,
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y}°` } },
+      },
+      scales: {
+        y: {
+          grid: { color: cores.grade },
+          ticks: { color: cores.texto, callback: (v) => `${v}°` },
+        },
+        x: { grid: { display: false }, ticks: { color: cores.texto } },
+      },
+    },
+  });
+}
 
-  return `
-    <svg class="chart-svg" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true">
-      <g>${barras}</g>
-      <g font-family="Inter, sans-serif" font-size="10" fill="#5F6C7B" text-anchor="middle">${labels}</g>
-    </svg>`;
+function construirGraficoBarras(cartao, pontos) {
+  if (pontos.length === 0) {
+    cartao.insertAdjacentHTML(
+      "beforeend",
+      '<p style="color:var(--ink-muted);font-size:13px;margin-top:8px;">Ainda não há sessões registradas.</p>'
+    );
+    return;
+  }
+  const cores = coresGrafico();
+  const canvas = document.createElement("canvas");
+  canvas.className = "chart-canvas";
+  cartao.appendChild(canvas);
+
+  new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: pontos.map((p) => p.rotulo),
+      datasets: [
+        {
+          data: pontos.map((p) => p.valor),
+          backgroundColor: cores.marca,
+          borderRadius: 4,
+          maxBarThickness: 36,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} min` } },
+      },
+      scales: {
+        y: {
+          grid: { color: cores.grade },
+          ticks: { color: cores.texto, callback: (v) => `${v} min` },
+        },
+        x: { grid: { display: false }, ticks: { color: cores.texto } },
+      },
+    },
+  });
 }
 
 function formatarDataCurta(dataIso) {
@@ -131,7 +176,7 @@ function formatarDataLonga(dataIso) {
             ? `${diferencaAmplitude >= 0 ? "+" : ""}${diferencaAmplitude.toFixed(0)}° desde a última sessão`
             : "Sem histórico suficiente";
         deltaAmplitudeEl.classList.toggle("negative", diferencaAmplitude != null && diferencaAmplitude < 0);
-        cartoes[0].insertAdjacentHTML("beforeend", construirGraficoLinha(pontosAmplitude));
+        construirGraficoLinha(cartoes[0], pontosAmplitude);
       }
       if (cartoes[1]) {
         const ultima = pontosDuracao.length ? pontosDuracao[pontosDuracao.length - 1].valor : null;
@@ -139,7 +184,7 @@ function formatarDataLonga(dataIso) {
         cartoes[1].querySelector(".delta").textContent = pontosDuracao.length
           ? `${pontosDuracao.length} sessões recentes`
           : "Sem histórico ainda";
-        cartoes[1].insertAdjacentHTML("beforeend", construirGraficoBarras(pontosDuracao));
+        construirGraficoBarras(cartoes[1], pontosDuracao);
       }
 
       const tbody = document.querySelector(".sessions-table tbody");
