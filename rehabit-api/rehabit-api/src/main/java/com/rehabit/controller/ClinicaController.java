@@ -28,4 +28,10 @@ public class ClinicaController {
                                                         @Valid @RequestBody ClinicaUpdateDTO dados) {
         return ResponseEntity.ok(clinicaService.atualizar(id, dados));
     }
+
+    @PutMapping("/{id}/tutorial-visto")
+    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id) {
+        clinicaService.marcarTutorialVisto(id);
+        return ResponseEntity.ok().build();
+    }
 }

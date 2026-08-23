@@ -77,7 +77,8 @@ public class FisioterapeutaService {
         fisioterapeuta.setFoto(vazioParaNulo(dados.getFoto()));
 
         Fisioterapeuta salvo = fisioterapeutaRepository.save(fisioterapeuta);
-        return new AuthResponseDTO(salvo.getId(), "FISIOTERAPEUTA", salvo.getNome(), salvo.getEmail(), salvo.getFoto());
+        return new AuthResponseDTO(salvo.getId(), "FISIOTERAPEUTA", salvo.getNome(), salvo.getEmail(),
+                salvo.getFoto(), salvo.isTutorialVisto());
     }
 
     private String vazioParaNulo(String valor) {
@@ -132,6 +133,14 @@ public class FisioterapeutaService {
         }
 
         return paraPerfilDTO(fisioterapeutaRepository.save(fisioterapeuta));
+    }
+
+    @Transactional
+    public void marcarTutorialVisto(Integer id) {
+        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
+        fisioterapeuta.setTutorialVisto(true);
+        fisioterapeutaRepository.save(fisioterapeuta);
     }
 
     private FisioterapeutaPerfilDTO paraPerfilDTO(Fisioterapeuta f) {

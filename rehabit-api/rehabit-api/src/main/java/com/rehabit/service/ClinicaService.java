@@ -94,6 +94,14 @@ public class ClinicaService {
         return paraDTO(clinicaRepository.save(clinica));
     }
 
+    @Transactional
+    public void marcarTutorialVisto(Integer id) {
+        Clinica clinica = clinicaRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
+        clinica.setTutorialVisto(true);
+        clinicaRepository.save(clinica);
+    }
+
     private ClinicaPerfilDTO paraDTO(Clinica clinica) {
         List<Fisioterapeuta> fisioterapeutas = fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(clinica.getId());
         List<Integer> idsFisioterapeutas = fisioterapeutas.stream().map(Fisioterapeuta::getId).collect(Collectors.toList());

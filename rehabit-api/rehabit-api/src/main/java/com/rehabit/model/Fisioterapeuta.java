@@ -35,6 +35,9 @@ public class Fisioterapeuta {
     @Column(name = "tb02_foto_fisioterapeuta", length = 255)
     private String foto;
 
+    @Column(name = "tb02_tutorial_visto", columnDefinition = "boolean not null default false")
+    private boolean tutorialVisto;
+
     @Column(name = "tb02_id_clinica", nullable = false)
     private Integer idClinica;
 
@@ -132,5 +135,13 @@ public class Fisioterapeuta {
 
     public void setLocalidade(String localidade) {
         this.localidade = localidade;
+    }
+
+    public boolean isTutorialVisto() {
+        return tutorialVisto;
+    }
+
+    public void setTutorialVisto(boolean tutorialVisto) {
+        this.tutorialVisto = tutorialVisto;
     }
 }
