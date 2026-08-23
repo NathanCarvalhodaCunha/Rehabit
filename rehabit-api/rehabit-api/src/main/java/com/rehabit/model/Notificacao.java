@@ -19,7 +19,7 @@ public class Notificacao {
     @Column(name = "tb07_tipo", nullable = false)
     private String tipo;
 
-    @Column(name = "tb07_mensagem", nullable = false)
+    @Column(name = "tb07_mensagem", nullable = false, length = 500)
     private String mensagem;
 
     @Column(name = "tb07_lida", nullable = false)
