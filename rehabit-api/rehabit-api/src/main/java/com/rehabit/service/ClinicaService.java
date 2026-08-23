@@ -12,6 +12,7 @@ import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
+import com.rehabit.security.PosseChecker;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,14 +48,16 @@ public class ClinicaService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public ClinicaPerfilDTO buscarPerfil(Integer id) {
+    public ClinicaPerfilDTO buscarPerfil(Integer id, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(id, usuarioId, usuarioTipo);
         Clinica clinica = clinicaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
         return paraDTO(clinica);
     }
 
     @Transactional
-    public ClinicaPerfilDTO atualizar(Integer id, ClinicaUpdateDTO dados) {
+    public ClinicaPerfilDTO atualizar(Integer id, ClinicaUpdateDTO dados, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(id, usuarioId, usuarioTipo);
         Clinica clinica = clinicaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
 
