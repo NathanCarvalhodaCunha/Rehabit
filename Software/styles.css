@@ -1306,3 +1306,70 @@ button.form-avatar {
     font-size: 14px;
   }
 }
+
+/* ---------- Notificações (sino na sidebar) ---------- */
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  margin-bottom: 24px;
+  transition: background 0.15s, color 0.15s;
+}
+.notif-bell:hover { background: #F3F4F6; color: var(--ink-strong); }
+.notif-bell:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(21,101,216,.3); }
+.notif-bell svg { width: 22px; height: 22px; }
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #DC2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.notif-badge.is-hidden { display: none; }
+
+.notif-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  width: 320px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card-hover);
+  z-index: 20;
+  padding: 8px;
+}
+.notif-dropdown.is-hidden { display: none; }
+.notif-empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+.notif-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.notif-item:not(:last-child) { border-bottom: 1px solid var(--hairline); }
+.notif-item .msg { font-size: 14px; color: var(--ink-strong); font-weight: 600; line-height: 1.4; }
+.notif-item .quando { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+.notif-item.is-unread { background: rgba(21,101,216,.05); }
