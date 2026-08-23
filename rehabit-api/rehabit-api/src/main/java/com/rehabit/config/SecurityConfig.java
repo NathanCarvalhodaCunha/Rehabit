@@ -1,6 +1,7 @@
 package com.rehabit.config;
 
 import com.rehabit.security.JwtAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +25,20 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    // JwtAuthenticationFilter também é um @Component, então o Spring Boot o
+    // registraria automaticamente no container de servlets (fora da cadeia
+    // do Spring Security) além de já estar registrado explicitamente abaixo
+    // via addFilterBefore — o que rodaria a checagem duas vezes por
+    // requisição. Desabilita esse registro automático; a única execução
+    // válida é a de dentro do SecurityFilterChain.
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> desabilitarRegistroAutomatico(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registro = new FilterRegistrationBean<>(jwtAuthenticationFilter);
+        registro.setEnabled(false);
+        return registro;
     }
 
     // Autenticação e autorização de verdade são feitas pelo JwtAuthenticationFilter

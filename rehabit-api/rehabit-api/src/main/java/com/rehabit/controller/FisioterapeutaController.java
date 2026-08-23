@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/fisioterapeutas")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // ajuste para o(s) domínio(s) real(is) do front-end em produção
 public class FisioterapeutaController {
 
     private final FisioterapeutaService fisioterapeutaService;
@@ -26,6 +26,8 @@ public class FisioterapeutaController {
         this.fisioterapeutaService = fisioterapeutaService;
     }
 
+    // Endpoint usado pela instituição já logada para cadastrar um
+    // fisioterapeuta vinculado a ela (tela cadastrar-profissional.html).
     @PostMapping
     public ResponseEntity<AuthResponseDTO> cadastrar(@Valid @RequestBody FisioterapeutaCreateDTO dados,
                                                         HttpServletRequest request) {

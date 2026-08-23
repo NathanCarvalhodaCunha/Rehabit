@@ -38,7 +38,7 @@ public class SessaoService {
         sessao.setDataSessao(dados.getData());
         sessao.setHoraSessao(LocalTime.now().withNano(0));
         sessao.setDuracao(dados.getDuracao());
-        sessao.setIdFisioterapeuta(dados.getIdFisioterapeuta());
+        sessao.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
         sessao.setIdPaciente(paciente.getId());
         Sessao sessaoSalva = sessaoRepository.save(sessao);
 

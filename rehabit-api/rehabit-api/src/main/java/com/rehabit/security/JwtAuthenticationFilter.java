@@ -53,6 +53,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Compara o path bruto da requisição contra os caminhos públicos. Isso é
+     * seguro porque o Spring Security usa StrictHttpFirewall por padrão
+     * (via FilterChainProxy), que rejeita URIs não-canônicas (com "..",
+     * double-encoding etc.) com 400 antes de qualquer filtro da cadeia
+     * rodar — sem essa garantia, um path como "/api/auth/../clinicas/5"
+     * poderia escapar desse startsWith().
+     */
     private boolean isPublico(HttpServletRequest request) {
         String path = request.getRequestURI();
         String metodo = request.getMethod();
