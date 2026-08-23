@@ -7,6 +7,7 @@ public class AuthResponseDTO {
     private String nome;
     private String email;
     private String foto;
+    private String token; // null na resposta de /auth/register (não faz login automático)
 
     public AuthResponseDTO() {
     }
@@ -17,6 +18,11 @@ public class AuthResponseDTO {
         this.nome = nome;
         this.email = email;
         this.foto = foto;
+    }
+
+    public AuthResponseDTO(Integer id, String tipo, String nome, String email, String foto, String token) {
+        this(id, tipo, nome, email, foto);
+        this.token = token;
     }
 
     public Integer getId() {
@@ -57,5 +63,13 @@ public class AuthResponseDTO {
 
     public void setFoto(String foto) {
         this.foto = foto;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

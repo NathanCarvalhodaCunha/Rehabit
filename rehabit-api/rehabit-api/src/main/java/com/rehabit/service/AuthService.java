@@ -9,6 +9,7 @@ import com.rehabit.model.Clinica;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
+import com.rehabit.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,13 +23,16 @@ public class AuthService {
     private final ClinicaRepository clinicaRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthService(ClinicaRepository clinicaRepository,
                         FisioterapeutaRepository fisioterapeutaRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        JwtService jwtService) {
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -54,15 +58,17 @@ public class AuthService {
         if (!passwordEncoder.matches(senhaInformada, clinica.getSenha())) {
             throw new AuthException("E-mail ou senha inválidos.", HttpStatus.UNAUTHORIZED);
         }
-        return new AuthResponseDTO(clinica.getId(), "CLINICA", clinica.getNome(), clinica.getEmail(), clinica.getFoto());
+        String token = jwtService.gerarToken(clinica.getId(), "CLINICA");
+        return new AuthResponseDTO(clinica.getId(), "CLINICA", clinica.getNome(), clinica.getEmail(), clinica.getFoto(), token);
     }
 
     private AuthResponseDTO autenticarFisioterapeuta(Fisioterapeuta fisioterapeuta, String senhaInformada) {
         if (!passwordEncoder.matches(senhaInformada, fisioterapeuta.getSenha())) {
             throw new AuthException("E-mail ou senha inválidos.", HttpStatus.UNAUTHORIZED);
         }
+        String token = jwtService.gerarToken(fisioterapeuta.getId(), "FISIOTERAPEUTA");
         return new AuthResponseDTO(fisioterapeuta.getId(), "FISIOTERAPEUTA",
-                fisioterapeuta.getNome(), fisioterapeuta.getEmail(), fisioterapeuta.getFoto());
+                fisioterapeuta.getNome(), fisioterapeuta.getEmail(), fisioterapeuta.getFoto(), token);
     }
 
     /**
