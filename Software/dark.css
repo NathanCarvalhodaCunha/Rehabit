@@ -252,3 +252,10 @@ body.dark .notif-item:not(:last-child) { border-color: #1B2647; }
 body.dark .notif-item .msg { color: #fff; }
 body.dark .notif-item .quando { color: var(--ink-muted); }
 body.dark .notif-item.is-unread { background: rgba(21,101,216,.14); }
+
+body.dark .tutorial-spotlight { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); }
+body.dark .tutorial-tooltip { background: #101A38; border: 1px solid #1B2647; box-shadow: none; }
+body.dark .tutorial-tooltip h4 { color: #fff; }
+body.dark .tutorial-tooltip p { color: var(--ink-muted); }
+body.dark .tutorial-skip { color: var(--ink-muted); }
+body.dark .tutorial-skip:hover { color: #fff; }
