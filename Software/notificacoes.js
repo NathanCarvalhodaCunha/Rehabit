@@ -67,7 +67,9 @@
     var badge = bell.querySelector("[data-notif-badge]");
     var naoLidas = 0;
 
-    fetch(API_BASE_URL + "/notificacoes?idClinica=" + sessao.id)
+    fetch(API_BASE_URL + "/notificacoes?idClinica=" + sessao.id, {
+      headers: { Authorization: "Bearer " + sessao.token },
+    })
       .then(function (r) { return r.json(); })
       .then(function (notificacoes) {
         naoLidas = notificacoes.filter(function (n) { return !n.lida; }).length;
@@ -96,7 +98,10 @@
         });
         fetch(API_BASE_URL + "/notificacoes/marcar-lidas", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + sessao.token,
+          },
           body: JSON.stringify({ idClinica: sessao.id }),
         }).catch(function () {});
       }
