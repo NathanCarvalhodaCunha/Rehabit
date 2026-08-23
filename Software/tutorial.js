@@ -1,6 +1,9 @@
 // Rehabit — tutorial interativo no primeiro acesso.
 // Roda só em instituicao.html/profissional.html (e variantes -escuro):
 // destaca elementos já existentes da sidebar, sem editar as outras páginas.
+// O passo ".notif-bell" depende do notificacoes.js já ter rodado e criado
+// o elemento do sino — o <script> dele precisa carregar antes do tutorial.js
+// nessas páginas (ordem já correta hoje; não inverter).
 (function () {
   "use strict";
 
@@ -25,7 +28,7 @@
   function passosPara(tipo) {
     var passos = [
       {
-        seletor: '.nav a[href*="dispositivo"]',
+        seletor: '.nav a[href*="dispositivo"], .mobile-bottomnav a[href*="dispositivo"]',
         titulo: "Dispositivo",
         texto: "Acompanhe as medições do goniômetro aqui.",
       },
@@ -49,7 +52,7 @@
       });
     }
     passos.push({
-      seletor: '.nav a[href*="configuracoes"]',
+      seletor: '.nav a[href*="configuracoes"], .mobile-bottomnav a[href*="configuracoes"]',
       titulo: "Configurações",
       texto: "Personalize o tema e mais aqui.",
     });
@@ -58,6 +61,10 @@
 
   function marcarVistoNoServidor(sessao) {
     var caminho = sessao.tipo === "CLINICA" ? "/clinicas/" : "/fisioterapeutas/";
+    // Falha silenciosa proposital: o localStorage já foi atualizado, então a sessão
+    // atual segue correta; se essa chamada falhar, o próximo login vai buscar o valor
+    // ainda "false" no servidor e o tutorial reaparece — tradeoff aceito em vez de
+    // bloquear a UI numa chamada de rede.
     fetch(API_BASE_URL + caminho + sessao.id + "/tutorial-visto", { method: "PUT" }).catch(function () {});
   }
 
