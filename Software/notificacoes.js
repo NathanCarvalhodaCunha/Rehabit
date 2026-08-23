@@ -5,6 +5,12 @@
 (function () {
   "use strict";
 
+  function escaparHtml(texto) {
+    var div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
+  }
+
   function tempoRelativo(isoDateTime) {
     var diffMs = Date.now() - new Date(isoDateTime).getTime();
     var minutos = Math.round(diffMs / 60000);
@@ -24,7 +30,7 @@
       .map(function (n) {
         return (
           '<div class="notif-item' + (n.lida ? "" : " is-unread") + '">' +
-          '<div class="msg">' + n.mensagem + "</div>" +
+          '<div class="msg">' + escaparHtml(n.mensagem) + "</div>" +
           '<div class="quando">' + tempoRelativo(n.criadaEm) + "</div>" +
           "</div>"
         );
