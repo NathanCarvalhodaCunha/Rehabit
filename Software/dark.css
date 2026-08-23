@@ -33,9 +33,14 @@ body.dark .settings-sub { color: var(--ink-muted); }
 body.dark .settings-panel { border-color: #1B2647; }
 body.dark .settings-icon-brand,
 body.dark .settings-icon-plain { background: rgba(21,101,216,.16); color: #2F80FF; }
+body.dark .settings-row-link:hover .settings-icon,
+body.dark .settings-toggle:hover .settings-icon { background: rgba(21,101,216,.3); }
+body.dark .settings-row-link:hover .settings-title { color: #2F80FF; }
 body.dark .settings-check { color: var(--ink-muted); }
 body.dark .settings-check .box { background: #26306B; border-color: #26306B; }
 body.dark .chev { color: var(--ink-muted); }
+body.dark .settings-row-link:hover .chev,
+body.dark .settings-toggle:hover .chev { color: #2F80FF; }
 
 body.dark .mobile-bottomnav {
   background: #0A1330;
@@ -167,6 +172,7 @@ body.dark .access-card .s { color: var(--ink-muted); }
 /* Home do profissional (escuro) */
 body.dark .pat-columns { color: var(--ink-muted); border-color: #1B2647; }
 body.dark .pat-item { border-color: #1B2647; }
+body.dark .pat-item:hover { background: rgba(255,255,255,.04); }
 body.dark .pat-name { color: #fff; }
 body.dark .pat-date { color: #fff; }
 body.dark .pat-meta-m { color: var(--ink-muted); }
