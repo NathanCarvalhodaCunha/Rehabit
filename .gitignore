@@ -26,3 +26,12 @@ Thumbs.db
 
 # Local git worktrees (superpowers:using-git-worktrees)
 .worktrees/
+
+# Internal planning docs, QA screenshots and academic materials —
+# kept locally for the TCC, not part of the published software repo.
+docs/superpowers/
+output/
+Fichamentos/
+API/
+Plano_de_projeto_Rehabit_v6.pdf
+goniometro.jpg.jpeg
