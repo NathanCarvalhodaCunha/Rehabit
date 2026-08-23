@@ -7,16 +7,18 @@ public class AuthResponseDTO {
     private String nome;
     private String email;
     private String foto;
+    private boolean tutorialVisto;
 
     public AuthResponseDTO() {
     }
 
-    public AuthResponseDTO(Integer id, String tipo, String nome, String email, String foto) {
+    public AuthResponseDTO(Integer id, String tipo, String nome, String email, String foto, boolean tutorialVisto) {
         this.id = id;
         this.tipo = tipo;
         this.nome = nome;
         this.email = email;
         this.foto = foto;
+        this.tutorialVisto = tutorialVisto;
     }
 
     public Integer getId() {
@@ -57,5 +59,13 @@ public class AuthResponseDTO {
 
     public void setFoto(String foto) {
         this.foto = foto;
+    }
+
+    public boolean isTutorialVisto() {
+        return tutorialVisto;
+    }
+
+    public void setTutorialVisto(boolean tutorialVisto) {
+        this.tutorialVisto = tutorialVisto;
     }
 }

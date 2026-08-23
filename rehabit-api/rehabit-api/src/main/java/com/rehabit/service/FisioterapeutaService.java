@@ -77,7 +77,8 @@ public class FisioterapeutaService {
         fisioterapeuta.setFoto(vazioParaNulo(dados.getFoto()));
 
         Fisioterapeuta salvo = fisioterapeutaRepository.save(fisioterapeuta);
-        return new AuthResponseDTO(salvo.getId(), "FISIOTERAPEUTA", salvo.getNome(), salvo.getEmail(), salvo.getFoto());
+        return new AuthResponseDTO(salvo.getId(), "FISIOTERAPEUTA", salvo.getNome(), salvo.getEmail(),
+                salvo.getFoto(), salvo.isTutorialVisto());
     }
 
     private String vazioParaNulo(String valor) {
