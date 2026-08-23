@@ -7,6 +7,7 @@ import com.rehabit.dto.FisioterapeutaResumoDTO;
 import com.rehabit.dto.FisioterapeutaUpdateDTO;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Fisioterapeuta;
+import com.rehabit.security.PosseChecker;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.ClinicaRepository;
@@ -50,7 +51,8 @@ public class FisioterapeutaService {
     }
 
     @Transactional
-    public AuthResponseDTO cadastrar(FisioterapeutaCreateDTO dados) {
+    public AuthResponseDTO cadastrar(FisioterapeutaCreateDTO dados, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(dados.getIdClinica(), usuarioId, usuarioTipo);
         if (!clinicaRepository.existsById(dados.getIdClinica())) {
             throw new AuthException("Instituição não encontrada.", HttpStatus.BAD_REQUEST);
         }
@@ -84,23 +86,26 @@ public class FisioterapeutaService {
         return (valor == null || valor.isBlank()) ? null : valor.trim();
     }
 
-    public List<FisioterapeutaResumoDTO> listarPorClinica(Integer idClinica) {
+    public List<FisioterapeutaResumoDTO> listarPorClinica(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
         return fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(idClinica).stream()
                 .map(f -> new FisioterapeutaResumoDTO(f.getId(), f.getNome(), f.getEspecialidade(), f.getFoto(),
                         pacienteRepository.countByIdFisioterapeutaAndStatus(f.getId(), "Ativo")))
                 .collect(Collectors.toList());
     }
 
-    public FisioterapeutaPerfilDTO buscarPerfil(Integer id) {
+    public FisioterapeutaPerfilDTO buscarPerfil(Integer id, Integer usuarioId, String usuarioTipo) {
         Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
         return paraPerfilDTO(fisioterapeuta);
     }
 
     @Transactional
-    public FisioterapeutaPerfilDTO atualizar(Integer id, FisioterapeutaUpdateDTO dados) {
+    public FisioterapeutaPerfilDTO atualizar(Integer id, FisioterapeutaUpdateDTO dados, Integer usuarioId, String usuarioTipo) {
         Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
 
         if (!fisioterapeuta.getEmail().equalsIgnoreCase(dados.getEmail())
                 && (fisioterapeutaRepository.existsByEmail(dados.getEmail())
