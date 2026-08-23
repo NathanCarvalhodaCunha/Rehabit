@@ -135,6 +135,14 @@ public class FisioterapeutaService {
         return paraPerfilDTO(fisioterapeutaRepository.save(fisioterapeuta));
     }
 
+    @Transactional
+    public void marcarTutorialVisto(Integer id) {
+        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
+        fisioterapeuta.setTutorialVisto(true);
+        fisioterapeutaRepository.save(fisioterapeuta);
+    }
+
     private FisioterapeutaPerfilDTO paraPerfilDTO(Fisioterapeuta f) {
         List<Sessao> sessoes = sessaoRepository.findByIdFisioterapeuta(f.getId());
 

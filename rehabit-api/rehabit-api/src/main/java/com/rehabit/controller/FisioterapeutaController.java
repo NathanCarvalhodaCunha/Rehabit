@@ -47,4 +47,10 @@ public class FisioterapeutaController {
                                                                @Valid @RequestBody FisioterapeutaUpdateDTO dados) {
         return ResponseEntity.ok(fisioterapeutaService.atualizar(id, dados));
     }
+
+    @PutMapping("/{id}/tutorial-visto")
+    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id) {
+        fisioterapeutaService.marcarTutorialVisto(id);
+        return ResponseEntity.ok().build();
+    }
 }
