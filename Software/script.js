@@ -277,3 +277,13 @@ if (cadastrarProfissionalForm) {
     if (destino !== atual) window.location.href = destino;
   });
 })();
+
+// Configurações — expande/recolhe as seções (ex.: "Preferências").
+(function configurarAccordions() {
+  document.querySelectorAll(".settings-toggle").forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const expandido = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", String(!expandido));
+    });
+  });
+})();

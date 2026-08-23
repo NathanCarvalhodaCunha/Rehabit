@@ -22,6 +22,7 @@ body.dark .field input {
   border-color: var(--dark-field);
 }
 body.dark .field input::placeholder { color: rgba(154,164,189,.7); }
+body.dark .field input:hover { border-color: #2B3A6B; }
 body.dark .field input:focus {
   border-color: var(--brand);
   box-shadow: 0 0 0 4px rgba(21,101,216,.25);
