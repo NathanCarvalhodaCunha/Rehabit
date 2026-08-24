@@ -1,6 +1,9 @@
 // Rehabit — área logada (Software)
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL =
+  location.protocol === "file:"
+    ? "http://localhost:8080/api"
+    : "https://rehabit-api.onrender.com/api";
 window.API_BASE_URL = API_BASE_URL;
 
 function getSessao() {
@@ -87,6 +90,7 @@ async function apiPut(caminho, corpo) {
 
 function urlFoto(caminhoFoto) {
   if (!caminhoFoto) return null;
+  if (caminhoFoto.startsWith("http")) return caminhoFoto;
   return API_BASE_URL.replace(/\/api$/, "") + caminhoFoto;
 }
 
