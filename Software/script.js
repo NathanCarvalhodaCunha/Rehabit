@@ -1,7 +1,7 @@
 // Rehabit — área logada (Software)
 
 const API_BASE_URL =
-  location.protocol === "file:"
+  location.protocol === "file:" || location.hostname === "localhost"
     ? "http://localhost:8080/api"
     : "https://rehabit-api.onrender.com/api";
 window.API_BASE_URL = API_BASE_URL;
@@ -107,8 +107,7 @@ function urlFoto(caminhoFoto) {
 (function aplicarAvatarSessao() {
   const sessao = getSessao();
   if (!sessao || !sessao.foto) return;
-  const origem = API_BASE_URL.replace(/\/api$/, "");
-  const url = origem + sessao.foto;
+  const url = urlFoto(sessao.foto);
   document.querySelectorAll(".inst-avatar, .mobile-avatar, .avatar").forEach((el) => {
     el.style.backgroundImage = `url("${url}")`;
     el.style.backgroundSize = "cover";

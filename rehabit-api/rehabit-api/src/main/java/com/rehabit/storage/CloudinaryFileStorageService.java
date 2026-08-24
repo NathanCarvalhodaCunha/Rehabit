@@ -3,6 +3,8 @@ package com.rehabit.storage;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.rehabit.exception.AuthException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ import java.util.Map;
 @Profile("cloud")
 public class CloudinaryFileStorageService implements FileStorageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CloudinaryFileStorageService.class);
+
     private final Cloudinary cloudinary;
 
     public CloudinaryFileStorageService() {
@@ -22,14 +26,23 @@ public class CloudinaryFileStorageService implements FileStorageService {
         // CLOUDINARY_URL sozinho (formato
         // cloudinary://<api_key>:<api_secret>@<cloud_name>).
         this.cloudinary = new Cloudinary();
+        if (cloudinary.config.apiKey == null) {
+            throw new IllegalStateException(
+                    "Variável de ambiente CLOUDINARY_URL não configurada (formato cloudinary://<api_key>:<api_secret>@<cloud_name>).");
+        }
     }
 
     @Override
     public String salvar(MultipartFile arquivo) {
         try {
             Map<?, ?> resultado = cloudinary.uploader().upload(arquivo.getBytes(), ObjectUtils.emptyMap());
-            return (String) resultado.get("secure_url");
+            String url = (String) resultado.get("secure_url");
+            if (url == null) {
+                throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return url;
         } catch (IOException ex) {
+            logger.warn("Falha ao enviar arquivo para o Cloudinary", ex);
             throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -37,7 +37,7 @@ if (registerForm) {
 // Rehabit Auth — vanilla JS mirroring the React behavior
 
 const API_BASE_URL =
-  location.protocol === "file:"
+  location.protocol === "file:" || location.hostname === "localhost"
     ? "http://localhost:8080/api"
     : "https://rehabit-api.onrender.com/api";
 // Tornar acessível globalmente para outros scripts
