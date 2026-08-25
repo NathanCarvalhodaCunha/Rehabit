@@ -65,7 +65,10 @@
     // atual segue correta; se essa chamada falhar, o próximo login vai buscar o valor
     // ainda "false" no servidor e o tutorial reaparece — tradeoff aceito em vez de
     // bloquear a UI numa chamada de rede.
-    fetch(API_BASE_URL + caminho + sessao.id + "/tutorial-visto", { method: "PUT" }).catch(function () {});
+    fetch(API_BASE_URL + caminho + sessao.id + "/tutorial-visto", {
+      method: "PUT",
+      headers: { Authorization: "Bearer " + sessao.token },
+    }).catch(function () {});
   }
 
   function iniciar() {
