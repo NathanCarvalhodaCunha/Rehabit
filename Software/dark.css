@@ -259,3 +259,10 @@ body.dark .tutorial-tooltip h4 { color: #fff; }
 body.dark .tutorial-tooltip p { color: var(--ink-muted); }
 body.dark .tutorial-skip { color: var(--ink-muted); }
 body.dark .tutorial-skip:hover { color: #fff; }
+
+/* Painel de indicadores e calendário no tema escuro */
+body.dark .cal-nav button { background: #101A38; border-color: #1B2647; color: #fff; }
+body.dark .cal-nav button:hover { background: #1B2647; }
+body.dark .cal-dia { color: #fff; }
+body.dark .cal-dia:hover:not(.is-vazio) { background: #1B2647; }
+body.dark .cal-dia.is-selecionado { color: #fff; }

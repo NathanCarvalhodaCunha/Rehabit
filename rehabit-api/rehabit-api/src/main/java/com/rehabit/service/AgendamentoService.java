@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,6 +66,36 @@ public class AgendamentoService {
                         idFisioterapeuta, LocalDate.now())
                 .stream()
                 .map(a -> paraDTO(a, nomeDoPaciente(a.getIdPaciente())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Agenda da clínica inteira, somando todos os seus profissionais.
+     * {@code apenasFuturos} separa o card "Próximas consultas" da tela de
+     * histórico, que precisa também do que já passou.
+     */
+    public List<AgendamentoDTO> listarDaClinica(Integer idClinica, boolean apenasFuturos,
+                                                 Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
+
+        List<Fisioterapeuta> profissionais = fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(idClinica);
+        if (profissionais.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, String> nomePorId = profissionais.stream()
+                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNome));
+        List<Integer> ids = new ArrayList<>(nomePorId.keySet());
+
+        List<Agendamento> agendamentos = apenasFuturos
+                ? agendamentoRepository
+                        .findByIdFisioterapeutaInAndDataAgendamentoBetweenOrderByDataAgendamentoAscHoraAgendamentoAsc(
+                                ids, LocalDate.now(), LocalDate.now().plusYears(5))
+                : agendamentoRepository.findByIdFisioterapeutaInOrderByDataAgendamentoDescHoraAgendamentoDesc(ids);
+
+        return agendamentos.stream()
+                .map(a -> new AgendamentoDTO(a.getId(), a.getDataAgendamento(), a.getHoraAgendamento(),
+                        a.getObservacao(), a.getIdPaciente(), nomeDoPaciente(a.getIdPaciente()),
+                        nomePorId.get(a.getIdFisioterapeuta())))
                 .collect(Collectors.toList());
     }
 

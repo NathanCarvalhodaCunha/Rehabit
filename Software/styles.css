@@ -105,6 +105,30 @@ button { font-family: inherit; cursor: pointer; }
   width: 100%;
 }
 
+/* ---------- Layout de duas colunas (só desktop largo) ----------
+   Home e Agenda empilhavam tudo numa coluna de ~700px, deixando metade
+   da tela vazia em monitor grande. Acima de 1200px o conteúdo passa a
+   ocupar duas colunas; abaixo disso continua empilhado como antes. */
+.page-grid { display: block; }
+.page-grid > .col-side { margin-top: 22px; }
+
+@media (min-width: 1200px) {
+  .main { max-width: 1500px; }
+  .page-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 26px;
+    align-items: start;
+  }
+  .page-grid > .col-side { margin-top: 0; position: sticky; top: 24px; }
+  /* Dentro do grid o cartão de formulário usa a coluna inteira. */
+  .page-grid .form-card { max-width: none; }
+}
+
+@media (min-width: 1600px) {
+  .page-grid { grid-template-columns: minmax(0, 1fr) 460px; }
+}
+
 .profile-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1562,3 +1586,129 @@ button.form-avatar {
     margin: 0;
   }
 }
+
+/* ---------- Painel de indicadores (Home) ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi-card { padding: 18px 20px; }
+.kpi-rotulo {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.kpi-valor {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ink-strong);
+  line-height: 1.1;
+}
+.kpi-detalhe { margin: 6px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.kpi-detalhe.pos { color: var(--success); }
+.kpi-detalhe.neg { color: #E57373; }
+
+@media (max-width: 991px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi-card { padding: 14px 14px; }
+  .kpi-valor { font-size: 24px; }
+  .kpi-rotulo { font-size: 11.5px; }
+  .kpi-detalhe { font-size: 12px; }
+}
+
+/* ---------- Calendário da Agenda ---------- */
+.cal-card { padding: 18px 18px 20px; }
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.cal-mes { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); text-transform: capitalize; }
+.cal-nav { display: flex; gap: 6px; }
+.cal-nav button {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-strong);
+  transition: background .15s, border-color .15s;
+}
+.cal-nav button:hover { background: #F3F4F6; border-color: #D1D5DB; }
+.cal-nav svg { width: 16px; height: 16px; }
+
+.cal-semana, .cal-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-semana span {
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  padding-bottom: 6px;
+  text-transform: uppercase;
+}
+.cal-dia {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  transition: background .15s, border-color .15s;
+}
+.cal-dia:hover:not(.is-vazio) { background: #F3F4F6; }
+.cal-dia.is-vazio { visibility: hidden; cursor: default; }
+.cal-dia.is-hoje { border-color: var(--brand); color: var(--brand); font-weight: 800; }
+.cal-dia.is-selecionado { background: var(--brand); color: #fff; border-color: var(--brand); }
+.cal-dia.tem-consulta::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.cal-dia.is-selecionado.tem-consulta::after { background: #fff; }
+
+.cal-legenda {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cal-legenda i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand); display: inline-block;
+}
+.cal-acoes { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.cal-acoes .btn-outline { width: 100%; text-align: center; }
+
+/* Ações de exportação dentro de cada agendamento */
+.agenda-item .agenda-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--brand);
+}
+.agenda-item .agenda-export svg { width: 13px; height: 13px; }
+.agenda-item .agenda-export:hover { text-decoration: underline; }

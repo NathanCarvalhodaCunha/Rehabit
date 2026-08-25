@@ -64,14 +64,10 @@
         </div>
       </header>
 
-      <section class="card list-card agenda-home-card">
-        <div class="list-head">
-          <h2>Próximos agendamentos</h2>
-          <a href="./agenda-escuro.html" class="show-more">Ver agenda</a>
-        </div>
-        <ul class="agenda-list"></ul>
-      </section>
+      <div class="kpi-grid"></div>
 
+      <div class="page-grid">
+       <div class="col-main">
       <section class="card list-card">
         <div class="list-head desktop-only">
           <h2>Lista de pacientes</h2>
@@ -110,12 +106,24 @@
 
         <a href="#" class="show-more desktop-only" data-action="show-more">Mostrar mais</a>
       </section>
+       </div>
 
-      <section class="card register-pro-card desktop-only">
-        <h3>Cadastre um paciente</h3>
-        <p>Registre os dados de um paciente</p>
-        <button class="btn-primary" type="button" data-action="add-patient">Cadastrar paciente</button>
-      </section>
+       <div class="col-side">
+        <section class="card list-card agenda-home-card">
+          <div class="list-head">
+            <h2>Próximos agendamentos</h2>
+            <a href="./agenda-escuro.html" class="show-more">Ver agenda</a>
+          </div>
+          <ul class="agenda-list"></ul>
+        </section>
+
+        <section class="card register-pro-card desktop-only">
+          <h3>Cadastre um paciente</h3>
+          <p>Registre os dados de um paciente</p>
+          <button class="btn-primary" type="button" data-action="add-patient">Cadastrar paciente</button>
+        </section>
+       </div>
+      </div>
     </main>
 
     <button class="fab mobile-only" data-action="add-patient" aria-label="Adicionar paciente">
@@ -144,6 +152,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./tutorial.js"></script>
+  <script src="./pages/indicadores.js"></script>
   <script src="./pages/profissional.js"></script>
 </body>
 </html>

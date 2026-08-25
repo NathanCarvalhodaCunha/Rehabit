@@ -16,4 +16,6 @@ public interface PacienteRepository extends JpaRepository<Paciente, Integer> {
     long countByIdFisioterapeuta(Integer idFisioterapeuta);
 
     long countByIdClinica(Integer idClinica);
+
+    long countByIdClinicaAndStatus(Integer idClinica, String status);
 }

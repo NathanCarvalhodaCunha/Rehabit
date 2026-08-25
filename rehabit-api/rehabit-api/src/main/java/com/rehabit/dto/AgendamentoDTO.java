@@ -11,18 +11,33 @@ public class AgendamentoDTO {
     private String observacao;
     private Integer idPaciente;
     private String nomePaciente;
+    private String nomeFisioterapeuta;
 
     public AgendamentoDTO() {
     }
 
     public AgendamentoDTO(Integer id, LocalDate data, LocalTime hora, String observacao,
                            Integer idPaciente, String nomePaciente) {
+        this(id, data, hora, observacao, idPaciente, nomePaciente, null);
+    }
+
+    public AgendamentoDTO(Integer id, LocalDate data, LocalTime hora, String observacao,
+                           Integer idPaciente, String nomePaciente, String nomeFisioterapeuta) {
         this.id = id;
         this.data = data;
         this.hora = hora;
         this.observacao = observacao;
         this.idPaciente = idPaciente;
         this.nomePaciente = nomePaciente;
+        this.nomeFisioterapeuta = nomeFisioterapeuta;
+    }
+
+    public String getNomeFisioterapeuta() {
+        return nomeFisioterapeuta;
+    }
+
+    public void setNomeFisioterapeuta(String nomeFisioterapeuta) {
+        this.nomeFisioterapeuta = nomeFisioterapeuta;
     }
 
     public Integer getId() {

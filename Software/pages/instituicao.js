@@ -28,6 +28,45 @@
     if (item) window.location.href = `${paginaTema("perfil-profissional")}?id=${item.dataset.id}`;
   });
 
+  // Card lateral "Próximas consultas": a agenda somada de todos os
+  // profissionais da instituição.
+  (function carregarProximasConsultas() {
+    const agendaEl = document.querySelector(".agenda-list");
+    if (!agendaEl) return;
+
+    apiGet(`/agendamentos?idClinica=${sessao.id}`)
+      .then((agendamentos) => {
+        if (!agendamentos.length) {
+          agendaEl.innerHTML =
+            '<li style="padding:14px 4px;color:var(--ink-muted);">Nenhuma consulta agendada.</li>';
+          return;
+        }
+        agendaEl.innerHTML = agendamentos
+          .slice(0, 6)
+          .map(
+            (a) => `
+          <li class="agenda-item">
+            <div class="agenda-when">${formatarDataCurta(a.data)}<br/><span class="hora">${a.hora.slice(0, 5)}</span></div>
+            <div>
+              <div class="agenda-patient">${a.nomePaciente || "Paciente"}</div>
+              <div class="agenda-obs">${a.nomeFisioterapeuta || ""}</div>
+            </div>
+          </li>`
+          )
+          .join("");
+        if (typeof RehabitAnim !== "undefined") RehabitAnim.staggerList(agendaEl);
+      })
+      .catch(() => {
+        agendaEl.innerHTML =
+          '<li style="padding:14px 4px;color:var(--ink-muted);">Não foi possível carregar as consultas.</li>';
+      });
+
+    function formatarDataCurta(dataIso) {
+      const [ano, mes, dia] = dataIso.split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+  })();
+
   function ordenarFisioterapeutas(lista, criterio) {
     const copia = lista.slice();
     if (criterio === "Ordem alfabética") {

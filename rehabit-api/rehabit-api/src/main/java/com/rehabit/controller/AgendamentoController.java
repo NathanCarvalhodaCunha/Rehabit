@@ -30,11 +30,29 @@ public class AgendamentoController {
                 dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /**
+     * Aceita {@code idFisioterapeuta} (agenda de um profissional) ou
+     * {@code idClinica} (agenda somada da instituição). Com {@code idClinica},
+     * {@code apenasFuturos=false} inclui o que já passou.
+     */
     @GetMapping
-    public ResponseEntity<List<AgendamentoDTO>> listar(@RequestParam Integer idFisioterapeuta,
-                                                          HttpServletRequest request) {
-        return ResponseEntity.ok(agendamentoService.listarProximos(
-                idFisioterapeuta, AuthContext.id(request), AuthContext.tipo(request)));
+    public ResponseEntity<List<AgendamentoDTO>> listar(
+            @RequestParam(required = false) Integer idFisioterapeuta,
+            @RequestParam(required = false) Integer idClinica,
+            @RequestParam(required = false, defaultValue = "true") boolean apenasFuturos,
+            HttpServletRequest request) {
+        Integer usuarioId = AuthContext.id(request);
+        String usuarioTipo = AuthContext.tipo(request);
+
+        if (idClinica != null) {
+            return ResponseEntity.ok(
+                    agendamentoService.listarDaClinica(idClinica, apenasFuturos, usuarioId, usuarioTipo));
+        }
+        if (idFisioterapeuta == null) {
+            throw new com.rehabit.exception.AuthException(
+                    "Informe idFisioterapeuta ou idClinica.", HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok(agendamentoService.listarProximos(idFisioterapeuta, usuarioId, usuarioTipo));
     }
 
     @DeleteMapping("/{id}")
