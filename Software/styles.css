@@ -1758,3 +1758,65 @@ button.form-avatar {
   .settings-form .form-actions { justify-content: stretch; }
   .settings-form .form-actions .btn-primary { width: 100%; }
 }
+
+/* ---------- Tela de Consultas (visão da clínica) ---------- */
+.consultas-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.consultas-abas {
+  display: inline-flex;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: #fff;
+}
+.consultas-abas button {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-muted);
+  transition: background .15s, color .15s;
+}
+.consultas-abas button:hover { color: var(--ink-strong); }
+.consultas-abas button.is-ativa { background: var(--brand); color: #fff; }
+.consultas-filtros { display: flex; align-items: center; gap: 12px; }
+.consultas-contador { font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+
+.consultas-lista { list-style: none; margin: 0; padding: 0; }
+.consulta-item {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) minmax(0, 220px);
+  gap: 16px;
+  align-items: center;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+.consulta-item:last-child { border-bottom: none; }
+.consulta-quando { display: flex; flex-direction: column; gap: 2px; }
+.consulta-quando strong { font-size: 14.5px; font-weight: 800; color: var(--ink-strong); }
+.consulta-quando span { font-size: 13px; font-weight: 600; color: var(--brand); }
+.consulta-paciente { font-size: 15px; font-weight: 700; color: var(--ink-strong); }
+.consulta-profissional { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
+.consulta-extra {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+@media (max-width: 991px) {
+  .consultas-topo { flex-direction: column; align-items: stretch; }
+  .consultas-abas { width: 100%; }
+  .consultas-abas button { flex: 1; }
+  .consultas-filtros { justify-content: space-between; }
+  .consulta-item { grid-template-columns: 84px minmax(0, 1fr); }
+  .consulta-extra { grid-column: 1 / -1; text-align: left; }
+}

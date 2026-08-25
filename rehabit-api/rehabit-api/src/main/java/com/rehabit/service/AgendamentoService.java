@@ -9,6 +9,7 @@ import com.rehabit.model.Paciente;
 import com.rehabit.repository.AgendamentoRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.PacienteRepository;
+import com.rehabit.repository.SessaoRepository;
 import com.rehabit.security.PosseChecker;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,17 +30,20 @@ public class AgendamentoService {
     private final PacienteRepository pacienteRepository;
     private final PacienteService pacienteService;
     private final ConfiguracaoService configuracaoService;
+    private final SessaoRepository sessaoRepository;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository,
                                FisioterapeutaRepository fisioterapeutaRepository,
                                PacienteRepository pacienteRepository,
                                PacienteService pacienteService,
-                               ConfiguracaoService configuracaoService) {
+                               ConfiguracaoService configuracaoService,
+                               SessaoRepository sessaoRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
         this.pacienteService = pacienteService;
         this.configuracaoService = configuracaoService;
+        this.sessaoRepository = sessaoRepository;
     }
 
     @Transactional
@@ -101,6 +105,31 @@ public class AgendamentoService {
                 .map(a -> new AgendamentoDTO(a.getId(), a.getDataAgendamento(), a.getHoraAgendamento(),
                         a.getObservacao(), a.getIdPaciente(), nomeDoPaciente(a.getIdPaciente()),
                         nomePorId.get(a.getIdFisioterapeuta())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Sessões já realizadas na clínica inteira. Reaproveita o AgendamentoDTO:
+     * a tela de consultas mostra realizadas e agendadas lado a lado, com os
+     * mesmos campos (data, hora, paciente, profissional).
+     */
+    public List<AgendamentoDTO> listarRealizadasDaClinica(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
+
+        List<Fisioterapeuta> profissionais = fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(idClinica);
+        if (profissionais.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, String> nomePorId = profissionais.stream()
+                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNome));
+
+        return sessaoRepository
+                .findByIdFisioterapeutaInOrderByDataSessaoDescHoraSessaoDesc(new ArrayList<>(nomePorId.keySet()))
+                .stream()
+                .map(s -> new AgendamentoDTO(s.getId(), s.getDataSessao(), s.getHoraSessao(),
+                        s.getDuracao() != null ? s.getDuracao() + " min" : null,
+                        s.getIdPaciente(), nomeDoPaciente(s.getIdPaciente()),
+                        nomePorId.get(s.getIdFisioterapeuta())))
                 .collect(Collectors.toList());
     }
 

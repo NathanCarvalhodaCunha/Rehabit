@@ -268,3 +268,10 @@ body.dark .cal-dia:hover:not(.is-vazio) { background: #1B2647; }
 body.dark .cal-dia.is-selecionado { color: #fff; }
 body.dark .badge-status.alta { background: rgba(34,197,94,.16); color: #4ADE80; }
 body.dark .badge-status.inativo { background: rgba(152,162,188,.16); color: var(--ink-muted); }
+body.dark .consultas-abas { background: #101A38; border-color: #1B2647; }
+body.dark .consultas-abas button { color: var(--ink-muted); }
+body.dark .consultas-abas button:hover { color: #fff; }
+body.dark .consultas-abas button.is-ativa { background: var(--brand); color: #fff; }
+body.dark .consulta-item { border-color: #1B2647; }
+body.dark .consulta-quando strong, body.dark .consulta-paciente { color: #fff; }
+body.dark .consulta-quando span { color: #2F80FF; }

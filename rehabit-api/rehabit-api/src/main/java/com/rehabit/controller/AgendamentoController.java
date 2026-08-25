@@ -55,6 +55,14 @@ public class AgendamentoController {
         return ResponseEntity.ok(agendamentoService.listarProximos(idFisioterapeuta, usuarioId, usuarioTipo));
     }
 
+    /** Consultas já realizadas (sessões) de toda a clínica. */
+    @GetMapping("/realizadas")
+    public ResponseEntity<List<AgendamentoDTO>> listarRealizadas(@RequestParam Integer idClinica,
+                                                                    HttpServletRequest request) {
+        return ResponseEntity.ok(agendamentoService.listarRealizadasDaClinica(
+                idClinica, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelar(@PathVariable Integer id, HttpServletRequest request) {
         agendamentoService.cancelar(id, AuthContext.id(request), AuthContext.tipo(request));

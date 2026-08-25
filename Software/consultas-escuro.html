@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Instituição — Rehabit</title>
+  <title>Consultas — Rehabit</title>
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./dark.css" />
   <link rel="stylesheet" href="./loader.css" />
@@ -14,7 +14,7 @@
     <aside class="sidebar">
       <a href="#" class="logo"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
       <nav class="nav">
-        <a href="./instituicao-escuro.html" class="active">
+        <a href="./instituicao-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
           Home
         </a>
@@ -50,72 +50,30 @@
     </div>
 
     <main class="main">
-      <header class="inst-header">
-        <div class="inst-greeting">
-          <h1>Olá, CER Atibaia</h1>
-          <p>Sexta-feira, 07 de maio</p>
-        </div>
-        <div class="inst-user desktop-only">
-          <div class="inst-avatar" aria-hidden="true"></div>
-          <div class="inst-user-meta">
-            <span class="name">CER Atibaia</span>
-            <span class="role">Admnistrador</span>
-          </div>
-        </div>
+      <header class="page-header desktop-only">
+        <h1>Consultas</h1>
+        <p>Histórico e agenda de todos os profissionais da instituição</p>
       </header>
 
-      <div class="kpi-grid"></div>
-
-      <div class="page-grid">
-       <div class="col-main">
-      <section class="card list-card">
-        <div class="list-head desktop-only">
-          <h2>Lista de Fisioterapeutas</h2>
-          <div class="list-controls">
-            <input type="text" class="list-search" placeholder="" aria-label="Buscar" />
-            <div class="select-wrap">
-              <select class="list-filter">
-                <option>Fisioterapeutas</option>
-                <option>Ordem alfabética</option>
-                <option>Mais pacientes</option>
-              </select>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
+      <div class="consultas-topo">
+        <div class="consultas-abas">
+          <button type="button" data-aba="agendadas" class="is-ativa">Agendadas</button>
+          <button type="button" data-aba="realizadas">Realizadas</button>
+        </div>
+        <div class="consultas-filtros">
+          <span class="consultas-contador" data-contador></span>
+          <div class="select-wrap">
+            <select id="filtro-profissional" aria-label="Filtrar por profissional">
+              <option value="">Todos os profissionais</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
-
-        <div class="mobile-only">
-          <input type="text" class="list-search" placeholder="" aria-label="Buscar" />
-        </div>
-
-        <div class="list-columns desktop-only">
-          <span>Fisioterapeuta</span>
-          <span>Especialidade</span>
-          <span class="right">Pacientes Ativos</span>
-        </div>
-
-        <ul class="fisio-list"></ul>
-
-        <a href="#" class="show-more desktop-only" data-action="show-more">Mostrar mais</a>
-      </section>
-       </div>
-
-       <div class="col-side">
-        <section class="card list-card agenda-home-card">
-          <div class="list-head">
-            <h2>Próximas consultas</h2>
-            <a href="./consultas-escuro.html" class="show-more">Ver todas</a>
-          </div>
-          <ul class="agenda-list"></ul>
-        </section>
-
-        <section class="card register-pro-card desktop-only">
-          <h3>Cadastre um profissional</h3>
-          <p>Registre os dados de um profissional</p>
-          <button class="btn-primary" type="button" data-action="add-fisio">Cadastrar Profissional</button>
-        </section>
-       </div>
       </div>
+
+      <section class="card list-card">
+        <ul class="consultas-lista" data-consultas></ul>
+      </section>
     </main>
 
 
@@ -144,8 +102,8 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
-  <script src="./tutorial.js"></script>
-  <script src="./pages/indicadores.js"></script>
-  <script src="./pages/instituicao.js"></script>
+
+
+  <script src="./pages/consultas.js"></script>
 </body>
 </html>
