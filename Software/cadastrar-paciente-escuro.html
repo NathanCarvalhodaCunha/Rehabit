@@ -54,16 +54,17 @@
       </div>
 
       <div class="form-avatar-outside mobile-only">
-        <div class="form-avatar" aria-hidden="true"></div>
-        <button type="button" class="btn-outline-brand">Alterar foto</button>
+        <button type="button" class="form-avatar" data-avatar-picker aria-label="Escolher foto de perfil"></button>
+        <p class="caption">Foto de perfil</p>
       </div>
 
       <form id="cadastrarPacienteForm" class="card form-card">
-        <h3>Informações</h3>
+        <input type="file" id="pfoto" accept="image/*" hidden />
         <div class="form-split">
           <div class="form-avatar-col">
-            <div class="form-avatar" aria-hidden="true"></div>
-            <button type="button" class="btn-outline-brand">Alterar foto</button>
+            <h3 class="form-col-title">Informações</h3>
+            <p class="caption">Foto de perfil</p>
+            <button type="button" class="form-avatar" data-avatar-picker aria-label="Escolher foto de perfil"></button>
           </div>
           <div>
             <div class="field field-id">
@@ -117,6 +118,9 @@
       </a>
     </nav>
   </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="./toast.js"></script>
   <script src="./loader.js"></script>
   <script src="./script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>

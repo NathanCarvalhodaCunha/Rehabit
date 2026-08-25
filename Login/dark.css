@@ -40,6 +40,8 @@ body.dark .account-type button {
 body.dark .account-type button:hover { color: #fff; }
 body.dark .account-type button.active { background: var(--brand); color: #fff; }
 
+body.dark .rh-pwd-toggle:hover { color: #fff; }
+
 body.dark .footer-link { color: var(--ink-muted); }
 body.dark .footer-link a { color: var(--brand); }
 body.dark .footer-link a:hover { color: #4E8BEE; }

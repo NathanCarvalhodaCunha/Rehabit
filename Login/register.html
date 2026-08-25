@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Criar conta — Rehabit</title>
-  <meta name="description" content="Crie sua conta Rehabit como profissional ou instituição." />
+  <meta name="description" content="Crie sua conta Rehabit como instituição." />
   <meta property="og:title" content="Criar conta — Rehabit" />
-  <meta property="og:description" content="Crie sua conta Rehabit como profissional ou instituição." />
+  <meta property="og:description" content="Crie sua conta Rehabit como instituição." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="modal.css" />
   <link rel="stylesheet" href="loader.css" />
@@ -32,14 +32,6 @@
 
           <h1>Crie sua conta</h1>
           <p class="subtitle">Preencha os dados para começar</p>
-
-          <div class="account-type-wrap">
-            <p class="account-type-label">Criar conta como:</p>
-            <div class="account-type" role="tablist" aria-label="Tipo de conta">
-              <button type="button" role="tab" aria-selected="true"  class="active" data-type="profissional">Profissional</button>
-              <button type="button" role="tab" aria-selected="false"                data-type="instituicao">Instituição</button>
-            </div>
-          </div>
 
           <div class="fields after-account">
             <div class="field">
@@ -70,6 +62,10 @@
     </section>
   </main>
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="toast.js"></script>
+  <script src="password-toggle.js"></script>
   <script src="loader.js"></script>
   <script src="script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>

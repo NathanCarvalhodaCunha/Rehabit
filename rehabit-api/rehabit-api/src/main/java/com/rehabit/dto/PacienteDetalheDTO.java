@@ -17,6 +17,7 @@ public class PacienteDetalheDTO {
     private String status;
     private Integer idFisioterapeuta;
     private String nomeFisioterapeuta;
+    private String foto;
 
     public PacienteDetalheDTO() {
     }
@@ -24,7 +25,7 @@ public class PacienteDetalheDTO {
     public PacienteDetalheDTO(Integer id, String nome, String cpf, String telefone, String email,
                                LocalDate dataNascimento, Integer idade, String sexo,
                                LocalDate dataInicioTratamento, String situacao, String status,
-                               Integer idFisioterapeuta, String nomeFisioterapeuta) {
+                               Integer idFisioterapeuta, String nomeFisioterapeuta, String foto) {
         this.id = id;
         this.nome = nome;
         this.cpf = cpf;
@@ -38,6 +39,7 @@ public class PacienteDetalheDTO {
         this.status = status;
         this.idFisioterapeuta = idFisioterapeuta;
         this.nomeFisioterapeuta = nomeFisioterapeuta;
+        this.foto = foto;
     }
 
     public Integer getId() {
@@ -142,5 +144,13 @@ public class PacienteDetalheDTO {
 
     public void setNomeFisioterapeuta(String nomeFisioterapeuta) {
         this.nomeFisioterapeuta = nomeFisioterapeuta;
+    }
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 }

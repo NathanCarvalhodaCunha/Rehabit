@@ -19,9 +19,12 @@ function construirGraficoLinha(cartao, pontos) {
     return;
   }
   const cores = coresGrafico();
+  const wrap = document.createElement("div");
+  wrap.className = "chart-canvas-wrap";
   const canvas = document.createElement("canvas");
   canvas.className = "chart-canvas";
-  cartao.appendChild(canvas);
+  wrap.appendChild(canvas);
+  cartao.appendChild(wrap);
 
   new Chart(canvas, {
     type: "line",
@@ -68,9 +71,12 @@ function construirGraficoBarras(cartao, pontos) {
     return;
   }
   const cores = coresGrafico();
+  const wrap = document.createElement("div");
+  wrap.className = "chart-canvas-wrap";
   const canvas = document.createElement("canvas");
   canvas.className = "chart-canvas";
-  cartao.appendChild(canvas);
+  wrap.appendChild(canvas);
+  cartao.appendChild(wrap);
 
   new Chart(canvas, {
     type: "bar",
@@ -145,6 +151,16 @@ function formatarDataLonga(dataIso) {
       const situacaoTexto = paciente.situacao || "Sem situação registrada";
       const inicioTexto = paciente.dataInicioTratamento ? formatarDataLonga(paciente.dataInicioTratamento) : "-";
       const fisioTexto = paciente.nomeFisioterapeuta || "-";
+
+      const fotoPaciente = urlFoto(paciente.foto);
+      if (fotoPaciente) {
+        const avatarEl = header.querySelector(".avatar-lg");
+        if (avatarEl) {
+          avatarEl.style.backgroundImage = `url("${fotoPaciente}")`;
+          avatarEl.style.backgroundSize = "cover";
+          avatarEl.style.backgroundPosition = "center";
+        }
+      }
 
       header.querySelector("h1").textContent = paciente.nome;
       header.querySelector(".patient-meta.desktop-only").innerHTML =

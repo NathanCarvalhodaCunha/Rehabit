@@ -40,6 +40,9 @@ public class Paciente {
     @Column(name = "tb03_status", length = 50)
     private String status;
 
+    @Column(name = "tb03_foto_paciente", length = 255)
+    private String foto;
+
     @Column(name = "tb03_id_clinica", nullable = false)
     private Integer idClinica;
 
@@ -127,6 +130,14 @@ public class Paciente {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 
     public Integer getIdClinica() {

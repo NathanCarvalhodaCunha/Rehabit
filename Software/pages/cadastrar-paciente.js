@@ -4,7 +4,7 @@
 
   const sessao = getSessao();
   if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") {
-    alert("Apenas um profissional logado pode cadastrar pacientes.");
+    RehabitToast.erro("Apenas um profissional logado pode cadastrar pacientes.");
     return;
   }
 
@@ -18,7 +18,7 @@
     const situacao = document.getElementById("situacao").value.trim() || null;
 
     if (!nome || !cpf) {
-      alert("Preencha nome e CPF.");
+      RehabitToast.erro("Preencha nome e CPF.");
       return;
     }
 
@@ -28,18 +28,37 @@
     submitBtn.textContent = "Cadastrando...";
 
     try {
+      let foto = null;
+      if (arquivoFotoProfissional) {
+        const formData = new FormData();
+        formData.append("arquivo", arquivoFotoProfissional);
+        const uploadResponse = await fetch(`${API_BASE_URL}/uploads`, {
+          method: "POST",
+          body: formData,
+        });
+        const uploadDados = await uploadResponse.json().catch(() => ({}));
+        if (!uploadResponse.ok) {
+          RehabitToast.erro(uploadDados.mensagem || "Não foi possível enviar a foto de perfil.");
+          return;
+        }
+        foto = uploadDados.url;
+      }
+
       const paciente = await apiPost("/pacientes", {
         nome,
         cpf,
         dataNascimento,
         sexo,
         situacao,
+        foto,
         idFisioterapeuta: sessao.id,
       });
-      alert("Paciente cadastrado com sucesso.");
-      window.location.href = `${paginaTema("paciente")}?id=${paciente.id}`;
+      RehabitToast.sucesso("Paciente cadastrado com sucesso.");
+      setTimeout(() => {
+        window.location.href = `${paginaTema("paciente")}?id=${paciente.id}`;
+      }, 1200);
     } catch (err) {
-      alert(err.message);
+      RehabitToast.erro(err.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;

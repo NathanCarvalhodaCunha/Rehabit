@@ -19,6 +19,7 @@ public class PacienteCreateDTO {
     private String sexo;
     private LocalDate dataInicioTratamento;
     private String situacao;
+    private String foto;
 
     @NotNull(message = "O profissional responsável é obrigatório.")
     private Integer idFisioterapeuta;
@@ -88,6 +89,14 @@ public class PacienteCreateDTO {
 
     public void setSituacao(String situacao) {
         this.situacao = situacao;
+    }
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 
     public Integer getIdFisioterapeuta() {

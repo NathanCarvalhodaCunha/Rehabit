@@ -43,18 +43,6 @@ const API_BASE_URL =
 // Tornar acessível globalmente para outros scripts
 window.API_BASE_URL = API_BASE_URL;
 
-// Account type selector (register page)
-document.querySelectorAll('.account-type button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.account-type button').forEach((b) => {
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected', 'true');
-  });
-});
-
 // Login form — envia os dados para a API e redireciona conforme o tipo de conta
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -82,7 +70,7 @@ if (loginForm) {
       const dados = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        alert(dados.mensagem || 'E-mail ou senha inválidos.');
+        RehabitToast.erro(dados.mensagem || 'E-mail ou senha inválidos.');
         return;
       }
 
@@ -93,7 +81,7 @@ if (loginForm) {
         dados.tipo === 'CLINICA' ? `../Software/instituicao${sufixo}.html` : `../Software/profissional${sufixo}.html`;
       window.location.href = destino;
     } catch (err) {
-      alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      RehabitToast.erro('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
     } finally {
       RehabitLoader.hide();
       submitBtn.disabled = false;
@@ -117,11 +105,11 @@ if (esqueciSenhaForm) {
 
     if (!email || !documento || !novaSenha) return;
     if (novaSenha.length < 6) {
-      alert('A nova senha deve ter ao menos 6 caracteres.');
+      RehabitToast.erro('A nova senha deve ter ao menos 6 caracteres.');
       return;
     }
     if (novaSenha !== confirmarSenha) {
-      alert('As senhas não conferem.');
+      RehabitToast.erro('As senhas não conferem.');
       return;
     }
 
@@ -139,14 +127,16 @@ if (esqueciSenhaForm) {
 
       if (!response.ok) {
         const dados = await response.json().catch(() => ({}));
-        alert(dados.mensagem || 'Não foi possível redefinir sua senha.');
+        RehabitToast.erro(dados.mensagem || 'Não foi possível redefinir sua senha.');
         return;
       }
 
-      alert('Senha redefinida com sucesso. Faça login com a nova senha.');
-      window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
+      RehabitToast.sucesso('Senha redefinida com sucesso. Faça login com a nova senha.');
+      setTimeout(() => {
+        window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
+      }, 1200);
     } catch (err) {
-      alert('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      RehabitToast.erro('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
     } finally {
       RehabitLoader.hide();
       submitBtn.disabled = false;

@@ -29,7 +29,7 @@
         avatarEl.style.backgroundPosition = "center";
       }
     })
-    .catch((err) => alert(err.message));
+    .catch((err) => RehabitToast.erro(err.message));
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -37,11 +37,11 @@
     const senhaAtual = document.getElementById("p-senha-atual").value;
     const novaSenha = document.getElementById("p-senha-nova").value;
     if (novaSenha && novaSenha.length < 6) {
-      alert("A nova senha deve ter ao menos 6 caracteres.");
+      RehabitToast.erro("A nova senha deve ter ao menos 6 caracteres.");
       return;
     }
     if (novaSenha && !senhaAtual) {
-      alert("Informe a senha atual para trocar de senha.");
+      RehabitToast.erro("Informe a senha atual para trocar de senha.");
       return;
     }
 
@@ -72,10 +72,12 @@
         }))
       );
 
-      alert("Perfil atualizado com sucesso.");
-      window.location.href = paginaTema("perfil-profissional");
+      RehabitToast.sucesso("Perfil atualizado com sucesso.");
+      setTimeout(() => {
+        window.location.href = paginaTema("perfil-profissional");
+      }, 1200);
     } catch (err) {
-      alert(err.message);
+      RehabitToast.erro(err.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;

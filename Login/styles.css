@@ -140,6 +140,29 @@ h1 {
   box-shadow: 0 0 0 4px rgba(21,101,216,.15);
 }
 
+/* ---- Mostrar/ocultar senha ---- */
+.rh-pwd-wrap { position: relative; }
+.rh-pwd-wrap input { padding-right: 44px; }
+.rh-pwd-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.rh-pwd-toggle:hover { color: #000; }
+.rh-pwd-toggle svg { width: 20px; height: 20px; }
+
 /* ---- Primary button ---- */
 .btn-primary {
   margin-top: 32px;

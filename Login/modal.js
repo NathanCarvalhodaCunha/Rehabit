@@ -54,7 +54,7 @@
   var arquivoSelecionado = null;
 
   function render(tipo) {
-    var campos = CAMPOS[tipo] || CAMPOS.profissional;
+    var campos = CAMPOS[tipo] || CAMPOS.instituicao;
     fieldsEl.innerHTML = campos
       .map(function (c) {
         var input =
@@ -85,18 +85,27 @@
     avatarBtn.innerHTML = '<img alt="Foto de perfil" src="' + URL.createObjectURL(f) + '" />';
   });
 
-  overlay.querySelector('.rh-skip').addEventListener('click', close);
-  overlay.querySelector('.rh-submit').addEventListener('click', async function () {
+  // Tanto "Cadastrar" quanto "Pular" concluem o cadastro: os campos deste
+  // pop-up são todos opcionais (exceto CNPJ, exigido pela própria API), então
+  // "Pular" significa "cadastrar sem preencher esses extras", não "cancelar".
+  async function submeter() {
     var submitBtn = overlay.querySelector('.rh-submit');
+    var skipBtn = overlay.querySelector('.rh-skip');
     submitBtn.disabled = true;
+    skipBtn.disabled = true;
     var originalText = submitBtn.textContent;
     submitBtn.textContent = 'Cadastrando...';
 
+    function liberar() {
+      submitBtn.disabled = false;
+      skipBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+
     var mainForm = document.getElementById('registerForm');
     if (!mainForm) {
-      alert('Formulário não encontrado.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      RehabitToast.erro('Formulário não encontrado.');
+      liberar();
       return;
     }
 
@@ -106,15 +115,13 @@
     var confirm = (mainForm.querySelector('#confirm') && mainForm.querySelector('#confirm').value) || '';
 
     if (!name || !email || !senha) {
-      alert('Preencha nome, e-mail e senha.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      RehabitToast.erro('Preencha nome, e-mail e senha.');
+      liberar();
       return;
     }
     if (senha !== confirm) {
-      alert('Senhas não conferem.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      RehabitToast.erro('Senhas não conferem.');
+      liberar();
       return;
     }
 
@@ -124,13 +131,11 @@
       extras[id] = (el.value || '').trim();
     });
 
-    var ativo = document.querySelector('.account-type button.active');
-    var tipo = ativo ? ativo.getAttribute('data-type') : 'profissional';
+    var tipo = 'instituicao';
 
-    if (tipo === 'instituicao' && !extras.cnpj) {
-      alert('Informe o CNPJ da instituição.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+    if (!extras.cnpj) {
+      RehabitToast.erro('Informe o CNPJ da instituição.');
+      liberar();
       return;
     }
 
@@ -144,18 +149,16 @@
         var uploadRes = await fetch(base + '/uploads', { method: 'POST', body: formData });
         var uploadData = await uploadRes.json().catch(function () { return {}; });
         if (!uploadRes.ok) {
-          alert(uploadData.mensagem || 'Não foi possível enviar a foto de perfil.');
+          RehabitToast.erro(uploadData.mensagem || 'Não foi possível enviar a foto de perfil.');
           RehabitLoader.hide();
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
+          liberar();
           return;
         }
         foto = uploadData.url;
       } catch (err) {
-        alert('Não foi possível enviar a foto de perfil. Verifique sua conexão.');
+        RehabitToast.erro('Não foi possível enviar a foto de perfil. Verifique sua conexão.');
         RehabitLoader.hide();
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        liberar();
         return;
       }
     }
@@ -173,20 +176,24 @@
       });
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok) {
-        alert(data.mensagem || 'Erro ao cadastrar (status ' + res.status + ').');
+        RehabitToast.erro(data.mensagem || 'Erro ao cadastrar (status ' + res.status + ').');
         return;
       }
-      alert('Cadastro realizado com sucesso.');
+      RehabitToast.sucesso('Cadastro realizado com sucesso.');
       close();
-      window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
+      setTimeout(function () {
+        window.location.href = document.body.classList.contains('dark') ? 'login-escuro.html' : 'login.html';
+      }, 1200);
     } catch (err) {
-      alert('Não foi possível conectar ao servidor. Verifique sua conexão.');
+      RehabitToast.erro('Não foi possível conectar ao servidor. Verifique sua conexão.');
     } finally {
       RehabitLoader.hide();
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      liberar();
     }
-  });
+  }
+
+  overlay.querySelector('.rh-skip').addEventListener('click', submeter);
+  overlay.querySelector('.rh-submit').addEventListener('click', submeter);
   overlay.addEventListener('mousedown', function (e) {
     if (e.target === overlay) close();
   });
@@ -201,8 +208,7 @@
   if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var ativo = document.querySelector('.account-type button.active');
-      open(ativo ? ativo.getAttribute('data-type') : 'profissional');
+      open('instituicao');
     });
   }
 })();

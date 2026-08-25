@@ -89,7 +89,7 @@
     const amplitude = document.getElementById("s-amp").value;
 
     if (!data || !duracao) {
-      alert("Preencha ao menos a data e a duração.");
+      RehabitToast.erro("Preencha ao menos a data e a duração.");
       return;
     }
 
@@ -107,9 +107,9 @@
       });
       form.reset();
       await carregarPacienteEHistorico();
-      alert("Sessão cadastrada com sucesso.");
+      RehabitToast.sucesso("Sessão cadastrada com sucesso.");
     } catch (err) {
-      alert(err.message);
+      RehabitToast.erro(err.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;

@@ -61,5 +61,5 @@
         if (labelEl && valores[i]) labelEl.textContent = valores[i].rotulo;
       });
     })
-    .catch((err) => alert(err.message));
+    .catch((err) => RehabitToast.erro(err.message));
 })();

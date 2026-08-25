@@ -7,16 +7,18 @@ public class PacienteResumoDTO {
     private String situacao;
     private String ultimaSessao;
     private String selo;
+    private String foto;
 
     public PacienteResumoDTO() {
     }
 
-    public PacienteResumoDTO(Integer id, String nome, String situacao, String ultimaSessao, String selo) {
+    public PacienteResumoDTO(Integer id, String nome, String situacao, String ultimaSessao, String selo, String foto) {
         this.id = id;
         this.nome = nome;
         this.situacao = situacao;
         this.ultimaSessao = ultimaSessao;
         this.selo = selo;
+        this.foto = foto;
     }
 
     public Integer getId() {
@@ -57,5 +59,13 @@ public class PacienteResumoDTO {
 
     public void setSelo(String selo) {
         this.selo = selo;
+    }
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 }

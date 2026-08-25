@@ -197,7 +197,7 @@ if (cadastrarProfissionalForm) {
 
     const sessao = getSessao();
     if (!sessao || sessao.tipo !== "CLINICA") {
-      alert("Apenas uma instituição logada pode cadastrar profissionais.");
+      RehabitToast.erro("Apenas uma instituição logada pode cadastrar profissionais.");
       return;
     }
 
@@ -211,11 +211,11 @@ if (cadastrarProfissionalForm) {
     const descricao = document.getElementById("pdesc").value.trim();
 
     if (!coffito || !nome || !email || !senha) {
-      alert("Preencha COFFITO, nome, e-mail e senha.");
+      RehabitToast.erro("Preencha COFFITO, nome, e-mail e senha.");
       return;
     }
     if (senha.length < 6) {
-      alert("A senha deve ter ao menos 6 caracteres.");
+      RehabitToast.erro("A senha deve ter ao menos 6 caracteres.");
       return;
     }
 
@@ -236,7 +236,7 @@ if (cadastrarProfissionalForm) {
         });
         const uploadDados = await uploadResponse.json().catch(() => ({}));
         if (!uploadResponse.ok) {
-          alert(uploadDados.mensagem || "Não foi possível enviar a foto de perfil.");
+          RehabitToast.erro(uploadDados.mensagem || "Não foi possível enviar a foto de perfil.");
           return;
         }
         foto = uploadDados.url;
@@ -262,14 +262,16 @@ if (cadastrarProfissionalForm) {
       const dados = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        alert(dados.mensagem || "Não foi possível cadastrar o profissional.");
+        RehabitToast.erro(dados.mensagem || "Não foi possível cadastrar o profissional.");
         return;
       }
 
-      alert("Profissional cadastrado com sucesso.");
-      window.location.href = paginaTema("instituicao");
+      RehabitToast.sucesso("Profissional cadastrado com sucesso.");
+      setTimeout(() => {
+        window.location.href = paginaTema("instituicao");
+      }, 1200);
     } catch (err) {
-      alert("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
+      RehabitToast.erro("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
     } finally {
       RehabitLoader.hide();
       submitBtn.disabled = false;

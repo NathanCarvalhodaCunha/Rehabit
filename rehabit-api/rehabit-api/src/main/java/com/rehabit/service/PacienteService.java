@@ -66,6 +66,7 @@ public class PacienteService {
         paciente.setDataInicioTratamento(
                 dados.getDataInicioTratamento() != null ? dados.getDataInicioTratamento() : LocalDate.now());
         paciente.setSituacao(vazioParaNulo(dados.getSituacao()));
+        paciente.setFoto(vazioParaNulo(dados.getFoto()));
         paciente.setStatus("Ativo");
         paciente.setIdClinica(fisioterapeuta.getIdClinica());
         paciente.setIdFisioterapeuta(fisioterapeuta.getId());
@@ -107,7 +108,7 @@ public class PacienteService {
                 ? sessoes.get(0).getDataSessao().format(FORMATO_DATA)
                 : null;
         return new PacienteResumoDTO(paciente.getId(), paciente.getNome(), paciente.getSituacao(),
-                ultimaSessao, calcularSelo(sessoes));
+                ultimaSessao, calcularSelo(sessoes), paciente.getFoto());
     }
 
     private String calcularSelo(List<Sessao> sessoesRecentesPrimeiro) {
@@ -139,7 +140,7 @@ public class PacienteService {
                 : null;
         return new PacienteDetalheDTO(p.getId(), p.getNome(), p.getCpf(), p.getTelefone(), p.getEmail(),
                 p.getDataNascimento(), idade, p.getSexo(), p.getDataInicioTratamento(), p.getSituacao(),
-                p.getStatus(), p.getIdFisioterapeuta(), nomeFisioterapeuta);
+                p.getStatus(), p.getIdFisioterapeuta(), nomeFisioterapeuta, p.getFoto());
     }
 
     private String vazioParaNulo(String valor) {

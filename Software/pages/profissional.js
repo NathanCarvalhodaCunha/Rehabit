@@ -47,9 +47,13 @@
             ? `<span class="badge ${info.classe}">${info.texto}</span>`
             : `<span class="badge estavel">Sem sessões</span>`;
           const ultimaSessao = p.ultimaSessao || "-";
+          const fotoPaciente = urlFoto(p.foto);
+          const estiloAvatar = fotoPaciente
+            ? ` style="background-image:url('${fotoPaciente}');background-size:cover;background-position:center;"`
+            : "";
           return `
           <li class="pat-item" data-id="${p.id}" style="cursor:pointer;">
-            <div class="avatar-sm" aria-hidden="true"></div>
+            <div class="avatar-sm" aria-hidden="true"${estiloAvatar}></div>
             <div class="pat-name">${p.nome}</div>
             <div class="pat-meta-m mobile-only">Última sessão<br/>${ultimaSessao}</div>
             <div class="pat-date desktop-only">${ultimaSessao}</div>

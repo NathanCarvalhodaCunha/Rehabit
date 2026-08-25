@@ -58,7 +58,7 @@
           const goniometro = await apiPost("/goniometro/sincronizar", { idClinica });
           aplicar(goniometro);
         } catch (err) {
-          alert(err.message);
+          RehabitToast.erro(err.message);
         } finally {
           btn.disabled = false;
         }
@@ -66,6 +66,6 @@
     });
   }).catch((err) => {
     semDados();
-    alert(err.message);
+    RehabitToast.erro(err.message);
   });
 })();
