@@ -8,6 +8,9 @@
   document.querySelectorAll(".inst-greeting h1").forEach((el) => {
     el.textContent = `Olá, ${sessao.nome}`;
   });
+  document.querySelectorAll(".inst-greeting p").forEach((el) => {
+    el.textContent = dataAtualPorExtenso();
+  });
   document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
     el.textContent = sessao.nome;
   });
@@ -20,29 +23,94 @@
     });
   }
 
-  apiGet(`/fisioterapeutas?idClinica=${sessao.id}`)
-    .then((fisioterapeutas) => {
-      if (fisioterapeutas.length === 0) {
-        listaEl.innerHTML =
-          '<li style="padding:16px;color:var(--ink-muted);">Nenhum profissional cadastrado ainda.</li>';
-        return;
-      }
-      listaEl.innerHTML = fisioterapeutas
-        .map((f) => {
-          const foto = urlFoto(f.foto);
-          const estiloAvatar = foto
-            ? ` style="background-image:url('${foto}');background-size:cover;background-position:center;"`
-            : "";
-          return `
-          <li class="fisio-item">
+  listaEl.addEventListener("click", (e) => {
+    const item = e.target.closest(".fisio-item[data-id]");
+    if (item) window.location.href = `${paginaTema("perfil-profissional")}?id=${item.dataset.id}`;
+  });
+
+  function ordenarFisioterapeutas(lista, criterio) {
+    const copia = lista.slice();
+    if (criterio === "Ordem alfabética") {
+      copia.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    } else if (criterio === "Mais pacientes") {
+      copia.sort((a, b) => b.pacientesAtivos - a.pacientesAtivos);
+    }
+    return copia;
+  }
+
+  function renderizarFisioterapeutas(fisioterapeutas) {
+    if (fisioterapeutas.length === 0) {
+      listaEl.innerHTML =
+        '<li style="padding:16px;color:var(--ink-muted);">Nenhum profissional encontrado.</li>';
+      return;
+    }
+    listaEl.innerHTML = fisioterapeutas
+      .map((f) => {
+        const foto = urlFoto(f.foto);
+        const estiloAvatar = foto
+          ? ` style="background-image:url('${foto}');background-size:cover;background-position:center;"`
+          : "";
+        return `
+          <li class="fisio-item" data-id="${f.id}" style="cursor:pointer;">
             <div class="avatar-sm"${estiloAvatar} aria-hidden="true"></div>
             <div class="fisio-name">${f.nome}</div>
             <div class="fisio-spec">${f.especialidade || "Fisioterapeuta"}</div>
             <div class="fisio-count"><span class="num">${f.pacientesAtivos}</span><span class="lbl mobile-only"> pacientes ativos</span></div>
           </li>`;
-        })
-        .join("");
-      RehabitAnim.staggerList(listaEl);
+      })
+      .join("");
+    RehabitAnim.staggerList(listaEl);
+  }
+
+  let todosOsFisioterapeutas = [];
+
+  function aplicarFiltroEOrdenacao() {
+    const termo = (buscaAtual() || "").trim().toLowerCase();
+    const criterio = filtroAtual() || "Fisioterapeutas";
+    const filtrados = termo
+      ? todosOsFisioterapeutas.filter((f) => f.nome.toLowerCase().includes(termo))
+      : todosOsFisioterapeutas;
+    renderizarFisioterapeutas(ordenarFisioterapeutas(filtrados, criterio));
+  }
+
+  const camposBusca = Array.from(document.querySelectorAll(".list-search"));
+  const camposFiltro = Array.from(document.querySelectorAll(".list-filter"));
+
+  function buscaAtual() {
+    const ativo = camposBusca.find((el) => document.activeElement === el);
+    return (ativo || camposBusca[0] || {}).value;
+  }
+  function filtroAtual() {
+    const ativo = camposFiltro.find((el) => document.activeElement === el);
+    return (ativo || camposFiltro[0] || {}).value;
+  }
+
+  camposBusca.forEach((campo) => {
+    campo.addEventListener("input", () => {
+      camposBusca.forEach((outro) => {
+        if (outro !== campo) outro.value = campo.value;
+      });
+      aplicarFiltroEOrdenacao();
+    });
+  });
+  camposFiltro.forEach((campo) => {
+    campo.addEventListener("change", () => {
+      camposFiltro.forEach((outro) => {
+        if (outro !== campo) outro.value = campo.value;
+      });
+      aplicarFiltroEOrdenacao();
+    });
+  });
+
+  apiGet(`/fisioterapeutas?idClinica=${sessao.id}`)
+    .then((fisioterapeutas) => {
+      todosOsFisioterapeutas = fisioterapeutas;
+      if (fisioterapeutas.length === 0) {
+        listaEl.innerHTML =
+          '<li style="padding:16px;color:var(--ink-muted);">Nenhum profissional cadastrado ainda.</li>';
+        return;
+      }
+      aplicarFiltroEOrdenacao();
     })
     .catch((err) => {
       listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${err.message}</li>`;

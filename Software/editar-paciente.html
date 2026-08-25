@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cadastrar Paciente — Rehabit</title>
+  <title>Editar paciente — Rehabit</title>
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./loader.css" />
 </head>
@@ -12,7 +12,7 @@
     <aside class="sidebar">
       <a href="#" class="logo"><img src="./assets/rehabit-logo.png" alt="Rehabit" /></a>
       <nav class="nav">
-        <a href="./profissional.html" class="active">
+        <a href="./profissional.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
           Home
         </a>
@@ -43,69 +43,71 @@
       <button data-action="back" aria-label="Voltar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <span></span>
     </div>
 
-    <main class="main form-main">
-      <header class="form-header">
-        <h1>Cadastrar Paciente</h1>
-        <p>Preencha as informações</p>
+    <main class="main edit-main">
+      <header class="edit-header">
+        <h1>Editar Paciente</h1>
+        <p>Atualize as informações do paciente</p>
       </header>
-      <div class="form-mobile-head">
-        <h1>Cadastrar Paciente</h1>
-        <p>Preencha as informações</p>
-      </div>
 
-      <div class="form-avatar-outside mobile-only">
-        <button type="button" class="form-avatar" data-avatar-picker aria-label="Escolher foto de perfil"></button>
-        <p class="caption">Foto de perfil</p>
-      </div>
-
-      <form id="cadastrarPacienteForm" class="card form-card">
+      <form class="edit-grid" onsubmit="event.preventDefault();">
         <input type="file" id="pfoto" accept="image/*" hidden />
-        <div class="form-split">
-          <div class="form-avatar-col">
-            <h3 class="form-col-title">Informações</h3>
-            <p class="caption">Foto de perfil</p>
-            <button type="button" class="form-avatar" data-avatar-picker aria-label="Escolher foto de perfil"></button>
-          </div>
-          <div>
-            <div class="field field-id">
-              <label for="cpf">CPF</label>
-              <input id="cpf" type="text" required />
+        <section class="card edit-avatar-card">
+          <div class="avatar-lg" aria-hidden="true" data-avatar-picker style="cursor:pointer;"></div>
+          <button type="button" class="btn-outline" data-avatar-picker>Alterar foto</button>
+          <h2 class="edit-name"></h2>
+          <p class="edit-role"></p>
+        </section>
+
+        <section class="card edit-info-card">
+          <h3>Informações</h3>
+          <div class="edit-section">
+            <div class="field">
+              <label for="p-cpf">CPF</label>
+              <input id="p-cpf" type="text" value="" disabled />
             </div>
-            <hr class="form-sep" />
-            <div class="two-col">
-              <div class="field">
-                <label for="nome">Nome</label>
-                <input id="nome" type="text" placeholder="Ex: Ana Carolina Silva" required />
-              </div>
-              <div class="field">
-                <label for="nasc">Data de nascimento</label>
-                <input id="nasc" type="date" />
-              </div>
+            <div class="field">
+              <label for="p-nome">Nome completo</label>
+              <input id="p-nome" type="text" value="" />
             </div>
             <div class="two-col">
               <div class="field">
-                <label for="sexo">Sexo</label>
-                <select id="sexo">
-                  <option value="" selected>Selecione</option>
+                <label for="p-nasc">Data de nascimento</label>
+                <input id="p-nasc" type="date" value="" />
+              </div>
+              <div class="field">
+                <label for="p-sexo">Sexo</label>
+                <select id="p-sexo">
+                  <option value="">Selecione</option>
                   <option>Feminino</option>
                   <option>Masculino</option>
                   <option>Outro</option>
                 </select>
               </div>
-              <div class="field">
-                <label for="situacao">Situação</label>
-                <input id="situacao" type="text" placeholder="Ex: Lesão de manguito rotador" />
-              </div>
             </div>
           </div>
-        </div>
-        <hr class="form-sep" />
-        <div class="form-actions">
-          <button type="submit" class="btn-primary">Cadastrar Paciente</button>
-        </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <div class="two-col">
+              <div class="field">
+                <label for="p-tel">Telefone</label>
+                <input id="p-tel" type="tel" value="" />
+              </div>
+              <div class="field">
+                <label for="p-email">E-mail</label>
+                <input id="p-email" type="email" value="" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="p-situacao">Situação</label>
+              <input id="p-situacao" type="text" placeholder="Ex: Lesão de manguito rotador" />
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button type="submit" class="btn-primary">Salvar alterações</button>
+          </div>
+        </section>
       </form>
     </main>
 
@@ -129,6 +131,6 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
-  <script src="./pages/cadastrar-paciente.js"></script>
+  <script src="./pages/editar-paciente.js"></script>
 </body>
 </html>

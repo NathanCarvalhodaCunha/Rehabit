@@ -88,6 +88,31 @@ async function apiPut(caminho, corpo) {
   }
 }
 
+// Data de hoje por extenso em pt-BR, ex.: "Terça-feira, 25 de agosto",
+// usada nos cabeçalhos de saudação da home (profissional/instituição).
+function dataAtualPorExtenso() {
+  const texto = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+async function apiDelete(caminho) {
+  RehabitLoader.show();
+  try {
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+      method: "DELETE",
+      headers: cabecalhosAutenticados(),
+    });
+    if (resposta.status === 204) return null;
+    return await tratarResposta(resposta, "Não foi possível concluir a ação.");
+  } finally {
+    RehabitLoader.hide();
+  }
+}
+
 function urlFoto(caminhoFoto) {
   if (!caminhoFoto) return null;
   if (caminhoFoto.startsWith("http")) return caminhoFoto;
@@ -101,6 +126,16 @@ function urlFoto(caminhoFoto) {
     window.location.href = paginaLogin();
   }
 })();
+
+// Se o navegador restaurar esta página do cache (voltar/avançar) sem
+// re-executar os scripts, força um recarregamento. Sem isso, em um
+// dispositivo compartilhado por vários profissionais, trocar de conta
+// e navegar com o botão "voltar" podia reexibir em tela a lista de
+// pacientes (ou outros dados) do usuário anterior, já que o HTML
+// ficava congelado do jeito que estava antes do logout/login.
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) window.location.reload();
+});
 
 // Mostra a foto de perfil do usuário logado onde o avatar aparece
 // (cabeçalho da instituição/profissional, topo mobile, tela de perfil).

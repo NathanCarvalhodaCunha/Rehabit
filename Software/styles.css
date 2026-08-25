@@ -432,6 +432,19 @@ button { font-family: inherit; cursor: pointer; }
 .btn-outline.center { align-self: center; margin-top: 12px; }
 .btn-outline.block { display: block; width: 100%; margin-top: 12px; }
 
+.btn-danger {
+  align-self: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 40px; padding: 0 22px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  font-weight: 600; font-size: 14.5px;
+  transition: background .15s, border-color .15s;
+}
+.btn-danger:hover { background: #FEF2F2; border-color: #DC2626; }
+
 .info-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 2px;
@@ -690,9 +703,36 @@ button { font-family: inherit; cursor: pointer; }
   .badge { min-width: 80px; height: 26px; font-size: 12.5px; padding: 0 10px; }
 }
 
+/* ---------- Agenda ---------- */
+.agenda-list { list-style: none; padding: 0; margin: 0; }
+.agenda-item {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+.agenda-item:last-child { border-bottom: none; }
+.agenda-when { font-weight: 700; color: var(--ink-strong); font-size: 14.5px; line-height: 1.35; }
+.agenda-when .hora { color: var(--brand); }
+.agenda-patient { font-weight: 700; color: var(--brand); font-size: 15px; }
+.agenda-obs { margin-top: 2px; color: var(--ink-muted); font-weight: 500; font-size: 13.5px; }
+.agenda-cancel {
+  background: none; border: 1px solid var(--hairline); border-radius: 8px;
+  padding: 8px 14px; font-weight: 600; font-size: 13px; color: var(--ink-muted);
+  cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.agenda-cancel:hover { color: #DC2626; border-color: #DC2626; }
+
+@media (max-width: 991px) {
+  .agenda-item { grid-template-columns: 1fr auto; padding: 12px 4px; }
+  .agenda-when { grid-column: 1 / -1; order: -1; font-size: 13.5px; }
+}
+
 /* ---------- Paciente detail ---------- */
 .patient-header {
-  display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center;
   margin-bottom: 20px;
 }
 .patient-header .avatar-lg {
@@ -757,6 +797,7 @@ button { font-family: inherit; cursor: pointer; }
 
 @media (max-width: 991px) {
   .patient-header { grid-template-columns: auto 1fr; gap: 16px; margin: 8px 0 14px; }
+  .patient-header .btn-edit { display: none; }
   .patient-header .avatar-lg { width: 78px; height: 78px; }
   .patient-header h1 { font-size: 18px; }
   .patient-meta { font-size: 13.5px; }
@@ -907,7 +948,7 @@ button { font-family: inherit; cursor: pointer; }
 .edit-actions .btn-primary { width: auto; padding: 10px 22px; }
 
 @media (max-width: 991px) {
-  .settings-main, .edit-main { padding: 20px 16px 96px; }
+  .settings-main, .edit-main { padding: 20px 16px 140px; }
   .page-title { text-align: center; font-size: 22px; margin-bottom: 20px; }
   .settings-mobile-profile { display: block; }
   .settings-card { padding: 14px 16px; }
@@ -917,7 +958,7 @@ button { font-family: inherit; cursor: pointer; }
   .edit-grid { grid-template-columns: 1fr; gap: 16px; }
   .edit-avatar-card { padding: 8px 16px 20px; box-shadow: none; border: 0; background: transparent; }
   .avatar-lg { width: 140px; height: 140px; margin-bottom: 12px; }
-  .btn-outline { display: none; }
+  .edit-avatar-card .btn-outline { display: none; }
   .edit-name { margin-top: 6px; }
   .two-col { grid-template-columns: 1fr; }
   .edit-sep { display: none; }
@@ -1029,7 +1070,7 @@ button.form-avatar {
 .add-manual-card .form-actions { margin-top: auto; padding-top: 18px; }
 
 @media (max-width: 991px) {
-  .form-main { padding: 12px 16px 96px; }
+  .form-main { padding: 12px 16px 140px; }
   .form-header { display: none; }
   .form-mobile-head { display: block; text-align: center; margin-bottom: 18px; }
   .form-mobile-head h1 { margin: 0; font-size: 22px; font-weight: 800; color: var(--ink-strong); }
@@ -1443,3 +1484,73 @@ button.form-avatar {
   transition: background 0.15s;
 }
 .tutorial-next:hover { background: var(--brand-hover); }
+
+/* ---------- Tutorial do goniômetro ---------- */
+.tutorial-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; align-items: start; }
+.tutorial-illustration-card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 28px 20px;
+}
+.tutorial-illustration-card svg { width: 100%; max-width: 300px; height: auto; }
+.tutorial-angle-readout { font-size: 14.5px; font-weight: 700; color: var(--ink-strong); }
+.tutorial-angle-readout .num { color: var(--brand); font-size: 24px; }
+.tutorial-caption { margin: 0; color: var(--ink-muted); font-size: 13.5px; text-align: center; max-width: 280px; }
+
+.tutorial-steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.tutorial-steps li {
+  display: grid; grid-template-columns: 32px 1fr; gap: 14px;
+  padding: 14px 4px; border-bottom: 1px solid var(--hairline);
+}
+.tutorial-steps li:last-child { border-bottom: none; }
+.tutorial-steps li::before {
+  counter-increment: step; content: counter(step);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-weight: 800; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tutorial-steps h4 { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--ink-strong); }
+.tutorial-steps p { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+
+.gonio-torso { fill: #CBD5E1; }
+.gonio-limb-line { stroke: #E3B98C; }
+.gonio-hand { fill: #E3B98C; }
+.gonio-scale-arc { fill: none; stroke: var(--ink-muted); stroke-width: 2; opacity: .55; }
+.gonio-tick { stroke: var(--ink-muted); stroke-width: 1.5; opacity: .55; }
+.gonio-tick-label { fill: var(--ink-muted); font-size: 9px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+.gonio-arm-fixed { stroke: #4B5563; stroke-width: 4; stroke-linecap: round; }
+.gonio-arm-moving { stroke: var(--brand); stroke-width: 4; stroke-linecap: round; }
+.gonio-hinge { fill: var(--brand); stroke: #fff; stroke-width: 2; }
+
+@media (max-width: 991px) {
+  .tutorial-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- Toastify — corrige mensagem cortada/sobreposta ----------
+   Dois problemas do padrão da lib: (1) max-width:calc(50% - 20px) vira
+   uma coluna estreita em celular, forçando a mensagem a quebrar em
+   várias linhas; (2) ela sempre te posiciona a ~15px do topo (via
+   style inline, por isso o !important aqui), o que em mobile cai por
+   cima da topbar/cabeçalho da página — com uma mensagem de 3 linhas,
+   chega a cobrir o título da tela. Aqui damos largura suficiente pra
+   quebrar pouco e um respiro do topo que sobra a topbar mobile. */
+.toastify {
+  max-width: min(420px, calc(100vw - 32px));
+  width: max-content;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  padding: 14px 18px;
+}
+@media (max-width: 991px) {
+  .toastify.toastify-top {
+    top: 78px !important;
+  }
+  .toastify.toastify-right,
+  .toastify.toastify-left {
+    left: 16px !important;
+    right: 16px !important;
+    max-width: none;
+    width: auto;
+    margin: 0;
+  }
+}

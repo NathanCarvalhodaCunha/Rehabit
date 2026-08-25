@@ -4,7 +4,69 @@
   if (!header || !statsEl) return;
 
   const sessao = getSessao();
-  if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
+  if (!sessao) return;
+
+  // Uma clínica pode abrir esta tela para consultar (somente leitura) o
+  // perfil de um dos seus profissionais, vindo da lista em instituicao.html.
+  const params = new URLSearchParams(window.location.search);
+  const idParam = params.get("id");
+  const somenteLeitura = sessao.tipo === "CLINICA" && !!idParam;
+  if (sessao.tipo !== "FISIOTERAPEUTA" && !somenteLeitura) return;
+  const idAlvo = somenteLeitura ? idParam : sessao.id;
+
+  if (somenteLeitura) {
+    document.querySelector(".mobile-bottomnav")?.remove();
+    document.querySelectorAll('.sidebar .nav a[href="./dispositivo.html"], .sidebar .nav a[href="./configuracoes.html"]')
+      .forEach((el) => el.remove());
+    const homeLink = document.querySelector('.sidebar .nav a[href="./profissional.html"]');
+    if (homeLink) homeLink.href = paginaTema("instituicao");
+
+    // "Editar perfil" (topbar mobile + botão do cabeçalho) passa a editar
+    // o profissional visitado, não a conta da própria clínica.
+    document.querySelectorAll('[data-action="edit-profile"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = `${paginaTema("editar-perfil-profissional")}?id=${idAlvo}`;
+      });
+    });
+
+    const goListBtn = document.querySelector('[data-action="go-list"]');
+    if (goListBtn) {
+      goListBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = `${paginaTema("profissional")}?idFisioterapeuta=${idAlvo}`;
+      });
+    }
+
+    const accessCard = document.querySelector(".access-card");
+    if (accessCard) {
+      const excluirCard = document.createElement("section");
+      excluirCard.className = "card access-card";
+      excluirCard.innerHTML = `
+        <p class="t">Excluir profissional</p>
+        <p class="s">Remove definitivamente o acesso e os dados deste profissional</p>
+        <button class="btn-danger" type="button">Excluir profissional</button>
+      `;
+      accessCard.insertAdjacentElement("afterend", excluirCard);
+      excluirCard.querySelector(".btn-danger").addEventListener("click", async () => {
+        const confirmado = window.confirm(
+          "Tem certeza que deseja excluir este profissional? Essa ação não pode ser desfeita."
+        );
+        if (!confirmado) return;
+        try {
+          await apiDelete(`/fisioterapeutas/${idAlvo}`);
+          RehabitToast.sucesso("Profissional excluído com sucesso.");
+          setTimeout(() => {
+            window.location.href = paginaTema("instituicao");
+          }, 1200);
+        } catch (err) {
+          RehabitToast.erro(err.message);
+        }
+      });
+    }
+  }
 
   function definirTextoAposSvg(row, texto) {
     const textNode = Array.from(row.childNodes).find(
@@ -17,7 +79,7 @@
     }
   }
 
-  apiGet(`/fisioterapeutas/${sessao.id}`)
+  apiGet(`/fisioterapeutas/${idAlvo}`)
     .then((f) => {
       header.querySelector("h1").textContent = f.nome;
       header.querySelector(".role").textContent = f.especialidade || "Fisioterapeuta";

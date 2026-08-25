@@ -3,6 +3,7 @@ package com.rehabit.controller;
 import com.rehabit.dto.PacienteCreateDTO;
 import com.rehabit.dto.PacienteDetalheDTO;
 import com.rehabit.dto.PacienteResumoDTO;
+import com.rehabit.dto.PacienteUpdateDTO;
 import com.rehabit.dto.SessaoCreateDTO;
 import com.rehabit.dto.SessaoDTO;
 import com.rehabit.security.AuthContext;
@@ -47,6 +48,14 @@ public class PacienteController {
     public ResponseEntity<PacienteDetalheDTO> buscar(@PathVariable Integer id, HttpServletRequest request) {
         return ResponseEntity.ok(pacienteService.buscar(
                 id, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PacienteDetalheDTO> atualizar(@PathVariable Integer id,
+                                                           @Valid @RequestBody PacienteUpdateDTO dados,
+                                                           HttpServletRequest request) {
+        return ResponseEntity.ok(pacienteService.atualizar(
+                id, dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @PostMapping("/{id}/sessoes")

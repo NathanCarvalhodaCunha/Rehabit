@@ -3,6 +3,7 @@ package com.rehabit.service;
 import com.rehabit.dto.PacienteCreateDTO;
 import com.rehabit.dto.PacienteDetalheDTO;
 import com.rehabit.dto.PacienteResumoDTO;
+import com.rehabit.dto.PacienteUpdateDTO;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Medicao;
@@ -78,7 +79,9 @@ public class PacienteService {
     }
 
     public List<PacienteResumoDTO> listarPorFisioterapeuta(Integer idFisioterapeuta, Integer usuarioId, String usuarioTipo) {
-        PosseChecker.exigirFisioterapeutaDono(idFisioterapeuta, usuarioId, usuarioTipo);
+        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(idFisioterapeuta)
+                .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.BAD_REQUEST));
+        PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
         return pacienteRepository.findByIdFisioterapeutaOrderByNomeAsc(idFisioterapeuta).stream()
                 .map(this::paraResumoDTO)
                 .collect(Collectors.toList());
@@ -92,6 +95,29 @@ public class PacienteService {
                 .map(Fisioterapeuta::getNome)
                 .orElse(null);
         return paraDetalheDTO(paciente, nomeFisioterapeuta);
+    }
+
+    @Transactional
+    public PacienteDetalheDTO atualizar(Integer id, PacienteUpdateDTO dados, Integer usuarioId, String usuarioTipo) {
+        Paciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Paciente não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirDonoOuClinicaDona(paciente.getIdFisioterapeuta(), paciente.getIdClinica(), usuarioId, usuarioTipo);
+
+        paciente.setNome(dados.getNome());
+        paciente.setTelefone(vazioParaNulo(dados.getTelefone()));
+        paciente.setEmail(vazioParaNulo(dados.getEmail()));
+        paciente.setDataNascimento(dados.getDataNascimento());
+        paciente.setSexo(vazioParaNulo(dados.getSexo()));
+        paciente.setSituacao(vazioParaNulo(dados.getSituacao()));
+        if (dados.getFoto() != null) {
+            paciente.setFoto(dados.getFoto());
+        }
+
+        Paciente salvo = pacienteRepository.save(paciente);
+        String nomeFisioterapeuta = fisioterapeutaRepository.findById(salvo.getIdFisioterapeuta())
+                .map(Fisioterapeuta::getNome)
+                .orElse(null);
+        return paraDetalheDTO(salvo, nomeFisioterapeuta);
     }
 
     /** Carrega o paciente e confirma que usuarioId/usuarioTipo tem posse dele; usado por SessaoService também. */

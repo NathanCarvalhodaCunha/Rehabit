@@ -3,11 +3,37 @@
   if (!form || !document.getElementById("p-coffito")) return;
 
   const sessao = getSessao();
-  if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
+  if (!sessao) return;
+
+  // Uma clínica pode abrir esta tela para editar os dados de um dos seus
+  // profissionais, vinda de perfil-profissional.html.
+  const params = new URLSearchParams(window.location.search);
+  const idParam = params.get("id");
+  const editandoOutroProfissional = sessao.tipo === "CLINICA" && !!idParam;
+  if (sessao.tipo !== "FISIOTERAPEUTA" && !editandoOutroProfissional) return;
+  const idAlvo = editandoOutroProfissional ? idParam : sessao.id;
+
+  if (editandoOutroProfissional) {
+    document.querySelector(".mobile-bottomnav")?.remove();
+    document.querySelectorAll('.sidebar .nav a[href="./dispositivo.html"], .sidebar .nav a[href="./configuracoes.html"]')
+      .forEach((el) => el.remove());
+    const homeLink = document.querySelector('.sidebar .nav a[href="./profissional.html"]');
+    if (homeLink) homeLink.href = paginaTema("instituicao");
+    const perfilLink = document.querySelector('.sidebar .nav a[href="./perfil-profissional.html"]');
+    if (perfilLink) perfilLink.href = `${paginaTema("perfil-profissional")}?id=${idAlvo}`;
+
+    const campoSenha = document.getElementById("p-senha-atual");
+    const secaoSenha = campoSenha ? campoSenha.closest(".edit-section") : null;
+    if (secaoSenha) {
+      const separador = secaoSenha.previousElementSibling;
+      if (separador && separador.classList.contains("edit-sep")) separador.remove();
+      secaoSenha.remove();
+    }
+  }
 
   let fotoAtual = null;
 
-  apiGet(`/fisioterapeutas/${sessao.id}`)
+  apiGet(`/fisioterapeutas/${idAlvo}`)
     .then((f) => {
       fotoAtual = f.foto;
       document.querySelector(".edit-name").textContent = f.nome;
@@ -34,8 +60,8 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const senhaAtual = document.getElementById("p-senha-atual").value;
-    const novaSenha = document.getElementById("p-senha-nova").value;
+    const senhaAtual = document.getElementById("p-senha-atual")?.value || "";
+    const novaSenha = document.getElementById("p-senha-nova")?.value || "";
     if (novaSenha && novaSenha.length < 6) {
       RehabitToast.erro("A nova senha deve ter ao menos 6 caracteres.");
       return;
@@ -51,7 +77,7 @@
     submitBtn.textContent = "Salvando...";
 
     try {
-      const atualizado = await apiPut(`/fisioterapeutas/${sessao.id}`, {
+      const atualizado = await apiPut(`/fisioterapeutas/${idAlvo}`, {
         nome: document.getElementById("p-nome").value.trim(),
         email: document.getElementById("p-email").value.trim(),
         telefone: document.getElementById("p-tel").value.trim() || null,
@@ -63,18 +89,22 @@
         novaSenha: novaSenha || null,
       });
 
-      localStorage.setItem(
-        "rehabit_usuario",
-        JSON.stringify(Object.assign({}, sessao, {
-          nome: atualizado.nome,
-          email: atualizado.email,
-          foto: atualizado.foto,
-        }))
-      );
+      if (!editandoOutroProfissional) {
+        localStorage.setItem(
+          "rehabit_usuario",
+          JSON.stringify(Object.assign({}, sessao, {
+            nome: atualizado.nome,
+            email: atualizado.email,
+            foto: atualizado.foto,
+          }))
+        );
+      }
 
       RehabitToast.sucesso("Perfil atualizado com sucesso.");
       setTimeout(() => {
-        window.location.href = paginaTema("perfil-profissional");
+        window.location.href = editandoOutroProfissional
+          ? `${paginaTema("perfil-profissional")}?id=${idAlvo}`
+          : paginaTema("perfil-profissional");
       }, 1200);
     } catch (err) {
       RehabitToast.erro(err.message);
