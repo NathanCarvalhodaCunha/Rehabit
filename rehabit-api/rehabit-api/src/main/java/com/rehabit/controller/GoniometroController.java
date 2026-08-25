@@ -1,6 +1,8 @@
 package com.rehabit.controller;
 
 import com.rehabit.dto.GoniometroDTO;
+import com.rehabit.dto.GoniometroLeituraDTO;
+import com.rehabit.dto.GoniometroLeituraRespostaDTO;
 import com.rehabit.dto.GoniometroSincronizarDTO;
 import com.rehabit.security.AuthContext;
 import com.rehabit.service.GoniometroService;
@@ -31,5 +33,20 @@ public class GoniometroController {
                                                         HttpServletRequest request) {
         return ResponseEntity.ok(goniometroService.sincronizar(
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    @PostMapping("/leitura")
+    public ResponseEntity<Void> registrarLeitura(@Valid @RequestBody GoniometroLeituraDTO dados,
+                                                    HttpServletRequest request) {
+        goniometroService.registrarLeitura(
+                dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request), dados.getAngulo());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/leitura")
+    public ResponseEntity<GoniometroLeituraRespostaDTO> buscarLeitura(@RequestParam Integer idClinica,
+                                                                          HttpServletRequest request) {
+        var angulo = goniometroService.buscarLeituraAtual(idClinica, AuthContext.id(request), AuthContext.tipo(request));
+        return ResponseEntity.ok(new GoniometroLeituraRespostaDTO(angulo));
     }
 }
