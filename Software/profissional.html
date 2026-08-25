@@ -73,6 +73,15 @@
           <div class="list-controls">
             <input type="text" class="list-search" placeholder="" aria-label="Buscar" />
             <div class="select-wrap">
+              <select data-filtro-status aria-label="Filtrar por status do tratamento">
+                <option value="">Todos</option>
+                <option value="Ativo">Em tratamento</option>
+                <option value="Alta">Alta</option>
+                <option value="Inativo">Inativos</option>
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="select-wrap">
               <select class="list-filter" aria-label="Ordenar pacientes">
                 <option>Alfabética</option>
                 <option>Última sessão</option>

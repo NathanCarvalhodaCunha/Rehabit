@@ -15,8 +15,18 @@ public class PacienteUpdateDTO {
     private String sexo;
     private String situacao;
     private String foto;
+    /** Em tratamento (Ativo), Alta ou Inativo. */
+    private String status;
 
     public PacienteUpdateDTO() {
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getNome() {

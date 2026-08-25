@@ -99,6 +99,8 @@
     const data = document.getElementById("s-data").value;
     const duracao = document.getElementById("s-dur").value;
     const amplitude = document.getElementById("s-amp").value;
+    const campoObs = document.getElementById("s-obs");
+    const observacoes = campoObs ? campoObs.value.trim() : "";
 
     if (!data || !duracao) {
       RehabitToast.erro("Preencha ao menos a data e a duração.");
@@ -115,6 +117,7 @@
         data,
         duracao: Number(duracao),
         amplitudeMedia: amplitude ? Number(amplitude) : null,
+        observacoes: observacoes || null,
         idFisioterapeuta: sessao.id,
       });
       form.reset();

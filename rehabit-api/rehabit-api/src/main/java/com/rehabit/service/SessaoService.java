@@ -40,6 +40,7 @@ public class SessaoService {
         sessao.setDuracao(dados.getDuracao());
         sessao.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
         sessao.setIdPaciente(paciente.getId());
+        sessao.setObservacoes(vazioParaNulo(dados.getObservacoes()));
         Sessao sessaoSalva = sessaoRepository.save(sessao);
 
         Medicao medicao = new Medicao();
@@ -52,7 +53,7 @@ public class SessaoService {
                 "Nova sessão registrada para " + paciente.getNome());
 
         return new SessaoDTO(sessaoSalva.getId(), sessaoSalva.getDataSessao(), sessaoSalva.getDuracao(),
-                medicaoSalva.getAmplitudeMedia());
+                medicaoSalva.getAmplitudeMedia(), sessaoSalva.getObservacoes());
     }
 
     public List<SessaoDTO> listarPorPaciente(Integer idPaciente, Integer usuarioId, String usuarioTipo) {
@@ -61,8 +62,12 @@ public class SessaoService {
                 .map(s -> {
                     Medicao medicao = medicaoRepository.findByIdSessao(s.getId());
                     return new SessaoDTO(s.getId(), s.getDataSessao(), s.getDuracao(),
-                            medicao != null ? medicao.getAmplitudeMedia() : null);
+                            medicao != null ? medicao.getAmplitudeMedia() : null, s.getObservacoes());
                 })
                 .collect(Collectors.toList());
+    }
+
+    private String vazioParaNulo(String valor) {
+        return (valor == null || valor.isBlank()) ? null : valor.trim();
     }
 }

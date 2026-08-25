@@ -15,6 +15,8 @@ public class SessaoCreateDTO {
 
     private BigDecimal amplitudeMedia;
 
+    private String observacoes;
+
     @NotNull(message = "O fisioterapeuta responsável é obrigatório.")
     private Integer idFisioterapeuta;
 
@@ -43,6 +45,14 @@ public class SessaoCreateDTO {
 
     public void setAmplitudeMedia(BigDecimal amplitudeMedia) {
         this.amplitudeMedia = amplitudeMedia;
+    }
+
+    public String getObservacoes() {
+        return observacoes;
+    }
+
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
     }
 
     public Integer getIdFisioterapeuta() {

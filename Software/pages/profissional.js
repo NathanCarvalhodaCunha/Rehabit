@@ -134,10 +134,17 @@
         const estiloAvatar = fotoPaciente
           ? ` style="background-image:url('${fotoPaciente}');background-size:cover;background-position:center;"`
           : "";
+        // Alta e Inativo saem do fluxo normal, então ganham um selo próprio
+        // ao lado do nome; "Ativo" é o caso comum e não precisa de marca.
+        const selosTratamento = {
+          Alta: '<span class="badge-status alta">Alta</span>',
+          Inativo: '<span class="badge-status inativo">Inativo</span>',
+        };
+        const seloTratamento = selosTratamento[p.status] || "";
         return `
           <li class="pat-item" data-id="${p.id}" style="cursor:pointer;">
             <div class="avatar-sm" aria-hidden="true"${estiloAvatar}></div>
-            <div class="pat-name">${p.nome}</div>
+            <div class="pat-name">${p.nome}${seloTratamento}</div>
             <div class="pat-meta-m mobile-only">Última sessão<br/>${ultimaSessao}</div>
             <div class="pat-date desktop-only">${ultimaSessao}</div>
             <div class="pat-status">${badge}</div>
@@ -149,12 +156,24 @@
 
   let todosOsPacientes = [];
 
+  function statusAtual() {
+    const campo = document.querySelector("[data-filtro-status]");
+    return campo ? campo.value : "";
+  }
+
   function aplicarFiltroEOrdenacao() {
     const termo = (buscaAtual() || "").trim().toLowerCase();
     const criterio = filtroAtual() || "Alfabética";
-    const filtrados = termo
-      ? todosOsPacientes.filter((p) => p.nome.toLowerCase().includes(termo))
-      : todosOsPacientes;
+    const status = statusAtual();
+
+    let filtrados = todosOsPacientes;
+    if (termo) {
+      filtrados = filtrados.filter((p) => p.nome.toLowerCase().includes(termo));
+    }
+    if (status) {
+      // Pacientes antigos podem estar sem status gravado; tratamos como "Ativo".
+      filtrados = filtrados.filter((p) => (p.status || "Ativo") === status);
+    }
     renderizarPacientes(ordenarPacientes(filtrados, criterio));
   }
 
@@ -185,6 +204,9 @@
       });
       aplicarFiltroEOrdenacao();
     });
+  });
+  document.querySelectorAll("[data-filtro-status]").forEach((campo) => {
+    campo.addEventListener("change", aplicarFiltroEOrdenacao);
   });
 
   apiGet(`/pacientes?idFisioterapeuta=${idFisioterapeuta}`)

@@ -9,15 +9,29 @@ public class SessaoDTO {
     private LocalDate data;
     private Integer duracao;
     private BigDecimal amplitudeMedia;
+    private String observacoes;
 
     public SessaoDTO() {
     }
 
     public SessaoDTO(Integer id, LocalDate data, Integer duracao, BigDecimal amplitudeMedia) {
+        this(id, data, duracao, amplitudeMedia, null);
+    }
+
+    public SessaoDTO(Integer id, LocalDate data, Integer duracao, BigDecimal amplitudeMedia, String observacoes) {
         this.id = id;
         this.data = data;
         this.duracao = duracao;
         this.amplitudeMedia = amplitudeMedia;
+        this.observacoes = observacoes;
+    }
+
+    public String getObservacoes() {
+        return observacoes;
+    }
+
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
     }
 
     public Integer getId() {

@@ -26,6 +26,8 @@
       document.getElementById("p-tel").value = p.telefone || "";
       document.getElementById("p-email").value = p.email || "";
       document.getElementById("p-situacao").value = p.situacao || "";
+      const campoStatus = document.getElementById("p-status");
+      if (campoStatus) campoStatus.value = p.status || "Ativo";
 
       const foto = urlFoto(p.foto);
       if (foto) {
@@ -75,6 +77,7 @@
         dataNascimento: document.getElementById("p-nasc").value || null,
         sexo: document.getElementById("p-sexo").value || null,
         situacao: document.getElementById("p-situacao").value.trim() || null,
+        status: document.getElementById("p-status") ? document.getElementById("p-status").value : null,
         foto,
       });
 

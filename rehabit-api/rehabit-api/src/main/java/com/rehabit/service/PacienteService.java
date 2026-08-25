@@ -22,12 +22,16 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class PacienteService {
 
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    /** "Ativo" = em tratamento; é o valor atribuído no cadastro. */
+    private static final Set<String> STATUS_VALIDOS = Set.of("Ativo", "Alta", "Inativo");
 
     private final PacienteRepository pacienteRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
@@ -112,6 +116,12 @@ public class PacienteService {
         if (dados.getFoto() != null) {
             paciente.setFoto(dados.getFoto());
         }
+        // Só troca o status quando a tela manda um valor conhecido — assim uma
+        // tela antiga que não envia o campo não zera o status do paciente.
+        String status = vazioParaNulo(dados.getStatus());
+        if (status != null && STATUS_VALIDOS.contains(status)) {
+            paciente.setStatus(status);
+        }
 
         Paciente salvo = pacienteRepository.save(paciente);
         String nomeFisioterapeuta = fisioterapeutaRepository.findById(salvo.getIdFisioterapeuta())
@@ -134,7 +144,7 @@ public class PacienteService {
                 ? sessoes.get(0).getDataSessao().format(FORMATO_DATA)
                 : null;
         return new PacienteResumoDTO(paciente.getId(), paciente.getNome(), paciente.getSituacao(),
-                ultimaSessao, calcularSelo(sessoes), paciente.getFoto());
+                ultimaSessao, calcularSelo(sessoes), paciente.getFoto(), paciente.getStatus());
     }
 
     private String calcularSelo(List<Sessao> sessoesRecentesPrimeiro) {

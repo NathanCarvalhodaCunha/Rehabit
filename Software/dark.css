@@ -266,3 +266,5 @@ body.dark .cal-nav button:hover { background: #1B2647; }
 body.dark .cal-dia { color: #fff; }
 body.dark .cal-dia:hover:not(.is-vazio) { background: #1B2647; }
 body.dark .cal-dia.is-selecionado { color: #fff; }
+body.dark .badge-status.alta { background: rgba(34,197,94,.16); color: #4ADE80; }
+body.dark .badge-status.inativo { background: rgba(152,162,188,.16); color: var(--ink-muted); }

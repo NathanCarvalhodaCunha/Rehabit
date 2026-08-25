@@ -8,17 +8,32 @@ public class PacienteResumoDTO {
     private String ultimaSessao;
     private String selo;
     private String foto;
+    private String status;
 
     public PacienteResumoDTO() {
     }
 
     public PacienteResumoDTO(Integer id, String nome, String situacao, String ultimaSessao, String selo, String foto) {
+        this(id, nome, situacao, ultimaSessao, selo, foto, null);
+    }
+
+    public PacienteResumoDTO(Integer id, String nome, String situacao, String ultimaSessao, String selo,
+                              String foto, String status) {
         this.id = id;
         this.nome = nome;
         this.situacao = situacao;
         this.ultimaSessao = ultimaSessao;
         this.selo = selo;
         this.foto = foto;
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Integer getId() {

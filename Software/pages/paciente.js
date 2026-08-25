@@ -114,6 +114,14 @@ function formatarDataCurta(dataIso) {
   return `${dia}/${mes}`;
 }
 
+// O prontuário é texto livre digitado pelo profissional e vai para dentro
+// de um template de HTML — precisa ser escapado.
+function escaparHtml(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto;
+  return div.innerHTML;
+}
+
 function formatarDataLonga(dataIso) {
   const [ano, mes, dia] = dataIso.split("-");
   return `${dia}/${mes}/${ano}`;
@@ -215,7 +223,11 @@ function formatarDataLonga(dataIso) {
               .map(
                 (s) => `
             <tr>
-              <td>${formatarDataLonga(s.data)}</td>
+              <td>${formatarDataLonga(s.data)}${
+                  s.observacoes
+                    ? `<div class="sessao-obs">${escaparHtml(s.observacoes)}</div>`
+                    : ""
+                }</td>
               <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
               <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
             </tr>`

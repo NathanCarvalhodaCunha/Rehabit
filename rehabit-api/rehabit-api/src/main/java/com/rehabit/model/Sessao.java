@@ -29,7 +29,19 @@ public class Sessao {
     @Column(name = "tb05_id_paciente", nullable = false)
     private Integer idPaciente;
 
+    /** Prontuário da sessão: o que foi trabalhado, evolução observada, conduta. */
+    @Column(name = "tb05_observacoes", columnDefinition = "TEXT")
+    private String observacoes;
+
     public Sessao() {
+    }
+
+    public String getObservacoes() {
+        return observacoes;
+    }
+
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
     }
 
     public Integer getId() {
