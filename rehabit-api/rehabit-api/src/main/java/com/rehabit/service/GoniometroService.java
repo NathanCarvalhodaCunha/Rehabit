@@ -9,8 +9,11 @@ import com.rehabit.repository.GoniometroRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -18,6 +21,7 @@ public class GoniometroService {
 
     private final GoniometroRepository goniometroRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
+    private final Map<Integer, BigDecimal> ultimoAnguloPorClinica = new ConcurrentHashMap<>();
 
     public GoniometroService(GoniometroRepository goniometroRepository,
                               FisioterapeutaRepository fisioterapeutaRepository) {
@@ -40,6 +44,16 @@ public class GoniometroService {
         goniometro.setDataSincronizacao(LocalDate.now());
         goniometro.setHoraSincronizacao(LocalTime.now().withNano(0));
         return paraDTO(goniometroRepository.save(goniometro));
+    }
+
+    public void registrarLeitura(Integer idClinica, Integer usuarioId, String usuarioTipo, BigDecimal angulo) {
+        verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
+        ultimoAnguloPorClinica.put(idClinica, angulo);
+    }
+
+    public BigDecimal buscarLeituraAtual(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
+        return ultimoAnguloPorClinica.get(idClinica);
     }
 
     /** A própria clínica, ou um fisioterapeuta que pertence a ela (dispositivo é compartilhado pela clínica toda). */
