@@ -141,6 +141,23 @@ public class FisioterapeutaService {
     }
 
     @Transactional
+    public void excluir(Integer id, Integer usuarioId, String usuarioTipo) {
+        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
+        PosseChecker.exigirClinicaDona(fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
+
+        long totalPacientes = pacienteRepository.countByIdFisioterapeuta(id);
+        if (totalPacientes > 0) {
+            throw new AuthException(
+                    "Não é possível excluir: este profissional tem " + totalPacientes
+                            + " paciente(s) cadastrado(s). Transfira ou remova os pacientes antes de excluir.",
+                    HttpStatus.CONFLICT);
+        }
+
+        fisioterapeutaRepository.delete(fisioterapeuta);
+    }
+
+    @Transactional
     public void marcarTutorialVisto(Integer id) {
         Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));

@@ -432,6 +432,19 @@ button { font-family: inherit; cursor: pointer; }
 .btn-outline.center { align-self: center; margin-top: 12px; }
 .btn-outline.block { display: block; width: 100%; margin-top: 12px; }
 
+.btn-danger {
+  align-self: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 40px; padding: 0 22px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  font-weight: 600; font-size: 14.5px;
+  transition: background .15s, border-color .15s;
+}
+.btn-danger:hover { background: #FEF2F2; border-color: #DC2626; }
+
 .info-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 2px;
@@ -1513,10 +1526,13 @@ button.form-avatar {
 }
 
 /* ---------- Toastify — corrige mensagem cortada/sobreposta ----------
-   O padrão da lib usa max-width:calc(50% - 20px), que em telas de
-   celular vira uma coluna estreita demais e deixa o texto sobrepondo
-   o próprio card; aqui garantimos uma largura legível e quebra de
-   linha correta em qualquer tamanho de tela. */
+   Dois problemas do padrão da lib: (1) max-width:calc(50% - 20px) vira
+   uma coluna estreita em celular, forçando a mensagem a quebrar em
+   várias linhas; (2) ela sempre te posiciona a ~15px do topo (via
+   style inline, por isso o !important aqui), o que em mobile cai por
+   cima da topbar/cabeçalho da página — com uma mensagem de 3 linhas,
+   chega a cobrir o título da tela. Aqui damos largura suficiente pra
+   quebrar pouco e um respiro do topo que sobra a topbar mobile. */
 .toastify {
   max-width: min(420px, calc(100vw - 32px));
   width: max-content;
@@ -1525,7 +1541,10 @@ button.form-avatar {
   line-height: 1.45;
   padding: 14px 18px;
 }
-@media (max-width: 480px) {
+@media (max-width: 991px) {
+  .toastify.toastify-top {
+    top: 78px !important;
+  }
   .toastify.toastify-right,
   .toastify.toastify-left {
     left: 16px !important;

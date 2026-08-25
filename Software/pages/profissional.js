@@ -83,25 +83,58 @@
     if (item) window.location.href = `${paginaTema("paciente")}?id=${item.dataset.id}`;
   });
 
-  apiGet(`/pacientes?idFisioterapeuta=${idFisioterapeuta}`)
-    .then((pacientes) => {
-      if (pacientes.length === 0) {
-        listaEl.innerHTML =
-          '<li style="padding:16px;color:var(--ink-muted);">Nenhum paciente cadastrado ainda.</li>';
-        return;
-      }
-      listaEl.innerHTML = pacientes
-        .map((p) => {
-          const info = SELO_INFO[p.selo];
-          const badge = info
-            ? `<span class="badge ${info.classe}">${info.texto}</span>`
-            : `<span class="badge estavel">Sem sessões</span>`;
-          const ultimaSessao = p.ultimaSessao || "-";
-          const fotoPaciente = urlFoto(p.foto);
-          const estiloAvatar = fotoPaciente
-            ? ` style="background-image:url('${fotoPaciente}');background-size:cover;background-position:center;"`
-            : "";
-          return `
+  // dd/MM/yyyy -> timestamp (ou null se vazio/inválido), para poder ordenar
+  // por "Última sessão" sem depender de string.
+  function dataBrParaOrdenacao(dataBr) {
+    if (!dataBr) return null;
+    const [dia, mes, ano] = dataBr.split("/");
+    const tempo = new Date(`${ano}-${mes}-${dia}T00:00:00`).getTime();
+    return Number.isNaN(tempo) ? null : tempo;
+  }
+
+  const ORDEM_STATUS = { Instavel: 0, Estavel: 1, Evoluindo: 2 };
+
+  function ordenarPacientes(lista, criterio) {
+    const copia = lista.slice();
+    if (criterio === "Última sessão" || criterio === "Última Sessão") {
+      copia.sort((a, b) => {
+        const ta = dataBrParaOrdenacao(a.ultimaSessao);
+        const tb = dataBrParaOrdenacao(b.ultimaSessao);
+        if (ta == null && tb == null) return 0;
+        if (ta == null) return 1;
+        if (tb == null) return -1;
+        return tb - ta;
+      });
+    } else if (criterio === "Status") {
+      copia.sort((a, b) => {
+        const oa = a.selo in ORDEM_STATUS ? ORDEM_STATUS[a.selo] : 99;
+        const ob = b.selo in ORDEM_STATUS ? ORDEM_STATUS[b.selo] : 99;
+        return oa - ob || a.nome.localeCompare(b.nome, "pt-BR");
+      });
+    } else {
+      copia.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    }
+    return copia;
+  }
+
+  function renderizarPacientes(pacientes) {
+    if (pacientes.length === 0) {
+      listaEl.innerHTML =
+        '<li style="padding:16px;color:var(--ink-muted);">Nenhum paciente encontrado.</li>';
+      return;
+    }
+    listaEl.innerHTML = pacientes
+      .map((p) => {
+        const info = SELO_INFO[p.selo];
+        const badge = info
+          ? `<span class="badge ${info.classe}">${info.texto}</span>`
+          : `<span class="badge estavel">Sem sessões</span>`;
+        const ultimaSessao = p.ultimaSessao || "-";
+        const fotoPaciente = urlFoto(p.foto);
+        const estiloAvatar = fotoPaciente
+          ? ` style="background-image:url('${fotoPaciente}');background-size:cover;background-position:center;"`
+          : "";
+        return `
           <li class="pat-item" data-id="${p.id}" style="cursor:pointer;">
             <div class="avatar-sm" aria-hidden="true"${estiloAvatar}></div>
             <div class="pat-name">${p.nome}</div>
@@ -109,9 +142,60 @@
             <div class="pat-date desktop-only">${ultimaSessao}</div>
             <div class="pat-status">${badge}</div>
           </li>`;
-        })
-        .join("");
-      RehabitAnim.staggerList(listaEl);
+      })
+      .join("");
+    RehabitAnim.staggerList(listaEl);
+  }
+
+  let todosOsPacientes = [];
+
+  function aplicarFiltroEOrdenacao() {
+    const termo = (buscaAtual() || "").trim().toLowerCase();
+    const criterio = filtroAtual() || "Alfabética";
+    const filtrados = termo
+      ? todosOsPacientes.filter((p) => p.nome.toLowerCase().includes(termo))
+      : todosOsPacientes;
+    renderizarPacientes(ordenarPacientes(filtrados, criterio));
+  }
+
+  const camposBusca = Array.from(document.querySelectorAll(".list-search"));
+  const camposFiltro = Array.from(document.querySelectorAll(".list-filter"));
+
+  function buscaAtual() {
+    const ativo = camposBusca.find((el) => document.activeElement === el);
+    return (ativo || camposBusca[0] || {}).value;
+  }
+  function filtroAtual() {
+    const ativo = camposFiltro.find((el) => document.activeElement === el);
+    return (ativo || camposFiltro[0] || {}).value;
+  }
+
+  camposBusca.forEach((campo) => {
+    campo.addEventListener("input", () => {
+      camposBusca.forEach((outro) => {
+        if (outro !== campo) outro.value = campo.value;
+      });
+      aplicarFiltroEOrdenacao();
+    });
+  });
+  camposFiltro.forEach((campo) => {
+    campo.addEventListener("change", () => {
+      camposFiltro.forEach((outro) => {
+        if (outro !== campo) outro.value = campo.value;
+      });
+      aplicarFiltroEOrdenacao();
+    });
+  });
+
+  apiGet(`/pacientes?idFisioterapeuta=${idFisioterapeuta}`)
+    .then((pacientes) => {
+      todosOsPacientes = pacientes;
+      if (pacientes.length === 0) {
+        listaEl.innerHTML =
+          '<li style="padding:16px;color:var(--ink-muted);">Nenhum paciente cadastrado ainda.</li>';
+        return;
+      }
+      aplicarFiltroEOrdenacao();
     })
     .catch((err) => {
       listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${err.message}</li>`;

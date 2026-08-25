@@ -57,6 +57,12 @@ public class FisioterapeutaController {
                 id, dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Integer id, HttpServletRequest request) {
+        fisioterapeutaService.excluir(id, AuthContext.id(request), AuthContext.tipo(request));
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/tutorial-visto")
     public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id) {
         fisioterapeutaService.marcarTutorialVisto(id);
