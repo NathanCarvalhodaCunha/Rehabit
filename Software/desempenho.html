@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Consultas — Rehabit</title>
+  <title>Desempenho — Rehabit</title>
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./loader.css" />
 </head>
@@ -48,39 +48,73 @@
       <div class="mobile-avatar" aria-hidden="true"></div>
     </div>
 
-    <main class="main">
+    <main class="main" data-desempenho>
       <header class="page-header desktop-only">
-        <h1>Consultas</h1>
-        <p>Histórico e agenda de todos os profissionais da instituição</p>
+        <h1>Desempenho</h1>
+        <p>Indicadores e evolução dos pacientes de cada profissional</p>
       </header>
 
-      <div class="consultas-topo">
-        <div class="consultas-abas">
-          <button type="button" data-aba="agendadas" class="is-ativa">Agendadas</button>
-          <button type="button" data-aba="realizadas">Realizadas</button>
-        </div>
-        <div class="consultas-filtros">
-          <span class="consultas-contador" data-contador></span>
-          <div class="select-wrap">
-            <select id="filtro-profissional" aria-label="Filtrar por profissional">
-              <option value="">Todos os profissionais</option>
-            </select>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="desempenho-topo">
+        <div class="desempenho-quem">
+          <div class="avatar-md" aria-hidden="true" data-avatar></div>
+          <div>
+            <h2 data-nome-profissional>Carregando...</h2>
+            <p data-especialidade></p>
           </div>
+        </div>
+        <div class="select-wrap">
+          <select id="desempenho-profissional" aria-label="Escolher profissional"></select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
 
+      <div class="kpi-grid" data-kpis></div>
+
       <div class="page-grid">
        <div class="col-main">
+        <section class="card chart-card">
+          <h3>Sessões por mês</h3>
+          <p class="sub">Últimos 6 meses</p>
+          <div class="chart-canvas-wrap alto">
+            <canvas class="chart-canvas" data-gr-sessoes></canvas>
+          </div>
+        </section>
+
+        <h2 class="section-title">Evolução por paciente</h2>
         <section class="card list-card">
-          <ul class="consultas-lista" data-consultas></ul>
+          <div class="desempenho-ordenar">
+            <span>Ordenar por</span>
+            <button type="button" data-ordenar="ganho" class="is-ativa">Maior ganho</button>
+            <button type="button" data-ordenar="sessoes">Mais sessões</button>
+            <button type="button" data-ordenar="nome">Nome</button>
+          </div>
+          <div class="tabela-rolavel">
+            <table class="sessions-table desempenho-tabela">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Sessões</th>
+                  <th>Inicial</th>
+                  <th>Atual</th>
+                  <th>Ganho</th>
+                </tr>
+              </thead>
+              <tbody data-tabela-pacientes></tbody>
+            </table>
+          </div>
         </section>
        </div>
 
        <div class="col-side">
-        <section class="card cal-card">
-          <div data-calendario></div>
-          <div class="cal-resumo" data-resumo-mes></div>
+        <section class="card chart-card">
+          <h3>Ganho de amplitude</h3>
+          <p class="sub">Diferença entre a primeira e a última medição</p>
+          <div class="chart-canvas-wrap alto">
+            <canvas class="chart-canvas" data-gr-ganhos></canvas>
+          </div>
+          <p class="grafico-vazio" data-ganhos-vazio style="display:none;">
+            Ainda não há pacientes com duas medições para comparar.
+          </p>
         </section>
        </div>
       </div>
@@ -109,7 +143,8 @@
   <script src="./notificacoes.js"></script>
 
 
-  <script src="./pages/calendario.js"></script>
-  <script src="./pages/consultas.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="./pages/desempenho.js"></script>
 </body>
 </html>

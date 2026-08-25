@@ -302,3 +302,17 @@ body.dark .notif-item .msg { color: #fff; }
 body.dark .notif-vazio p { color: #fff; }
 body.dark .notif-lista { scrollbar-color: #26325C transparent; }
 body.dark .notif-lista::-webkit-scrollbar-thumb { background: #26325C; border-color: #101A38; }
+body.dark .cal-resumo { border-color: #1B2647; }
+body.dark .cal-resumo-linha strong { color: #fff; }
+body.dark .cal-dia.tem-realizada::after { background: #2BD17E; }
+
+/* Tela de Desempenho (escuro) */
+body.dark .desempenho-quem h2 { color: #fff; }
+body.dark .avatar-md { background: #1B2450; }
+body.dark .desempenho-ordenar { border-color: #1B2647; }
+body.dark .desempenho-ordenar button { background: #101A38; border-color: #1F2A50; color: var(--ink-muted); }
+body.dark .desempenho-ordenar button:hover { color: #fff; border-color: #2B3A6B; }
+body.dark .desempenho-ordenar button.is-ativa { background: var(--brand); border-color: var(--brand); color: #fff; }
+body.dark .desempenho-tabela tbody tr:hover { background: rgba(255,255,255,.04); }
+body.dark .desempenho-tabela td.pos strong { color: #2BD17E; }
+body.dark .desempenho-tabela td.neg strong { color: #FF8E8E; }

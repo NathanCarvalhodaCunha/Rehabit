@@ -169,18 +169,35 @@ window.addEventListener("pageshow", (e) => {
 
   document.querySelectorAll(ehClinica ? seletorAgenda : seletorConsultas).forEach((el) => el.remove());
 
-  if (!ehClinica || nav.querySelector(seletorConsultas)) return;
+  const perfil = Array.from(nav.querySelectorAll("a")).find((a) => /perfil/i.test(a.textContent));
 
-  // Insere Consultas antes de Perfil, mantendo a ordem das demais telas.
-  const link = document.createElement("a");
-  link.href = paginaTema("consultas");
-  link.innerHTML =
+  function inserirLink(pagina, rotulo, svg) {
+    if (nav.querySelector(`a[href$="${pagina}.html"], a[href$="${pagina}-escuro.html"]`)) return;
+    const link = document.createElement("a");
+    link.href = paginaTema(pagina);
+    link.innerHTML = svg + " " + rotulo;
+    nav.insertBefore(link, perfil || null);
+  }
+
+  const ICONE_CALENDARIO =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>' +
-    '<line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Consultas';
+    '<line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const ICONE_DESEMPENHO =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
 
-  const perfil = Array.from(nav.querySelectorAll("a")).find((a) => /perfil/i.test(a.textContent));
-  nav.insertBefore(link, perfil || null);
+  // Consultas é só da clínica e Agenda só do profissional; Desempenho serve
+  // aos dois (o profissional vê os próprios números, a clínica escolhe de
+  // quem quer ver). Inserir o que falta — e não só remover o que sobra —
+  // é o que mantém o menu igual em toda tela, inclusive nas geradas a
+  // partir do modelo do outro tipo de conta.
+  if (ehClinica) {
+    inserirLink("consultas", "Consultas", ICONE_CALENDARIO);
+  } else {
+    inserirLink("agenda", "Agenda", ICONE_CALENDARIO);
+  }
+  inserirLink("desempenho", "Desempenho", ICONE_DESEMPENHO);
 })();
 
 // Mostra a foto de perfil do usuário logado onde o avatar aparece

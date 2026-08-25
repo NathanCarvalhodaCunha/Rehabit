@@ -3,38 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Consultas — Rehabit</title>
+  <title>Desempenho — Rehabit</title>
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dark.css" />
   <link rel="stylesheet" href="./loader.css" />
 </head>
-<body>
+<body class="dark">
   <div class="app">
     <!-- Sidebar (desktop) -->
     <aside class="sidebar">
-      <a href="#" class="logo"><img src="./assets/rehabit-logo.png" alt="Rehabit" /></a>
+      <a href="#" class="logo"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
       <nav class="nav">
-        <a href="./instituicao.html">
+        <a href="./instituicao-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
           Home
         </a>
-        <a href="./dispositivo.html">
+        <a href="./dispositivo-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           Dispositivo
         </a>
-        <a href="./consultas.html">
+        <a href="./consultas-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Consultas
         </a>
-        <a href="./perfil-instituicao.html">
+        <a href="./perfil-instituicao-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
           Perfil
         </a>
-        <a href="./configuracoes.html">
+        <a href="./configuracoes-escuro.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
           Configurações
         </a>
       </nav>
-      <a href="#" class="logout" data-action="logout">
+      <a href="../Login/login-escuro.html" class="logout" data-action="logout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Sair
       </a>
@@ -48,53 +49,88 @@
       <div class="mobile-avatar" aria-hidden="true"></div>
     </div>
 
-    <main class="main">
+    <main class="main" data-desempenho>
       <header class="page-header desktop-only">
-        <h1>Consultas</h1>
-        <p>Histórico e agenda de todos os profissionais da instituição</p>
+        <h1>Desempenho</h1>
+        <p>Indicadores e evolução dos pacientes de cada profissional</p>
       </header>
 
-      <div class="consultas-topo">
-        <div class="consultas-abas">
-          <button type="button" data-aba="agendadas" class="is-ativa">Agendadas</button>
-          <button type="button" data-aba="realizadas">Realizadas</button>
-        </div>
-        <div class="consultas-filtros">
-          <span class="consultas-contador" data-contador></span>
-          <div class="select-wrap">
-            <select id="filtro-profissional" aria-label="Filtrar por profissional">
-              <option value="">Todos os profissionais</option>
-            </select>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="desempenho-topo">
+        <div class="desempenho-quem">
+          <div class="avatar-md" aria-hidden="true" data-avatar></div>
+          <div>
+            <h2 data-nome-profissional>Carregando...</h2>
+            <p data-especialidade></p>
           </div>
+        </div>
+        <div class="select-wrap">
+          <select id="desempenho-profissional" aria-label="Escolher profissional"></select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
 
+      <div class="kpi-grid" data-kpis></div>
+
       <div class="page-grid">
        <div class="col-main">
+        <section class="card chart-card">
+          <h3>Sessões por mês</h3>
+          <p class="sub">Últimos 6 meses</p>
+          <div class="chart-canvas-wrap alto">
+            <canvas class="chart-canvas" data-gr-sessoes></canvas>
+          </div>
+        </section>
+
+        <h2 class="section-title">Evolução por paciente</h2>
         <section class="card list-card">
-          <ul class="consultas-lista" data-consultas></ul>
+          <div class="desempenho-ordenar">
+            <span>Ordenar por</span>
+            <button type="button" data-ordenar="ganho" class="is-ativa">Maior ganho</button>
+            <button type="button" data-ordenar="sessoes">Mais sessões</button>
+            <button type="button" data-ordenar="nome">Nome</button>
+          </div>
+          <div class="tabela-rolavel">
+            <table class="sessions-table desempenho-tabela">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Sessões</th>
+                  <th>Inicial</th>
+                  <th>Atual</th>
+                  <th>Ganho</th>
+                </tr>
+              </thead>
+              <tbody data-tabela-pacientes></tbody>
+            </table>
+          </div>
         </section>
        </div>
 
        <div class="col-side">
-        <section class="card cal-card">
-          <div data-calendario></div>
-          <div class="cal-resumo" data-resumo-mes></div>
+        <section class="card chart-card">
+          <h3>Ganho de amplitude</h3>
+          <p class="sub">Diferença entre a primeira e a última medição</p>
+          <div class="chart-canvas-wrap alto">
+            <canvas class="chart-canvas" data-gr-ganhos></canvas>
+          </div>
+          <p class="grafico-vazio" data-ganhos-vazio style="display:none;">
+            Ainda não há pacientes com duas medições para comparar.
+          </p>
         </section>
        </div>
       </div>
     </main>
 
+
     <!-- Mobile bottom nav -->
     <nav class="mobile-bottomnav">
-      <a href="./dispositivo.html" aria-label="Dispositivo">
+      <a href="./dispositivo-escuro.html" aria-label="Dispositivo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
       </a>
-      <a href="./instituicao.html" aria-label="Home">
+      <a href="./instituicao-escuro.html" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
       </a>
-      <a href="./configuracoes.html" aria-label="Configurações">
+      <a href="./configuracoes-escuro.html" aria-label="Configurações">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </a>
     </nav>
@@ -109,7 +145,8 @@
   <script src="./notificacoes.js"></script>
 
 
-  <script src="./pages/calendario.js"></script>
-  <script src="./pages/consultas.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="./pages/desempenho.js"></script>
 </body>
 </html>

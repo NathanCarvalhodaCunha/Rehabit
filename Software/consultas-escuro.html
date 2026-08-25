@@ -71,15 +71,22 @@
         </div>
       </div>
 
-      <section class="card list-card">
-        <ul class="consultas-lista" data-consultas></ul>
-      </section>
+      <div class="page-grid">
+       <div class="col-main">
+        <section class="card list-card">
+          <ul class="consultas-lista" data-consultas></ul>
+        </section>
+       </div>
+
+       <div class="col-side">
+        <section class="card cal-card">
+          <div data-calendario></div>
+          <div class="cal-resumo" data-resumo-mes></div>
+        </section>
+       </div>
+      </div>
     </main>
 
-
-    <button class="fab mobile-only" data-action="add-fisio" aria-label="Adicionar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
 
     <!-- Mobile bottom nav -->
     <nav class="mobile-bottomnav">
@@ -104,6 +111,7 @@
   <script src="./notificacoes.js"></script>
 
 
+  <script src="./pages/calendario.js"></script>
   <script src="./pages/consultas.js"></script>
 </body>
 </html>

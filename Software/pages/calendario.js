@@ -103,7 +103,11 @@ window.RehabitCalendario = (function () {
     let anoAtual = hoje.getFullYear();
     let mesAtual = hoje.getMonth();
     let diasComConsulta = new Set();
+    // Categoria opcional: quando preenchida, o ponto do dia muda de cor
+    // (ex.: consultas já realizadas x ainda agendadas).
+    let diasAlternativos = new Set();
     let selecionado = null;
+    let aoTrocarMes = null;
 
     container.innerHTML =
       '<div class="cal-head">' +
@@ -140,6 +144,7 @@ window.RehabitCalendario = (function () {
         if (dataIso === hojeIso) classes.push("is-hoje");
         if (dataIso === selecionado) classes.push("is-selecionado");
         if (diasComConsulta.has(dataIso)) classes.push("tem-consulta");
+        if (diasAlternativos.has(dataIso)) classes.push("tem-realizada");
         html += `<button type="button" class="${classes.join(" ")}" data-data="${dataIso}">${dia}</button>`;
       }
       diasEl.innerHTML = html;
@@ -158,6 +163,7 @@ window.RehabitCalendario = (function () {
           anoAtual++;
         }
         desenhar();
+        if (aoTrocarMes) aoTrocarMes(anoAtual, mesAtual);
         return;
       }
 
@@ -171,9 +177,13 @@ window.RehabitCalendario = (function () {
     desenhar();
 
     return {
-      /** Recebe a lista de agendamentos e marca os dias correspondentes. */
-      marcarDias(agendamentos) {
+      /**
+       * Marca os dias com consulta. `alternativos` é opcional e recebe um
+       * ponto de outra cor — usado para separar realizadas de agendadas.
+       */
+      marcarDias(agendamentos, alternativos) {
         diasComConsulta = new Set(agendamentos.map((a) => a.data));
+        diasAlternativos = new Set((alternativos || []).map((a) => a.data));
         desenhar();
       },
       diaSelecionado() {
@@ -181,6 +191,20 @@ window.RehabitCalendario = (function () {
       },
       limparSelecao() {
         selecionado = null;
+        desenhar();
+      },
+      mesVisivel() {
+        return { ano: anoAtual, mes: mesAtual };
+      },
+      aoMudarDeMes(callback) {
+        aoTrocarMes = callback;
+      },
+      /** Leva o calendário para o mês de uma data ISO, sem selecioná-la. */
+      irPara(dataIso) {
+        if (!dataIso) return;
+        const [ano, mes] = dataIso.split("-").map(Number);
+        anoAtual = ano;
+        mesAtual = mes - 1;
         desenhar();
       },
     };

@@ -103,6 +103,11 @@ button { font-family: inherit; cursor: pointer; }
   padding: 48px 56px;
 
   width: 100%;
+  /* Item de grid tem min-width:auto e estica para caber o conteúdo — uma
+     tabela larga empurrava a página inteira e criava rolagem horizontal no
+     celular. Com min-width:0 o conteúdo largo rola dentro do próprio
+     contêiner, como manda o .tabela-rolavel. */
+  min-width: 0;
 }
 
 /* ---------- Layout de duas colunas (só desktop largo) ----------
@@ -1908,4 +1913,103 @@ button.form-avatar {
   .consultas-filtros { justify-content: space-between; }
   .consulta-item { grid-template-columns: 84px minmax(0, 1fr); }
   .consulta-extra { grid-column: 1 / -1; text-align: left; }
+}
+
+/* ---------- Resumo do mês, abaixo do calendário ---------- */
+.cal-resumo {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.cal-resumo-linha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.cal-resumo-linha span { color: var(--ink-muted); font-weight: 600; }
+.cal-resumo-linha strong { color: var(--ink-strong); font-weight: 800; font-size: 14.5px; }
+.cal-resumo-vazio { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-muted); text-align: center; }
+
+/* Ponto verde para consultas já realizadas, azul para agendadas */
+.cal-dia.tem-realizada::after { background: var(--success); }
+.cal-dia.is-selecionado.tem-realizada::after { background: #fff; }
+
+/* ---------- Tela de Desempenho ---------- */
+.desempenho-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.desempenho-quem { display: flex; align-items: center; gap: 14px; }
+.avatar-md {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: #D9D9D9;
+  flex-shrink: 0;
+}
+.desempenho-quem h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-strong);
+}
+.desempenho-quem p { margin: 2px 0 0; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+
+.desempenho-ordenar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+.desempenho-ordenar span { font-size: 12.5px; font-weight: 700; color: var(--ink-muted); margin-right: 2px; }
+.desempenho-ordenar button {
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--ink-muted);
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.desempenho-ordenar button:hover { color: var(--ink-strong); border-color: #C7D2FE; }
+.desempenho-ordenar button.is-ativa {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* Gráficos desta tela pedem mais altura que os do paciente */
+.chart-canvas-wrap.alto { height: 260px; }
+
+.grafico-vazio {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.tabela-rolavel { overflow-x: auto; }
+.desempenho-tabela { min-width: 480px; }
+.desempenho-tabela tbody tr:hover { background: #F6F8FC; }
+.desempenho-tabela td.pos strong { color: var(--success); }
+.desempenho-tabela td.neg strong { color: #E57373; }
+
+@media (max-width: 991px) {
+  .desempenho-topo { flex-direction: column; align-items: stretch; }
+  .desempenho-quem h2 { font-size: 18px; }
+  .chart-canvas-wrap.alto { height: 220px; }
 }

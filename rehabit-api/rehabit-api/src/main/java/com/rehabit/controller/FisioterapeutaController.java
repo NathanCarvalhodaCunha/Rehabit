@@ -1,11 +1,13 @@
 package com.rehabit.controller;
 
 import com.rehabit.dto.AuthResponseDTO;
+import com.rehabit.dto.DesempenhoDTO;
 import com.rehabit.dto.FisioterapeutaCreateDTO;
 import com.rehabit.dto.FisioterapeutaPerfilDTO;
 import com.rehabit.dto.FisioterapeutaResumoDTO;
 import com.rehabit.dto.FisioterapeutaUpdateDTO;
 import com.rehabit.security.AuthContext;
+import com.rehabit.service.DesempenhoService;
 import com.rehabit.service.FisioterapeutaService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,9 +23,12 @@ import java.util.List;
 public class FisioterapeutaController {
 
     private final FisioterapeutaService fisioterapeutaService;
+    private final DesempenhoService desempenhoService;
 
-    public FisioterapeutaController(FisioterapeutaService fisioterapeutaService) {
+    public FisioterapeutaController(FisioterapeutaService fisioterapeutaService,
+                                     DesempenhoService desempenhoService) {
         this.fisioterapeutaService = fisioterapeutaService;
+        this.desempenhoService = desempenhoService;
     }
 
     // Endpoint usado pela instituição já logada para cadastrar um
@@ -61,6 +66,13 @@ public class FisioterapeutaController {
     public ResponseEntity<Void> excluir(@PathVariable Integer id, HttpServletRequest request) {
         fisioterapeutaService.excluir(id, AuthContext.id(request), AuthContext.tipo(request));
         return ResponseEntity.noContent().build();
+    }
+
+    /** Indicadores e evolução dos pacientes deste profissional. */
+    @GetMapping("/{id}/desempenho")
+    public ResponseEntity<DesempenhoDTO> desempenho(@PathVariable Integer id, HttpServletRequest request) {
+        return ResponseEntity.ok(desempenhoService.doFisioterapeuta(
+                id, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @PutMapping("/{id}/tutorial-visto")
