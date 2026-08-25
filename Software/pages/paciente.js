@@ -136,6 +136,11 @@ function formatarDataLonga(dataIso) {
   document.querySelectorAll(".tabs a.tab").forEach((a) => {
     a.href = `${paginaTema("cadastrar-sessao")}?id=${idPaciente}`;
   });
+  document.querySelectorAll(".edit-patient-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      window.location.href = `${paginaTema("editar-paciente")}?id=${idPaciente}`;
+    });
+  });
   const addSessionBtn = document.querySelector('[data-action="add-session"]');
   if (addSessionBtn) {
     addSessionBtn.addEventListener("click", (e) => {

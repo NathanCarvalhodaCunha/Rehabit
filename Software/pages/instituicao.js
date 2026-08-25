@@ -8,6 +8,9 @@
   document.querySelectorAll(".inst-greeting h1").forEach((el) => {
     el.textContent = `Olá, ${sessao.nome}`;
   });
+  document.querySelectorAll(".inst-greeting p").forEach((el) => {
+    el.textContent = dataAtualPorExtenso();
+  });
   document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
     el.textContent = sessao.nome;
   });
@@ -19,6 +22,11 @@
       el.style.backgroundPosition = "center";
     });
   }
+
+  listaEl.addEventListener("click", (e) => {
+    const item = e.target.closest(".fisio-item[data-id]");
+    if (item) window.location.href = `${paginaTema("perfil-profissional")}?id=${item.dataset.id}`;
+  });
 
   apiGet(`/fisioterapeutas?idClinica=${sessao.id}`)
     .then((fisioterapeutas) => {
@@ -34,7 +42,7 @@
             ? ` style="background-image:url('${foto}');background-size:cover;background-position:center;"`
             : "";
           return `
-          <li class="fisio-item">
+          <li class="fisio-item" data-id="${f.id}" style="cursor:pointer;">
             <div class="avatar-sm"${estiloAvatar} aria-hidden="true"></div>
             <div class="fisio-name">${f.nome}</div>
             <div class="fisio-spec">${f.especialidade || "Fisioterapeuta"}</div>

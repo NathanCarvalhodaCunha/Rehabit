@@ -131,6 +131,23 @@ CREATE TABLE IF NOT EXISTS `tb06_medicao` (
 
 -- Copiando dados para a tabela rehabit.tb06_medicao: ~0 rows (aproximadamente)
 
+-- Copiando estrutura para tabela rehabit.tb07_agendamento
+CREATE TABLE IF NOT EXISTS `tb07_agendamento` (
+  `tb07_id_agendamento` int(11) NOT NULL AUTO_INCREMENT,
+  `tb07_data_agendamento` date NOT NULL,
+  `tb07_hora_agendamento` time NOT NULL,
+  `tb07_observacao` varchar(255) DEFAULT NULL,
+  `tb07_id_fisioterapeuta` int(11) NOT NULL,
+  `tb07_id_paciente` int(11) NOT NULL,
+  PRIMARY KEY (`tb07_id_agendamento`),
+  KEY `idx_tb07_id_fisioterapeuta` (`tb07_id_fisioterapeuta`),
+  KEY `idx_tb07_id_paciente` (`tb07_id_paciente`),
+  CONSTRAINT `fk_tb07_tb02` FOREIGN KEY (`tb07_id_fisioterapeuta`) REFERENCES `tb02_fisioterapeuta` (`tb02_id_fisioterapeuta`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_tb07_tb03` FOREIGN KEY (`tb07_id_paciente`) REFERENCES `tb03_paciente` (`tb03_id_paciente`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb07_agendamento: ~0 rows (aproximadamente)
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;

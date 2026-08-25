@@ -304,3 +304,27 @@ h1 {
   h1 { font-size: 36px; }
   .logo { width: 340px; }
 }
+
+/* ---------- Toastify — corrige mensagem cortada/sobreposta ----------
+   O padrão da lib usa max-width:calc(50% - 20px), que em telas de
+   celular vira uma coluna estreita demais e deixa o texto sobrepondo
+   o próprio card; aqui garantimos uma largura legível e quebra de
+   linha correta em qualquer tamanho de tela. */
+.toastify {
+  max-width: min(420px, calc(100vw - 32px));
+  width: max-content;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  padding: 14px 18px;
+}
+@media (max-width: 480px) {
+  .toastify.toastify-right,
+  .toastify.toastify-left {
+    left: 16px !important;
+    right: 16px !important;
+    max-width: none;
+    width: auto;
+    margin: 0;
+  }
+}

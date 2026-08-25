@@ -1,10 +1,7 @@
 package com.rehabit.storage;
 
 import com.rehabit.exception.AuthException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -13,12 +10,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-@Service
-@Profile("!cloud")
+/**
+ * Guarda o arquivo no disco local. Usado como alternativa quando o
+ * Cloudinary não está configurado (ver FileStorageConfig); em serviços
+ * sem disco persistente (ex.: Render sem um "Disk" contratado) os
+ * arquivos daqui são perdidos a cada novo deploy/restart.
+ */
 public class LocalFileStorageService implements FileStorageService {
 
-    @Value("${app.upload-dir}")
-    private String uploadDir;
+    private final String uploadDir;
+
+    public LocalFileStorageService(String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
 
     @Override
     public String salvar(MultipartFile arquivo) {

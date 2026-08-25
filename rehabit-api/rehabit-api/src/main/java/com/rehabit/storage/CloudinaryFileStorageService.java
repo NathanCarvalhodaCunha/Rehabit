@@ -5,16 +5,19 @@ import com.cloudinary.utils.ObjectUtils;
 import com.rehabit.exception.AuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
 
-@Service
-@Profile("cloud")
+/**
+ * Guarda o arquivo no Cloudinary (armazenamento persistente). Escolhido
+ * em FileStorageConfig sempre que a variável de ambiente CLOUDINARY_URL
+ * está definida, independentemente do profile do Spring ativo — assim
+ * um deploy que esqueça de ativar o profile "cloud" não volta a gravar
+ * fotos no disco local (efêmero) por engano.
+ */
 public class CloudinaryFileStorageService implements FileStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudinaryFileStorageService.class);
