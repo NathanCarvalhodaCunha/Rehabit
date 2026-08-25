@@ -48,6 +48,11 @@ button { font-family: inherit; cursor: pointer; }
   position: sticky;
   top: 0;
   height: 100vh;
+  /* Acima do conteúdo do .main: o dropdown de notificações abre para fora
+     da sidebar, por cima dos cards da página. Sem um z-index explícito, a
+     ordem de pintura depende do contexto de empilhamento de cada página e
+     o dropdown acabava atrás de algum card. */
+  z-index: 30;
 }
 
 .sidebar .logo {
@@ -1429,7 +1434,7 @@ button.form-avatar {
   border: 1px solid var(--card-border);
   border-radius: 12px;
   box-shadow: var(--shadow-card-hover);
-  z-index: 20;
+  z-index: 40;
   padding: 8px;
 }
 .notif-dropdown.is-hidden { display: none; }
@@ -1520,6 +1525,8 @@ button.form-avatar {
 .gonio-scale-arc { fill: none; stroke: var(--ink-muted); stroke-width: 2; opacity: .55; }
 .gonio-tick { stroke: var(--ink-muted); stroke-width: 1.5; opacity: .55; }
 .gonio-tick-label { fill: var(--ink-muted); font-size: 9px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+.gonio-support { fill: var(--hairline); }
+.gonio-device { fill: var(--brand); opacity: .85; }
 .gonio-arm-fixed { stroke: #4B5563; stroke-width: 4; stroke-linecap: round; }
 .gonio-arm-moving { stroke: var(--brand); stroke-width: 4; stroke-linecap: round; }
 .gonio-hinge { fill: var(--brand); stroke: #fff; stroke-width: 2; }

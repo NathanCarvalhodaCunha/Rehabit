@@ -175,15 +175,23 @@ let arquivoFotoProfissional = null;
     btn.addEventListener("click", () => inputFoto.click());
   });
 
+  // Todo picker abre o seletor de arquivo, mas só os que são o próprio
+  // avatar recebem a prévia. Em editar-paciente o botão de texto "Alterar
+  // foto" também é um picker — pintar a foto nele deixava a imagem atrás
+  // do texto do botão.
+  const alvosPreview = Array.from(pickers).filter(
+    (el) => el.classList.contains("form-avatar") || el.classList.contains("avatar-lg")
+  );
+
   inputFoto.addEventListener("change", () => {
     const arquivo = inputFoto.files && inputFoto.files[0];
     if (!arquivo) return;
     arquivoFotoProfissional = arquivo;
     const url = URL.createObjectURL(arquivo);
-    pickers.forEach((btn) => {
-      btn.style.backgroundImage = `url("${url}")`;
-      btn.style.backgroundSize = "cover";
-      btn.style.backgroundPosition = "center";
+    alvosPreview.forEach((el) => {
+      el.style.backgroundImage = `url("${url}")`;
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "center";
     });
   });
 })();
