@@ -5,6 +5,18 @@
   const sessao = getSessao();
   if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
 
+  apiGet(`/fisioterapeutas/${sessao.id}`)
+    .then((f) => fetch(`${API_BASE_URL}/goniometro/leitura?idClinica=${f.idClinica}`, {
+      headers: { Authorization: `Bearer ${sessao.token}` },
+    }))
+    .then((r) => r.json())
+    .then((dados) => {
+      if (dados.angulo != null) {
+        document.getElementById("s-amp").value = dados.angulo;
+      }
+    })
+    .catch(() => {});
+
   const params = new URLSearchParams(window.location.search);
   const idPaciente = params.get("id");
   if (!idPaciente) {

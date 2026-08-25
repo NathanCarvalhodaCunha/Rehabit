@@ -64,6 +64,20 @@
         }
       });
     });
+
+    function atualizarAngulo() {
+      fetch(`${API_BASE_URL}/goniometro/leitura?idClinica=${idClinica}`, {
+        headers: { Authorization: `Bearer ${sessao.token}` },
+      })
+        .then((r) => r.json())
+        .then((dados) => {
+          const texto = dados.angulo != null ? `${dados.angulo}°` : "-";
+          document.querySelectorAll(".angulo-atual").forEach((el) => (el.textContent = texto));
+        })
+        .catch(() => {});
+    }
+    atualizarAngulo();
+    setInterval(atualizarAngulo, 2000);
   }).catch((err) => {
     semDados();
     RehabitToast.erro(err.message);
