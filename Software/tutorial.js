@@ -59,12 +59,27 @@
     return passos;
   }
 
+  // Marca local que sobrevive ao logout (o logout apaga "rehabit_usuario",
+  // então guardar o "já vi" só dentro da sessão não adianta). Sem isso, se a
+  // gravação no servidor falhasse, o tutorial voltava a cada login.
+  function chaveLocal(sessao) {
+    return "rehabit_tutorial_visto_" + sessao.tipo + "_" + sessao.id;
+  }
+
+  function jaViu(sessao) {
+    if (sessao.tutorialVisto) return true;
+    try {
+      return localStorage.getItem(chaveLocal(sessao)) === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
   function marcarVistoNoServidor(sessao) {
     var caminho = sessao.tipo === "CLINICA" ? "/clinicas/" : "/fisioterapeutas/";
-    // Falha silenciosa proposital: o localStorage já foi atualizado, então a sessão
-    // atual segue correta; se essa chamada falhar, o próximo login vai buscar o valor
-    // ainda "false" no servidor e o tutorial reaparece — tradeoff aceito em vez de
-    // bloquear a UI numa chamada de rede.
+    // Falha silenciosa proposital: a marca local já foi gravada, então o
+    // tutorial não reaparece neste navegador mesmo se esta chamada falhar.
+    // O servidor é só para o usuário não rever o tutorial em outro aparelho.
     fetch(API_BASE_URL + caminho + sessao.id + "/tutorial-visto", {
       method: "PUT",
       headers: cabecalhosAutenticados(),
@@ -73,12 +88,17 @@
 
   function iniciar() {
     var sessao = getSessao();
-    if (!sessao || sessao.tutorialVisto) return;
+    if (!sessao || jaViu(sessao)) return;
 
     // Marca como visto imediatamente — "mostra uma vez, sempre", não
     // "mostra até completar". Evita reabrir se a página recarregar no meio.
     sessao.tutorialVisto = true;
     localStorage.setItem("rehabit_usuario", JSON.stringify(sessao));
+    try {
+      localStorage.setItem(chaveLocal(sessao), "1");
+    } catch (err) {
+      /* modo privado sem storage: o servidor ainda cobre o caso normal */
+    }
     marcarVistoNoServidor(sessao);
 
     var passos = passosPara(sessao.tipo)

@@ -35,6 +35,17 @@ function cabecalhosAutenticados(extras) {
   return cabecalhos;
 }
 
+// fetch() rejeita com TypeError ("Failed to fetch") quando o servidor está
+// fora do ar, sem internet ou o CORS barrou a resposta. Essa mensagem crua
+// aparecia direto na tela para o usuário; aqui vira algo compreensível.
+async function buscar(url, opcoes) {
+  try {
+    return await fetch(url, opcoes);
+  } catch (err) {
+    throw new Error("Não foi possível falar com o servidor. Verifique sua conexão e tente novamente.");
+  }
+}
+
 async function tratarResposta(resposta, mensagemPadrao) {
   const dados = await resposta.json().catch(() => ({}));
   if (resposta.status === 401) {
@@ -51,7 +62,7 @@ async function tratarResposta(resposta, mensagemPadrao) {
 async function apiGet(caminho) {
   RehabitLoader.show();
   try {
-    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    const resposta = await buscar(`${API_BASE_URL}${caminho}`, {
       headers: cabecalhosAutenticados(),
     });
     return await tratarResposta(resposta, "Não foi possível carregar os dados.");
@@ -63,7 +74,7 @@ async function apiGet(caminho) {
 async function apiPost(caminho, corpo) {
   RehabitLoader.show();
   try {
-    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    const resposta = await buscar(`${API_BASE_URL}${caminho}`, {
       method: "POST",
       headers: cabecalhosAutenticados({ "Content-Type": "application/json" }),
       body: JSON.stringify(corpo),
@@ -77,7 +88,7 @@ async function apiPost(caminho, corpo) {
 async function apiPut(caminho, corpo) {
   RehabitLoader.show();
   try {
-    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    const resposta = await buscar(`${API_BASE_URL}${caminho}`, {
       method: "PUT",
       headers: cabecalhosAutenticados({ "Content-Type": "application/json" }),
       body: JSON.stringify(corpo),
@@ -102,7 +113,7 @@ function dataAtualPorExtenso() {
 async function apiDelete(caminho) {
   RehabitLoader.show();
   try {
-    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+    const resposta = await buscar(`${API_BASE_URL}${caminho}`, {
       method: "DELETE",
       headers: cabecalhosAutenticados(),
     });
@@ -286,7 +297,7 @@ if (cadastrarProfissionalForm) {
       if (arquivoFotoProfissional) {
         const formData = new FormData();
         formData.append("arquivo", arquivoFotoProfissional);
-        const uploadResponse = await fetch(`${API_BASE_URL}/uploads`, {
+        const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
           body: formData,
         });

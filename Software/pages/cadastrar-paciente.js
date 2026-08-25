@@ -32,7 +32,7 @@
       if (arquivoFotoProfissional) {
         const formData = new FormData();
         formData.append("arquivo", arquivoFotoProfissional);
-        const uploadResponse = await fetch(`${API_BASE_URL}/uploads`, {
+        const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
           body: formData,
         });
