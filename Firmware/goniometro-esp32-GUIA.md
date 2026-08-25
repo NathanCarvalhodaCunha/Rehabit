@@ -50,7 +50,17 @@
 5. Se `[nuvem]` demorar bastante na primeira leitura — normal, o Render
    gratuito "dorme" e leva alguns segundos pra acordar na primeira
    chamada depois de um tempo parado.
-6. Com tudo funcionando, abra a tela Dispositivo do Rehabit (local ou a
+6. Se aparecer `status=-1` (em vez de um código HTTP normal como 200, 401
+   etc.) em qualquer um dos dois alvos, geralmente é problema de conexão
+   Wi-Fi/TLS, não um erro da aplicação — confira o sinal do Wi-Fi e, no
+   caso do `[nuvem]`, se o ESP tem acesso à internet de verdade (não só à
+   rede local).
+7. Se o ângulo aparecer sempre negativo e isso não fizer sentido para a
+   articulação medida: `atan2` pode retornar valores negativos dependendo
+   de como o MPU6050 está montado, e o campo de amplitude não tem mínimo —
+   experimente montar o sensor do outro lado ou tirar o valor absoluto em
+   `lerAngulo()`.
+8. Com tudo funcionando, abra a tela Dispositivo do Rehabit (local ou a
    versão publicada) logado como a clínica — o ângulo deve aparecer e
    atualizar sozinho a cada ~2s.
 

@@ -23,6 +23,17 @@
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <WiFiClientSecure.h>
+
+WiFiClientSecure clienteSeguro;
+WiFiClient clienteInseguro;
+
+WiFiClient &clienteParaUrl(const char *url) {
+  if (String(url).startsWith("https://")) {
+    return clienteSeguro;
+  }
+  return clienteInseguro;
+}
 
 const char *WIFI_SSID = "SEU_WIFI_AQUI";
 const char *WIFI_SENHA = "SUA_SENHA_WIFI_AQUI";
@@ -65,12 +76,14 @@ void conectarWifi() {
 void fazerLogin(Alvo &alvo) {
   Serial.printf("[%s] tentando login...\n", alvo.nome);
   HTTPClient http;
-  http.begin(String(alvo.baseUrl) + "/auth/login");
+  http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/auth/login");
   http.addHeader("Content-Type", "application/json");
   String corpo = String("{\"email\":\"") + alvo.email + "\",\"senha\":\"" + alvo.senha + "\"}";
   int status = http.POST(corpo);
   if (status == 200) {
     String resposta = http.getString();
+    // Busca posicional simples: assume que o AuthResponseDTO serializa "id" antes de "token".
+    // Se a ordem dos campos desse DTO mudar, este parsing quebra silenciosamente.
     int posToken = resposta.indexOf("\"token\":\"");
     int posId = resposta.indexOf("\"id\":");
     if (posToken >= 0 && posId >= 0) {
@@ -101,7 +114,7 @@ float lerAngulo() {
 
 void enviarLeitura(Alvo &alvo, float angulo) {
   HTTPClient http;
-  http.begin(String(alvo.baseUrl) + "/goniometro/leitura");
+  http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/goniometro/leitura");
   http.addHeader("Content-Type", "application/json");
   http.addHeader("Authorization", "Bearer " + alvo.token);
   String corpo = String("{\"idClinica\":") + alvo.idClinica + ",\"angulo\":" + String(angulo, 2) + "}";
@@ -122,6 +135,7 @@ void setup() {
   delay(1000);
 
   Wire.begin();
+  clienteSeguro.setInsecure();  // TCC/demo: sem verificação de certificado, simplicidade sobre segurança de transporte perfeita.
   if (!mpu.begin()) {
     Serial.println("MPU6050 nao encontrado! Confira a fiacao (SDA/SCL/VCC/GND) e trave aqui.");
     while (true) {

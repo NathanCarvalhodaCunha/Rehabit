@@ -19,9 +19,13 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class GoniometroService {
 
+    private record Leitura(BigDecimal angulo, java.time.Instant recebidaEm) {}
+
+    private static final long VALIDADE_LEITURA_SEGUNDOS = 30;
+
     private final GoniometroRepository goniometroRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
-    private final Map<Integer, BigDecimal> ultimoAnguloPorClinica = new ConcurrentHashMap<>();
+    private final Map<Integer, Leitura> ultimoAnguloPorClinica = new ConcurrentHashMap<>();
 
     public GoniometroService(GoniometroRepository goniometroRepository,
                               FisioterapeutaRepository fisioterapeutaRepository) {
@@ -48,12 +52,17 @@ public class GoniometroService {
 
     public void registrarLeitura(Integer idClinica, Integer usuarioId, String usuarioTipo, BigDecimal angulo) {
         verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
-        ultimoAnguloPorClinica.put(idClinica, angulo);
+        ultimoAnguloPorClinica.put(idClinica, new Leitura(angulo, java.time.Instant.now()));
     }
 
     public BigDecimal buscarLeituraAtual(Integer idClinica, Integer usuarioId, String usuarioTipo) {
         verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
-        return ultimoAnguloPorClinica.get(idClinica);
+        Leitura leitura = ultimoAnguloPorClinica.get(idClinica);
+        if (leitura == null) {
+            return null;
+        }
+        boolean expirada = leitura.recebidaEm().isBefore(java.time.Instant.now().minusSeconds(VALIDADE_LEITURA_SEGUNDOS));
+        return expirada ? null : leitura.angulo();
     }
 
     /** A própria clínica, ou um fisioterapeuta que pertence a ela (dispositivo é compartilhado pela clínica toda). */
