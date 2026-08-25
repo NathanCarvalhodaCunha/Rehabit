@@ -82,8 +82,12 @@ void fazerLogin(Alvo &alvo) {
   int status = http.POST(corpo);
   if (status == 200) {
     String resposta = http.getString();
-    // Busca posicional simples: assume que o AuthResponseDTO serializa "id" antes de "token".
-    // Se a ordem dos campos desse DTO mudar, este parsing quebra silenciosamente.
+    // Busca posicional simples no JSON do AuthResponseDTO: "token" e "id" são
+    // procurados de forma independente (a ordem entre eles não importa), mas a
+    // linha abaixo assume que "id" NÃO é o último campo do objeto — ela procura
+    // a vírgula depois de "id": pra saber onde o número termina. Se "id" virar o
+    // último campo desse DTO, indexOf(",", posId) não acha vírgula (-1) e este
+    // parsing quebra silenciosamente.
     int posToken = resposta.indexOf("\"token\":\"");
     int posId = resposta.indexOf("\"id\":");
     if (posToken >= 0 && posId >= 0) {
