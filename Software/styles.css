@@ -1415,10 +1415,13 @@ button.form-avatar {
 .notif-badge.is-hidden { display: none; }
 
 .notif-dropdown {
+  /* Abre como um flyout à direita do sino, não para baixo: a 320px de
+     largura, "para baixo" cobria o resto do menu (Perfil, Configurações)
+     porque a sidebar tem só 240px. */
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
+  top: 0;
+  left: 100%;
+  margin-left: 12px;
   width: 320px;
   max-height: 360px;
   overflow-y: auto;

@@ -4,20 +4,22 @@
   if (!forearm || !angleValueEl) return;
 
   // Ângulos em graus "de tela" (0° = eixo +x, sentido horário), medidos a
-  // partir do pivô do cotovelo. 45° = braço totalmente estendido (antebraço
-  // na mesma linha do braço); -100° = flexão confortável de ~145°.
-  const ANGULO_ESTENDIDO = 45;
-  const ANGULO_FLETIDO = -100;
+  // partir do pivô do pulso. Nosso goniômetro fica preso na mão e só mede
+  // um movimento: a mão sai de uma posição baixa/fechada (85°, apontando
+  // para baixo) e abre para cima (-15°, acima da horizontal) — não é um
+  // vaivém de flexão/extensão como num goniômetro de cotovelo genérico.
+  const ANGULO_FECHADO = 85;
+  const ANGULO_ABERTO = -15;
   const DURACAO_MS = 2200;
   const PAUSA_MS = 700;
 
-  function flexaoAPartirDoAngulo(anguloTela) {
-    return Math.round(ANGULO_ESTENDIDO - anguloTela);
+  function aberturaAPartirDoAngulo(anguloTela) {
+    return Math.round(ANGULO_FECHADO - anguloTela);
   }
 
   function aplicar(anguloTela) {
     forearm.style.transform = `rotate(${anguloTela}deg)`;
-    angleValueEl.textContent = String(flexaoAPartirDoAngulo(anguloTela));
+    angleValueEl.textContent = String(aberturaAPartirDoAngulo(anguloTela));
   }
 
   function easeInOutSine(t) {
@@ -48,9 +50,11 @@
       requestAnimationFrame(passo);
     }
 
-    tramo(ANGULO_ESTENDIDO, ANGULO_FLETIDO, () => {
+    // O movimento real do dispositivo é só de abertura (baixo → cima); o
+    // retorno aqui é somente para o loop de demonstração poder repetir.
+    tramo(ANGULO_FECHADO, ANGULO_ABERTO, () => {
       setTimeout(() => {
-        tramo(ANGULO_FLETIDO, ANGULO_ESTENDIDO, () => {
+        tramo(ANGULO_ABERTO, ANGULO_FECHADO, () => {
           animando = false;
           if (onDone) onDone();
         });
@@ -65,7 +69,7 @@
   }
 
   if (prefersReducedMotion()) {
-    aplicar((ANGULO_ESTENDIDO + ANGULO_FLETIDO) / 2);
+    aplicar((ANGULO_FECHADO + ANGULO_ABERTO) / 2);
   } else {
     loop();
   }

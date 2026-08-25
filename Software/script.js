@@ -137,6 +137,19 @@ window.addEventListener("pageshow", (e) => {
   if (e.persisted) window.location.reload();
 });
 
+// Esconde o link de Agenda para contas de clínica. A agenda é por
+// paciente/profissional (não existe uma "agenda da clínica"), mas
+// dispositivo.html e configuracoes.html são páginas compartilhadas entre
+// os dois tipos de conta e têm o link fixo no HTML — sem isso, o item
+// "aparece e some" da barra lateral conforme a página, para uma clínica.
+(function ajustarNavAgenda() {
+  const sessao = getSessao();
+  if (!sessao || sessao.tipo === "FISIOTERAPEUTA") return;
+  document.querySelectorAll('a[href$="agenda.html"], a[href$="agenda-escuro.html"]').forEach((el) => {
+    el.remove();
+  });
+})();
+
 // Mostra a foto de perfil do usuário logado onde o avatar aparece
 // (cabeçalho da instituição/profissional, topo mobile, tela de perfil).
 (function aplicarAvatarSessao() {
