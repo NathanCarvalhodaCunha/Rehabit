@@ -121,7 +121,9 @@
           <span>${(c.hora || "").slice(0, 5)}</span>
         </div>
         <div class="consulta-info">
-          <div class="consulta-paciente">${escaparHtml(c.nomePaciente || "Paciente")}</div>
+          <button type="button" class="consulta-paciente link-paciente" data-id-paciente="${c.idPaciente}">
+            ${escaparHtml(c.nomePaciente || "Paciente")}
+          </button>
           <div class="consulta-profissional">${escaparHtml(c.nomeFisioterapeuta || "-")}</div>
         </div>
         <div class="consulta-extra">${escaparHtml(c.observacao || "")}</div>
@@ -166,6 +168,11 @@
     calendario = RehabitCalendario.criar(containerCalendario, renderizar);
     calendario.aoMudarDeMes(atualizarResumo);
   }
+
+  lista.addEventListener("click", (e) => {
+    const alvo = e.target.closest("[data-id-paciente]");
+    if (alvo) window.location.href = `${paginaTema("paciente")}?id=${alvo.dataset.idPaciente}`;
+  });
 
   abas.forEach((botao) => {
     botao.addEventListener("click", () => {

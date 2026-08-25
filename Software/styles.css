@@ -554,7 +554,11 @@ button { font-family: inherit; cursor: pointer; }
   font: inherit; color: var(--ink-strong);
 }
 .list-search:focus { outline: none; border-color: var(--brand); background: #FFFFFF; }
-.select-wrap { position: relative; }
+/* inline-flex faz a moldura abraçar exatamente o <select>; como bloco ela
+   podia ficar mais larga e a seta (posicionada à direita dela) caía fora
+   da caixa. */
+.select-wrap { position: relative; display: inline-flex; }
+.select-wrap select { width: 100%; }
 /* Vale para qualquer <select> dentro de .select-wrap: a moldura desenha a
    própria seta, então a nativa precisa sumir — senão aparecem duas. */
 .list-filter,
@@ -2013,3 +2017,17 @@ button.form-avatar {
   .desempenho-quem h2 { font-size: 18px; }
   .chart-canvas-wrap.alto { height: 220px; }
 }
+
+/* Nome do paciente clicável nas listas de consultas */
+.link-paciente {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-strong);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.link-paciente:hover { color: var(--brand); text-decoration: underline; }
+.link-paciente:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(21,101,216,.25); }

@@ -42,6 +42,11 @@
     return `${valor > 0 ? "+" : ""}${valor}°`;
   }
 
+  /** "1 sessão" / "3 sessões" — sem o "(ões)" entre parênteses. */
+  function plural(quantidade, singular, pluralForma) {
+    return `${quantidade} ${quantidade === 1 ? singular : pluralForma}`;
+  }
+
   function preencherIndicadores(d) {
     const cartoes = [
       { rotulo: "Sessões realizadas", valor: d.totalSessoes, detalhe: `${d.sessoesUltimos30Dias} nos últimos 30 dias` },
@@ -89,7 +94,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} sessão(ões)` } },
+          tooltip: { callbacks: { label: (ctx) => plural(ctx.parsed.y, "sessão", "sessões") } },
         },
         scales: {
           y: { beginAtZero: true, grid: { color: c.grade }, ticks: { color: c.texto, precision: 0 } },
@@ -202,11 +207,13 @@
     raiz.querySelector("[data-especialidade]").textContent = d.especialidade || "Fisioterapeuta";
 
     const avatar = raiz.querySelector("[data-avatar]");
-    const foto = urlFoto(d.foto);
-    if (avatar && foto) {
-      avatar.style.backgroundImage = `url("${foto}")`;
-      avatar.style.backgroundSize = "cover";
-      avatar.style.backgroundPosition = "center";
+    if (avatar) {
+      const foto = urlFoto(d.foto);
+      // Limpa sempre antes: sem isso, trocar para um profissional sem foto
+      // deixava na tela a imagem do anterior.
+      avatar.style.backgroundImage = foto ? `url("${foto}")` : "";
+      avatar.style.backgroundSize = foto ? "cover" : "";
+      avatar.style.backgroundPosition = foto ? "center" : "";
     }
 
     preencherIndicadores(d);

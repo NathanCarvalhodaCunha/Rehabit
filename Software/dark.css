@@ -316,3 +316,5 @@ body.dark .desempenho-ordenar button.is-ativa { background: var(--brand); border
 body.dark .desempenho-tabela tbody tr:hover { background: rgba(255,255,255,.04); }
 body.dark .desempenho-tabela td.pos strong { color: #2BD17E; }
 body.dark .desempenho-tabela td.neg strong { color: #FF8E8E; }
+body.dark .link-paciente { color: #fff; }
+body.dark .link-paciente:hover { color: #2F80FF; }
