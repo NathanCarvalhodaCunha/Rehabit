@@ -60,22 +60,53 @@
 
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
-  document.querySelectorAll(".pro-greeting h1").forEach((el) => {
-    el.textContent = `${saudacao}, ${sessao.nome}!`;
-  });
-  document.querySelectorAll(".pro-greeting p").forEach((el) => {
-    el.textContent = dataAtualPorExtenso();
-  });
-  document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
-    el.textContent = sessao.nome;
-  });
-  const fotoSessao = urlFoto(sessao.foto);
-  if (fotoSessao) {
-    document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
-      el.style.backgroundImage = `url("${fotoSessao}")`;
-      el.style.backgroundSize = "cover";
-      el.style.backgroundPosition = "center";
+
+  if (somenteLeitura) {
+    // A clínica está olhando a tela de um profissional: o cabeçalho tem que
+    // dizer de quem são os pacientes, não saudar quem está logado.
+    document.querySelectorAll(".pro-greeting p").forEach((el) => {
+      el.textContent = dataAtualPorExtenso();
     });
+    apiGet(`/fisioterapeutas/${idFisioterapeuta}`)
+      .then((f) => {
+        document.querySelectorAll(".pro-greeting h1").forEach((el) => {
+          el.textContent = `Pacientes de ${f.nome}`;
+        });
+        document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
+          el.textContent = f.nome;
+        });
+        const foto = urlFoto(f.foto);
+        if (foto) {
+          document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
+            el.style.backgroundImage = `url("${foto}")`;
+            el.style.backgroundSize = "cover";
+            el.style.backgroundPosition = "center";
+          });
+        }
+      })
+      .catch(() => {
+        document.querySelectorAll(".pro-greeting h1").forEach((el) => {
+          el.textContent = "Pacientes do profissional";
+        });
+      });
+  } else {
+    document.querySelectorAll(".pro-greeting h1").forEach((el) => {
+      el.textContent = `${saudacao}, ${sessao.nome}!`;
+    });
+    document.querySelectorAll(".pro-greeting p").forEach((el) => {
+      el.textContent = dataAtualPorExtenso();
+    });
+    document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
+      el.textContent = sessao.nome;
+    });
+    const fotoSessao = urlFoto(sessao.foto);
+    if (fotoSessao) {
+      document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
+        el.style.backgroundImage = `url("${fotoSessao}")`;
+        el.style.backgroundSize = "cover";
+        el.style.backgroundPosition = "center";
+      });
+    }
   }
 
   listaEl.addEventListener("click", (e) => {

@@ -102,12 +102,14 @@ async function apiPut(caminho, corpo) {
 // Data de hoje por extenso em pt-BR, ex.: "Terça-feira, 25 de agosto",
 // usada nos cabeçalhos de saudação da home (profissional/instituição).
 function dataAtualPorExtenso() {
-  const texto = new Date().toLocaleDateString("pt-BR", {
+  const agora = new Date();
+  const data = agora.toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
+  const hora = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return data.charAt(0).toUpperCase() + data.slice(1) + " · " + hora;
 }
 
 async function apiDelete(caminho) {

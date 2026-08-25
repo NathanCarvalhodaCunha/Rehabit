@@ -550,13 +550,18 @@ button { font-family: inherit; cursor: pointer; }
 }
 .list-search:focus { outline: none; border-color: var(--brand); background: #FFFFFF; }
 .select-wrap { position: relative; }
-.list-filter {
+/* Vale para qualquer <select> dentro de .select-wrap: a moldura desenha a
+   própria seta, então a nativa precisa sumir — senão aparecem duas. */
+.list-filter,
+.select-wrap select {
   height: 40px; padding: 0 36px 0 14px;
   border: 1px solid var(--hairline); border-radius: 6px;
   background: #F3F4F6; color: var(--brand); font-weight: 600;
-  appearance: none; -webkit-appearance: none;
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
   font-family: inherit; font-size: 14.5px;
 }
+.select-wrap select:hover { border-color: #C7D2FE; }
+.select-wrap select:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(21,101,216,.25); }
 .select-wrap svg {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
   width: 16px; height: 16px; color: var(--brand); pointer-events: none;
@@ -1442,39 +1447,123 @@ button.form-avatar {
 .notif-badge.is-hidden { display: none; }
 
 .notif-dropdown {
-  /* Abre como um flyout à direita do sino, não para baixo: a 320px de
-     largura, "para baixo" cobria o resto do menu (Perfil, Configurações)
-     porque a sidebar tem só 240px. */
+  /* Flyout à direita da sidebar: para baixo ele cobriria o resto do menu,
+     porque a sidebar tem só 240px e o painel 340px. */
   position: absolute;
-  top: 0;
+  top: -8px;
   left: 100%;
-  margin-left: 12px;
-  width: 320px;
-  max-height: 360px;
-  overflow-y: auto;
+  margin-left: 14px;
+  width: 340px;
   background: #fff;
   border: 1px solid var(--card-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-card-hover);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(16,24,40,.14), 0 2px 6px rgba(16,24,40,.06);
   z-index: 40;
-  padding: 8px;
+  overflow: hidden;
+  animation: notif-entrada .16s ease-out;
+}
+@keyframes notif-entrada {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notif-dropdown { animation: none; }
 }
 .notif-dropdown.is-hidden { display: none; }
-.notif-empty {
-  padding: 20px 12px;
+
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.notif-head h4 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--ink-strong);
+}
+.notif-novas {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(21,101,216,.1);
+  color: var(--brand);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.notif-lista {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+.notif-lista::-webkit-scrollbar { width: 8px; }
+.notif-lista::-webkit-scrollbar-track { background: transparent; }
+.notif-lista::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 10px;
+  border-radius: 10px;
+  transition: background .15s;
+}
+.notif-item:hover { background: #F6F8FC; }
+.notif-icone {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(21,101,216,.1);
+  color: var(--brand);
+}
+.notif-icone svg { width: 17px; height: 17px; }
+.notif-corpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.notif-item .msg {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-strong);
+}
+.notif-item .quando { font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+
+/* Não lida: marca discreta na lateral em vez de pintar a linha inteira */
+.notif-item.is-unread { background: rgba(21,101,216,.05); }
+.notif-item.is-unread .notif-icone { background: var(--brand); color: #fff; }
+
+.notif-vazio {
+  padding: 30px 20px 34px;
   text-align: center;
   color: var(--ink-muted);
-  font-size: 14px;
 }
-.notif-item {
-  display: block;
-  padding: 10px 12px;
-  border-radius: 8px;
+.notif-vazio svg { width: 34px; height: 34px; opacity: .35; margin-bottom: 10px; }
+.notif-vazio p { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: var(--ink-strong); }
+.notif-vazio span { font-size: 12.5px; font-weight: 500; line-height: 1.45; display: block; }
+
+/* No celular a sidebar some, então o sino também — mas se algum dia aparecer,
+   o painel vira uma folha centrada em vez de um flyout fora da tela. */
+@media (max-width: 991px) {
+  .notif-dropdown {
+    position: fixed;
+    top: 68px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    margin-left: 0;
+  }
 }
-.notif-item:not(:last-child) { border-bottom: 1px solid var(--hairline); }
-.notif-item .msg { font-size: 14px; color: var(--ink-strong); font-weight: 600; line-height: 1.4; }
-.notif-item .quando { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
-.notif-item.is-unread { background: rgba(21,101,216,.05); }
 
 /* ---------- Tutorial (primeiro acesso) ---------- */
 .tutorial-overlay {
@@ -1740,7 +1829,7 @@ button.form-avatar {
 }
 
 /* O filtro de status usa a mesma moldura do seletor de ordenação */
-.select-wrap select[data-filtro-status] { font: inherit; }
+
 
 /* ---------- Formulários dentro das Configurações ---------- */
 .settings-form { padding-top: 4px; }

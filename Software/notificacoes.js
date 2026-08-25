@@ -22,20 +22,61 @@
     return "há " + dias + "d";
   }
 
-  function montarDropdown(notificacoes) {
+  // Ícone por tipo, para bater o olho e saber do que se trata sem ler.
+  var ICONES = {
+    NOVO_PACIENTE:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.5 3.1-6 7-6"/><line x1="18" y1="12" x2="18" y2="18"/><line x1="15" y1="15" x2="21" y2="15"/></svg>',
+    NOVA_SESSAO:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>',
+  };
+
+  function iconeDe(tipo) {
+    return (
+      ICONES[tipo] ||
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    );
+  }
+
+  function montarCabecalho(naoLidas) {
+    return (
+      '<div class="notif-head">' +
+      "<h4>Notificações</h4>" +
+      (naoLidas > 0 ? '<span class="notif-novas">' + naoLidas + " nova" + (naoLidas > 1 ? "s" : "") + "</span>" : "") +
+      "</div>"
+    );
+  }
+
+  function montarLista(notificacoes) {
     if (!notificacoes.length) {
-      return '<p class="notif-empty">Nenhuma notificação por enquanto.</p>';
+      return (
+        '<div class="notif-vazio">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' +
+        "<p>Tudo em dia por aqui</p>" +
+        "<span>As novidades dos seus profissionais aparecem aqui.</span>" +
+        "</div>"
+      );
     }
-    return notificacoes
-      .map(function (n) {
-        return (
-          '<div class="notif-item' + (n.lida ? "" : " is-unread") + '">' +
-          '<div class="msg">' + escaparHtml(n.mensagem) + "</div>" +
-          '<div class="quando">' + tempoRelativo(n.criadaEm) + "</div>" +
-          "</div>"
-        );
-      })
-      .join("");
+    return (
+      '<div class="notif-lista">' +
+      notificacoes
+        .map(function (n) {
+          return (
+            '<div class="notif-item' + (n.lida ? "" : " is-unread") + '">' +
+            '<span class="notif-icone">' + iconeDe(n.tipo) + "</span>" +
+            '<span class="notif-corpo">' +
+            '<span class="msg">' + escaparHtml(n.mensagem) + "</span>" +
+            '<span class="quando">' + tempoRelativo(n.criadaEm) + "</span>" +
+            "</span>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function montarDropdown(notificacoes, naoLidas) {
+    return montarCabecalho(naoLidas) + montarLista(notificacoes);
   }
 
   function iniciar() {
@@ -56,7 +97,7 @@
     var dropdown = document.createElement("div");
     dropdown.className = "notif-dropdown is-hidden";
     dropdown.setAttribute("data-notif-dropdown", "");
-    dropdown.innerHTML = '<p class="notif-empty">Carregando...</p>';
+    dropdown.innerHTML = montarCabecalho(0) + '<div class="notif-vazio"><p>Carregando...</p></div>';
 
     var wrap = document.createElement("div");
     wrap.style.position = "relative";
@@ -77,13 +118,16 @@
           badge.textContent = String(naoLidas);
           badge.classList.remove("is-hidden");
         }
-        dropdown.innerHTML = montarDropdown(notificacoes);
-        if (typeof RehabitAnim !== "undefined" && notificacoes.length) {
-          RehabitAnim.staggerList(dropdown);
+        dropdown.innerHTML = montarDropdown(notificacoes, naoLidas);
+        var lista = dropdown.querySelector(".notif-lista");
+        if (typeof RehabitAnim !== "undefined" && lista) {
+          RehabitAnim.staggerList(lista);
         }
       })
       .catch(function () {
-        dropdown.innerHTML = '<p class="notif-empty">Não foi possível carregar.</p>';
+        dropdown.innerHTML =
+          montarCabecalho(0) +
+          '<div class="notif-vazio"><p>Não foi possível carregar</p><span>Verifique sua conexão e tente de novo.</span></div>';
       });
 
     bell.addEventListener("click", function (e) {
@@ -96,6 +140,8 @@
         dropdown.querySelectorAll(".notif-item.is-unread").forEach(function (item) {
           item.classList.remove("is-unread");
         });
+        var contador = dropdown.querySelector(".notif-novas");
+        if (contador) contador.remove();
         fetch(API_BASE_URL + "/notificacoes/marcar-lidas", {
           method: "PUT",
           headers: {

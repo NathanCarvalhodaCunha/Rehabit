@@ -243,12 +243,6 @@ body.dark .edit-info-card {
 
 body.dark .notif-bell { color: var(--ink-muted); }
 body.dark .notif-bell:hover { background: rgba(255,255,255,.06); color: #fff; }
-body.dark .notif-dropdown {
-  background: #0E1733;
-  border-color: #1B2647;
-  box-shadow: none;
-}
-body.dark .notif-item:not(:last-child) { border-color: #1B2647; }
 body.dark .notif-item .msg { color: #fff; }
 body.dark .notif-item .quando { color: var(--ink-muted); }
 body.dark .notif-item.is-unread { background: rgba(21,101,216,.14); }
@@ -275,3 +269,36 @@ body.dark .consultas-abas button.is-ativa { background: var(--brand); color: #ff
 body.dark .consulta-item { border-color: #1B2647; }
 body.dark .consulta-quando strong, body.dark .consulta-paciente { color: #fff; }
 body.dark .consulta-quando span { color: #2F80FF; }
+
+/* Botão destrutivo: no escuro, o fundo branco fixo do tema claro virava um
+   bloco luminoso no meio do card. */
+body.dark .btn-danger {
+  background: transparent;
+  border-color: rgba(248,113,113,.45);
+  color: #F87171;
+}
+body.dark .btn-danger:hover { background: rgba(248,113,113,.12); border-color: #F87171; }
+
+/* Selects mantêm a mesma moldura escura dos inputs */
+body.dark .list-filter,
+body.dark .select-wrap select { background: #1A2247; border-color: #1A2247; color: #fff; }
+body.dark .select-wrap select:hover { border-color: #2B3A6B; }
+body.dark .select-wrap svg { color: #2F80FF; }
+
+/* Painel de notificações (escuro) */
+body.dark .notif-dropdown {
+  background: #101A38;
+  border-color: #1F2A50;
+  box-shadow: 0 12px 32px rgba(0,0,0,.5);
+}
+body.dark .notif-head { border-color: #1B2647; }
+body.dark .notif-head h4 { color: #fff; }
+body.dark .notif-novas { background: rgba(47,128,255,.18); color: #2F80FF; }
+body.dark .notif-item:hover { background: rgba(255,255,255,.05); }
+body.dark .notif-item.is-unread { background: rgba(47,128,255,.10); }
+body.dark .notif-icone { background: rgba(47,128,255,.16); color: #2F80FF; }
+body.dark .notif-item.is-unread .notif-icone { background: #1565D8; color: #fff; }
+body.dark .notif-item .msg { color: #fff; }
+body.dark .notif-vazio p { color: #fff; }
+body.dark .notif-lista { scrollbar-color: #26325C transparent; }
+body.dark .notif-lista::-webkit-scrollbar-thumb { background: #26325C; border-color: #101A38; }
