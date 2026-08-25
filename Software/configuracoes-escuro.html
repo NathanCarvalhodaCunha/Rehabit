@@ -71,6 +71,75 @@
           </label>
         </div>
       </section>
+
+      <section class="card settings-card">
+        <button type="button" class="settings-row settings-toggle" data-toggle="atendimento" aria-expanded="true">
+          <span class="settings-icon settings-icon-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          </span>
+          <span class="settings-text">
+            <span class="settings-title">Atendimento</span>
+            <span class="settings-sub">Horário de funcionamento e duração das sessões</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="settings-panel" data-panel="atendimento">
+          <form id="configAtendimentoForm" class="settings-form">
+            <div class="two-col">
+              <div class="field">
+                <label for="cfg-abertura">Abertura</label>
+                <input id="cfg-abertura" type="time" />
+              </div>
+              <div class="field">
+                <label for="cfg-fechamento">Fechamento</label>
+                <input id="cfg-fechamento" type="time" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="cfg-duracao">Duração padrão da sessão (minutos)</label>
+              <input id="cfg-duracao" type="number" min="5" max="480" />
+              <p class="field-hint">Usada para pré-preencher agendamentos e detectar conflitos.</p>
+            </div>
+            <label class="settings-check">
+              <input type="checkbox" id="cfg-conflito" />
+              <span class="box" aria-hidden="true"></span>
+              <span>Avisar quando houver conflito de horário</span>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Salvar configurações</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card settings-card">
+        <button type="button" class="settings-row settings-toggle" data-toggle="seguranca" aria-expanded="false">
+          <span class="settings-icon settings-icon-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <span class="settings-text">
+            <span class="settings-title">Segurança</span>
+            <span class="settings-sub">Altere a senha de acesso da sua conta</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="settings-panel" data-panel="seguranca">
+          <form id="trocarSenhaForm" class="settings-form">
+            <div class="field">
+              <label for="cfg-senha-atual">Senha atual</label>
+              <input id="cfg-senha-atual" type="password" autocomplete="current-password" />
+            </div>
+            <div class="field">
+              <label for="cfg-senha-nova">Nova senha</label>
+              <input id="cfg-senha-nova" type="password" autocomplete="new-password" />
+              <p class="field-hint">Mínimo de 6 caracteres.</p>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Alterar senha</button>
+            </div>
+          </form>
+        </div>
+      </section>
     </main>
 
     <nav class="mobile-bottomnav">
@@ -93,5 +162,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
+  <script src="./password-toggle.js"></script>
+  <script src="./pages/configuracoes.js"></script>
 </body>
 </html>

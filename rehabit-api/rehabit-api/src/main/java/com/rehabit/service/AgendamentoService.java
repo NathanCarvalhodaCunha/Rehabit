@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,15 +28,18 @@ public class AgendamentoService {
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final PacienteRepository pacienteRepository;
     private final PacienteService pacienteService;
+    private final ConfiguracaoService configuracaoService;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository,
                                FisioterapeutaRepository fisioterapeutaRepository,
                                PacienteRepository pacienteRepository,
-                               PacienteService pacienteService) {
+                               PacienteService pacienteService,
+                               ConfiguracaoService configuracaoService) {
         this.agendamentoRepository = agendamentoRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
         this.pacienteService = pacienteService;
+        this.configuracaoService = configuracaoService;
     }
 
     @Transactional
@@ -44,6 +48,7 @@ public class AgendamentoService {
             throw new AuthException("Apenas um profissional logado pode criar agendamentos.", HttpStatus.FORBIDDEN);
         }
         Paciente paciente = pacienteService.carregarComPosse(dados.getIdPaciente(), usuarioId, usuarioTipo);
+        exigirHorarioLivre(usuarioId, usuarioTipo, dados);
 
         Agendamento agendamento = new Agendamento();
         agendamento.setDataAgendamento(dados.getData());
@@ -107,6 +112,35 @@ public class AgendamentoService {
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.BAD_REQUEST));
         PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
         agendamentoRepository.delete(agendamento);
+    }
+
+    /**
+     * Recusa dois atendimentos sobrepostos do mesmo profissional, usando a
+     * duração padrão configurada como tamanho de cada sessão. Só age se o
+     * aviso de conflito estiver ligado nas configurações.
+     */
+    private void exigirHorarioLivre(Integer idFisioterapeuta, String usuarioTipo, AgendamentoCreateDTO dados) {
+        if (!configuracaoService.deveAvisarConflito(usuarioTipo, idFisioterapeuta)) {
+            return;
+        }
+        int duracao = configuracaoService.duracaoPadrao(usuarioTipo, idFisioterapeuta);
+        LocalTime inicioNovo = dados.getHora();
+        LocalTime fimNovo = inicioNovo.plusMinutes(duracao);
+
+        boolean conflita = agendamentoRepository
+                .findByIdFisioterapeutaAndDataAgendamento(idFisioterapeuta, dados.getData())
+                .stream()
+                .anyMatch(existente -> {
+                    LocalTime inicioExistente = existente.getHoraAgendamento();
+                    LocalTime fimExistente = inicioExistente.plusMinutes(duracao);
+                    return inicioNovo.isBefore(fimExistente) && inicioExistente.isBefore(fimNovo);
+                });
+
+        if (conflita) {
+            throw new AuthException(
+                    "Já existe uma consulta nesse horário. Escolha outro ou desligue o aviso de conflito nas configurações.",
+                    HttpStatus.CONFLICT);
+        }
     }
 
     private String nomeDoPaciente(Integer idPaciente) {

@@ -1741,3 +1741,20 @@ button.form-avatar {
 
 /* O filtro de status usa a mesma moldura do seletor de ordenação */
 .select-wrap select[data-filtro-status] { font: inherit; }
+
+/* ---------- Formulários dentro das Configurações ---------- */
+.settings-form { padding-top: 4px; }
+.settings-form .field { margin-bottom: 14px; }
+.settings-form .form-actions { margin-top: 4px; display: flex; justify-content: flex-end; }
+.settings-form .settings-check { margin: 4px 0 18px; }
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+@media (max-width: 991px) {
+  .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
+  .settings-form .form-actions { justify-content: stretch; }
+  .settings-form .form-actions .btn-primary { width: 100%; }
+}
