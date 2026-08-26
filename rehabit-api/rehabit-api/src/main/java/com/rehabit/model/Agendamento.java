@@ -29,6 +29,18 @@ public class Agendamento {
     @Column(name = "tb07_id_paciente", nullable = false)
     private Integer idPaciente;
 
+    /** AGENDADA (padrão), REALIZADA, FALTOU ou REMARCADA. */
+    @Column(name = "tb07_status", length = 20)
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public Agendamento() {
     }
 

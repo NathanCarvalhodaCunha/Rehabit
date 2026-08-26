@@ -33,6 +33,18 @@ public class Sessao {
     @Column(name = "tb05_observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
+    /** Escala visual analógica de dor relatada pelo paciente, de 0 a 10. */
+    @Column(name = "tb05_dor")
+    private Integer dor;
+
+    public Integer getDor() {
+        return dor;
+    }
+
+    public void setDor(Integer dor) {
+        this.dor = dor;
+    }
+
     public Sessao() {
     }
 

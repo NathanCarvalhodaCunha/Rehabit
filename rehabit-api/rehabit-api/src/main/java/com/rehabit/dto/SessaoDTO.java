@@ -34,6 +34,16 @@ public class SessaoDTO {
         this.observacoes = observacoes;
     }
 
+    private Integer dor;
+
+    public Integer getDor() {
+        return dor;
+    }
+
+    public void setDor(Integer dor) {
+        this.dor = dor;
+    }
+
     public Integer getId() {
         return id;
     }

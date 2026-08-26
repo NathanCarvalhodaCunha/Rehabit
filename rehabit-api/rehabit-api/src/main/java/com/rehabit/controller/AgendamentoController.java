@@ -63,6 +63,15 @@ public class AgendamentoController {
                 idClinica, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /** Presença/falta: {"status":"REALIZADA"|"FALTOU"|"REMARCADA"|"AGENDADA"} */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<AgendamentoDTO> alterarStatus(@PathVariable Integer id,
+                                                          @RequestBody java.util.Map<String, String> corpo,
+                                                          HttpServletRequest request) {
+        return ResponseEntity.ok(agendamentoService.alterarStatus(
+                id, corpo.get("status"), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelar(@PathVariable Integer id, HttpServletRequest request) {
         agendamentoService.cancelar(id, AuthContext.id(request), AuthContext.tipo(request));

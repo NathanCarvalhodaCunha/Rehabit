@@ -18,6 +18,27 @@ public class PacienteUpdateDTO {
     /** Em tratamento (Ativo), Alta ou Inativo. */
     private String status;
 
+    // Anamnese e meta de tratamento
+    private String queixaPrincipal;
+    private String historicoClinico;
+    private String medicamentos;
+    private String contraindicacoes;
+    private java.math.BigDecimal metaAmplitude;
+    private LocalDate metaData;
+
+    public String getQueixaPrincipal() { return queixaPrincipal; }
+    public void setQueixaPrincipal(String queixaPrincipal) { this.queixaPrincipal = queixaPrincipal; }
+    public String getHistoricoClinico() { return historicoClinico; }
+    public void setHistoricoClinico(String historicoClinico) { this.historicoClinico = historicoClinico; }
+    public String getMedicamentos() { return medicamentos; }
+    public void setMedicamentos(String medicamentos) { this.medicamentos = medicamentos; }
+    public String getContraindicacoes() { return contraindicacoes; }
+    public void setContraindicacoes(String contraindicacoes) { this.contraindicacoes = contraindicacoes; }
+    public java.math.BigDecimal getMetaAmplitude() { return metaAmplitude; }
+    public void setMetaAmplitude(java.math.BigDecimal metaAmplitude) { this.metaAmplitude = metaAmplitude; }
+    public LocalDate getMetaData() { return metaData; }
+    public void setMetaData(LocalDate metaData) { this.metaData = metaData; }
+
     public PacienteUpdateDTO() {
     }
 

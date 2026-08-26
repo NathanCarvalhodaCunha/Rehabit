@@ -41,6 +41,7 @@ public class SessaoService {
         sessao.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
         sessao.setIdPaciente(paciente.getId());
         sessao.setObservacoes(vazioParaNulo(dados.getObservacoes()));
+        sessao.setDor(dorValida(dados.getDor()));
         Sessao sessaoSalva = sessaoRepository.save(sessao);
 
         Medicao medicao = new Medicao();
@@ -52,8 +53,18 @@ public class SessaoService {
         notificacaoService.criar(paciente.getIdClinica(), "NOVA_SESSAO",
                 "Nova sessão registrada para " + paciente.getNome());
 
-        return new SessaoDTO(sessaoSalva.getId(), sessaoSalva.getDataSessao(), sessaoSalva.getDuracao(),
+        SessaoDTO dto = new SessaoDTO(sessaoSalva.getId(), sessaoSalva.getDataSessao(), sessaoSalva.getDuracao(),
                 medicaoSalva.getAmplitudeMedia(), sessaoSalva.getObservacoes());
+        dto.setDor(sessaoSalva.getDor());
+        return dto;
+    }
+
+    /** Fora de 0–10 a escala não significa nada, então guarda nulo. */
+    private Integer dorValida(Integer dor) {
+        if (dor == null || dor < 0 || dor > 10) {
+            return null;
+        }
+        return dor;
     }
 
     public List<SessaoDTO> listarPorPaciente(Integer idPaciente, Integer usuarioId, String usuarioTipo) {
@@ -61,8 +72,10 @@ public class SessaoService {
         return sessaoRepository.findByIdPacienteOrderByDataSessaoDescHoraSessaoDesc(idPaciente).stream()
                 .map(s -> {
                     Medicao medicao = medicaoRepository.findByIdSessao(s.getId());
-                    return new SessaoDTO(s.getId(), s.getDataSessao(), s.getDuracao(),
+                    SessaoDTO dto = new SessaoDTO(s.getId(), s.getDataSessao(), s.getDuracao(),
                             medicao != null ? medicao.getAmplitudeMedia() : null, s.getObservacoes());
+                    dto.setDor(s.getDor());
+                    return dto;
                 })
                 .collect(Collectors.toList());
     }

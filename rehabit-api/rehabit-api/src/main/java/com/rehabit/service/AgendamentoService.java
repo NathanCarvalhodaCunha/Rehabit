@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -102,9 +103,13 @@ public class AgendamentoService {
                 : agendamentoRepository.findByIdFisioterapeutaInOrderByDataAgendamentoDescHoraAgendamentoDesc(ids);
 
         return agendamentos.stream()
-                .map(a -> new AgendamentoDTO(a.getId(), a.getDataAgendamento(), a.getHoraAgendamento(),
-                        a.getObservacao(), a.getIdPaciente(), nomeDoPaciente(a.getIdPaciente()),
-                        nomePorId.get(a.getIdFisioterapeuta())))
+                .map(a -> {
+                    AgendamentoDTO dto = new AgendamentoDTO(a.getId(), a.getDataAgendamento(),
+                            a.getHoraAgendamento(), a.getObservacao(), a.getIdPaciente(),
+                            nomeDoPaciente(a.getIdPaciente()), nomePorId.get(a.getIdFisioterapeuta()));
+                    dto.setStatus(a.getStatus() == null ? "AGENDADA" : a.getStatus());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -131,6 +136,27 @@ public class AgendamentoService {
                         s.getIdPaciente(), nomeDoPaciente(s.getIdPaciente()),
                         nomePorId.get(s.getIdFisioterapeuta())))
                 .collect(Collectors.toList());
+    }
+
+    private static final Set<String> STATUS_VALIDOS =
+            Set.of("AGENDADA", "REALIZADA", "FALTOU", "REMARCADA");
+
+    /** Marca presença/falta de um agendamento. */
+    @Transactional
+    public AgendamentoDTO alterarStatus(Integer id, String novoStatus, Integer usuarioId, String usuarioTipo) {
+        if (novoStatus == null || !STATUS_VALIDOS.contains(novoStatus)) {
+            throw new AuthException("Status inválido.", HttpStatus.BAD_REQUEST);
+        }
+        Agendamento agendamento = agendamentoRepository.findById(id)
+                .orElseThrow(() -> new AuthException("Agendamento não encontrado.", HttpStatus.NOT_FOUND));
+        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(agendamento.getIdFisioterapeuta())
+                .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.BAD_REQUEST));
+        PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(),
+                usuarioId, usuarioTipo);
+
+        agendamento.setStatus(novoStatus);
+        Agendamento salvo = agendamentoRepository.save(agendamento);
+        return paraDTO(salvo, nomeDoPaciente(salvo.getIdPaciente()));
     }
 
     @Transactional
@@ -177,8 +203,11 @@ public class AgendamentoService {
     }
 
     private AgendamentoDTO paraDTO(Agendamento a, String nomePaciente) {
-        return new AgendamentoDTO(a.getId(), a.getDataAgendamento(), a.getHoraAgendamento(), a.getObservacao(),
-                a.getIdPaciente(), nomePaciente);
+        AgendamentoDTO dto = new AgendamentoDTO(a.getId(), a.getDataAgendamento(), a.getHoraAgendamento(),
+                a.getObservacao(), a.getIdPaciente(), nomePaciente);
+        // Agendamentos criados antes do campo existir não têm status gravado.
+        dto.setStatus(a.getStatus() == null ? "AGENDADA" : a.getStatus());
+        return dto;
     }
 
     private String vazioParaNulo(String valor) {

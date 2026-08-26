@@ -123,6 +123,13 @@ public class PacienteService {
             paciente.setStatus(status);
         }
 
+        paciente.setQueixaPrincipal(vazioParaNulo(dados.getQueixaPrincipal()));
+        paciente.setHistoricoClinico(vazioParaNulo(dados.getHistoricoClinico()));
+        paciente.setMedicamentos(vazioParaNulo(dados.getMedicamentos()));
+        paciente.setContraindicacoes(vazioParaNulo(dados.getContraindicacoes()));
+        paciente.setMetaAmplitude(dados.getMetaAmplitude());
+        paciente.setMetaData(dados.getMetaData());
+
         Paciente salvo = pacienteRepository.save(paciente);
         String nomeFisioterapeuta = fisioterapeutaRepository.findById(salvo.getIdFisioterapeuta())
                 .map(Fisioterapeuta::getNome)
@@ -174,9 +181,16 @@ public class PacienteService {
         Integer idade = p.getDataNascimento() != null
                 ? Period.between(p.getDataNascimento(), LocalDate.now()).getYears()
                 : null;
-        return new PacienteDetalheDTO(p.getId(), p.getNome(), p.getCpf(), p.getTelefone(), p.getEmail(),
-                p.getDataNascimento(), idade, p.getSexo(), p.getDataInicioTratamento(), p.getSituacao(),
-                p.getStatus(), p.getIdFisioterapeuta(), nomeFisioterapeuta, p.getFoto());
+        PacienteDetalheDTO dto = new PacienteDetalheDTO(p.getId(), p.getNome(), p.getCpf(), p.getTelefone(),
+                p.getEmail(), p.getDataNascimento(), idade, p.getSexo(), p.getDataInicioTratamento(),
+                p.getSituacao(), p.getStatus(), p.getIdFisioterapeuta(), nomeFisioterapeuta, p.getFoto());
+        dto.setQueixaPrincipal(p.getQueixaPrincipal());
+        dto.setHistoricoClinico(p.getHistoricoClinico());
+        dto.setMedicamentos(p.getMedicamentos());
+        dto.setContraindicacoes(p.getContraindicacoes());
+        dto.setMetaAmplitude(p.getMetaAmplitude());
+        dto.setMetaData(p.getMetaData());
+        return dto;
     }
 
     private String vazioParaNulo(String valor) {

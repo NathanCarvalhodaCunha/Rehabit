@@ -17,6 +17,17 @@ public class SessaoCreateDTO {
 
     private String observacoes;
 
+    /** Escala de dor 0–10 relatada pelo paciente. */
+    private Integer dor;
+
+    public Integer getDor() {
+        return dor;
+    }
+
+    public void setDor(Integer dor) {
+        this.dor = dor;
+    }
+
     @NotNull(message = "O fisioterapeuta responsável é obrigatório.")
     private Integer idFisioterapeuta;
 

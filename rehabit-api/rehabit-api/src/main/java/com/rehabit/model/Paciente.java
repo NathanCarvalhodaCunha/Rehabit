@@ -43,6 +43,74 @@ public class Paciente {
     @Column(name = "tb03_foto_paciente", length = 255)
     private String foto;
 
+    // --- Anamnese inicial ---
+    @Column(name = "tb03_queixa_principal", columnDefinition = "TEXT")
+    private String queixaPrincipal;
+
+    @Column(name = "tb03_historico_clinico", columnDefinition = "TEXT")
+    private String historicoClinico;
+
+    @Column(name = "tb03_medicamentos", columnDefinition = "TEXT")
+    private String medicamentos;
+
+    @Column(name = "tb03_contraindicacoes", columnDefinition = "TEXT")
+    private String contraindicacoes;
+
+    // --- Meta de tratamento ---
+    @Column(name = "tb03_meta_amplitude", precision = 6, scale = 2)
+    private java.math.BigDecimal metaAmplitude;
+
+    @Column(name = "tb03_meta_data")
+    private LocalDate metaData;
+
+    public String getQueixaPrincipal() {
+        return queixaPrincipal;
+    }
+
+    public void setQueixaPrincipal(String queixaPrincipal) {
+        this.queixaPrincipal = queixaPrincipal;
+    }
+
+    public String getHistoricoClinico() {
+        return historicoClinico;
+    }
+
+    public void setHistoricoClinico(String historicoClinico) {
+        this.historicoClinico = historicoClinico;
+    }
+
+    public String getMedicamentos() {
+        return medicamentos;
+    }
+
+    public void setMedicamentos(String medicamentos) {
+        this.medicamentos = medicamentos;
+    }
+
+    public String getContraindicacoes() {
+        return contraindicacoes;
+    }
+
+    public void setContraindicacoes(String contraindicacoes) {
+        this.contraindicacoes = contraindicacoes;
+    }
+
+    public java.math.BigDecimal getMetaAmplitude() {
+        return metaAmplitude;
+    }
+
+    public void setMetaAmplitude(java.math.BigDecimal metaAmplitude) {
+        this.metaAmplitude = metaAmplitude;
+    }
+
+    public LocalDate getMetaData() {
+        return metaData;
+    }
+
+    public void setMetaData(LocalDate metaData) {
+        this.metaData = metaData;
+    }
+
     @Column(name = "tb03_id_clinica", nullable = false)
     private Integer idClinica;
 

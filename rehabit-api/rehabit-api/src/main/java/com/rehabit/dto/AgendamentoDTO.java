@@ -32,6 +32,16 @@ public class AgendamentoDTO {
         this.nomeFisioterapeuta = nomeFisioterapeuta;
     }
 
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public String getNomeFisioterapeuta() {
         return nomeFisioterapeuta;
     }
