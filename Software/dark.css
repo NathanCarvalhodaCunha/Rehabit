@@ -359,3 +359,4 @@ body.dark .badge-presenca.faltou { background: rgba(255,142,142,.16); color: #FF
 body.dark .badge-presenca.remarcada { background: rgba(234,179,8,.18); color: #FBBF24; }
 body.dark .agenda-presenca button { background: #101A38; border-color: #1F2A50; color: var(--ink-muted); }
 body.dark .agenda-presenca button:hover:not(:disabled) { color: #fff; border-color: #2B3A6B; }
+body.dark .comparativo-titulo { color: #fff; }

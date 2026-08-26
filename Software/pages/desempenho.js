@@ -244,6 +244,45 @@
     });
   });
 
+  /** Comparativo: uma linha por profissional, com os números lado a lado. */
+  function montarComparativo(profissionais) {
+    const secao = raiz.querySelector("[data-comparativo]");
+    const corpo = raiz.querySelector("[data-tabela-comparativo]");
+    if (!secao || !corpo || profissionais.length < 2) return;
+
+    secao.hidden = false;
+    corpo.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+
+    Promise.all(
+      profissionais.map((p) =>
+        apiGet(`/fisioterapeutas/${p.id}/desempenho`).catch(() => null)
+      )
+    ).then((todos) => {
+      const linhas = todos.filter(Boolean);
+      if (!linhas.length) {
+        secao.hidden = true;
+        return;
+      }
+      // Ordena por ganho médio: quem entrega mais evolução aparece primeiro.
+      linhas.sort((a, b) => (b.ganhoMedioGraus || -Infinity) - (a.ganhoMedioGraus || -Infinity));
+
+      corpo.innerHTML = linhas
+        .map(
+          (d) => `
+        <tr data-id-fisio="${d.idFisioterapeuta}" style="cursor:pointer;">
+          <td>${escaparHtml(d.nomeFisioterapeuta)}</td>
+          <td>${d.totalPacientes}</td>
+          <td>${d.totalSessoes}</td>
+          <td>${d.pacientesAlta}</td>
+          <td class="${d.ganhoMedioGraus == null ? "" : d.ganhoMedioGraus >= 0 ? "pos" : "neg"}">
+            <strong>${formatarGanho(d.ganhoMedioGraus)}</strong>
+          </td>
+        </tr>`
+        )
+        .join("");
+    });
+  }
+
   if (ehClinica && seletorProfissional) {
     apiGet(`/fisioterapeutas?idClinica=${sessao.id}`)
       .then((profissionais) => {
@@ -259,10 +298,20 @@
           : profissionais[0].id;
         seletorProfissional.value = escolhido;
         carregar(escolhido);
+        montarComparativo(profissionais);
       })
       .catch((err) => RehabitToast.erro(err.message));
 
     seletorProfissional.addEventListener("change", () => carregar(seletorProfissional.value));
+
+    // Clicar numa linha do comparativo troca o profissional em foco.
+    raiz.addEventListener("click", (e) => {
+      const linha = e.target.closest("[data-id-fisio]");
+      if (!linha) return;
+      seletorProfissional.value = linha.dataset.idFisio;
+      carregar(linha.dataset.idFisio);
+      raiz.querySelector("[data-nome-profissional]").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
   } else {
     const wrap = seletorProfissional ? seletorProfissional.closest(".select-wrap") : null;
     if (wrap) wrap.style.display = "none";
