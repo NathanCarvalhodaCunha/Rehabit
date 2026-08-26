@@ -318,3 +318,21 @@ body.dark .desempenho-tabela td.pos strong { color: #2BD17E; }
 body.dark .desempenho-tabela td.neg strong { color: #FF8E8E; }
 body.dark .link-paciente { color: #fff; }
 body.dark .link-paciente:hover { color: #2F80FF; }
+
+/* Busca global e alertas (escuro) */
+body.dark .busca-abrir { background: #101A38; border-color: #1F2A50; color: var(--ink-muted); }
+body.dark .busca-abrir:hover { border-color: #2B3A6B; color: #fff; }
+body.dark .busca-abrir kbd, body.dark .busca-campo kbd { background: rgba(255,255,255,.08); color: var(--ink-muted); }
+body.dark .busca-overlay { background: rgba(0,0,0,.6); }
+body.dark .busca-caixa { background: #101A38; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+body.dark .busca-campo { border-color: #1B2647; }
+body.dark .busca-campo input { color: #fff; }
+body.dark .busca-item:hover, body.dark .busca-item.is-ativo { background: rgba(47,128,255,.14); }
+body.dark .busca-texto strong { color: #fff; }
+body.dark .busca-avatar { background-color: #1B2450; }
+body.dark .busca-avatar-icone { background: rgba(47,128,255,.16); color: #2F80FF; }
+body.dark .alertas-head h2 { color: #fff; }
+body.dark .alerta-item:hover { background: rgba(255,255,255,.04); }
+body.dark .alerta-texto strong { color: #fff; }
+body.dark .alerta-item.is-atencao .alerta-icone { background: rgba(234,179,8,.18); color: #FBBF24; }
+body.dark .alerta-item.is-bom .alerta-icone { background: rgba(43,209,126,.16); color: #2BD17E; }
