@@ -507,16 +507,6 @@ button { font-family: inherit; cursor: pointer; }
 .tip-t { margin: 0 0 6px; font-weight: 700; color: var(--ink-strong); font-size: 15px; }
 .tip-s { margin: 0; color: var(--ink-muted); font-weight: 500; line-height: 1.55; font-size: 14.5px; }
 
-/* Device mobile card */
-.device-card-mobile { padding: 22px 20px; }
-.device-card-mobile .mheader {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
-}
-.device-card-mobile h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink-strong); }
-.status-ok { color: var(--success); font-weight: 700; font-size: 15px; }
-.device-serial { text-align: center; margin: 4px 0 16px; color: var(--ink-muted); font-weight: 600; font-size: 14px; line-height: 1.4; }
-.device-serial strong { color: var(--ink-strong); font-weight: 700; }
-
 /* ---------- Instituição page ---------- */
 .inst-header {
   display: grid;
@@ -1032,7 +1022,6 @@ button { font-family: inherit; cursor: pointer; }
     border-left: 1px solid var(--hairline);
     border-right: 1px solid var(--hairline);
   }
-  .device-card-mobile,
   .tip-card,
   .description-card,
   .contact-card-mobile,
@@ -1045,8 +1034,8 @@ button { font-family: inherit; cursor: pointer; }
   .main { padding-left: 16px; padding-right: 16px; }
   .card { padding: 18px 16px; }
   .profile-header { gap: 10px; }
-  .avatar, .device-card-mobile .device-image { width: 112px; height: 112px; }
-  .device-card-mobile .mheader, .info-row { align-items: flex-start; }
+  .avatar { width: 112px; height: 112px; }
+  .info-row { align-items: flex-start; }
   .info-row { flex-direction: column; gap: 4px; }
   .info-row .v { text-align: left; }
   .fisio-item, .pat-item { grid-template-columns: 44px minmax(0, 1fr); }
@@ -2392,3 +2381,176 @@ button.form-avatar {
 .comparativo-titulo { margin: 0 0 2px; font-size: 17px; font-weight: 800; color: var(--ink-strong); }
 .comparativo-sub { margin: 0 0 14px; font-size: 12.5px; font-weight: 600; color: var(--ink-muted); }
 [data-comparativo] { margin-top: 22px; }
+
+/* ---------- Goniômetro ao vivo (tela Dispositivo) ---------- */
+.live-card { padding: 24px 28px; margin-bottom: 22px; }
+
+.live-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  margin-bottom: 22px;
+}
+.live-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink-strong); }
+.live-sub { margin: 4px 0 0; font-size: 13.5px; font-weight: 500; color: var(--ink-muted); }
+
+.conn-badge {
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
+  height: 30px; padding: 0 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+  background: rgba(107,114,128,.12); color: var(--ink-muted);
+}
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.conn-badge[data-conn="conectado"] { background: rgba(22,163,74,.12); color: var(--success); }
+.conn-badge[data-conn="desconectado"] { background: rgba(220,38,38,.12); color: #DC2626; }
+.conn-badge[data-conn="capturando"] { background: rgba(21,101,216,.14); color: var(--brand); }
+/* O ponto pulsa só quando há dado chegando — parado, ele mente sobre o estado. */
+.conn-badge[data-conn="conectado"] .conn-dot,
+.conn-badge[data-conn="capturando"] .conn-dot { animation: rh-pulse 1.6s ease-in-out infinite; }
+@keyframes rh-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.75); }
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.gauge { width: 100%; max-width: 260px; height: auto; display: block; }
+.gauge-track {
+  fill: none; stroke: var(--hairline); stroke-width: 13; stroke-linecap: round;
+}
+.gauge-progress {
+  fill: none; stroke: var(--brand); stroke-width: 13; stroke-linecap: round;
+  stroke-dasharray: 276.46; stroke-dashoffset: 276.46;
+  transition: stroke-dashoffset .25s ease, stroke .25s ease;
+}
+.gauge-needle {
+  stroke: var(--ink-strong); stroke-width: 3; stroke-linecap: round;
+  transition: transform .25s ease;
+  transform-box: view-box; transform-origin: 110px 116px;
+}
+.gauge-pin { fill: var(--ink-strong); }
+.gauge-tick { fill: var(--ink-muted); font-size: 11px; font-weight: 600; font-family: inherit; }
+.gauge-tick:last-of-type { text-anchor: end; }
+
+.gauge-value {
+  margin: 2px 0 0; font-size: 46px; font-weight: 800; line-height: 1;
+  color: var(--ink-strong); font-variant-numeric: tabular-nums;
+}
+.gauge-deg { font-size: 24px; font-weight: 700; color: var(--ink-muted); margin-left: 2px; }
+.gauge-hint { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-muted); text-align: center; }
+
+.live-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.live-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.live-stat {
+  border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+.live-stat .k {
+  font-size: 11.5px; font-weight: 700; color: var(--ink-muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.live-stat strong {
+  font-size: 20px; font-weight: 800; color: var(--ink-strong); font-variant-numeric: tabular-nums;
+}
+.live-stat.destaque { border-color: rgba(21,101,216,.45); background: rgba(21,101,216,.06); }
+.live-stat.destaque strong { color: var(--brand); }
+
+.live-chart-box {
+  position: relative; height: 170px;
+  border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden;
+  background: rgba(21,101,216,.03);
+}
+.live-chart { width: 100%; height: 100%; display: block; }
+.live-chart-line {
+  fill: none; stroke: var(--brand); stroke-width: 2;
+  stroke-linejoin: round; stroke-linecap: round;
+  /* O viewBox é esticado (preserveAspectRatio="none") para o gráfico ocupar a
+     largura toda; sem isto a linha engordaria junto com o eixo X. */
+  vector-effect: non-scaling-stroke;
+}
+.live-chart-area { fill: rgba(21,101,216,.12); stroke: none; }
+.live-chart-vazio {
+  position: absolute; inset: 0; margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: var(--ink-muted);
+}
+/* display:flex acima vence o [hidden] do HTML; sem esta linha o aviso de
+   "sem leituras" ficaria por cima do gráfico já desenhado. */
+.live-chart-vazio[hidden] { display: none; }
+.live-chart-legenda {
+  display: flex; justify-content: space-between; gap: 12px;
+  margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-muted);
+}
+
+.live-actions {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--hairline);
+}
+.live-actions .btn-outline, .live-actions .btn-primary { align-self: auto; }
+.live-actions button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+/* Enquanto grava, o botão vira "parar" — vermelho, para ninguém achar que
+   está iniciando outra captura por cima da que está rodando. */
+.live-actions .btn-primary[data-capturando="true"] { background: #DC2626; }
+.live-actions .btn-primary[data-capturando="true"]:hover { background: #B91C1C; box-shadow: 0 6px 16px -6px rgba(220,38,38,.5); }
+
+.live-nota { margin: 12px 0 0; font-size: 12.5px; font-weight: 500; color: var(--ink-muted); line-height: 1.5; }
+
+.device-botoes { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; }
+
+@media (max-width: 991px) {
+  .live-card { padding: 20px 18px; }
+  .live-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .live-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .live-actions { justify-content: stretch; }
+  .live-actions .btn-outline, .live-actions .btn-primary { flex: 1 1 160px; }
+  /* Sem o card exclusivo de celular, as duas colunas do cadastro viram uma
+     pilha e a divisória troca de lado. */
+  .device-grid { flex-direction: column; gap: 22px; }
+  .device-col + .device-col {
+    border-left: none; padding-left: 0;
+    border-top: 1px solid var(--hairline); padding-top: 20px;
+  }
+  .device-botoes { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .live-card, .device-card { max-width: 720px; margin-left: auto; margin-right: auto; }
+}
+
+@media (max-width: 575px) {
+  .live-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .live-stat.destaque { grid-column: 1 / -1; }
+  .gauge-value { font-size: 40px; }
+  .live-chart-box { height: 140px; }
+}
+
+/* ---------- Goniômetro embutido no formulário de sessão ---------- */
+.gonio-inline {
+  margin-top: 10px; padding: 14px 16px;
+  border: 1px solid var(--hairline); border-radius: 12px;
+  background: rgba(21,101,216,.04);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.gonio-inline[hidden] { display: none; }
+.gonio-inline-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.gonio-inline-valor {
+  font-size: 26px; font-weight: 800; color: var(--ink-strong);
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.gonio-inline-deg { font-size: 16px; font-weight: 700; color: var(--ink-muted); margin-left: 1px; }
+.gonio-inline-stats {
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  font-size: 12.5px; font-weight: 600; color: var(--ink-muted);
+}
+.gonio-inline-stats strong { color: var(--ink-strong); font-variant-numeric: tabular-nums; }
+.gonio-inline-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.gonio-inline-acoes .btn-outline {
+  align-self: auto; flex: 1 1 150px; height: 36px; font-size: 13.5px; padding: 0 14px;
+}
+.gonio-inline-acoes .btn-outline:disabled { opacity: .5; cursor: not-allowed; }
+.gonio-inline .field-hint { margin: 0; }

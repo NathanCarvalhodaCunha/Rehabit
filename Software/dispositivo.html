@@ -52,69 +52,117 @@
     <main class="main">
       <header class="page-header desktop-only">
         <h1>Dispositivo</h1>
-        <p>Conecte seu dispositivo para sincronizar dados em tempo real</p>
+        <p>Acompanhe a leitura do goniômetro em tempo real e capture a amplitude do movimento</p>
       </header>
 
-      <!-- Desktop layout: two columns inside one card -->
-      <section class="card device-card desktop-only">
+      <!-- Leitura ao vivo (mesma marcação no desktop e no celular) -->
+      <section class="card live-card" data-live-card>
+        <div class="live-head">
+          <div>
+            <h3>Leitura ao vivo</h3>
+            <p class="live-sub">Ângulo enviado pelo goniômetro em tempo real</p>
+          </div>
+          <span class="conn-badge" data-conn="aguardando">
+            <span class="conn-dot" aria-hidden="true"></span>
+            <span class="conn-text">Conectando…</span>
+          </span>
+        </div>
+
+        <div class="live-grid">
+          <div class="gauge-wrap">
+            <svg class="gauge" viewBox="0 0 220 140" role="img" aria-label="Ângulo atual do goniômetro">
+              <path class="gauge-track" d="M 22 116 A 88 88 0 0 1 198 116" />
+              <path class="gauge-progress" data-gauge-progress d="M 22 116 A 88 88 0 0 1 198 116" />
+              <line class="gauge-needle" data-gauge-needle x1="110" y1="116" x2="22" y2="116" />
+              <circle class="gauge-pin" cx="110" cy="116" r="6" />
+              <text class="gauge-tick" x="18" y="134">-30°</text>
+              <text class="gauge-tick" x="182" y="134">180°</text>
+            </svg>
+            <p class="gauge-value"><span data-angulo>–</span><span class="gauge-deg">°</span></p>
+            <p class="gauge-hint" data-gauge-hint>Aguardando o aparelho…</p>
+          </div>
+
+          <div class="live-side">
+            <div class="live-stats">
+              <div class="live-stat">
+                <span class="k">Mínimo</span>
+                <strong data-stat="minimo">–</strong>
+              </div>
+              <div class="live-stat">
+                <span class="k">Máximo</span>
+                <strong data-stat="maximo">–</strong>
+              </div>
+              <div class="live-stat destaque">
+                <span class="k">Amplitude</span>
+                <strong data-stat="amplitude">–</strong>
+              </div>
+            </div>
+            <div class="live-chart-box">
+              <svg class="live-chart" viewBox="0 0 600 170" preserveAspectRatio="none" aria-hidden="true">
+                <polyline class="live-chart-area" data-chart-area points="" />
+                <polyline class="live-chart-line" data-chart-line points="" />
+              </svg>
+              <p class="live-chart-vazio" data-chart-vazio>Sem leituras ainda</p>
+            </div>
+            <p class="live-chart-legenda"><span data-chart-escala>–</span><span data-chart-janela>últimos 60 s</span></p>
+          </div>
+        </div>
+
+        <div class="live-actions">
+          <button class="btn-outline" type="button" data-action="tarar">Zerar (tara)</button>
+          <button class="btn-outline" type="button" data-action="identificar">Identificar aparelho</button>
+          <button class="btn-primary" type="button" data-action="captura">Iniciar captura</button>
+        </div>
+        <p class="live-nota">A captura registra o menor e o maior ângulo enquanto o paciente faz o movimento completo — a amplitude sai da diferença entre os dois.</p>
+      </section>
+
+      <!-- Cadastro e telemetria do aparelho -->
+      <section class="card device-card">
         <div class="device-grid">
           <div class="device-col">
             <h3>Status da conexão</h3>
             <div class="device-image" aria-hidden="true"></div>
-            <p class="device-name">Dispositivo conectado</p>
-            <p class="device-sub">Rehabit Goniômetro</p>
-            <button class="btn-outline" data-action="disconnect" type="button">Desconectar</button>
+            <p class="device-name" data-device-name>Verificando…</p>
+            <p class="device-sub" data-device-sub>Rehabit Goniômetro</p>
+            <div class="device-botoes">
+              <button class="btn-outline" data-action="sync" type="button">Sincronizar</button>
+              <button class="btn-outline" data-action="reiniciar" type="button">Reiniciar aparelho</button>
+            </div>
           </div>
           <div class="device-col right">
             <h3>Informações do dispositivo</h3>
             <div class="info-row">
               <span class="k">Número de série</span>
-              <span class="v">XXXX-XXXX</span>
+              <span class="v" data-info="serie">–</span>
+            </div>
+            <div class="info-row">
+              <span class="k">Firmware</span>
+              <span class="v" data-info="firmware">–</span>
             </div>
             <div class="info-row">
               <span class="k">Bateria</span>
-              <span class="v battery"><span class="battery-num">78%</span>
-                <span class="battery-icon" aria-hidden="true"><span class="battery-fill" style="width:78%"></span></span>
+              <span class="v battery"><span class="battery-num">–</span>
+                <span class="battery-icon" aria-hidden="true"><span class="battery-fill" style="width:0%"></span></span>
               </span>
             </div>
             <div class="info-row">
-              <span class="k">Última sincronização</span>
-              <span class="v">07/05/2026 09:15:23</span>
+              <span class="k">Sinal Wi-Fi</span>
+              <span class="v" data-info="sinal">–</span>
             </div>
             <div class="info-row">
-              <span class="k">Ângulo atual</span>
-              <span class="v angulo-atual">-</span>
+              <span class="k">Endereço IP</span>
+              <span class="v" data-info="ip">–</span>
             </div>
-            <button class="btn-outline center" data-action="sync" type="button">Sincronizar</button>
+            <div class="info-row">
+              <span class="k">Último pacote</span>
+              <span class="v" data-info="contato">–</span>
+            </div>
+            <div class="info-row">
+              <span class="k">Última sincronização</span>
+              <span class="v" data-info="sincronizacao">–</span>
+            </div>
           </div>
         </div>
-      </section>
-
-      <!-- Mobile layout -->
-      <section class="card device-card-mobile mobile-only">
-        <div class="mheader">
-          <h3>Status da conexão</h3>
-          <span class="status-ok">Conectado</span>
-        </div>
-        <div class="device-image" aria-hidden="true"></div>
-        <p class="device-name center">Rehabit Goniômetro</p>
-        <p class="device-serial">Número de série<br/><strong>XXXX-XXXX</strong></p>
-        <div class="info-row">
-          <span class="k">Bateria</span>
-          <span class="v battery"><span class="battery-num">78%</span>
-            <span class="battery-icon" aria-hidden="true"><span class="battery-fill" style="width:78%"></span></span>
-          </span>
-        </div>
-        <div class="info-row">
-          <span class="k">Última Sincronização</span>
-          <span class="v">07/05/2026 09:15:23</span>
-        </div>
-        <div class="info-row">
-          <span class="k">Ângulo atual</span>
-          <span class="v angulo-atual">-</span>
-        </div>
-        <button class="btn-outline block" data-action="sync" type="button">Sincronizar</button>
-        <button class="btn-outline block" data-action="disconnect" type="button">Desconectar</button>
       </section>
 
       <section class="card tip-card">
@@ -151,6 +199,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./goniometro.js"></script>
   <script src="./pages/dispositivo.js"></script>
 </body>
 </html>

@@ -66,9 +66,8 @@ body.dark .mobile-title { color: #fff; }
 body.dark .device-col + .device-col { border-color: #1B2647; }
 body.dark .device-col h3 { color: #fff; }
 body.dark .device-image { background: #1B2450; }
-body.dark .device-name, body.dark .device-card-mobile h3 { color: #fff; }
-body.dark .device-sub, body.dark .device-serial { color: var(--ink-muted); }
-body.dark .device-serial strong { color: #fff; }
+body.dark .device-name { color: #fff; }
+body.dark .device-sub { color: var(--ink-muted); }
 body.dark .info-row { border-color: #1B2647; }
 body.dark .info-row .k { color: var(--ink-muted); }
 body.dark .info-row .v { color: #fff; }
@@ -79,7 +78,6 @@ body.dark .btn-outline {
   color: #2F80FF;
 }
 body.dark .btn-outline:hover { background: rgba(47,128,255,.10); border-color: #2F80FF; }
-body.dark .status-ok { color: #2BD17E; }
 body.dark .tip-t { color: #fff; }
 body.dark .tip-s { color: var(--ink-muted); }
 
@@ -360,3 +358,37 @@ body.dark .badge-presenca.remarcada { background: rgba(234,179,8,.18); color: #F
 body.dark .agenda-presenca button { background: #101A38; border-color: #1F2A50; color: var(--ink-muted); }
 body.dark .agenda-presenca button:hover:not(:disabled) { color: #fff; border-color: #2B3A6B; }
 body.dark .comparativo-titulo { color: #fff; }
+
+/* ---------- Goniômetro ao vivo (tema escuro) ---------- */
+body.dark .live-head h3 { color: #fff; }
+body.dark .conn-badge { background: rgba(152,162,188,.16); color: var(--ink-muted); }
+body.dark .conn-badge[data-conn="conectado"] { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .conn-badge[data-conn="desconectado"] { background: rgba(248,113,113,.16); color: #F87171; }
+body.dark .conn-badge[data-conn="capturando"] { background: rgba(47,128,255,.18); color: #2F80FF; }
+
+body.dark .gauge-track { stroke: #1B2647; }
+body.dark .gauge-progress { stroke: #2F80FF; }
+body.dark .gauge-needle { stroke: #fff; }
+body.dark .gauge-pin { fill: #fff; }
+body.dark .gauge-value { color: #fff; }
+
+body.dark .live-stat { border-color: #1B2647; }
+body.dark .live-stat strong { color: #fff; }
+body.dark .live-stat.destaque {
+  border-color: rgba(47,128,255,.5); background: rgba(47,128,255,.12);
+}
+body.dark .live-stat.destaque strong { color: #2F80FF; }
+
+body.dark .live-chart-box { border-color: #1B2647; background: rgba(47,128,255,.06); }
+body.dark .live-chart-line { stroke: #2F80FF; }
+body.dark .live-chart-area { fill: rgba(47,128,255,.18); }
+body.dark .live-actions { border-color: #1B2647; }
+body.dark .device-col + .device-col { border-color: #1B2647; }
+
+body.dark .live-actions .btn-primary[data-capturando="true"] { background: #DC2626; }
+body.dark .live-actions .btn-primary[data-capturando="true"]:hover { background: #B91C1C; }
+
+/* ---------- Goniômetro embutido no formulário de sessão (tema escuro) ---------- */
+body.dark .gonio-inline { border-color: #1B2647; background: rgba(47,128,255,.08); }
+body.dark .gonio-inline-valor { color: #fff; }
+body.dark .gonio-inline-stats strong { color: #fff; }
