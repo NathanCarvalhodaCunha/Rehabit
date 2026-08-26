@@ -93,6 +93,19 @@
 
   const form = document.getElementById("cadastrarSessaoForm");
   if (!form) return;
+
+  // Espelha o valor do controle deslizante ao lado dele.
+  (function ligarEscalaDeDor() {
+    const controle = document.getElementById("s-dor");
+    const saida = document.querySelector("[data-dor-valor]");
+    if (!controle || !saida) return;
+    const atualizar = () => {
+      saida.textContent = controle.value;
+      saida.dataset.nivel = controle.value >= 7 ? "alto" : controle.value >= 4 ? "medio" : "baixo";
+    };
+    controle.addEventListener("input", atualizar);
+    atualizar();
+  })();
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -101,6 +114,7 @@
     const amplitude = document.getElementById("s-amp").value;
     const campoObs = document.getElementById("s-obs");
     const observacoes = campoObs ? campoObs.value.trim() : "";
+    const campoDor = document.getElementById("s-dor");
 
     if (!data || !duracao) {
       RehabitToast.erro("Preencha ao menos a data e a duração.");
@@ -118,6 +132,7 @@
         duracao: Number(duracao),
         amplitudeMedia: amplitude ? Number(amplitude) : null,
         observacoes: observacoes || null,
+        dor: campoDor ? Number(campoDor.value) : null,
         idFisioterapeuta: sessao.id,
       });
       form.reset();

@@ -14,6 +14,14 @@
 
   let fotoAtual = null;
 
+  /** Valor de um campo opcional; null quando vazio, para não gravar "". */
+  function valorDe(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const valor = el.value.trim();
+    return valor === "" ? null : valor;
+  }
+
   apiGet(`/pacientes/${idPaciente}`)
     .then((p) => {
       fotoAtual = p.foto;
@@ -28,6 +36,17 @@
       document.getElementById("p-situacao").value = p.situacao || "";
       const campoStatus = document.getElementById("p-status");
       if (campoStatus) campoStatus.value = p.status || "Ativo";
+
+      const preencher = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.value = valor != null ? valor : "";
+      };
+      preencher("p-queixa", p.queixaPrincipal);
+      preencher("p-historico", p.historicoClinico);
+      preencher("p-medicamentos", p.medicamentos);
+      preencher("p-contra", p.contraindicacoes);
+      preencher("p-meta-amplitude", p.metaAmplitude);
+      preencher("p-meta-data", p.metaData);
 
       const foto = urlFoto(p.foto);
       if (foto) {
@@ -78,6 +97,12 @@
         sexo: document.getElementById("p-sexo").value || null,
         situacao: document.getElementById("p-situacao").value.trim() || null,
         status: document.getElementById("p-status") ? document.getElementById("p-status").value : null,
+        queixaPrincipal: valorDe("p-queixa"),
+        historicoClinico: valorDe("p-historico"),
+        medicamentos: valorDe("p-medicamentos"),
+        contraindicacoes: valorDe("p-contra"),
+        metaAmplitude: valorDe("p-meta-amplitude") ? Number(valorDe("p-meta-amplitude")) : null,
+        metaData: valorDe("p-meta-data"),
         foto,
       });
 

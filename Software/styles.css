@@ -2194,3 +2194,196 @@ button.form-avatar {
   .busca-abrir { display: none; }
   .busca-overlay { padding-top: 8vh; }
 }
+
+/* ---------- Escala de dor (0–10) ---------- */
+.escala-dor { display: flex; align-items: center; gap: 14px; }
+.escala-dor input[type="range"] {
+  flex: 1;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  /* Verde à esquerda, vermelho à direita: a própria barra já comunica. */
+  background: linear-gradient(90deg, #16A34A 0%, #EAB308 50%, #DC2626 100%);
+  cursor: pointer;
+}
+.escala-dor input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--ink-strong);
+  cursor: pointer;
+}
+.escala-dor input[type="range"]::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--ink-strong);
+  cursor: pointer;
+}
+.escala-dor output {
+  min-width: 42px;
+  padding: 5px 0;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  background: rgba(22,163,74,.12);
+  color: #15803D;
+}
+.escala-dor output[data-nivel="medio"] { background: rgba(234,179,8,.16); color: #B45309; }
+.escala-dor output[data-nivel="alto"] { background: rgba(220,38,38,.12); color: #DC2626; }
+
+/* ---------- Ações e abas da tela do paciente ---------- */
+.paciente-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 6px; }
+.paciente-acoes .btn-outline { display: inline-flex; align-items: center; gap: 8px; }
+.paciente-acoes svg { width: 16px; height: 16px; }
+
+.paciente-abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+.paciente-abas button {
+  border: none;
+  background: none;
+  padding: 9px 4px;
+  margin-right: 14px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.paciente-abas button:hover { color: var(--ink-strong); }
+.paciente-abas button.is-ativa { color: var(--brand); border-color: var(--brand); }
+
+/* ---------- Meta de tratamento ---------- */
+.meta-card { padding: 18px 20px; margin-top: 16px; }
+.meta-topo {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+.meta-topo h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--ink-strong); }
+.meta-topo span { font-size: 15px; font-weight: 800; color: var(--brand); }
+.meta-barra {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+.meta-barra span {
+  display: block; height: 100%; width: 0;
+  border-radius: 999px;
+  background: var(--brand);
+  transition: width .5s ease;
+}
+.meta-card.is-atingida .meta-topo span,
+.meta-card.is-atingida .meta-barra span { background: var(--success); color: var(--success); }
+.meta-card.is-atingida .meta-topo span { background: none; }
+.meta-detalhe { margin: 9px 0 0; font-size: 12.5px; font-weight: 600; color: var(--ink-muted); }
+
+/* ---------- Anamnese ---------- */
+.anamnese-card { padding: 20px 22px; }
+.anamnese-lista { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px 26px; }
+.anamnese-lista dt {
+  font-size: 12px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .03em; color: var(--ink-muted); margin-bottom: 4px;
+}
+.anamnese-lista dd {
+  margin: 0; font-size: 14px; font-weight: 500;
+  line-height: 1.5; color: var(--ink-strong); white-space: pre-wrap;
+}
+.anamnese-lista dd.vazio { color: var(--ink-muted); }
+
+/* ---------- Linha do tempo ---------- */
+.timeline { list-style: none; margin: 0; padding: 4px 0 0 4px; }
+.timeline-item { position: relative; padding: 0 0 20px 26px; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: 5px; top: 16px; bottom: 0;
+  width: 2px;
+  background: var(--hairline);
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:last-child::before { display: none; }
+.timeline-marca {
+  position: absolute; left: 0; top: 5px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2px solid #fff;
+}
+.timeline-item.is-inicio .timeline-marca { background: var(--success); }
+.timeline-item.is-agendamento .timeline-marca { background: #fff; border-color: var(--brand); }
+.timeline-corpo { display: flex; flex-direction: column; gap: 2px; }
+.timeline-data { font-size: 12px; font-weight: 700; color: var(--ink-muted); }
+.timeline-corpo strong { font-size: 14px; font-weight: 700; color: var(--ink-strong); }
+.timeline-corpo span:not(.timeline-data) {
+  font-size: 13px; font-weight: 500; line-height: 1.45; color: var(--ink-muted);
+}
+.timeline-vazio { list-style: none; padding: 16px 0; color: var(--ink-muted); font-size: 13.5px; }
+
+@media (max-width: 991px) {
+  .anamnese-lista { grid-template-columns: 1fr; gap: 14px; }
+  .paciente-acoes .btn-outline { flex: 1; justify-content: center; }
+}
+
+/* ---------- Relatório em PDF (impressão) ---------- */
+@media print {
+  .sidebar, .mobile-topbar, .mobile-bottomnav, .fab,
+  .paciente-acoes, .paciente-abas, .busca-overlay, .busca-abrir,
+  .notif-dropdown, .tabs, .add-card, [data-action="add-session"] {
+    display: none !important;
+  }
+  .app { display: block; }
+  .main { padding: 0; max-width: none; }
+  .card {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .bottom-grid { display: block !important; }
+  .desktop-only { display: block !important; }
+  .chart-canvas-wrap { height: 200px !important; }
+  body { background: #fff !important; }
+  a[href]::after { content: ""; }
+}
+
+/* ---------- Presença/falta na agenda ---------- */
+.badge-presenca {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  vertical-align: middle;
+}
+.badge-presenca.realizada { background: rgba(22,163,74,.13); color: #15803D; }
+.badge-presenca.faltou { background: rgba(220,38,38,.11); color: #DC2626; }
+.badge-presenca.remarcada { background: rgba(234,179,8,.16); color: #B45309; }
+
+.agenda-presenca { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.agenda-presenca button {
+  border: 1px solid var(--hairline);
+  background: #fff;
+  color: var(--ink-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.agenda-presenca button:hover:not(:disabled) { color: var(--ink-strong); border-color: #C7D2FE; }
+.agenda-presenca button:disabled { opacity: .5; }

@@ -25,6 +25,12 @@
     return horaIso.slice(0, 5);
   }
 
+  const SELOS_PRESENCA = {
+    REALIZADA: '<span class="badge-presenca realizada">Compareceu</span>',
+    FALTOU: '<span class="badge-presenca faltou">Faltou</span>',
+    REMARCADA: '<span class="badge-presenca remarcada">Remarcou</span>',
+  };
+
   function iconeAgenda() {
     return (
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
@@ -58,8 +64,13 @@
       <li class="agenda-item" data-id="${a.id}">
         <div class="agenda-when">${formatarDataCurta(a.data)}<br/><span class="hora">${formatarHoraCurta(a.hora)}</span></div>
         <div>
-          <div class="agenda-patient">${a.nomePaciente || "Paciente"}</div>
+          <div class="agenda-patient">${a.nomePaciente || "Paciente"}${SELOS_PRESENCA[a.status] || ""}</div>
           ${a.observacao ? `<div class="agenda-obs">${a.observacao}</div>` : ""}
+          <div class="agenda-presenca">
+            <button type="button" data-presenca="REALIZADA" data-id="${a.id}">Compareceu</button>
+            <button type="button" data-presenca="FALTOU" data-id="${a.id}">Faltou</button>
+            <button type="button" data-presenca="REMARCADA" data-id="${a.id}">Remarcou</button>
+          </div>
           <a class="agenda-export" href="${RehabitCalendario.linkGoogle(a)}" target="_blank" rel="noopener">
             ${iconeAgenda()} Adicionar ao Google Agenda
           </a>
@@ -108,6 +119,22 @@
   carregarLista();
 
   listaEl.addEventListener("click", (e) => {
+    const presenca = e.target.closest("[data-presenca]");
+    if (presenca) {
+      const grupo = presenca.parentElement;
+      grupo.querySelectorAll("button").forEach((b) => (b.disabled = true));
+      apiPut(`/agendamentos/${presenca.dataset.id}/status`, { status: presenca.dataset.presenca })
+        .then(() => {
+          RehabitToast.sucesso("Presença registrada.");
+          carregarLista();
+        })
+        .catch((err) => {
+          RehabitToast.erro(err.message);
+          grupo.querySelectorAll("button").forEach((b) => (b.disabled = false));
+        });
+      return;
+    }
+
     const btn = e.target.closest(".agenda-cancel[data-id]");
     if (!btn) return;
     btn.disabled = true;

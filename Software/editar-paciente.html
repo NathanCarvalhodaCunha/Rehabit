@@ -114,6 +114,42 @@
               </div>
             </div>
           </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <h3 class="edit-sub">Anamnese</h3>
+            <div class="field">
+              <label for="p-queixa">Queixa principal</label>
+              <textarea id="p-queixa" rows="2" placeholder="O que trouxe o paciente à fisioterapia"></textarea>
+            </div>
+            <div class="field">
+              <label for="p-historico">Histórico clínico</label>
+              <textarea id="p-historico" rows="2" placeholder="Cirurgias, lesões anteriores, comorbidades"></textarea>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="p-medicamentos">Medicamentos em uso</label>
+                <textarea id="p-medicamentos" rows="2"></textarea>
+              </div>
+              <div class="field">
+                <label for="p-contra">Contraindicações</label>
+                <textarea id="p-contra" rows="2" placeholder="Movimentos ou cargas a evitar"></textarea>
+              </div>
+            </div>
+          </div>
+          <hr class="edit-sep" />
+          <div class="edit-section">
+            <h3 class="edit-sub">Meta de tratamento</h3>
+            <div class="two-col">
+              <div class="field">
+                <label for="p-meta-amplitude">Amplitude alvo (graus)</label>
+                <input id="p-meta-amplitude" type="number" step="0.01" min="0" placeholder="Ex: 90" />
+              </div>
+              <div class="field">
+                <label for="p-meta-data">Prazo</label>
+                <input id="p-meta-data" type="date" />
+              </div>
+            </div>
+          </div>
           <div class="edit-actions">
             <button type="submit" class="btn-primary">Salvar alterações</button>
           </div>

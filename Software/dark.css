@@ -336,3 +336,26 @@ body.dark .alerta-item:hover { background: rgba(255,255,255,.04); }
 body.dark .alerta-texto strong { color: #fff; }
 body.dark .alerta-item.is-atencao .alerta-icone { background: rgba(234,179,8,.18); color: #FBBF24; }
 body.dark .alerta-item.is-bom .alerta-icone { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .escala-dor input[type="range"]::-webkit-slider-thumb { background: #101A38; border-color: #fff; }
+body.dark .escala-dor input[type="range"]::-moz-range-thumb { background: #101A38; border-color: #fff; }
+body.dark .escala-dor output { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .escala-dor output[data-nivel="medio"] { background: rgba(234,179,8,.18); color: #FBBF24; }
+body.dark .escala-dor output[data-nivel="alto"] { background: rgba(255,142,142,.16); color: #FF8E8E; }
+
+/* Complementos do paciente (escuro) */
+body.dark .paciente-abas { border-color: #1B2647; }
+body.dark .paciente-abas button:hover { color: #fff; }
+body.dark .paciente-abas button.is-ativa { color: #2F80FF; border-color: #2F80FF; }
+body.dark .meta-topo h3 { color: #fff; }
+body.dark .meta-barra { background: #1B2647; }
+body.dark .anamnese-lista dd { color: #fff; }
+body.dark .anamnese-lista dd.vazio { color: var(--ink-muted); }
+body.dark .timeline-item::before { background: #1B2647; }
+body.dark .timeline-marca { border-color: #101A38; }
+body.dark .timeline-item.is-agendamento .timeline-marca { background: #101A38; border-color: #2F80FF; }
+body.dark .timeline-corpo strong { color: #fff; }
+body.dark .badge-presenca.realizada { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .badge-presenca.faltou { background: rgba(255,142,142,.16); color: #FF8E8E; }
+body.dark .badge-presenca.remarcada { background: rgba(234,179,8,.18); color: #FBBF24; }
+body.dark .agenda-presenca button { background: #101A38; border-color: #1F2A50; color: var(--ink-muted); }
+body.dark .agenda-presenca button:hover:not(:disabled) { color: #fff; border-color: #2B3A6B; }

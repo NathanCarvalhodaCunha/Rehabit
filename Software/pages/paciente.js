@@ -5,9 +5,94 @@ function coresGrafico() {
   return {
     marca: escuro ? "#2F80FF" : "#1565D8",
     preenchimento: escuro ? "rgba(47,128,255,.14)" : "rgba(21,101,216,.08)",
+    dor: escuro ? "#FF8E8E" : "#E57373",
     grade: escuro ? "#1B2647" : "#E5E7EB",
     texto: escuro ? "#98A2BC" : "#6B7280",
   };
+}
+
+/**
+ * Amplitude e dor no mesmo gráfico, em eixos separados: a leitura que
+ * importa é a amplitude subindo enquanto a dor cai.
+ */
+function construirGraficoAmplitudeXDor(cartao, pontos) {
+  const comDor = pontos.filter((p) => p.dor != null);
+  if (pontos.length === 0 || comDor.length === 0) {
+    return false;
+  }
+  const cores = coresGrafico();
+  const wrap = document.createElement("div");
+  wrap.className = "chart-canvas-wrap";
+  const canvas = document.createElement("canvas");
+  canvas.className = "chart-canvas";
+  wrap.appendChild(canvas);
+  cartao.appendChild(wrap);
+
+  new Chart(canvas, {
+    data: {
+      labels: pontos.map((p) => p.rotulo),
+      datasets: [
+        {
+          type: "line",
+          label: "Amplitude",
+          data: pontos.map((p) => p.valor),
+          borderColor: cores.marca,
+          backgroundColor: cores.preenchimento,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: cores.marca,
+          tension: 0.3,
+          fill: true,
+          yAxisID: "y",
+        },
+        {
+          type: "line",
+          label: "Dor",
+          data: pontos.map((p) => p.dor),
+          borderColor: cores.dor,
+          borderWidth: 2,
+          borderDash: [5, 4],
+          pointRadius: 4,
+          pointBackgroundColor: cores.dor,
+          tension: 0.3,
+          fill: false,
+          yAxisID: "yDor",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: true, labels: { color: cores.texto, boxWidth: 12, usePointStyle: true } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              ctx.dataset.label === "Dor"
+                ? `Dor: ${ctx.parsed.y}/10`
+                : `Amplitude: ${ctx.parsed.y}°`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          position: "left",
+          grid: { color: cores.grade },
+          ticks: { color: cores.texto, callback: (v) => `${v}°` },
+        },
+        yDor: {
+          position: "right",
+          min: 0,
+          max: 10,
+          grid: { display: false },
+          ticks: { color: cores.dor, stepSize: 2 },
+        },
+        x: { grid: { display: false }, ticks: { color: cores.texto } },
+      },
+    },
+  });
+  return true;
 }
 
 function construirGraficoLinha(cartao, pontos) {
@@ -188,7 +273,11 @@ function formatarDataLonga(dataIso) {
       const cronologicas = sessoes.slice(0, 5).reverse();
       const pontosAmplitude = cronologicas
         .filter((s) => s.amplitudeMedia != null)
-        .map((s) => ({ rotulo: formatarDataCurta(s.data), valor: Number(s.amplitudeMedia) }));
+        .map((s) => ({
+          rotulo: formatarDataCurta(s.data),
+          valor: Number(s.amplitudeMedia),
+          dor: s.dor != null ? Number(s.dor) : null,
+        }));
       const pontosDuracao = cronologicas
         .filter((s) => s.duracao != null)
         .map((s) => ({ rotulo: formatarDataCurta(s.data), valor: s.duracao }));
@@ -205,7 +294,13 @@ function formatarDataLonga(dataIso) {
             ? `${diferencaAmplitude >= 0 ? "+" : ""}${diferencaAmplitude.toFixed(0)}° desde a última sessão`
             : "Sem histórico suficiente";
         deltaAmplitudeEl.classList.toggle("negative", diferencaAmplitude != null && diferencaAmplitude < 0);
-        construirGraficoLinha(cartoes[0], pontosAmplitude);
+        // Havendo dor registrada, mostra os dois juntos; senão, só amplitude.
+        if (!construirGraficoAmplitudeXDor(cartoes[0], pontosAmplitude)) {
+          construirGraficoLinha(cartoes[0], pontosAmplitude);
+        } else {
+          const sub = cartoes[0].querySelector(".sub");
+          if (sub) sub.textContent = "Amplitude e dor relatada";
+        }
       }
       if (cartoes[1]) {
         const ultima = pontosDuracao.length ? pontosDuracao[pontosDuracao.length - 1].valor : null;
