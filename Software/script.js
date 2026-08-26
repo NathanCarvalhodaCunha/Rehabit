@@ -161,23 +161,14 @@ window.addEventListener("pageshow", (e) => {
   if (!sessao) return;
 
   const nav = document.querySelector(".sidebar .nav");
-  if (!nav) return;
+  const barraMobile = document.querySelector(".mobile-bottomnav");
+  if (!nav && !barraMobile) return;
 
   const ehClinica = sessao.tipo === "CLINICA";
   const seletorAgenda = 'a[href$="agenda.html"], a[href$="agenda-escuro.html"]';
   const seletorConsultas = 'a[href$="consultas.html"], a[href$="consultas-escuro.html"]';
 
   document.querySelectorAll(ehClinica ? seletorAgenda : seletorConsultas).forEach((el) => el.remove());
-
-  const perfil = Array.from(nav.querySelectorAll("a")).find((a) => /perfil/i.test(a.textContent));
-
-  function inserirLink(pagina, rotulo, svg) {
-    if (nav.querySelector(`a[href$="${pagina}.html"], a[href$="${pagina}-escuro.html"]`)) return;
-    const link = document.createElement("a");
-    link.href = paginaTema(pagina);
-    link.innerHTML = svg + " " + rotulo;
-    nav.insertBefore(link, perfil || null);
-  }
 
   const ICONE_CALENDARIO =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
@@ -187,17 +178,58 @@ window.addEventListener("pageshow", (e) => {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
 
+  function jaTem(container, pagina) {
+    return !!container.querySelector(`a[href$="${pagina}.html"], a[href$="${pagina}-escuro.html"]`);
+  }
+
+  function inserirNaSidebar(pagina, rotulo, svg) {
+    if (!nav || jaTem(nav, pagina)) return;
+    const perfil = Array.from(nav.querySelectorAll("a")).find((a) => /perfil/i.test(a.textContent));
+    const link = document.createElement("a");
+    link.href = paginaTema(pagina);
+    link.innerHTML = svg + " " + rotulo;
+    nav.insertBefore(link, perfil || null);
+  }
+
+  /**
+   * No celular a sidebar está oculta, então a barra inferior é o único
+   * caminho para essas telas — sem isso, Agenda, Consultas e Desempenho
+   * ficavam inalcançáveis no celular.
+   */
+  function inserirNaBarraMobile(pagina, rotulo, svg, antesDe) {
+    if (!barraMobile || jaTem(barraMobile, pagina)) return;
+    const link = document.createElement("a");
+    link.href = paginaTema(pagina);
+    link.setAttribute("aria-label", rotulo);
+    link.innerHTML = svg;
+    const referencia = antesDe
+      ? barraMobile.querySelector(`a[href$="${antesDe}.html"], a[href$="${antesDe}-escuro.html"]`)
+      : null;
+    barraMobile.insertBefore(link, referencia);
+  }
+
   // Consultas é só da clínica e Agenda só do profissional; Desempenho serve
   // aos dois (o profissional vê os próprios números, a clínica escolhe de
   // quem quer ver). Inserir o que falta — e não só remover o que sobra —
   // é o que mantém o menu igual em toda tela, inclusive nas geradas a
   // partir do modelo do outro tipo de conta.
   if (ehClinica) {
-    inserirLink("consultas", "Consultas", ICONE_CALENDARIO);
+    inserirNaSidebar("consultas", "Consultas", ICONE_CALENDARIO);
+    inserirNaBarraMobile("consultas", "Consultas", ICONE_CALENDARIO, "configuracoes");
   } else {
-    inserirLink("agenda", "Agenda", ICONE_CALENDARIO);
+    inserirNaSidebar("agenda", "Agenda", ICONE_CALENDARIO);
+    inserirNaBarraMobile("agenda", "Agenda", ICONE_CALENDARIO, "configuracoes");
   }
-  inserirLink("desempenho", "Desempenho", ICONE_DESEMPENHO);
+  inserirNaSidebar("desempenho", "Desempenho", ICONE_DESEMPENHO);
+  inserirNaBarraMobile("desempenho", "Desempenho", ICONE_DESEMPENHO, "configuracoes");
+
+  // Marca o item da tela atual, para a barra indicar onde o usuário está.
+  if (barraMobile) {
+    const arquivoAtual = window.location.pathname.split("/").pop();
+    barraMobile.querySelectorAll("a[href]").forEach((a) => {
+      if (a.getAttribute("href").split("/").pop() === arquivoAtual) a.classList.add("active");
+    });
+  }
 })();
 
 // Mostra a foto de perfil do usuário logado onde o avatar aparece

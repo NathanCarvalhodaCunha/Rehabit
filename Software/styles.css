@@ -377,7 +377,10 @@ button { font-family: inherit; cursor: pointer; }
 
   .mobile-bottomnav {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* Colunas automáticas: o script insere Agenda/Consultas e Desempenho
+       conforme o tipo de conta, então o número de itens varia. */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     position: fixed;
     bottom: 0;
     left: 0;
