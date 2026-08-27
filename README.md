@@ -53,15 +53,48 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 ## Envio de e-mail
 
 Duas telas dependem de e-mail: a confirmação do endereço no cadastro e a
-recuperação de senha. Sem SMTP configurado a API **continua funcionando** —
+recuperação de senha. Sem provedor configurado a API **continua funcionando** —
 ela escreve o conteúdo do e-mail (com o código) no console do backend, o que
 basta para desenvolver e demonstrar, e o cadastro passa a exigir só as
 checagens de endereço (formato, domínio descartável e DNS).
 
-Para enviar de verdade, o jeito mais simples é copiar
-`rehabit-api/rehabit-api/config/application.properties.exemplo` para
-`application.properties` na mesma pasta e preencher os dados. O Spring Boot lê
-essa pasta sozinho ao subir o jar, sem recompilar e sem mexer em variável de
+Há dois caminhos de saída, escolhidos por qual estiver configurado.
+
+### Em produção (Render): API HTTP do Brevo
+
+Desde 26/09/2025 o plano gratuito do Render
+[bloqueia a saída nas portas de SMTP](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)
+(25, 465 e 587). Ou seja: lá o Gmail por SMTP não funciona, com senha de app
+certa ou errada — a conexão morre antes de chegar ao servidor. Por isso o
+envio de produção usa a [API HTTP do Brevo](https://developers.brevo.com/reference/sendtransacemail),
+que responde em HTTPS na porta 443.
+
+O plano gratuito do Brevo dá 300 e-mails por dia e aceita verificar **só um
+endereço remetente** — não exige domínio próprio, então serve uma conta
+Gmail comum.
+
+1. Crie a conta em [brevo.com](https://www.brevo.com) e verifique o e-mail
+   que vai aparecer como remetente (*Senders, Domains & Dedicated IPs →
+   Senders*). Chega uma mensagem de confirmação nesse endereço.
+2. Gere uma chave em *SMTP & API → API Keys*. Ela começa com `xkeysib-`.
+3. No Render, em *Environment*, defina:
+
+| Variável | Valor |
+| --- | --- |
+| `BREVO_API_KEY` | a chave `xkeysib-...` |
+| `MAIL_FROM` | o endereço verificado no passo 1 |
+| `REHABIT_APP_URL` | endereço público da pasta `Login/`, para o link do e-mail de recuperação |
+
+Se `BREVO_API_KEY` estiver definida e `MAIL_FROM` não, a API avisa no log e
+volta a escrever no console — o Brevo recusaria o envio de um remetente não
+verificado.
+
+### Para rodar local: SMTP
+
+Fora do Render as portas de SMTP funcionam normalmente. O jeito mais simples
+é copiar `rehabit-api/rehabit-api/config/application.properties.exemplo` para
+`application.properties` na mesma pasta e preencher. O Spring Boot lê essa
+pasta sozinho ao subir o jar, sem recompilar e sem mexer em variável de
 ambiente — e o arquivo está no `.gitignore`, então a senha não vai parar no
 repositório. Com Gmail, use uma
 [senha de app](https://support.google.com/accounts/answer/185833): a senha
@@ -73,18 +106,23 @@ spring.mail.username=suaconta@gmail.com
 spring.mail.password=abcd efgh ijkl mnop
 ```
 
-Em servidor (Render e afins), onde não dá para deixar arquivo na máquina, as
-mesmas opções existem como variáveis de ambiente:
+### Todas as opções
 
 | Variável | Para que serve | Padrão |
 | --- | --- | --- |
-| `MAIL_USERNAME` | Conta que envia. Vazio = envio desligado. | *(vazio)* |
+| `BREVO_API_KEY` | Chave da API do Brevo. Definida, é o caminho usado. | *(vazio)* |
+| `MAIL_FROM` | Endereço remetente. Obrigatório com o Brevo, e precisa estar verificado lá. | o `MAIL_USERNAME` |
+| `MAIL_FROM_NAME` | Nome exibido como remetente. | `Rehabit` |
+| `MAIL_USERNAME` | Conta do SMTP. Usada quando não há chave do Brevo. | *(vazio)* |
 | `MAIL_PASSWORD` | Senha de app da conta acima. | *(vazio)* |
 | `MAIL_HOST` / `MAIL_PORT` | Servidor SMTP. | `smtp.gmail.com` / `587` |
-| `MAIL_FROM` | Endereço no remetente. | o `MAIL_USERNAME` |
 | `REHABIT_APP_URL` | Endereço público da pasta `Login/`, usado para montar o link do e-mail de recuperação. Vazio = o e-mail vai só com o código. | *(vazio)* |
 | `REHABIT_VALIDAR_EMAIL_DNS` | Checar no DNS se o domínio do e-mail recebe mensagens. | `true` |
-| `REHABIT_CONFIRMAR_CADASTRO` | Exigir o código de confirmação no cadastro. Vazio = liga sozinho quando há SMTP. | *(vazio)* |
+| `REHABIT_CONFIRMAR_CADASTRO` | Exigir o código de confirmação no cadastro. Vazio = liga sozinho quando há provedor. | *(vazio)* |
+
+A linha que o backend escreve ao subir diz qual caminho está valendo:
+`Envio de e-mail por BREVO...`, `Envio de e-mail por SMTP...` ou
+`Envio de e-mail desligado...`.
 
 ### Como o e-mail é validado no cadastro
 

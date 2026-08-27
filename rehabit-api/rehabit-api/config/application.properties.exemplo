@@ -17,6 +17,16 @@
 spring.mail.username=suaconta@gmail.com
 spring.mail.password=abcd efgh ijkl mnop
 
+# --- Alternativa: API HTTP do Brevo ---
+# Definindo a chave abaixo, o SMTP acima é ignorado e o envio passa pela API
+# do Brevo. É o que a API usa hospedada no Render, cujo plano gratuito
+# bloqueia as portas de SMTP. Local não é necessário, mas serve para testar
+# o mesmo caminho que roda em produção.
+# Com o Brevo, rehabit.mail.remetente é obrigatório e precisa ser um
+# endereço verificado na conta dele.
+#rehabit.mail.brevo.api-key=xkeysib-sua-chave
+#rehabit.mail.remetente=suaconta@gmail.com
+
 # Nome que aparece como remetente na caixa de entrada de quem recebe.
 rehabit.mail.nome-remetente=Rehabit
 
