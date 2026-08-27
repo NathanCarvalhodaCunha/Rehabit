@@ -148,6 +148,39 @@ CREATE TABLE IF NOT EXISTS `tb07_agendamento` (
 
 -- Copiando dados para a tabela rehabit.tb07_agendamento: ~0 rows (aproximadamente)
 
+-- Copiando estrutura para tabela rehabit.tb11_recuperacao_senha
+CREATE TABLE IF NOT EXISTS `tb11_recuperacao_senha` (
+  `tb11_id_recuperacao` int(11) NOT NULL AUTO_INCREMENT,
+  `tb11_email` varchar(150) NOT NULL,
+  `tb11_tipo_conta` varchar(20) NOT NULL,
+  `tb11_token_hash` varchar(64) NOT NULL,
+  `tb11_codigo_hash` varchar(64) NOT NULL,
+  `tb11_tentativas` int(11) NOT NULL DEFAULT 0,
+  `tb11_criado_em` datetime NOT NULL,
+  `tb11_expira_em` datetime NOT NULL,
+  `tb11_usado_em` datetime DEFAULT NULL,
+  PRIMARY KEY (`tb11_id_recuperacao`),
+  UNIQUE KEY `tb11_token_hash` (`tb11_token_hash`),
+  KEY `idx_tb11_email` (`tb11_email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb11_recuperacao_senha: ~0 rows (aproximadamente)
+
+-- Copiando estrutura para tabela rehabit.tb12_verificacao_email
+CREATE TABLE IF NOT EXISTS `tb12_verificacao_email` (
+  `tb12_id_verificacao` int(11) NOT NULL AUTO_INCREMENT,
+  `tb12_email` varchar(150) NOT NULL,
+  `tb12_codigo_hash` varchar(64) NOT NULL,
+  `tb12_tentativas` int(11) NOT NULL DEFAULT 0,
+  `tb12_criado_em` datetime NOT NULL,
+  `tb12_expira_em` datetime NOT NULL,
+  `tb12_verificado_em` datetime DEFAULT NULL,
+  PRIMARY KEY (`tb12_id_verificacao`),
+  UNIQUE KEY `tb12_email` (`tb12_email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb12_verificacao_email: ~0 rows (aproximadamente)
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;

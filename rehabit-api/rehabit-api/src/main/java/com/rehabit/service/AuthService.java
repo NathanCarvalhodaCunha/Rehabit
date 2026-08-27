@@ -2,8 +2,8 @@ package com.rehabit.service;
 
 import com.rehabit.dto.AuthResponseDTO;
 import com.rehabit.dto.LoginRequestDTO;
-import com.rehabit.dto.RedefinirSenhaRequestDTO;
 import com.rehabit.dto.RegisterRequestDTO;
+import com.rehabit.email.ValidadorEmailService;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Clinica;
 import com.rehabit.model.Fisioterapeuta;
@@ -24,15 +24,21 @@ public class AuthService {
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final ValidadorEmailService validadorEmail;
+    private final VerificacaoEmailService verificacaoEmail;
 
     public AuthService(ClinicaRepository clinicaRepository,
                         FisioterapeutaRepository fisioterapeutaRepository,
                         PasswordEncoder passwordEncoder,
-                        JwtService jwtService) {
+                        JwtService jwtService,
+                        ValidadorEmailService validadorEmail,
+                        VerificacaoEmailService verificacaoEmail) {
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.validadorEmail = validadorEmail;
+        this.verificacaoEmail = verificacaoEmail;
     }
 
     /**
@@ -41,12 +47,16 @@ public class AuthService {
      * para os dois tipos de conta.
      */
     public AuthResponseDTO login(LoginRequestDTO dados) {
-        Optional<Clinica> clinica = clinicaRepository.findByEmail(dados.getEmail());
+        // Normaliza igual ao cadastro: quem digita "Nathan@Gmail.com" no
+        // celular (que capitaliza sozinho) precisa entrar do mesmo jeito.
+        String email = validadorEmail.normalizar(dados.getEmail());
+
+        Optional<Clinica> clinica = clinicaRepository.findByEmail(email);
         if (clinica.isPresent()) {
             return autenticarClinica(clinica.get(), dados.getSenha());
         }
 
-        Optional<Fisioterapeuta> fisioterapeuta = fisioterapeutaRepository.findByEmail(dados.getEmail());
+        Optional<Fisioterapeuta> fisioterapeuta = fisioterapeutaRepository.findByEmail(email);
         if (fisioterapeuta.isPresent()) {
             return autenticarFisioterapeuta(fisioterapeuta.get(), dados.getSenha());
         }
@@ -88,18 +98,25 @@ public class AuthService {
                     HttpStatus.BAD_REQUEST);
         }
 
-        if (clinicaRepository.existsByEmail(dados.getEmail())
-                || fisioterapeutaRepository.existsByEmail(dados.getEmail())) {
+        // Formato, domínio descartável e DNS do domínio.
+        String email = validadorEmail.validarENormalizar(dados.getEmail());
+
+        if (clinicaRepository.existsByEmail(email)
+                || fisioterapeutaRepository.existsByEmail(email)) {
             throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
         }
 
-        if (clinicaRepository.existsByCnpj(dados.getCnpj())) {
+        if (clinicaRepository.existsByCnpj(dados.getCnpj().trim())) {
             throw new AuthException("Este CNPJ já está cadastrado.", HttpStatus.CONFLICT);
         }
 
+        // Prova de que a caixa de entrada existe: sem o código que enviamos
+        // para lá, o cadastro não passa daqui.
+        verificacaoEmail.exigirConfirmado(email);
+
         Clinica clinica = new Clinica();
         clinica.setNome(dados.getNome());
-        clinica.setEmail(dados.getEmail());
+        clinica.setEmail(email);
         clinica.setSenha(passwordEncoder.encode(dados.getSenha()));
         clinica.setCnpj(dados.getCnpj().trim());
         clinica.setTelefone(vazioParaNulo(dados.getTelefone()));
@@ -109,47 +126,9 @@ public class AuthService {
         clinica.setFoto(vazioParaNulo(dados.getFoto()));
 
         Clinica salva = clinicaRepository.save(clinica);
+        verificacaoEmail.consumir(email);
         return new AuthResponseDTO(salva.getId(), "CLINICA", salva.getNome(), salva.getEmail(),
                 salva.getFoto(), salva.isTutorialVisto());
-    }
-
-    /**
-     * Redefinição direta de senha (sem e-mail): identifica a conta pelo
-     * e-mail e confirma a posse dela através do CNPJ (clínica) ou COFFITO
-     * (fisioterapeuta), únicos por conta e não expostos publicamente.
-     * A mensagem de erro é sempre a mesma para não revelar qual dado
-     * (e-mail ou documento) estava incorreto.
-     */
-    @Transactional
-    public void redefinirSenha(RedefinirSenhaRequestDTO dados) {
-        String documentoInformado = dados.getDocumento().trim();
-        AuthException dadosInvalidos = new AuthException(
-                "Não foi possível verificar seus dados. Confira o e-mail e o CNPJ/COFFITO informados.",
-                HttpStatus.BAD_REQUEST);
-
-        Optional<Clinica> clinica = clinicaRepository.findByEmail(dados.getEmail());
-        if (clinica.isPresent()) {
-            Clinica c = clinica.get();
-            if (c.getCnpj() == null || !documentoInformado.equalsIgnoreCase(c.getCnpj().trim())) {
-                throw dadosInvalidos;
-            }
-            c.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
-            clinicaRepository.save(c);
-            return;
-        }
-
-        Optional<Fisioterapeuta> fisioterapeuta = fisioterapeutaRepository.findByEmail(dados.getEmail());
-        if (fisioterapeuta.isPresent()) {
-            Fisioterapeuta f = fisioterapeuta.get();
-            if (f.getCoffito() == null || !documentoInformado.equalsIgnoreCase(f.getCoffito().trim())) {
-                throw dadosInvalidos;
-            }
-            f.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
-            fisioterapeutaRepository.save(f);
-            return;
-        }
-
-        throw dadosInvalidos;
     }
 
     private String vazioParaNulo(String valor) {

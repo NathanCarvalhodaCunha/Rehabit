@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redefinir senha — Rehabit</title>
+  <meta name="description" content="Crie uma nova senha para a sua conta Rehabit." />
+  <meta property="og:title" content="Redefinir senha — Rehabit" />
+  <meta property="og:description" content="Crie uma nova senha para a sua conta Rehabit." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="loader.css" />
+</head>
+<body>
+  <main class="shell image-left">
+    <!-- Photo panel (left on desktop) -->
+    <div class="photo">
+      <img src="assets/physio.png" alt="Fisioterapeuta manipulando o joelho de um paciente" />
+      <!-- Curved white divider on the right (form-facing) edge -->
+      <div class="divider right" aria-hidden="true">
+        <svg viewBox="0 0 120 1000" preserveAspectRatio="none">
+          <path d="M120,0 L60,0 C90,250 20,500 50,750 C70,900 100,950 120,1000 Z" fill="currentColor" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Form panel -->
+    <section class="form-side">
+      <div class="form-wrap">
+        <form id="redefinirSenhaForm" class="form-content" novalidate>
+          <img class="logo" src="assets/rehabit-logo.png" alt="Rehabit" />
+
+          <h1>Nova senha</h1>
+          <p class="subtitle" id="redefinirSubtitulo">Use o código que enviamos para o seu e-mail</p>
+
+          <div class="fields">
+            <!-- Escondidos quando a pessoa chega pelo link do e-mail: o token
+                 que vem na URL já identifica a conta. -->
+            <div class="field" data-campo-codigo>
+              <label for="email">E-mail da conta</label>
+              <input id="email" name="email" type="email" autocomplete="email" />
+            </div>
+            <div class="field" data-campo-codigo>
+              <label for="codigo">Código de 6 dígitos</label>
+              <input id="codigo" name="codigo" type="text" inputmode="numeric" autocomplete="one-time-code"
+                     maxlength="6" placeholder="000000" />
+              <p class="form-hint">É o código que chegou no e-mail. Vale por 30 minutos.</p>
+            </div>
+            <div class="field">
+              <label for="novaSenha">Nova senha</label>
+              <input id="novaSenha" name="novaSenha" type="password" autocomplete="new-password" required />
+            </div>
+            <div class="field">
+              <label for="confirmarSenha">Confirmar nova senha</label>
+              <input id="confirmarSenha" name="confirmarSenha" type="password" autocomplete="new-password" required />
+            </div>
+          </div>
+
+          <button class="btn-primary" type="submit">Salvar nova senha</button>
+
+          <p class="footer-link">
+            Não recebeu o código? <a href="esqueci-senha.html">Pedir de novo</a>
+          </p>
+          <p class="footer-link" style="margin-top:10px">
+            Lembrou a senha? <a href="login.html">Voltar para o login</a>
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="toast.js"></script>
+  <script src="password-toggle.js"></script>
+  <script src="loader.js"></script>
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="animations.js"></script>
+</body>
+</html>
