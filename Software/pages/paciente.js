@@ -12,6 +12,23 @@ function coresGrafico() {
 }
 
 /**
+ * O Chart.js vem de CDN, e CDN falha (rede bloqueando o domínio, internet
+ * caindo). Sem esta checagem, o "new Chart" estourava e derrubava o resto
+ * da montagem da tela do paciente — o histórico e os dados sumiam junto
+ * com o gráfico. Devolve true quando avisou, para quem chamou parar aí.
+ */
+function semBibliotecaDeGrafico(cartao) {
+  if (typeof Chart !== "undefined") return false;
+  cartao.insertAdjacentHTML(
+    "beforeend",
+    '<p style="color:var(--ink-muted);font-size:13px;margin-top:8px;">' +
+      "Não foi possível carregar o gráfico. Verifique sua conexão." +
+      "</p>"
+  );
+  return true;
+}
+
+/**
  * Amplitude e dor no mesmo gráfico, em eixos separados: a leitura que
  * importa é a amplitude subindo enquanto a dor cai.
  */
@@ -20,6 +37,7 @@ function construirGraficoAmplitudeXDor(cartao, pontos) {
   if (pontos.length === 0 || comDor.length === 0) {
     return false;
   }
+  if (semBibliotecaDeGrafico(cartao)) return true;
   const cores = coresGrafico();
   const wrap = document.createElement("div");
   wrap.className = "chart-canvas-wrap";
@@ -103,6 +121,7 @@ function construirGraficoLinha(cartao, pontos) {
     );
     return;
   }
+  if (semBibliotecaDeGrafico(cartao)) return;
   const cores = coresGrafico();
   const wrap = document.createElement("div");
   wrap.className = "chart-canvas-wrap";
@@ -155,6 +174,7 @@ function construirGraficoBarras(cartao, pontos) {
     );
     return;
   }
+  if (semBibliotecaDeGrafico(cartao)) return;
   const cores = coresGrafico();
   const wrap = document.createElement("div");
   wrap.className = "chart-canvas-wrap";

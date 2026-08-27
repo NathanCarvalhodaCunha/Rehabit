@@ -1,0 +1,31 @@
+# Configuração local do envio de e-mail — MODELO
+#
+# Copie este arquivo para "application.properties" nesta mesma pasta
+# (rehabit-api/rehabit-api/config/) e preencha com os seus dados. O Spring
+# Boot lê essa pasta sozinho ao subir o jar e o que estiver aqui vence o
+# application.properties de dentro do projeto — não precisa mexer em
+# variável de ambiente do Windows nem recompilar.
+#
+# O arquivo "application.properties" desta pasta está no .gitignore: a
+# senha de app fica só na sua máquina e não vai para o repositório.
+#
+# No Gmail a senha comum NÃO funciona. É preciso:
+#   1. ligar a verificação em duas etapas na conta Google;
+#   2. gerar uma "senha de app" em https://myaccount.google.com/apppasswords;
+#   3. colar aqui os 16 caracteres, com ou sem espaços.
+
+spring.mail.username=suaconta@gmail.com
+spring.mail.password=abcd efgh ijkl mnop
+
+# Nome que aparece como remetente na caixa de entrada de quem recebe.
+rehabit.mail.nome-remetente=Rehabit
+
+# Endereço público da pasta Login/, usado para montar o link do e-mail de
+# recuperação de senha. Deixe comentado se o site só roda pelo arquivo
+# local (file://): aí o e-mail vai só com o código de 6 dígitos, que
+# funciona igual.
+#rehabit.app.url-login=https://seu-usuario.github.io/Rehabit/Login
+
+# Outro provedor de e-mail? Ajuste também o servidor:
+#spring.mail.host=smtp.office365.com
+#spring.mail.port=587

@@ -58,9 +58,23 @@ ela escreve o conteúdo do e-mail (com o código) no console do backend, o que
 basta para desenvolver e demonstrar, e o cadastro passa a exigir só as
 checagens de endereço (formato, domínio descartável e DNS).
 
-Para enviar de verdade, exporte as variáveis antes de subir a API. Com Gmail,
-use uma [senha de app](https://support.google.com/accounts/answer/185833) —
-a senha normal da conta não funciona:
+Para enviar de verdade, o jeito mais simples é copiar
+`rehabit-api/rehabit-api/config/application.properties.exemplo` para
+`application.properties` na mesma pasta e preencher os dados. O Spring Boot lê
+essa pasta sozinho ao subir o jar, sem recompilar e sem mexer em variável de
+ambiente — e o arquivo está no `.gitignore`, então a senha não vai parar no
+repositório. Com Gmail, use uma
+[senha de app](https://support.google.com/accounts/answer/185833): a senha
+normal da conta não funciona.
+
+```properties
+# rehabit-api/rehabit-api/config/application.properties
+spring.mail.username=suaconta@gmail.com
+spring.mail.password=abcd efgh ijkl mnop
+```
+
+Em servidor (Render e afins), onde não dá para deixar arquivo na máquina, as
+mesmas opções existem como variáveis de ambiente:
 
 | Variável | Para que serve | Padrão |
 | --- | --- | --- |
@@ -71,14 +85,6 @@ a senha normal da conta não funciona:
 | `REHABIT_APP_URL` | Endereço público da pasta `Login/`, usado para montar o link do e-mail de recuperação. Vazio = o e-mail vai só com o código. | *(vazio)* |
 | `REHABIT_VALIDAR_EMAIL_DNS` | Checar no DNS se o domínio do e-mail recebe mensagens. | `true` |
 | `REHABIT_CONFIRMAR_CADASTRO` | Exigir o código de confirmação no cadastro. Vazio = liga sozinho quando há SMTP. | *(vazio)* |
-
-No Windows:
-
-```bat
-set MAIL_USERNAME=suaconta@gmail.com
-set MAIL_PASSWORD=abcd efgh ijkl mnop
-java -jar target/rehabit-api-1.0.0.jar
-```
 
 ### Como o e-mail é validado no cadastro
 
