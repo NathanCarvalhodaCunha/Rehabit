@@ -2395,3 +2395,81 @@ button.form-avatar {
 .comparativo-titulo { margin: 0 0 2px; font-size: 17px; font-weight: 800; color: var(--ink-strong); }
 .comparativo-sub { margin: 0 0 14px; font-size: 12.5px; font-weight: 600; color: var(--ink-muted); }
 [data-comparativo] { margin-top: 22px; }
+
+/* ---------- Goniômetros pareados ---------- */
+.dispositivos-card { margin-top: 20px; padding: 20px 22px; }
+.dispositivos-topo {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px; margin-bottom: 14px;
+}
+.dispositivos-topo h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
+.dispositivos-topo .sub { margin: 3px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+
+.dispositivos-lista { list-style: none; margin: 0; padding: 0; }
+.dispositivo-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 12px 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+.dispositivo-item:last-child { border-bottom: none; }
+.dispositivo-item.is-revogado { opacity: .55; }
+.dispositivo-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dispositivo-info strong { font-size: 14.5px; font-weight: 700; color: var(--ink-strong); }
+.dispositivo-info span { font-size: 12.5px; font-weight: 600; color: var(--ink-muted); }
+.dispositivo-vazio {
+  list-style: none; padding: 18px 4px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink-muted);
+}
+
+.dispositivo-selo {
+  display: inline-block; margin-left: 8px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .03em;
+  vertical-align: middle;
+}
+.dispositivo-selo.online { background: rgba(22,163,74,.13); color: #15803D; }
+.dispositivo-selo.offline { background: rgba(107,114,128,.15); color: #4B5563; }
+.dispositivo-selo.revogado { background: rgba(220,38,38,.11); color: #DC2626; }
+
+.btn-pequeno { height: 34px; padding: 0 14px; font-size: 13px; align-self: center; }
+
+/* ---------- Janela de pareamento ---------- */
+.pareamento-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(16,24,40,.5);
+}
+.pareamento-overlay.is-hidden { display: none; }
+.pareamento-caixa {
+  width: min(460px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  padding: 26px 26px 20px;
+  box-shadow: 0 24px 60px rgba(16,24,40,.3);
+  text-align: center;
+}
+.pareamento-caixa h3 { margin: 0 0 12px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
+.pareamento-passos {
+  margin: 0 0 18px;
+  font-size: 13px; font-weight: 500; line-height: 1.7;
+  color: var(--ink-muted); text-align: left;
+}
+.pareamento-codigo {
+  font-size: 40px; font-weight: 800; letter-spacing: .1em;
+  color: var(--brand);
+  padding: 14px 0;
+  border-radius: 12px;
+  background: rgba(21,101,216,.07);
+}
+.pareamento-codigo.is-expirado { color: var(--ink-muted); background: rgba(107,114,128,.1); }
+.pareamento-validade { margin: 10px 0 18px; font-size: 12.5px; font-weight: 700; color: var(--ink-muted); }
+.pareamento-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 991px) {
+  .dispositivos-topo { flex-direction: column; }
+  .dispositivos-topo .btn-primary { width: 100%; }
+  .pareamento-codigo { font-size: 32px; }
+  .pareamento-acoes .btn-primary, .pareamento-acoes .btn-outline { flex: 1; }
+}

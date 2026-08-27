@@ -1,4 +1,12 @@
-# Guia: gravar o firmware do goniômetro no ESP32
+# Guia: gravar e conectar o goniômetro (ESP32 + MPU6050)
+
+O firmware é gravado **uma única vez**. Depois disso, quem for usar o
+aparelho configura tudo pelo celular — Wi-Fi e vínculo com a clínica — sem
+precisar de computador nem da Arduino IDE.
+
+---
+
+# Parte 1 — Gravar o firmware (só uma vez, feito por você)
 
 ## 1. Instalar suporte à placa ESP32 na Arduino IDE
 
@@ -10,82 +18,112 @@
 4. **Ferramentas → Placa**, escolha o modelo da sua placa (geralmente
    "ESP32 Dev Module" se não souber o nome exato).
 
-## 2. Instalar a biblioteca do MPU6050
+## 2. Instalar as bibliotecas
 
-1. **Ferramentas → Gerenciar Bibliotecas** (ou Sketch → Incluir Biblioteca
-   → Gerenciar Bibliotecas).
-2. Busque "Adafruit MPU6050", instale (vai pedir pra instalar também
-   "Adafruit Unified Sensor" e "Adafruit BusIO" — aceite, são dependências).
+**Ferramentas → Gerenciar Bibliotecas**, e instale as duas:
 
-## 3. Selecionar a porta
+- **Adafruit MPU6050** — vai pedir para instalar junto "Adafruit Unified
+  Sensor" e "Adafruit BusIO"; aceite, são dependências.
+- **WiFiManager** (de *tzapu*) — é ela que cria o portal de configuração no
+  celular.
 
-1. Conecte o ESP32 no PC via USB (se ainda não estiver).
-2. **Ferramentas → Porta**, escolha a porta COM que apareceu quando você
-   conectou o cabo (no Gerenciador de Dispositivos do Windows, procure por
-   "Portas (COM e LPT)" — costuma aparecer como "Silicon Labs CP210x" ou
-   "CH340").
+## 3. Montar o sensor
 
-## 4. Preencher e gravar o firmware
+MPU6050 → ESP32: `VCC → 3.3V`, `GND → GND`, `SDA → GPIO21`, `SCL → GPIO22`.
+São os pinos padrão de I2C na maioria das placas DevKit; confira a
+serigrafia da sua se for diferente.
 
-> **A Arduino IDE exige que o `.ino` esteja dentro de uma pasta com o mesmo
-> nome.** Ou seja: `goniometro-esp32/goniometro-esp32.ino`. Ao abrir o
-> arquivo, a IDE se oferece para criar essa pasta — aceite.
+## 4. Selecionar a porta e gravar
+
+1. Conecte o ESP32 no PC via USB.
+2. **Ferramentas → Porta**, escolha a porta COM que apareceu ao conectar o
+   cabo (no Gerenciador de Dispositivos do Windows costuma aparecer como
+   "Silicon Labs CP210x" ou "CH340").
+3. Abra `goniometro-esp32.ino` e clique em **Carregar** (a seta →).
+
+> **Não é preciso editar nada no código.** Não há senha de Wi-Fi nem senha
+> de conta ali dentro — é justamente essa a diferença: essas informações
+> entram pelo celular, na Parte 2.
 >
-> Essa pasta de trabalho **não vai para o GitHub** (está no `.gitignore`),
-> justamente porque você preenche nela a senha do seu Wi-Fi e a senha da
-> conta da clínica. O arquivo versionado é o `Firmware/goniometro-esp32.ino`,
-> que fica só com os campos em branco. Se precisar começar do zero, copie
-> esse modelo para dentro da pasta de trabalho.
+> A Arduino IDE exige que o `.ino` fique dentro de uma pasta com o mesmo
+> nome (`goniometro-esp32/goniometro-esp32.ino`). Ao abrir o arquivo, ela se
+> oferece para criar essa pasta — aceite. Essa pasta de trabalho não vai
+> para o GitHub (está no `.gitignore`).
 
-1. Abra `goniometro-esp32.ino` na Arduino IDE.
-2. Preencha `WIFI_SSID`/`WIFI_SENHA` e o e-mail/senha da clínica nos dois
-   `ALVOS` (local e nuvem), no topo do arquivo.
-3. Confira se `ALVOS[0].baseUrl` aponta pro IP certo do PC (hoje é
-   `192.168.1.10:8080` — se seu PC estiver em outro IP na sua rede
-   Wi-Fi, ajuste).
-4. Clique em **Carregar** (a seta →) na Arduino IDE.
+---
 
-## 5. Verificar que está funcionando
+# Parte 2 — Conectar o aparelho (qualquer pessoa, pelo celular)
 
-1. Abra o **Monitor Serial** (ícone de lupa no canto superior direito, ou
-   Ferramentas → Monitor Serial), velocidade **115200**.
-2. Você deve ver, em ordem: `MPU6050 encontrado`, depois
-   `Wi-Fi conectado, IP: ...`, depois `[local] login OK, idClinica=...` e
-   `[nuvem] login OK, idClinica=...`.
-3. A cada ~2 segundos deve aparecer `Angulo lido: X.XX graus` seguido de
-   `[local] leitura enviada: ...` e `[nuvem] leitura enviada: ...`.
-4. Se `[local]` falhar com "login falhou" — confira se o backend local
-   está rodando (`iniciar-rehabit.bat`) e se o ESP e o PC estão na mesma
-   rede Wi-Fi.
-5. Se `[nuvem]` demorar bastante na primeira leitura — normal, o Render
-   gratuito "dorme" e leva alguns segundos pra acordar na primeira
-   chamada depois de um tempo parado.
-6. Se aparecer `status=-1` (em vez de um código HTTP normal como 200, 401
-   etc.) em qualquer um dos dois alvos, geralmente é problema de conexão
-   Wi-Fi/TLS, não um erro da aplicação — confira o sinal do Wi-Fi e, no
-   caso do `[nuvem]`, se o ESP tem acesso à internet de verdade (não só à
-   rede local).
-7. Se o ângulo aparecer sempre negativo e isso não fizer sentido para a
-   articulação medida: `atan2` pode retornar valores negativos dependendo
-   de como o MPU6050 está montado, e o campo de amplitude não tem mínimo —
-   experimente montar o sensor do outro lado ou tirar o valor absoluto em
-   `lerAngulo()`.
-8. Com tudo funcionando, abra a tela Dispositivo do Rehabit (local ou a
-   versão publicada) logado como a clínica — o ângulo deve aparecer e
-   atualizar sozinho a cada ~2s.
+## 1. Pegar o código na tela do Rehabit
 
-**Se algo não bater com o esperado acima, copie exatamente o que apareceu
-no Monitor Serial — essa é a única forma de diagnosticar o problema.**
+1. Entre no Rehabit **com a conta da clínica**.
+2. Vá em **Dispositivo** → botão **Parear novo dispositivo**.
+3. Aparece um código de 6 dígitos. Ele vale **10 minutos** e serve **uma
+   única vez** — pedir outro invalida o anterior.
 
-## Erros de compilação conhecidos
+## 2. Configurar o goniômetro
+
+1. Ligue o goniômetro. Sem configuração, ele cria uma rede Wi-Fi chamada
+   **`Rehabit-Goniometro`** (senha **`rehabit123`**).
+2. No celular, conecte-se a essa rede. Um portal abre sozinho — se não
+   abrir, acesse `192.168.4.1` no navegador.
+3. No portal: escolha a rede Wi-Fi da clínica, digite a senha dela e o
+   **código de 6 dígitos** no campo indicado.
+4. Salve. O aparelho grava tudo na memória interna e reinicia já conectado.
+
+Pronto. Na tela **Dispositivo**, o aparelho aparece como **Online** e o
+ângulo passa a atualizar sozinho a cada ~2 segundos.
+
+## 3. Reconfigurar depois (trocou de Wi-Fi ou de clínica)
+
+Com o aparelho ligado, **segure o botão BOOT por 5 segundos**. Ele apaga a
+configuração e volta a criar a rede `Rehabit-Goniometro`. Repita a Parte 2.
+
+## 4. Se um aparelho sumir ou for roubado
+
+Na tela Dispositivo, clique em **Revogar**. O acesso é cortado na hora, sem
+precisar trocar a senha da clínica. A senha da clínica nunca fica gravada no
+aparelho — ele guarda só um token próprio, que a revogação invalida.
+
+---
+
+# Verificar que está funcionando
+
+Com o cabo USB ligado, abra o **Monitor Serial** (Ferramentas → Monitor
+Serial), velocidade **115200**. Você deve ver, em ordem:
+
+1. `MPU6050 encontrado.`
+2. `Sem token: use o portal para parear.` (ou `Token encontrado na memoria.`)
+3. `Wi-Fi conectado, IP: ...`
+4. `Pareado com a clinica "..."` — só na primeira vez
+5. A cada ~2s: `Angulo lido: X.XX graus` e `Leitura enviada: X.XX graus`
+
+## Problemas comuns
+
+| O que aparece | O que fazer |
+|---|---|
+| `MPU6050 nao encontrado!` | Fiação: confira VCC/GND/SDA/SCL. |
+| `Pareamento falhou (status=400)` | Código expirado ou já usado — gere outro na tela Dispositivo. |
+| `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
+| `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
+| `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. |
+| Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. |
+| Ângulo sempre negativo | `atan2` pode dar negativo conforme a montagem do sensor. Monte o MPU do outro lado ou use valor absoluto em `lerAngulo()`. |
+
+**Se algo não bater com o esperado, copie exatamente o que apareceu no
+Monitor Serial — é a única forma de diagnosticar.**
+
+---
+
+# Erros de compilação conhecidos
 
 **`variable or field 'fazerLogin' declared void`**
 
-A Arduino IDE cria sozinha os protótipos das funções e os coloca no topo do
-arquivo — antes do `struct Alvo`. Se uma função recebesse `Alvo &` como
-parâmetro, o protótipo gerado citaria um tipo que ainda não existe naquele
-ponto, e a compilação parava aí.
+Erro da versão antiga do firmware. A Arduino IDE cria sozinha os protótipos
+das funções e os coloca no topo do arquivo, antes das suas declarações — uma
+função que recebesse um `struct` próprio gerava um protótipo citando um tipo
+que ainda não existia ali.
 
-Por isso `fazerLogin()` e `enviarLeitura()` recebem o **índice** do alvo
-(`int`) em vez do struct, e pegam `ALVOS[indice]` na primeira linha. Não
-troque essas assinaturas de volta para `Alvo &` — o erro volta.
+A versão atual não tem mais esse problema: as funções recebem só tipos
+nativos. Se você editar o código e voltar a passar um `struct` como
+parâmetro, o erro reaparece.

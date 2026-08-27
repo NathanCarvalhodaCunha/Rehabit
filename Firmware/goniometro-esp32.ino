@@ -1,22 +1,29 @@
 // Rehabit — leitura do goniômetro (ESP32 + MPU6050)
 //
-// ANTES DE GRAVAR:
-//   1. Preencha WIFI_SSID / WIFI_SENHA abaixo.
-//   2. Preencha o e-mail e a senha de uma conta de CLÍNICA já cadastrada
-//      no Rehabit em cada um dos dois ALVOS (local e nuvem) — pode ser a
-//      mesma conta nos dois, mas os dois blocos {email, senha} de baixo
-//      precisam estar preenchidos.
-//   3. Confira o IP do alvo "local" (ALVOS[0].baseUrl) — hoje aponta pra
-//      192.168.1.10:8080. Se o PC que roda o backend local mudar de IP,
-//      troque aqui.
-//   4. Monte o MPU6050: VCC->3.3V, GND->GND, SDA->GPIO21, SCL->GPIO22
-//      (pinos padrão de I2C da maioria das placas ESP32 DevKit — confira
-//      a serigrafia da sua placa se for diferente).
+// NÃO É PRECISO EDITAR NADA AQUI. Wi-Fi e pareamento são configurados pelo
+// celular, na primeira vez que o aparelho liga:
+//
+//   1. Grave este código uma vez (veja o guia ao lado).
+//   2. Ao ligar sem configuração, o goniômetro cria um Wi-Fi chamado
+//      "Rehabit-Goniometro" (senha: rehabit123).
+//   3. Conecte o celular nesse Wi-Fi — abre sozinho um portal.
+//   4. Escolha a rede da clínica, digite a senha dela e o código de 6
+//      dígitos que aparece na tela Dispositivo do Rehabit.
+//   5. O aparelho grava tudo na memória e reinicia já conectado.
+//
+// Para reconfigurar (trocou de Wi-Fi, mudou de clínica): segure o botão BOOT
+// por 5 segundos com o aparelho ligado. Ele apaga a configuração e volta ao
+// passo 2.
+//
+// Montagem do MPU6050: VCC->3.3V, GND->GND, SDA->GPIO21, SCL->GPIO22.
 //
 // O ângulo é calculado só com o acelerômetro (sem giroscópio), pelo eixo
 // Y/Z — se o MPU6050 estiver montado de outro jeito na articulação, troque
 // accel.acceleration.y / accel.acceleration.z pelos eixos certos (X/Y ou
 // X/Z) na função lerAngulo().
+//
+// BIBLIOTECAS (Gerenciar Bibliotecas): "Adafruit MPU6050" e
+// "WiFiManager" (de tzapu).
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -24,9 +31,32 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <WiFiClientSecure.h>
+#include <WiFiManager.h>
+#include <Preferences.h>
+
+// Onde o Rehabit está publicado. Só precisa mudar se você republicar a API
+// em outro endereço.
+const char *BASE_URL = "https://rehabit-api-4tex.onrender.com/api";
+
+const char *AP_NOME = "Rehabit-Goniometro";
+const char *AP_SENHA = "rehabit123";
+
+const int PINO_BOTAO_RESET = 0;  // BOOT na maioria das placas DevKit
+const unsigned long SEGURAR_PARA_RESETAR_MS = 5000;
+
+const unsigned long INTERVALO_LEITURA_MS = 2000;
+const unsigned long INTERVALO_RETRY_PAREAMENTO_MS = 30000;
 
 WiFiClientSecure clienteSeguro;
 WiFiClient clienteInseguro;
+
+Adafruit_MPU6050 mpu;
+Preferences memoria;
+
+String tokenDispositivo = "";
+unsigned long ultimaLeitura = 0;
+unsigned long ultimaTentativaPareamento = 0;
+unsigned long botaoPressionadoDesde = 0;
 
 WiFiClient &clienteParaUrl(const char *url) {
   if (String(url).startsWith("https://")) {
@@ -35,152 +65,231 @@ WiFiClient &clienteParaUrl(const char *url) {
   return clienteInseguro;
 }
 
-const char *WIFI_SSID = "SEU_WIFI_AQUI";
-const char *WIFI_SENHA = "SUA_SENHA_WIFI_AQUI";
+// ---------------------------------------------------------------------------
+// Memória interna (NVS): guarda o token entre reinícios, para não precisar
+// parear de novo toda vez que faltar luz.
+// ---------------------------------------------------------------------------
 
-struct Alvo {
-  const char *nome;
-  const char *baseUrl;
-  const char *email;
-  const char *senha;
-  String token;
-  int idClinica;
-  bool logado;
-  unsigned long ultimaTentativaLogin;
-};
+void salvarToken(const String &token) {
+  memoria.begin("rehabit", false);
+  memoria.putString("token", token);
+  memoria.end();
+}
 
-Alvo ALVOS[2] = {
-  {"local", "http://192.168.1.10:8080/api", "EMAIL_DA_CLINICA", "SENHA_DA_CLINICA", "", 0, false, 0},
-  {"nuvem", "https://rehabit-api-4tex.onrender.com/api", "EMAIL_DA_CLINICA", "SENHA_DA_CLINICA", "", 0, false, 0},
-};
+String carregarToken() {
+  memoria.begin("rehabit", true);
+  String token = memoria.getString("token", "");
+  memoria.end();
+  return token;
+}
 
-const unsigned long INTERVALO_LEITURA_MS = 2000;
-const unsigned long INTERVALO_RETRY_LOGIN_MS = 30000;
+void apagarConfiguracao() {
+  memoria.begin("rehabit", false);
+  memoria.clear();
+  memoria.end();
 
-Adafruit_MPU6050 mpu;
-unsigned long ultimaLeitura = 0;
+  WiFiManager wm;
+  wm.resetSettings();  // apaga também a rede Wi-Fi salva
+}
 
-void conectarWifi() {
-  Serial.print("Conectando ao Wi-Fi ");
-  Serial.println(WIFI_SSID);
-  WiFi.begin(WIFI_SSID, WIFI_SENHA);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+// ---------------------------------------------------------------------------
+// Pareamento
+// ---------------------------------------------------------------------------
+
+// Extrai um campo string simples de um JSON achatado, sem biblioteca de
+// parsing — o corpo esperado tem poucos campos e formato conhecido.
+String extrairTexto(const String &json, const char *chave) {
+  String marcador = String("\"") + chave + "\":\"";
+  int inicio = json.indexOf(marcador);
+  if (inicio < 0) {
+    return "";
   }
-  Serial.println();
+  inicio += marcador.length();
+  int fim = json.indexOf("\"", inicio);
+  if (fim < 0) {
+    return "";
+  }
+  return json.substring(inicio, fim);
+}
+
+/** Troca o código de 6 dígitos por um token próprio do aparelho. */
+bool parear(const String &codigo) {
+  if (codigo.length() == 0) {
+    return false;
+  }
+  Serial.println("Tentando parear com o codigo informado...");
+
+  HTTPClient http;
+  http.begin(clienteParaUrl(BASE_URL), String(BASE_URL) + "/dispositivos/parear");
+  http.addHeader("Content-Type", "application/json");
+
+  String corpo = String("{\"codigo\":\"") + codigo + "\"}";
+  int status = http.POST(corpo);
+  String resposta = http.getString();
+  http.end();
+
+  if (status != 200) {
+    Serial.printf("Pareamento falhou (status=%d): %s\n", status, resposta.c_str());
+    return false;
+  }
+
+  String token = extrairTexto(resposta, "token");
+  if (token.length() == 0) {
+    Serial.println("Pareamento: resposta sem token.");
+    return false;
+  }
+
+  tokenDispositivo = token;
+  salvarToken(token);
+  Serial.printf("Pareado com a clinica \"%s\". Token guardado.\n",
+                extrairTexto(resposta, "nomeClinica").c_str());
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Wi-Fi + portal de configuração
+// ---------------------------------------------------------------------------
+
+void conectarOuAbrirPortal() {
+  WiFiManager wm;
+  wm.setConfigPortalTimeout(0);  // fica no portal até alguém configurar
+
+  // Campo extra no portal, além de rede e senha: é onde entra o código que a
+  // clínica vê na tela Dispositivo.
+  WiFiManagerParameter campoCodigo(
+      "codigo", "Codigo de pareamento (6 digitos)", "", 6,
+      "pattern=\"[0-9]{6}\" inputmode=\"numeric\"");
+  wm.addParameter(&campoCodigo);
+
+  Serial.printf("Se nao conectar, abra o Wi-Fi \"%s\" (senha %s) no celular.\n",
+                AP_NOME, AP_SENHA);
+
+  // autoConnect: tenta a rede salva; não tendo, sobe o ponto de acesso e
+  // bloqueia aqui até a pessoa terminar a configuração.
+  if (!wm.autoConnect(AP_NOME, AP_SENHA)) {
+    Serial.println("Falhou ao configurar. Reiniciando...");
+    delay(2000);
+    ESP.restart();
+  }
+
   Serial.print("Wi-Fi conectado, IP: ");
   Serial.println(WiFi.localIP());
+
+  String codigo = String(campoCodigo.getValue());
+  codigo.trim();
+  if (codigo.length() > 0) {
+    // Veio do portal agora: vale mais que o token antigo, porque a pessoa
+    // pode estar movendo o aparelho para outra clínica.
+    parear(codigo);
+  }
 }
 
-// Recebe o índice em ALVOS, e não "Alvo &", de propósito: a Arduino IDE gera
-// os protótipos das funções automaticamente e os coloca no topo do arquivo,
-// ANTES do "struct Alvo". Com o tipo próprio na assinatura, o protótipo
-// gerado referencia um tipo que ainda não existe e a compilação falha com
-// "variable or field 'fazerLogin' declared void". Usando int, o protótipo só
-// menciona tipos nativos e compila.
-void fazerLogin(int indice) {
-  Alvo &alvo = ALVOS[indice];
-  Serial.printf("[%s] tentando login...\n", alvo.nome);
-  HTTPClient http;
-  http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/auth/login");
-  http.addHeader("Content-Type", "application/json");
-  String corpo = String("{\"email\":\"") + alvo.email + "\",\"senha\":\"" + alvo.senha + "\"}";
-  int status = http.POST(corpo);
-  if (status == 200) {
-    String resposta = http.getString();
-    // Busca posicional simples no JSON do AuthResponseDTO: "token" e "id" são
-    // procurados de forma independente (a ordem entre eles não importa), mas a
-    // linha abaixo assume que "id" NÃO é o último campo do objeto — ela procura
-    // a vírgula depois de "id": pra saber onde o número termina. Se "id" virar o
-    // último campo desse DTO, indexOf(",", posId) não acha vírgula (-1) e este
-    // parsing quebra silenciosamente.
-    int posToken = resposta.indexOf("\"token\":\"");
-    int posId = resposta.indexOf("\"id\":");
-    if (posToken >= 0 && posId >= 0) {
-      int inicioToken = posToken + 9;
-      int fimToken = resposta.indexOf("\"", inicioToken);
-      alvo.token = resposta.substring(inicioToken, fimToken);
-      alvo.idClinica = resposta.substring(posId + 5, resposta.indexOf(",", posId)).toInt();
-      alvo.logado = true;
-      Serial.printf("[%s] login OK, idClinica=%d\n", alvo.nome, alvo.idClinica);
-    } else {
-      Serial.printf("[%s] login: resposta 200 mas sem token/id reconhecivel: %s\n", alvo.nome, resposta.c_str());
-      alvo.logado = false;
-    }
-  } else {
-    Serial.printf("[%s] login falhou, status=%d\n", alvo.nome, status);
-    alvo.logado = false;
-  }
-  http.end();
-  alvo.ultimaTentativaLogin = millis();
-}
+// ---------------------------------------------------------------------------
+// Leitura e envio
+// ---------------------------------------------------------------------------
 
 float lerAngulo() {
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
-  float angulo = atan2(accel.acceleration.y, accel.acceleration.z) * 180.0 / PI;
-  return angulo;
+  return atan2(accel.acceleration.y, accel.acceleration.z) * 180.0 / PI;
 }
 
-// Mesmo motivo de fazerLogin(): índice em vez do tipo próprio.
-void enviarLeitura(int indice, float angulo) {
-  Alvo &alvo = ALVOS[indice];
+void enviarLeitura(float angulo) {
   HTTPClient http;
-  http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/goniometro/leitura");
+  http.begin(clienteParaUrl(BASE_URL), String(BASE_URL) + "/goniometro/leitura");
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", "Bearer " + alvo.token);
-  String corpo = String("{\"idClinica\":") + alvo.idClinica + ",\"angulo\":" + String(angulo, 2) + "}";
+  http.addHeader("Authorization", "Bearer " + tokenDispositivo);
+
+  // Sem idClinica: o servidor tira do token deste aparelho.
+  String corpo = String("{\"angulo\":") + String(angulo, 2) + "}";
   int status = http.POST(corpo);
-  if (status == 401) {
-    Serial.printf("[%s] token expirado, vou logar de novo\n", alvo.nome);
-    alvo.logado = false;
-  } else if (status != 200) {
-    Serial.printf("[%s] envio falhou, status=%d\n", alvo.nome, status);
-  } else {
-    Serial.printf("[%s] leitura enviada: %.2f graus\n", alvo.nome, angulo);
-  }
   http.end();
+
+  if (status == 200) {
+    Serial.printf("Leitura enviada: %.2f graus\n", angulo);
+  } else if (status == 401) {
+    Serial.println("Token recusado. Reconfigure segurando o botao BOOT por 5s.");
+  } else if (status == 403) {
+    Serial.println("Este aparelho foi revogado pela clinica. Pareie de novo.");
+  } else {
+    Serial.printf("Envio falhou, status=%d\n", status);
+  }
+}
+
+/** Segurar BOOT por 5s apaga a configuração e reinicia no portal. */
+void verificarBotaoDeReset() {
+  bool pressionado = digitalRead(PINO_BOTAO_RESET) == LOW;
+
+  if (!pressionado) {
+    botaoPressionadoDesde = 0;
+    return;
+  }
+  if (botaoPressionadoDesde == 0) {
+    botaoPressionadoDesde = millis();
+    return;
+  }
+  if (millis() - botaoPressionadoDesde >= SEGURAR_PARA_RESETAR_MS) {
+    Serial.println("Apagando configuracao... o aparelho vai reiniciar no portal.");
+    apagarConfiguracao();
+    delay(500);
+    ESP.restart();
+  }
 }
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
+  pinMode(PINO_BOTAO_RESET, INPUT_PULLUP);
+
   Wire.begin();
-  clienteSeguro.setInsecure();  // TCC/demo: sem verificação de certificado, simplicidade sobre segurança de transporte perfeita.
+  clienteSeguro.setInsecure();  // TCC/demo: sem verificação de certificado.
+
   if (!mpu.begin()) {
-    Serial.println("MPU6050 nao encontrado! Confira a fiacao (SDA/SCL/VCC/GND) e trave aqui.");
+    Serial.println("MPU6050 nao encontrado! Confira a fiacao (SDA/SCL/VCC/GND).");
     while (true) {
       delay(1000);
     }
   }
   Serial.println("MPU6050 encontrado.");
 
-  conectarWifi();
-
-  for (int i = 0; i < 2; i++) {
-    fazerLogin(i);
+  tokenDispositivo = carregarToken();
+  if (tokenDispositivo.length() > 0) {
+    Serial.println("Token encontrado na memoria.");
+  } else {
+    Serial.println("Sem token: use o portal para parear.");
   }
+
+  conectarOuAbrirPortal();
 }
 
 void loop() {
+  verificarBotaoDeReset();
+
   unsigned long agora = millis();
+  if (agora - ultimaLeitura < INTERVALO_LEITURA_MS) {
+    return;
+  }
+  ultimaLeitura = agora;
 
-  for (int i = 0; i < 2; i++) {
-    if (!ALVOS[i].logado && agora - ALVOS[i].ultimaTentativaLogin > INTERVALO_RETRY_LOGIN_MS) {
-      fazerLogin(i);
+  float angulo = lerAngulo();
+  Serial.printf("Angulo lido: %.2f graus\n", angulo);
+
+  if (tokenDispositivo.length() == 0) {
+    // Sem pareamento não há para onde enviar; avisa de vez em quando para
+    // não encher o monitor serial.
+    if (agora - ultimaTentativaPareamento > INTERVALO_RETRY_PAREAMENTO_MS) {
+      ultimaTentativaPareamento = agora;
+      Serial.println("Aparelho ainda nao pareado. Segure BOOT por 5s para abrir o portal.");
     }
+    return;
   }
 
-  if (agora - ultimaLeitura > INTERVALO_LEITURA_MS) {
-    ultimaLeitura = agora;
-    float angulo = lerAngulo();
-    Serial.printf("Angulo lido: %.2f graus\n", angulo);
-    for (int i = 0; i < 2; i++) {
-      if (ALVOS[i].logado) {
-        enviarLeitura(i, angulo);
-      }
-    }
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Wi-Fi caiu, tentando reconectar...");
+    WiFi.reconnect();
+    return;
   }
+
+  enviarLeitura(angulo);
 }
