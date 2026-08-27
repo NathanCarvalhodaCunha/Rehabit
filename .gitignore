@@ -38,3 +38,8 @@ goniometro.jpg.jpeg
 
 # Arquivo gerado ao testar a exportação da agenda
 agenda-rehabit.ics
+
+# Pasta de trabalho da Arduino IDE: o .ino ali fica preenchido com a senha
+# do Wi-Fi e a senha da conta da clínica. O modelo versionado, sem dados
+# reais, é o Firmware/goniometro-esp32.ino.
+Firmware/goniometro-esp32/

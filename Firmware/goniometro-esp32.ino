@@ -50,8 +50,8 @@ struct Alvo {
 };
 
 Alvo ALVOS[2] = {
-  {"local", "http://192.168.1.10:8080/api", "SEU_EMAIL_AQUI", "SUA_SENHA_AQUI", "", 0, false, 0},
-  {"nuvem", "https://rehabit-api-4tex.onrender.com/api", "SEU_EMAIL_AQUI", "SUA_SENHA_AQUI", "", 0, false, 0},
+  {"local", "http://192.168.1.10:8080/api", "EMAIL_DA_CLINICA", "SENHA_DA_CLINICA", "", 0, false, 0},
+  {"nuvem", "https://rehabit-api-4tex.onrender.com/api", "EMAIL_DA_CLINICA", "SENHA_DA_CLINICA", "", 0, false, 0},
 };
 
 const unsigned long INTERVALO_LEITURA_MS = 2000;
@@ -73,7 +73,14 @@ void conectarWifi() {
   Serial.println(WiFi.localIP());
 }
 
-void fazerLogin(Alvo &alvo) {
+// Recebe o índice em ALVOS, e não "Alvo &", de propósito: a Arduino IDE gera
+// os protótipos das funções automaticamente e os coloca no topo do arquivo,
+// ANTES do "struct Alvo". Com o tipo próprio na assinatura, o protótipo
+// gerado referencia um tipo que ainda não existe e a compilação falha com
+// "variable or field 'fazerLogin' declared void". Usando int, o protótipo só
+// menciona tipos nativos e compila.
+void fazerLogin(int indice) {
+  Alvo &alvo = ALVOS[indice];
   Serial.printf("[%s] tentando login...\n", alvo.nome);
   HTTPClient http;
   http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/auth/login");
@@ -116,7 +123,9 @@ float lerAngulo() {
   return angulo;
 }
 
-void enviarLeitura(Alvo &alvo, float angulo) {
+// Mesmo motivo de fazerLogin(): índice em vez do tipo próprio.
+void enviarLeitura(int indice, float angulo) {
+  Alvo &alvo = ALVOS[indice];
   HTTPClient http;
   http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/goniometro/leitura");
   http.addHeader("Content-Type", "application/json");
@@ -151,7 +160,7 @@ void setup() {
   conectarWifi();
 
   for (int i = 0; i < 2; i++) {
-    fazerLogin(ALVOS[i]);
+    fazerLogin(i);
   }
 }
 
@@ -160,7 +169,7 @@ void loop() {
 
   for (int i = 0; i < 2; i++) {
     if (!ALVOS[i].logado && agora - ALVOS[i].ultimaTentativaLogin > INTERVALO_RETRY_LOGIN_MS) {
-      fazerLogin(ALVOS[i]);
+      fazerLogin(i);
     }
   }
 
@@ -170,7 +179,7 @@ void loop() {
     Serial.printf("Angulo lido: %.2f graus\n", angulo);
     for (int i = 0; i < 2; i++) {
       if (ALVOS[i].logado) {
-        enviarLeitura(ALVOS[i], angulo);
+        enviarLeitura(i, angulo);
       }
     }
   }

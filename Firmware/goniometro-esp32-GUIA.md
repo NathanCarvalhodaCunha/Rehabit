@@ -27,6 +27,16 @@
 
 ## 4. Preencher e gravar o firmware
 
+> **A Arduino IDE exige que o `.ino` esteja dentro de uma pasta com o mesmo
+> nome.** Ou seja: `goniometro-esp32/goniometro-esp32.ino`. Ao abrir o
+> arquivo, a IDE se oferece para criar essa pasta — aceite.
+>
+> Essa pasta de trabalho **não vai para o GitHub** (está no `.gitignore`),
+> justamente porque você preenche nela a senha do seu Wi-Fi e a senha da
+> conta da clínica. O arquivo versionado é o `Firmware/goniometro-esp32.ino`,
+> que fica só com os campos em branco. Se precisar começar do zero, copie
+> esse modelo para dentro da pasta de trabalho.
+
 1. Abra `goniometro-esp32.ino` na Arduino IDE.
 2. Preencha `WIFI_SSID`/`WIFI_SENHA` e o e-mail/senha da clínica nos dois
    `ALVOS` (local e nuvem), no topo do arquivo.
@@ -66,3 +76,16 @@
 
 **Se algo não bater com o esperado acima, copie exatamente o que apareceu
 no Monitor Serial — essa é a única forma de diagnosticar o problema.**
+
+## Erros de compilação conhecidos
+
+**`variable or field 'fazerLogin' declared void`**
+
+A Arduino IDE cria sozinha os protótipos das funções e os coloca no topo do
+arquivo — antes do `struct Alvo`. Se uma função recebesse `Alvo &` como
+parâmetro, o protótipo gerado citaria um tipo que ainda não existe naquele
+ponto, e a compilação parava aí.
+
+Por isso `fazerLogin()` e `enviarLeitura()` recebem o **índice** do alvo
+(`int`) em vez do struct, e pegam `ALVOS[indice]` na primeira linha. Não
+troque essas assinaturas de volta para `Alvo &` — o erro volta.
