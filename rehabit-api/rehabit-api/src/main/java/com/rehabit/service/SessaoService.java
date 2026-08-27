@@ -2,14 +2,17 @@ package com.rehabit.service;
 
 import com.rehabit.dto.SessaoCreateDTO;
 import com.rehabit.dto.SessaoDTO;
+import com.rehabit.exception.AuthException;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Paciente;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.SessaoRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +36,14 @@ public class SessaoService {
     @Transactional
     public SessaoDTO cadastrar(Integer idPaciente, SessaoCreateDTO dados, Integer usuarioId, String usuarioTipo) {
         Paciente paciente = pacienteService.carregarComPosse(idPaciente, usuarioId, usuarioTipo);
+
+        // A sessão é o registro de um atendimento que já aconteceu; datar no
+        // futuro estragaria a evolução do paciente e os números do painel.
+        if (dados.getData() != null && dados.getData().isAfter(LocalDate.now())) {
+            throw new AuthException(
+                    "A sessão não pode ter uma data futura. Use a Agenda para marcar o que ainda vai acontecer.",
+                    HttpStatus.BAD_REQUEST);
+        }
 
         Sessao sessao = new Sessao();
         sessao.setDataSessao(dados.getData());

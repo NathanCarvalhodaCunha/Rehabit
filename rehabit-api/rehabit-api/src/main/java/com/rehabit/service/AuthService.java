@@ -59,8 +59,10 @@ public class AuthService {
             throw new AuthException("E-mail ou senha inválidos.", HttpStatus.UNAUTHORIZED);
         }
         String token = jwtService.gerarToken(clinica.getId(), "CLINICA");
-        return new AuthResponseDTO(clinica.getId(), "CLINICA", clinica.getNome(), clinica.getEmail(),
-                clinica.getFoto(), clinica.isTutorialVisto(), token);
+        AuthResponseDTO resposta = new AuthResponseDTO(clinica.getId(), "CLINICA", clinica.getNome(),
+                clinica.getEmail(), clinica.getFoto(), clinica.isTutorialVisto(), token);
+        resposta.setNomeClinica(clinica.getNome());
+        return resposta;
     }
 
     private AuthResponseDTO autenticarFisioterapeuta(Fisioterapeuta fisioterapeuta, String senhaInformada) {
@@ -68,9 +70,12 @@ public class AuthService {
             throw new AuthException("E-mail ou senha inválidos.", HttpStatus.UNAUTHORIZED);
         }
         String token = jwtService.gerarToken(fisioterapeuta.getId(), "FISIOTERAPEUTA");
-        return new AuthResponseDTO(fisioterapeuta.getId(), "FISIOTERAPEUTA",
+        AuthResponseDTO resposta = new AuthResponseDTO(fisioterapeuta.getId(), "FISIOTERAPEUTA",
                 fisioterapeuta.getNome(), fisioterapeuta.getEmail(), fisioterapeuta.getFoto(),
                 fisioterapeuta.isTutorialVisto(), token);
+        resposta.setNomeClinica(clinicaRepository.findById(fisioterapeuta.getIdClinica())
+                .map(Clinica::getNome).orElse(null));
+        return resposta;
     }
 
     /**

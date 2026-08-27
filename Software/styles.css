@@ -1773,7 +1773,8 @@ button.form-avatar {
 .cal-dia.is-vazio { visibility: hidden; cursor: default; }
 .cal-dia.is-hoje { border-color: var(--brand); color: var(--brand); font-weight: 800; }
 .cal-dia.is-selecionado { background: var(--brand); color: #fff; border-color: var(--brand); }
-.cal-dia.tem-consulta::after {
+.cal-dia.tem-consulta::after,
+.cal-dia.tem-realizada::after {
   content: "";
   position: absolute;
   bottom: 5px;
@@ -1798,6 +1799,8 @@ button.form-avatar {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--brand); display: inline-block;
 }
+.cal-legenda i.realizada { background: var(--success); }
+.cal-legenda .sep { color: var(--hairline); }
 .cal-acoes { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .cal-acoes .btn-outline { width: 100%; text-align: center; }
 
@@ -1854,6 +1857,8 @@ button.form-avatar {
   font-weight: 500;
   color: var(--ink-muted);
 }
+/* Uma dica logo antes do próximo campo encostava no rótulo dele. */
+.field-hint + .field { margin-top: 16px; }
 @media (max-width: 991px) {
   .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
   .settings-form .form-actions { justify-content: stretch; }
@@ -2473,3 +2478,99 @@ button.form-avatar {
   .pareamento-codigo { font-size: 32px; }
   .pareamento-acoes .btn-primary, .pareamento-acoes .btn-outline { flex: 1; }
 }
+
+/* ---------- Cartão de informações do paciente (clique no nome) ---------- */
+.resumo-overlay {
+  position: fixed; inset: 0; z-index: 1250;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(16,24,40,.5);
+  backdrop-filter: blur(2px);
+}
+.resumo-overlay.is-hidden { display: none; }
+.resumo-caixa {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 26px 26px 22px;
+  box-shadow: 0 24px 60px rgba(16,24,40,.3);
+}
+.resumo-fechar {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; border-radius: 8px;
+  color: var(--ink-muted); cursor: pointer;
+}
+.resumo-fechar:hover { background: rgba(107,114,128,.12); color: var(--ink-strong); }
+.resumo-fechar svg { width: 18px; height: 18px; }
+.resumo-carregando { margin: 30px 0; text-align: center; color: var(--ink-muted); font-weight: 600; }
+.resumo-topo { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.resumo-topo .avatar-lg { width: 72px; height: 72px; border-radius: 50%; background: #D1D5DB; flex-shrink: 0; }
+.resumo-topo h3 { margin: 0; font-size: 20px; font-weight: 800; color: var(--ink-strong); }
+.resumo-situacao { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+.resumo-indicadores {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 14px 0; margin-bottom: 6px;
+  border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+}
+.resumo-indicadores div { text-align: center; }
+.resumo-indicadores strong { display: block; font-size: 18px; font-weight: 800; color: var(--brand); }
+.resumo-indicadores span { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .03em; }
+.resumo-dados { padding: 14px 0 4px; }
+.resumo-dado { display: flex; justify-content: space-between; gap: 14px; padding: 6px 0; }
+.resumo-dado .k { font-size: 12.5px; font-weight: 700; color: var(--ink-muted); }
+.resumo-dado .v { font-size: 13.5px; font-weight: 600; color: var(--ink-strong); text-align: right; }
+.resumo-bloco { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: rgba(21,101,216,.06); }
+.resumo-bloco.alerta { background: rgba(220,38,38,.07); }
+.resumo-bloco h4 { margin: 0 0 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); }
+.resumo-bloco p { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.55; color: var(--ink-strong); }
+.resumo-vazio { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+.resumo-acoes { margin-top: 20px; }
+.resumo-acoes .btn-primary { display: block; width: 100%; text-align: center; text-decoration: none; }
+
+/* ---------- Remarcar consulta ---------- */
+.remarcar-overlay {
+  position: fixed; inset: 0; z-index: 1250;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(16,24,40,.5);
+  backdrop-filter: blur(2px);
+}
+.remarcar-overlay.is-hidden { display: none; }
+.remarcar-caixa {
+  width: min(480px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 24px 60px rgba(16,24,40,.3);
+}
+.remarcar-caixa h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
+.remarcar-atual { margin: 0 0 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+.remarcar-atual strong { color: var(--ink-strong); }
+.remarcar-erro {
+  margin: 4px 0 0; padding: 9px 12px; border-radius: 9px;
+  background: rgba(220,38,38,.09); color: #B91C1C;
+  font-size: 12.5px; font-weight: 700; line-height: 1.45;
+}
+.remarcar-caixa .two-col { gap: 14px; }
+.remarcar-caixa .field-hint { margin: 0; }
+.remarcar-acoes { display: flex; gap: 10px; margin-top: 18px; }
+.remarcar-acoes .btn-outline, .remarcar-acoes .btn-primary { flex: 1; text-align: center; }
+
+/* ---------- Agenda: consultas que já passaram ---------- */
+.agenda-item.is-passada .agenda-when { color: var(--ink-muted); }
+.agenda-item.is-passada .agenda-when .hora { color: var(--ink-muted); }
+.cal-dia.is-passado:not(.is-selecionado):not(.is-hoje):not(.tem-consulta):not(.tem-realizada) {
+  opacity: .45;
+}
+
+/* O nome do paciente na agenda é um botão, mas continua com cara de link
+   do próprio item — .link-paciente sozinho zeraria peso e tamanho. */
+.agenda-item .agenda-patient.link-paciente {
+  font-size: 15px; font-weight: 700; color: var(--brand);
+}
+.agenda-item .agenda-patient.link-paciente:hover { text-decoration: underline; }
