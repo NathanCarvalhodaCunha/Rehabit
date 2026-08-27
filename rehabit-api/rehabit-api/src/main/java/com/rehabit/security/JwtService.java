@@ -24,15 +24,30 @@ public class JwtService {
     }
 
     public String gerarToken(Integer id, String tipo) {
+        return gerarToken(id, tipo, expiracaoMs, null);
+    }
+
+    /**
+     * Variante para o goniômetro: o aparelho fica ligado indefinidamente e não
+     * tem como alguém refazer login nele, então o token dura muito mais. Quem
+     * corta o acesso é a flag "ativo" do dispositivo, conferida a cada leitura.
+     */
+    public String gerarTokenDeDispositivo(Integer idDispositivo, Integer idClinica, long validadeMs) {
+        return gerarToken(idDispositivo, "DISPOSITIVO", validadeMs, idClinica);
+    }
+
+    private String gerarToken(Integer id, String tipo, long validadeMs, Integer idClinica) {
         Date agora = new Date();
-        Date expiracao = new Date(agora.getTime() + expiracaoMs);
-        return Jwts.builder()
+        Date expiracao = new Date(agora.getTime() + validadeMs);
+        var builder = Jwts.builder()
                 .subject(String.valueOf(id))
                 .claim("tipo", tipo)
                 .issuedAt(agora)
-                .expiration(expiracao)
-                .signWith(chave)
-                .compact();
+                .expiration(expiracao);
+        if (idClinica != null) {
+            builder.claim("idClinica", idClinica);
+        }
+        return builder.signWith(chave).compact();
     }
 
     /**
@@ -48,12 +63,14 @@ public class JwtService {
                     .getPayload();
             Integer id = Integer.valueOf(claims.getSubject());
             String tipo = claims.get("tipo", String.class);
-            return new TokenDados(id, tipo);
+            Integer idClinica = claims.get("idClinica", Integer.class);
+            return new TokenDados(id, tipo, idClinica);
         } catch (JwtException | IllegalArgumentException ex) {
             return null;
         }
     }
 
-    public record TokenDados(Integer id, String tipo) {
+    /** {@code idClinica} só vem preenchido em token de dispositivo. */
+    public record TokenDados(Integer id, String tipo, Integer idClinica) {
     }
 }

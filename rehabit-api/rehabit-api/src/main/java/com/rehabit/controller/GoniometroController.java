@@ -5,6 +5,7 @@ import com.rehabit.dto.GoniometroLeituraDTO;
 import com.rehabit.dto.GoniometroLeituraRespostaDTO;
 import com.rehabit.dto.GoniometroSincronizarDTO;
 import com.rehabit.security.AuthContext;
+import com.rehabit.service.DispositivoService;
 import com.rehabit.service.GoniometroService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -17,9 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class GoniometroController {
 
     private final GoniometroService goniometroService;
+    private final DispositivoService dispositivoService;
 
-    public GoniometroController(GoniometroService goniometroService) {
+    public GoniometroController(GoniometroService goniometroService,
+                                  DispositivoService dispositivoService) {
         this.goniometroService = goniometroService;
+        this.dispositivoService = dispositivoService;
     }
 
     @GetMapping
@@ -35,9 +39,26 @@ public class GoniometroController {
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /**
+     * Aceita tanto um goniômetro pareado quanto a clínica logada. Vindo do
+     * aparelho, a clínica sai do próprio token — o corpo não manda idClinica,
+     * então um dispositivo não consegue escrever na clínica de outro.
+     */
     @PostMapping("/leitura")
     public ResponseEntity<Void> registrarLeitura(@Valid @RequestBody GoniometroLeituraDTO dados,
                                                     HttpServletRequest request) {
+        Integer idClinicaDoToken = AuthContext.idClinicaDoDispositivo(request);
+
+        if (idClinicaDoToken != null) {
+            Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
+            goniometroService.registrarLeituraDeDispositivo(idClinicaAtiva, dados.getAngulo());
+            return ResponseEntity.ok().build();
+        }
+
+        if (dados.getIdClinica() == null) {
+            throw new com.rehabit.exception.AuthException("A clínica é obrigatória.",
+                    org.springframework.http.HttpStatus.BAD_REQUEST);
+        }
         goniometroService.registrarLeitura(
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request), dados.getAngulo());
         return ResponseEntity.ok().build();

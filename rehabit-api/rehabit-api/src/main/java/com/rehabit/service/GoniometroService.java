@@ -55,6 +55,15 @@ public class GoniometroService {
         ultimoAnguloPorClinica.put(idClinica, new Leitura(angulo, java.time.Instant.now()));
     }
 
+    /**
+     * Leitura vinda de um goniômetro pareado: a clínica veio do token do
+     * próprio aparelho e a posse já foi conferida ao validar o dispositivo,
+     * então não há o que checar de novo aqui.
+     */
+    public void registrarLeituraDeDispositivo(Integer idClinica, BigDecimal angulo) {
+        ultimoAnguloPorClinica.put(idClinica, new Leitura(angulo, java.time.Instant.now()));
+    }
+
     public BigDecimal buscarLeituraAtual(Integer idClinica, Integer usuarioId, String usuarioTipo) {
         verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
         Leitura leitura = ultimoAnguloPorClinica.get(idClinica);
