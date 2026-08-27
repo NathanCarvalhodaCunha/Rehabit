@@ -17,6 +17,18 @@
     return div.innerHTML;
   }
 
+  /**
+   * A API já devolve só o que a conta enxerga: uma clínica acha profissionais
+   * e pacientes, um profissional acha apenas os próprios pacientes. O texto do
+   * campo tem de dizer a mesma coisa, senão promete uma busca que não existe.
+   */
+  function textoDoCampo() {
+    var sessao = getSessao();
+    return sessao && sessao.tipo === "CLINICA"
+      ? "Buscar paciente ou profissional..."
+      : "Buscar paciente...";
+  }
+
   function montar() {
     overlay = document.createElement("div");
     overlay.className = "busca-overlay is-hidden";
@@ -24,12 +36,14 @@
       '<div class="busca-caixa" role="dialog" aria-modal="true" aria-label="Busca">' +
       '<div class="busca-campo">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-      '<input type="text" placeholder="Buscar paciente ou profissional..." aria-label="Buscar" />' +
+      '<input type="text" placeholder="' + textoDoCampo() + '" aria-label="Buscar" />' +
       '<kbd>esc</kbd>' +
       "</div>" +
       '<div class="busca-resultados"></div>' +
       "</div>";
     document.body.appendChild(overlay);
+
+    overlay.querySelector(".busca-caixa").setAttribute("aria-label", textoDoCampo().replace("...", ""));
 
     campo = overlay.querySelector("input");
     listaEl = overlay.querySelector(".busca-resultados");

@@ -59,8 +59,8 @@ public class AgendamentoService {
         }
         Paciente paciente = pacienteService.carregarComPosse(dados.getIdPaciente(), usuarioId, usuarioTipo);
         exigirDataFutura(dados.getData(), dados.getHora());
-        exigirDentroDoExpediente(usuarioTipo, usuarioId, dados.getData(), dados.getHora());
-        exigirHorarioLivre(usuarioId, usuarioTipo, dados.getData(), dados.getHora(), null);
+        exigirDentroDoExpediente(usuarioId, dados.getData(), dados.getHora());
+        exigirHorarioLivre(usuarioId, dados.getData(), dados.getHora(), null);
 
         Agendamento agendamento = new Agendamento();
         agendamento.setDataAgendamento(dados.getData());
@@ -95,8 +95,8 @@ public class AgendamentoService {
 
         Integer idFisioterapeuta = agendamento.getIdFisioterapeuta();
         exigirDataFutura(dados.getData(), dados.getHora());
-        exigirDentroDoExpediente("FISIOTERAPEUTA", idFisioterapeuta, dados.getData(), dados.getHora());
-        exigirHorarioLivre(idFisioterapeuta, "FISIOTERAPEUTA", dados.getData(), dados.getHora(), id);
+        exigirDentroDoExpediente(idFisioterapeuta, dados.getData(), dados.getHora());
+        exigirHorarioLivre(idFisioterapeuta, dados.getData(), dados.getHora(), id);
 
         // Só a primeira remarcação grava a origem: o que interessa é de onde a
         // consulta saiu, não cada passo intermediário.
@@ -259,15 +259,15 @@ public class AgendamentoService {
      * A consulta inteira — começo e fim, pela duração padrão configurada —
      * precisa caber no horário de funcionamento das configurações.
      */
-    private void exigirDentroDoExpediente(String usuarioTipo, Integer idUsuario, LocalDate data, LocalTime hora) {
-        ConfiguracaoDTO config = configuracaoService.buscar(idUsuario, usuarioTipo);
+    private void exigirDentroDoExpediente(Integer idFisioterapeuta, LocalDate data, LocalTime hora) {
+        ConfiguracaoDTO config = configuracaoService.janelaDeAtendimento(idFisioterapeuta);
         LocalTime abertura = config.getHoraAbertura();
         LocalTime fechamento = config.getHoraFechamento();
         if (abertura == null || fechamento == null) {
             return;
         }
 
-        int duracao = configuracaoService.duracaoPadrao(usuarioTipo, idUsuario);
+        int duracao = config.getDuracaoPadraoMin();
         LocalTime fim = hora.plusMinutes(duracao);
         // fim.isBefore(hora) = a sessão atravessaria a meia-noite.
         boolean cabe = !hora.isBefore(abertura) && !fim.isAfter(fechamento) && !fim.isBefore(hora);
@@ -284,15 +284,15 @@ public class AgendamentoService {
     /**
      * Recusa dois atendimentos sobrepostos do mesmo profissional, usando a
      * duração padrão configurada como tamanho de cada sessão. Só age se o
-     * aviso de conflito estiver ligado nas configurações. {@code idIgnorar}
+     * aviso de conflito estiver ligado. {@code idIgnorar}
      * deixa de fora a própria consulta que está sendo remarcada.
      */
-    private void exigirHorarioLivre(Integer idFisioterapeuta, String usuarioTipo, LocalDate data, LocalTime hora,
-                                     Integer idIgnorar) {
-        if (!configuracaoService.deveAvisarConflito(usuarioTipo, idFisioterapeuta)) {
+    private void exigirHorarioLivre(Integer idFisioterapeuta, LocalDate data, LocalTime hora, Integer idIgnorar) {
+        ConfiguracaoDTO config = configuracaoService.janelaDeAtendimento(idFisioterapeuta);
+        if (!config.isAvisarConflito()) {
             return;
         }
-        int duracao = configuracaoService.duracaoPadrao(usuarioTipo, idFisioterapeuta);
+        int duracao = config.getDuracaoPadraoMin();
         LocalTime fimNovo = hora.plusMinutes(duracao);
 
         boolean conflita = agendamentoRepository

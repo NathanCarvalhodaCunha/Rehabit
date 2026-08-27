@@ -24,7 +24,8 @@
   let abaAtual = "agendadas";
   let calendario = null;
 
-  // Preenchido por /configuracoes; o padrão vale enquanto a resposta não chega.
+  // Janela efetiva de atendimento (a da clínica, apertada pela do profissional).
+  // O padrão vale só enquanto a resposta da API não chega.
   let expediente = { horaAbertura: "08:00", horaFechamento: "18:00", duracao: 45 };
 
   function hojeIso() {
@@ -286,7 +287,9 @@
     });
   }
 
-  apiGet("/configuracoes")
+  // /configuracoes traz o que este profissional gravou; /atendimento traz o
+  // que vale de verdade — o horário da clínica já apertado pelo dele.
+  apiGet("/configuracoes/atendimento")
     .then((cfg) => {
       expediente = {
         horaAbertura: cfg.horaAbertura ? String(cfg.horaAbertura).slice(0, 5) : "",

@@ -27,6 +27,20 @@ public class ConfiguracaoController {
                 AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /**
+     * Janela que a agenda precisa respeitar de fato. Para um profissional, é o
+     * horário da clínica apertado pelo dele; para a clínica, o seu próprio.
+     * A tela usa isto para travar os campos e explicar o limite.
+     */
+    @GetMapping("/atendimento")
+    public ResponseEntity<ConfiguracaoDTO> janelaDeAtendimento(HttpServletRequest request) {
+        Integer usuarioId = AuthContext.id(request);
+        String usuarioTipo = AuthContext.tipo(request);
+        return ResponseEntity.ok("FISIOTERAPEUTA".equals(usuarioTipo)
+                ? configuracaoService.janelaDeAtendimento(usuarioId)
+                : configuracaoService.buscar(usuarioId, usuarioTipo));
+    }
+
     @PutMapping
     public ResponseEntity<ConfiguracaoDTO> salvar(@RequestBody ConfiguracaoDTO dados,
                                                     HttpServletRequest request) {
