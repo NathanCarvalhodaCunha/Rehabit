@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Esqueci minha senha — Rehabit</title>
-  <meta name="description" content="Redefina a senha da sua conta Rehabit." />
+  <meta name="description" content="Receba por e-mail o código para redefinir a senha da sua conta Rehabit." />
   <meta property="og:title" content="Esqueci minha senha — Rehabit" />
-  <meta property="og:description" content="Redefina a senha da sua conta Rehabit." />
+  <meta property="og:description" content="Receba por e-mail o código para redefinir a senha da sua conta Rehabit." />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="dark.css" />
   <link rel="stylesheet" href="loader.css" />
+  <link rel="stylesheet" href="dark.css" />
 </head>
 <body class="dark">
   <main class="shell image-left">
@@ -31,34 +31,47 @@
           <img class="logo" src="assets/rehabit-logo-dark.png" alt="Rehabit" />
 
           <h1>Esqueceu a senha?</h1>
-          <p class="subtitle">Confirme seus dados para definir uma nova senha</p>
+          <p class="subtitle">Enviamos um código de recuperação para o seu e-mail</p>
 
           <div class="fields">
             <div class="field">
-              <label for="email">E-mail</label>
+              <label for="email">E-mail da conta</label>
               <input id="email" name="email" type="email" autocomplete="email" required />
-            </div>
-            <div class="field">
-              <label for="documento">CNPJ (instituição) ou COFFITO (profissional)</label>
-              <input id="documento" name="documento" type="text" required />
-              <p class="form-hint">Usamos esse dado só para confirmar que a conta é sua.</p>
-            </div>
-            <div class="field">
-              <label for="novaSenha">Nova senha</label>
-              <input id="novaSenha" name="novaSenha" type="password" autocomplete="new-password" required />
-            </div>
-            <div class="field">
-              <label for="confirmarSenha">Confirmar nova senha</label>
-              <input id="confirmarSenha" name="confirmarSenha" type="password" autocomplete="new-password" required />
+              <p class="form-hint">Use o mesmo e-mail com que você entra no Rehabit.</p>
             </div>
           </div>
 
-          <button class="btn-primary" type="submit">Redefinir senha</button>
+          <button class="btn-primary" type="submit">Enviar código</button>
 
           <p class="footer-link">
+            Já tem o código? <a href="redefinir-senha-escuro.html">Redefinir a senha</a>
+          </p>
+          <p class="footer-link" style="margin-top:10px">
             Lembrou a senha? <a href="login-escuro.html">Voltar para o login</a>
           </p>
         </form>
+
+        <!-- Mostrado depois do envio, no lugar do formulário -->
+        <div id="esqueciSenhaEnviado" class="form-content" hidden>
+          <img class="logo" src="assets/rehabit-logo-dark.png" alt="Rehabit" />
+
+          <h1>Confira seu e-mail</h1>
+          <p class="subtitle" id="esqueciSenhaMensagem">
+            Se existir uma conta com esse e-mail, enviamos as instruções de recuperação para ele.
+          </p>
+          <p class="form-hint" style="margin-top:18px">
+            O código tem 6 dígitos e vale por 30 minutos. Não achou? Veja também a caixa de spam.
+          </p>
+
+          <a class="btn-primary" id="irRedefinir" href="redefinir-senha-escuro.html"
+             style="display:flex;align-items:center;justify-content:center;text-decoration:none">
+            Já recebi o código
+          </a>
+
+          <p class="footer-link">
+            Não chegou nada? <a href="#" id="reenviarCodigo">Enviar de novo</a>
+          </p>
+        </div>
       </div>
     </section>
   </main>
