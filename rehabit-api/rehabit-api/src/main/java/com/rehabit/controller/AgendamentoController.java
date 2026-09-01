@@ -55,12 +55,36 @@ public class AgendamentoController {
         return ResponseEntity.ok(agendamentoService.listarProximos(idFisioterapeuta, usuarioId, usuarioTipo));
     }
 
-    /** Consultas já realizadas (sessões) de toda a clínica. */
+    /** Consultas do profissional que já passaram, da mais recente para a mais antiga. */
+    @GetMapping("/historico")
+    public ResponseEntity<List<AgendamentoDTO>> listarHistorico(@RequestParam Integer idFisioterapeuta,
+                                                                   HttpServletRequest request) {
+        return ResponseEntity.ok(agendamentoService.listarHistorico(
+                idFisioterapeuta, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    /**
+     * Consultas já realizadas (sessões registradas). Com {@code idClinica},
+     * de toda a instituição; com {@code idFisioterapeuta}, de um profissional.
+     */
     @GetMapping("/realizadas")
-    public ResponseEntity<List<AgendamentoDTO>> listarRealizadas(@RequestParam Integer idClinica,
-                                                                    HttpServletRequest request) {
-        return ResponseEntity.ok(agendamentoService.listarRealizadasDaClinica(
-                idClinica, AuthContext.id(request), AuthContext.tipo(request)));
+    public ResponseEntity<List<AgendamentoDTO>> listarRealizadas(
+            @RequestParam(required = false) Integer idClinica,
+            @RequestParam(required = false) Integer idFisioterapeuta,
+            HttpServletRequest request) {
+        Integer usuarioId = AuthContext.id(request);
+        String usuarioTipo = AuthContext.tipo(request);
+
+        if (idClinica != null) {
+            return ResponseEntity.ok(
+                    agendamentoService.listarRealizadasDaClinica(idClinica, usuarioId, usuarioTipo));
+        }
+        if (idFisioterapeuta == null) {
+            throw new com.rehabit.exception.AuthException(
+                    "Informe idFisioterapeuta ou idClinica.", HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok(
+                agendamentoService.listarRealizadasDoProfissional(idFisioterapeuta, usuarioId, usuarioTipo));
     }
 
     /** Presença/falta: {"status":"REALIZADA"|"FALTOU"|"REMARCADA"|"AGENDADA"} */
@@ -70,6 +94,15 @@ public class AgendamentoController {
                                                           HttpServletRequest request) {
         return ResponseEntity.ok(agendamentoService.alterarStatus(
                 id, corpo.get("status"), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    /** Move a consulta para outra data/horário, mantendo o mesmo registro. */
+    @PutMapping("/{id}/remarcar")
+    public ResponseEntity<AgendamentoDTO> remarcar(@PathVariable Integer id,
+                                                     @RequestBody AgendamentoCreateDTO dados,
+                                                     HttpServletRequest request) {
+        return ResponseEntity.ok(agendamentoService.remarcar(
+                id, dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     @DeleteMapping("/{id}")

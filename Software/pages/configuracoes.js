@@ -16,6 +16,27 @@
     return valor ? valor.slice(0, 5) : "";
   }
 
+  /**
+   * Um profissional não atende fora do horário da clínica, então o que ele
+   * grava aqui só aperta essa faixa. Sem dizer isso, um horário salvo que
+   * cai fora da janela da instituição parece ter sido ignorado.
+   */
+  function mostrarLimiteDaClinica() {
+    const aviso = document.querySelector("[data-limite-clinica]");
+    if (!aviso || sessao.tipo !== "FISIOTERAPEUTA") return;
+    apiGet("/configuracoes/atendimento")
+      .then((janela) => {
+        const abertura = apenasHoraMinuto(janela.horaAbertura);
+        const fechamento = apenasHoraMinuto(janela.horaFechamento);
+        if (!abertura || !fechamento) return;
+        aviso.textContent =
+          `A agenda aceita marcações das ${abertura} às ${fechamento} — o horário da ` +
+          "instituição limita o seu, e o que você definir aqui só pode apertá-lo.";
+        aviso.hidden = false;
+      })
+      .catch(() => {});
+  }
+
   if (formAtendimento) {
     apiGet("/configuracoes")
       .then((cfg) => {
@@ -24,6 +45,7 @@
         campoDuracao.value = cfg.duracaoPadraoMin != null ? cfg.duracaoPadraoMin : "";
         campoConflito.checked = !!cfg.avisarConflito;
       })
+      .then(mostrarLimiteDaClinica)
       .catch((err) => RehabitToast.erro(err.message));
 
     formAtendimento.addEventListener("submit", async (e) => {
@@ -42,6 +64,7 @@
           avisarConflito: campoConflito.checked,
         });
         RehabitToast.sucesso("Configurações salvas.");
+        mostrarLimiteDaClinica();
       } catch (err) {
         RehabitToast.erro(err.message);
       } finally {

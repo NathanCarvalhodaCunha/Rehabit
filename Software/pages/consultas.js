@@ -12,6 +12,7 @@
   const contador = document.querySelector("[data-contador]");
   const containerCalendario = document.querySelector("[data-calendario]");
   const resumoEl = document.querySelector("[data-resumo-mes]");
+  const botaoRelatorio = document.querySelector('[data-action="relatorio-consultas"]');
 
   // Cada aba é carregada uma vez e guardada aqui, para alternar sem rede.
   const cache = { agendadas: null, realizadas: null };
@@ -171,8 +172,48 @@
 
   lista.addEventListener("click", (e) => {
     const alvo = e.target.closest("[data-id-paciente]");
-    if (alvo) window.location.href = `${paginaTema("paciente")}?id=${alvo.dataset.idPaciente}`;
+    // Cartão em cima da lista: quem só quer conferir um dado não perde o
+    // filtro e o dia que já tinha escolhido. O prontuário fica a um clique.
+    if (alvo) RehabitPacienteResumo.abrir(alvo.dataset.idPaciente);
   });
+
+  if (botaoRelatorio) {
+    botaoRelatorio.addEventListener("click", () => {
+      // O relatório é sempre do que já passou, mesmo com a aba "Agendadas"
+      // aberta: é isso que o título promete.
+      const gerar = (passadas) => {
+        const consultas = filtradasPorProfissional(passadas);
+        if (!consultas.length) {
+          RehabitToast.info("Não há consultas realizadas para incluir no relatório.");
+          return Promise.resolve();
+        }
+        return RehabitRelatorio.consultas({
+          clinica: sessao.nome,
+          titulo: "Relatório de consultas passadas",
+          subtitulo: filtroProfissional && filtroProfissional.value ? filtroProfissional.value : "Todos os profissionais",
+          mostrarProfissional: true,
+          consultas,
+        }).then(() => RehabitToast.sucesso("Relatório gerado."));
+      };
+
+      botaoRelatorio.disabled = true;
+      RehabitLoader.show("Gerando relatório");
+      const passadas = cache.realizadas
+        ? Promise.resolve(cache.realizadas)
+        : apiGet(`/agendamentos/realizadas?idClinica=${sessao.id}`).then((dados) => {
+            cache.realizadas = dados;
+            return dados;
+          });
+
+      passadas
+        .then(gerar)
+        .catch((err) => RehabitToast.erro(err.message))
+        .finally(() => {
+          RehabitLoader.hide();
+          botaoRelatorio.disabled = false;
+        });
+    });
+  }
 
   abas.forEach((botao) => {
     botao.addEventListener("click", () => {

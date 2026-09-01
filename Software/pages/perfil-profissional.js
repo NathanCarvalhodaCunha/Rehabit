@@ -31,14 +31,17 @@
       });
     });
 
-    const goListBtn = document.querySelector('[data-action="go-list"]');
-    if (goListBtn) {
-      goListBtn.addEventListener("click", (e) => {
+    // O logo e o item "Home" da sidebar também são [data-action="go-list"],
+    // e vêm antes no HTML: um querySelector solto pegava o logo e deixava o
+    // botão cair no atalho global, que leva a clínica de volta para a home.
+    // Só o botão desta tela é <button>; os do menu são <a>.
+    document.querySelectorAll('button[data-action="go-list"]').forEach((botao) => {
+      botao.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         window.location.href = `${paginaTema("profissional")}?idFisioterapeuta=${idAlvo}`;
       });
-    }
+    });
 
     const accessCard = document.querySelector(".access-card");
     if (accessCard) {

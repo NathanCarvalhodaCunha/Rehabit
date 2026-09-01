@@ -60,7 +60,7 @@
        <div class="col-main">
       <section class="card form-card">
         <h3>Novo agendamento</h3>
-        <form id="agendamentoForm">
+        <form id="agendamentoForm" novalidate>
           <div class="field">
             <label for="ag-paciente">Paciente</label>
             <select id="ag-paciente" required>
@@ -77,6 +77,7 @@
               <input id="ag-hora" type="time" required />
             </div>
           </div>
+          <p class="field-hint" data-limite-horario>Carregando horário de atendimento...</p>
           <div class="field">
             <label for="ag-obs">Observação</label>
             <input id="ag-obs" type="text" placeholder="Ex: Trazer exames anteriores" />
@@ -86,6 +87,22 @@
           </div>
         </form>
       </section>
+
+      <div class="consultas-topo">
+        <div class="consultas-abas">
+          <button type="button" data-aba="agendadas" class="is-ativa">Agendadas</button>
+          <button type="button" data-aba="realizadas">Realizadas</button>
+        </div>
+        <div class="consultas-filtros">
+          <span class="consultas-contador" data-contador></span>
+          <div class="select-wrap">
+            <select id="filtro-paciente" aria-label="Filtrar por paciente">
+              <option value="">Todos os pacientes</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
 
       <h2 class="section-title" data-titulo-lista>Próximos agendamentos</h2>
       <section class="card list-card">
@@ -98,6 +115,7 @@
           <div data-calendario></div>
           <div class="cal-acoes">
             <button type="button" class="btn-outline" data-action="exportar-ics">Baixar agenda (.ics)</button>
+            <button type="button" class="btn-outline" data-action="relatorio-consultas">Relatório de consultas (PDF)</button>
           </div>
         </section>
        </div>
@@ -127,6 +145,9 @@
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
   <script src="./pages/calendario.js"></script>
+  <script src="./pages/relatorio.js"></script>
+  <script src="./pages/paciente-resumo.js"></script>
+  <script src="./pages/remarcar.js"></script>
   <script src="./pages/agenda.js"></script>
 </body>
 </html>

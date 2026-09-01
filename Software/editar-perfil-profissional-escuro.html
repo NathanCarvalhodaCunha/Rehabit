@@ -53,9 +53,10 @@
       </header>
 
       <form class="edit-grid" onsubmit="event.preventDefault();">
+        <input type="file" id="pfoto" accept="image/*" hidden />
         <section class="card edit-avatar-card">
-          <div class="avatar-lg" aria-hidden="true"></div>
-          <button type="button" class="btn-outline">Alterar foto</button>
+          <div class="avatar-lg" aria-hidden="true" data-avatar-picker style="cursor:pointer;"></div>
+          <button type="button" class="btn-outline" data-avatar-picker>Alterar foto</button>
           <h2 class="edit-name"></h2>
           <p class="edit-role"></p>
           <p class="edit-id"></p>

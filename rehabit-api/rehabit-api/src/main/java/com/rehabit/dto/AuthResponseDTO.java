@@ -8,6 +8,12 @@ public class AuthResponseDTO {
     private String email;
     private String foto;
     private boolean tutorialVisto;
+    /**
+     * Nome da instituição a que a conta pertence (para a clínica, ela mesma).
+     * Vai no login para que as telas possam se apresentar ao paciente em nome
+     * da clínica sem precisar de uma chamada extra à API.
+     */
+    private String nomeClinica;
     private String token; // null na resposta de /auth/register (não faz login automático)
 
     public AuthResponseDTO() {
@@ -26,6 +32,14 @@ public class AuthResponseDTO {
                             String token) {
         this(id, tipo, nome, email, foto, tutorialVisto);
         this.token = token;
+    }
+
+    public String getNomeClinica() {
+        return nomeClinica;
+    }
+
+    public void setNomeClinica(String nomeClinica) {
+        this.nomeClinica = nomeClinica;
     }
 
     public Integer getId() {

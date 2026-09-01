@@ -168,6 +168,29 @@ window.addEventListener("pageshow", (e) => {
   const seletorAgenda = 'a[href$="agenda.html"], a[href$="agenda-escuro.html"]';
   const seletorConsultas = 'a[href$="consultas.html"], a[href$="consultas-escuro.html"]';
 
+  /**
+   * Telas compartilhadas (Desempenho, por exemplo) foram feitas a partir do
+   * modelo da instituição e trazem "./instituicao.html" fixo no menu. Um
+   * profissional que clicasse em Home ali caía na tela da clínica. Aqui o
+   * link de Home de qualquer tela é reapontado para a casa de quem está
+   * logado — e no tema certo.
+   */
+  (function corrigirLinksDeHome() {
+    const home = ehClinica ? "instituicao" : "profissional";
+    const outra = ehClinica ? "profissional" : "instituicao";
+    document
+      .querySelectorAll(`a[href$="${outra}.html"], a[href$="${outra}-escuro.html"]`)
+      .forEach((link) => {
+        link.href = paginaTema(home);
+      });
+    // A variante de tema também pode estar errada (link claro numa tela escura).
+    document
+      .querySelectorAll(`a[href$="${home}.html"], a[href$="${home}-escuro.html"]`)
+      .forEach((link) => {
+        link.href = paginaTema(home);
+      });
+  })();
+
   document.querySelectorAll(ehClinica ? seletorAgenda : seletorConsultas).forEach((el) => el.remove());
 
   const ICONE_CALENDARIO =

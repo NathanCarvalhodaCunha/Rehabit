@@ -176,6 +176,11 @@ public class FisioterapeutaService {
         fisioterapeutaRepository.save(fisioterapeuta);
     }
 
+    private String nomeDaClinica(Integer idClinica) {
+        return idClinica == null ? null
+                : clinicaRepository.findById(idClinica).map(c -> c.getNome()).orElse(null);
+    }
+
     private FisioterapeutaPerfilDTO paraPerfilDTO(Fisioterapeuta f) {
         List<Sessao> sessoes = sessaoRepository.findByIdFisioterapeuta(f.getId());
 
@@ -195,8 +200,13 @@ public class FisioterapeutaService {
 
         long pacientesAtivos = pacienteRepository.countByIdFisioterapeutaAndStatus(f.getId(), "Ativo");
 
-        return new FisioterapeutaPerfilDTO(f.getId(), f.getNome(), f.getCoffito(), f.getEmail(), f.getTelefone(),
-                f.getEspecialidade(), f.getLocalidade(), f.getDescricao(), f.getFoto(), f.getIdClinica(),
-                pacientesAtivos, sessoesEsteMes, amplitudeMediaGeral);
+        FisioterapeutaPerfilDTO dto = new FisioterapeutaPerfilDTO(f.getId(), f.getNome(), f.getCoffito(),
+                f.getEmail(), f.getTelefone(), f.getEspecialidade(), f.getLocalidade(), f.getDescricao(),
+                f.getFoto(), f.getIdClinica(), pacientesAtivos, sessoesEsteMes, amplitudeMediaGeral);
+        // O nome da instituição acompanha o perfil porque é ele que assina o
+        // que sai para o paciente (lembrete no WhatsApp, relatório em PDF) —
+        // quem atende é o profissional, mas quem se apresenta é a clínica.
+        dto.setNomeClinica(nomeDaClinica(f.getIdClinica()));
+        return dto;
     }
 }

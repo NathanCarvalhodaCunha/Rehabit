@@ -12,6 +12,7 @@ public class FisioterapeutaPerfilDTO {
     private String descricao;
     private String foto;
     private Integer idClinica;
+    private String nomeClinica;
     private long pacientesAtivos;
     private long sessoesEsteMes;
     private Double amplitudeMediaGeral;
@@ -36,6 +37,14 @@ public class FisioterapeutaPerfilDTO {
         this.pacientesAtivos = pacientesAtivos;
         this.sessoesEsteMes = sessoesEsteMes;
         this.amplitudeMediaGeral = amplitudeMediaGeral;
+    }
+
+    public String getNomeClinica() {
+        return nomeClinica;
+    }
+
+    public void setNomeClinica(String nomeClinica) {
+        this.nomeClinica = nomeClinica;
     }
 
     public Integer getId() {
