@@ -10,6 +10,10 @@
 }
 
 * { box-sizing: border-box; }
+/* O atributo hidden do HTML perde para qualquer regra de display do próprio
+   site (.form-content é flex, por exemplo). Sem este !important, um bloco
+   marcado como hidden continua aparecendo na tela. */
+[hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; height: 100%; }
 body {
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;

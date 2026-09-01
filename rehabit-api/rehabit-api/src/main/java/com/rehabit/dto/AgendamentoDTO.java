@@ -12,6 +12,9 @@ public class AgendamentoDTO {
     private Integer idPaciente;
     private String nomePaciente;
     private String nomeFisioterapeuta;
+    private Integer idFisioterapeuta;
+    private LocalDate dataOriginal;
+    private LocalTime horaOriginal;
 
     public AgendamentoDTO() {
     }
@@ -33,6 +36,30 @@ public class AgendamentoDTO {
     }
 
     private String status;
+
+    public Integer getIdFisioterapeuta() {
+        return idFisioterapeuta;
+    }
+
+    public void setIdFisioterapeuta(Integer idFisioterapeuta) {
+        this.idFisioterapeuta = idFisioterapeuta;
+    }
+
+    public LocalDate getDataOriginal() {
+        return dataOriginal;
+    }
+
+    public void setDataOriginal(LocalDate dataOriginal) {
+        this.dataOriginal = dataOriginal;
+    }
+
+    public LocalTime getHoraOriginal() {
+        return horaOriginal;
+    }
+
+    public void setHoraOriginal(LocalTime horaOriginal) {
+        this.horaOriginal = horaOriginal;
+    }
 
     public String getStatus() {
         return status;

@@ -19,4 +19,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Intege
 
     /** Agendamentos do profissional num dia — base da checagem de conflito de horário. */
     List<Agendamento> findByIdFisioterapeutaAndDataAgendamento(Integer idFisioterapeuta, LocalDate data);
+
+    /** Consultas já passadas de um profissional, da mais recente para a mais antiga. */
+    List<Agendamento> findByIdFisioterapeutaAndDataAgendamentoLessThanOrderByDataAgendamentoDescHoraAgendamentoDesc(
+            Integer idFisioterapeuta, LocalDate dataAgendamento);
 }

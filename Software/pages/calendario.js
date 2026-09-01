@@ -122,7 +122,8 @@ window.RehabitCalendario = (function () {
       "</div></div>" +
       '<div class="cal-semana">' + DIAS_SEMANA.map((d) => `<span>${d}</span>`).join("") + "</div>" +
       '<div class="cal-dias"></div>' +
-      '<p class="cal-legenda"><i></i> dia com consulta marcada</p>';
+      '<p class="cal-legenda"><i></i> agendada <span class="sep">·</span> ' +
+      '<i class="realizada"></i> já realizada</p>';
 
     const tituloEl = container.querySelector(".cal-mes");
     const diasEl = container.querySelector(".cal-dias");
@@ -141,6 +142,9 @@ window.RehabitCalendario = (function () {
       for (let dia = 1; dia <= totalDias; dia++) {
         const dataIso = iso(anoAtual, mesAtual, dia);
         const classes = ["cal-dia"];
+        // Dias que já passaram ficam apagados: a agenda não aceita marcar
+        // para trás, então o calendário não deve convidar a tentar.
+        if (dataIso < hojeIso) classes.push("is-passado");
         if (dataIso === hojeIso) classes.push("is-hoje");
         if (dataIso === selecionado) classes.push("is-selecionado");
         if (diasComConsulta.has(dataIso)) classes.push("tem-consulta");

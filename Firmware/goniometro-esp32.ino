@@ -1,27 +1,32 @@
 // Rehabit — goniômetro digital (ESP32 + MPU6050)
-// Firmware 2.0
+// Firmware 2.1
 //
-// O que este firmware faz:
-//   * lê o MPU6050 a 100 Hz e calcula o ângulo da articulação com um filtro
-//     complementar (acelerômetro + giroscópio), que não treme como o
-//     acelerômetro sozinho nem escorrega como o giroscópio sozinho;
+// NÃO É PRECISO EDITAR NADA AQUI. Wi-Fi e pareamento são configurados pelo
+// celular, na primeira vez que o aparelho liga:
+//
+//   1. Grave este código uma vez (veja o guia ao lado).
+//   2. Ao ligar sem configuração, o goniômetro cria um Wi-Fi chamado
+//      "Rehabit-Goniometro" (senha: rehabit123).
+//   3. Conecte o celular nesse Wi-Fi — abre sozinho um portal.
+//   4. Escolha a rede da clínica, digite a senha dela e o código de 6
+//      dígitos que aparece na tela Dispositivo do Rehabit.
+//   5. O aparelho grava tudo na memória e reinicia já conectado.
+//
+// Para reconfigurar (trocou de Wi-Fi, mudou de clínica): segure o botão BOOT
+// por 5 segundos com o aparelho ligado. Ele apaga a configuração e volta ao
+// passo 2.
+//
+// O que este firmware faz depois de pareado:
+//   * lê o MPU6050 a 100 Hz e calcula o ângulo com um filtro complementar
+//     (acelerômetro + giroscópio), que não treme como o acelerômetro sozinho
+//     nem escorrega como o giroscópio sozinho;
 //   * calibra o giroscópio no boot e guarda a tara (o "zero" do aparelho) na
-//     memória não volátil, então ela sobrevive a desligar e ligar;
-//   * manda telemetria (ângulo, bateria, sinal, série, firmware) para um ou
-//     dois servidores Rehabit e obedece aos comandos que voltam na resposta
-//     — tarar, identificar, iniciar/parar captura, reiniciar;
+//     memória, então ela sobrevive a desligar e ligar;
+//   * manda telemetria (ângulo, bateria, sinal, série, firmware) e obedece
+//     aos comandos que voltam na resposta — tarar, identificar, iniciar e
+//     parar captura, reiniciar;
 //   * acelera para 10 amostras por segundo quando alguém está com a tela
 //     aberta ou gravando, e desacelera quando ninguém está olhando.
-//
-// ================== ANTES DE GRAVAR ==================
-//   1. Preencha WIFI_SSID / WIFI_SENHA.
-//   2. Preencha e-mail e senha de uma conta de CLÍNICA já cadastrada no
-//      Rehabit em cada ALVO que você for usar.
-//   3. Confira o IP do alvo "local" — precisa ser o IP do PC que roda o
-//      backend, na mesma rede Wi-Fi do ESP32.
-//   4. Se for usar só a nuvem (ou só o local), ponha `false` no campo
-//      `ativo` do alvo que não vai usar.
-//   5. Monte o hardware conforme a tabela abaixo.
 //
 // ================== LIGAÇÕES ==================
 //   MPU6050 VCC  -> 3V3
@@ -29,11 +34,15 @@
 //   MPU6050 SDA  -> GPIO21
 //   MPU6050 SCL  -> GPIO22
 //   LED de status-> GPIO2 (o LED azul já soldado na maioria das DevKit)
+//   Botão BOOT   -> GPIO0 (já existe na placa; segurar 5 s reconfigura)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
 //
 // O MPU6050 deve ficar no segmento MÓVEL da articulação, com o eixo X do
 // chip apontando ao longo do osso. Se o ângulo crescer no sentido errado,
 // inverta EIXO_INVERTIDO abaixo em vez de remontar o sensor.
+//
+// BIBLIOTECAS (Gerenciar Bibliotecas): "Adafruit MPU6050" e "WiFiManager"
+// (de tzapu).
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -41,45 +50,31 @@
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <WiFiManager.h>
 #include <Preferences.h>
 
 // ------------------------------------------------------------------
 // Configuração
 // ------------------------------------------------------------------
 
-const char *WIFI_SSID = "SEU_WIFI_AQUI";
-const char *WIFI_SENHA = "SUA_SENHA_WIFI_AQUI";
+// Onde o Rehabit está publicado. Só precisa mudar se você republicar a API
+// em outro endereço.
+const char *BASE_URL = "https://rehabit-api-4tex.onrender.com/api";
 
-const char *VERSAO_FIRMWARE = "2.0";
+const char *VERSAO_FIRMWARE = "2.1";
 
-struct Alvo {
-  const char *nome;
-  const char *baseUrl;
-  const char *email;
-  const char *senha;
-  bool ativo;
+const char *AP_NOME = "Rehabit-Goniometro";
+const char *AP_SENHA = "rehabit123";
 
-  // Preenchidos em tempo de execução — não mexa.
-  String token;
-  int idClinica;
-  bool logado;
-  unsigned long proximaTentativaLogin;
-  unsigned long proximoEnvio;
-  unsigned long intervaloMs;
-  int falhasSeguidas;
-};
-
-Alvo ALVOS[] = {
-  {"local", "http://192.168.1.10:8080/api", "SEU_EMAIL_AQUI", "SUA_SENHA_AQUI", true, "", 0, false, 0, 0, 2000, 0},
-  {"nuvem", "https://rehabit-api-4tex.onrender.com/api", "SEU_EMAIL_AQUI", "SUA_SENHA_AQUI", true, "", 0, false, 0, 0, 2000, 0},
-};
-const int QTD_ALVOS = sizeof(ALVOS) / sizeof(ALVOS[0]);
-
+const int PINO_BOTAO_RESET = 0;  // BOOT na maioria das placas DevKit
+const int PINO_LED = 2;
 // Pino do divisor de tensão da bateria. Ponha -1 se a placa é alimentada só
 // por USB — aí o Rehabit simplesmente não mostra bateria, em vez de mostrar
 // um número inventado.
 const int PINO_BATERIA = 34;
-const int PINO_LED = 2;
+
+const unsigned long SEGURAR_PARA_RESETAR_MS = 5000;
+const unsigned long AVISO_SEM_PAREAMENTO_MS = 30000;
 
 // Inverta se o ângulo aumentar quando deveria diminuir.
 const bool EIXO_INVERTIDO = false;
@@ -88,34 +83,83 @@ const bool EIXO_INVERTIDO = false;
 // sujeito a deriva; perto de 0 = mais fiel à gravidade e mais trêmulo.
 const float PESO_GIRO = 0.98f;
 
-const unsigned long PERIODO_AMOSTRA_US = 10000;   // 100 Hz de leitura do sensor
-const unsigned long ESPERA_LOGIN_MS = 15000;
+const unsigned long PERIODO_AMOSTRA_US = 10000;  // 100 Hz de leitura do sensor
 const unsigned long TIMEOUT_HTTP_MS = 4000;
-const int MAX_FALHAS_ANTES_DO_CASTIGO = 3;
-const unsigned long CASTIGO_MS = 20000;           // alvo que só dá erro descansa
+const unsigned long INTERVALO_INICIAL_MS = 2000;
 
 // ------------------------------------------------------------------
 // Estado
 // ------------------------------------------------------------------
 
+WiFiClientSecure clienteSeguro;
+WiFiClient clienteInseguro;
+
 Adafruit_MPU6050 mpu;
 Preferences memoria;
 
-WiFiClientSecure clienteSeguro;
-WiFiClient clienteSimples;
+String tokenDispositivo = "";
+String numeroSerie;
 
 float anguloFiltrado = 0.0f;
 float offsetTara = 0.0f;
-float biasGiroX = 0.0f, biasGiroY = 0.0f, biasGiroZ = 0.0f;
+float biasGiroX = 0.0f;
 bool calibrado = false;
 bool capturando = false;
 
 unsigned long ultimaAmostraUs = 0;
+unsigned long proximoEnvio = 0;
+unsigned long intervaloEnvioMs = INTERVALO_INICIAL_MS;
+unsigned long ultimoAvisoPareamento = 0;
+unsigned long botaoPressionadoDesde = 0;
 unsigned long fimIdentificacao = 0;
 unsigned long ultimoPiscaLed = 0;
 bool ledAceso = false;
 
-String numeroSerie;
+WiFiClient &clienteParaUrl(const char *url) {
+  return String(url).startsWith("https://") ? (WiFiClient &)clienteSeguro : clienteInseguro;
+}
+
+// ------------------------------------------------------------------
+// Memória interna (NVS)
+// ------------------------------------------------------------------
+//
+// Guarda o token e a tara entre reinícios, para não precisar parear nem
+// rezerar o aparelho toda vez que faltar luz.
+
+void salvarToken(const String &token) {
+  memoria.begin("rehabit", false);
+  memoria.putString("token", token);
+  memoria.end();
+}
+
+String carregarToken() {
+  memoria.begin("rehabit", true);
+  String token = memoria.getString("token", "");
+  memoria.end();
+  return token;
+}
+
+void salvarTara(float valor) {
+  memoria.begin("rehabit", false);
+  memoria.putFloat("tara", valor);
+  memoria.end();
+}
+
+float carregarTara() {
+  memoria.begin("rehabit", true);
+  float valor = memoria.getFloat("tara", 0.0f);
+  memoria.end();
+  return valor;
+}
+
+void apagarConfiguracao() {
+  memoria.begin("rehabit", false);
+  memoria.clear();  // leva junto a tara: o aparelho está indo para outro lugar
+  memoria.end();
+
+  WiFiManager wm;
+  wm.resetSettings();  // apaga também a rede Wi-Fi salva
+}
 
 // ------------------------------------------------------------------
 // Apoio: JSON na unha
@@ -125,7 +169,7 @@ String numeroSerie;
 // um leitor de 20 linhas do que puxar uma biblioteca de JSON inteira para
 // dentro do firmware. Os dois leitores procuram a chave e leem o valor até
 // o delimitador — sem depender da ORDEM dos campos nem de haver uma vírgula
-// depois deles (era exatamente aí que a versão anterior quebrava).
+// depois deles.
 
 String extrairTexto(const String &json, const char *chave) {
   String alvo = String("\"") + chave + "\":\"";
@@ -156,10 +200,6 @@ long extrairNumero(const String &json, const char *chave, long padrao) {
   while (fim < (int)json.length() && isDigit(json.charAt(fim))) fim++;
   if (fim == inicio) return padrao;
   return json.substring(inicio, fim).toInt();
-}
-
-WiFiClient &clienteParaUrl(const char *url) {
-  return String(url).startsWith("https://") ? (WiFiClient &)clienteSeguro : clienteSimples;
 }
 
 // ------------------------------------------------------------------
@@ -199,26 +239,27 @@ int lerBateria() {
 void calibrarGiroscopio() {
   Serial.println("Calibrando o giroscopio — mantenha o aparelho PARADO...");
   const int amostras = 400;
-  float somaX = 0, somaY = 0, somaZ = 0;
+  float soma = 0;
   for (int i = 0; i < amostras; i++) {
     sensors_event_t accel, gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
-    somaX += gyro.gyro.x;
-    somaY += gyro.gyro.y;
-    somaZ += gyro.gyro.z;
+    soma += gyro.gyro.x;
     delay(5);
   }
-  biasGiroX = somaX / amostras;
-  biasGiroY = somaY / amostras;
-  biasGiroZ = somaZ / amostras;
+  biasGiroX = soma / amostras;
   calibrado = true;
-  Serial.printf("Giroscopio calibrado (bias X=%.4f Y=%.4f Z=%.4f rad/s)\n", biasGiroX, biasGiroY, biasGiroZ);
+  Serial.printf("Giroscopio calibrado (bias X=%.4f rad/s)\n", biasGiroX);
 }
 
 // Ângulo que a gravidade indica agora. É a referência absoluta do filtro:
 // não escorrega com o tempo, mas balança a cada tranco do movimento.
-float anguloPelaGravidade(const sensors_event_t &accel) {
-  float graus = atan2(accel.acceleration.y, accel.acceleration.z) * 180.0f / PI;
+//
+// Recebe os eixos como float em vez de um sensors_event_t de propósito: a
+// Arduino IDE gera os protótipos das funções e os injeta no topo do sketch,
+// e um tipo customizado na assinatura faz o build quebrar antes de começar
+// (foi o que aconteceu no commit ed1a53a). Só tipos embutidos aqui.
+float anguloPelaGravidade(float acelY, float acelZ) {
+  float graus = atan2(acelY, acelZ) * 180.0f / PI;
   return EIXO_INVERTIDO ? -graus : graus;
 }
 
@@ -232,7 +273,7 @@ void atualizarAngulo() {
 
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
-  float pelaGravidade = anguloPelaGravidade(accel);
+  float pelaGravidade = anguloPelaGravidade(accel.acceleration.y, accel.acceleration.z);
 
   // Um envio HTTP lento pode segurar o loop por segundos. Integrar o
   // giroscópio por um buraco desses só produz lixo — nesse caso o ângulo é
@@ -255,7 +296,7 @@ float anguloAtual() {
 
 void aplicarTara() {
   offsetTara = anguloFiltrado;
-  memoria.putFloat("tara", offsetTara);
+  salvarTara(offsetTara);
   Serial.printf("Tara aplicada: %.2f graus viraram o novo zero.\n", offsetTara);
 }
 
@@ -266,14 +307,7 @@ void aplicarTara() {
 // Sem tela no aparelho, o LED é a única forma de saber o que está havendo
 // olhando para ele: piscando rápido = "sou eu" (comando Identificar),
 // aceso = gravando captura, pisca curto = tudo certo, pisca duplo = sem
-// Wi-Fi ou sem login.
-
-bool algumAlvoLogado() {
-  for (int i = 0; i < QTD_ALVOS; i++) {
-    if (ALVOS[i].ativo && ALVOS[i].logado) return true;
-  }
-  return false;
-}
+// Wi-Fi ou sem pareamento.
 
 void atualizarLed() {
   unsigned long agora = millis();
@@ -292,10 +326,8 @@ void atualizarLed() {
     return;
   }
 
-  bool saudavel = WiFi.status() == WL_CONNECTED && algumAlvoLogado();
-  unsigned long aceso = saudavel ? 60 : 500;
-  unsigned long apagado = saudavel ? 1940 : 500;
-  unsigned long limite = ledAceso ? aceso : apagado;
+  bool saudavel = WiFi.status() == WL_CONNECTED && tokenDispositivo.length() > 0;
+  unsigned long limite = ledAceso ? (saudavel ? 60 : 500) : (saudavel ? 1940 : 500);
   if (agora - ultimoPiscaLed > limite) {
     ledAceso = !ledAceso;
     digitalWrite(PINO_LED, ledAceso);
@@ -304,81 +336,103 @@ void atualizarLed() {
 }
 
 // ------------------------------------------------------------------
-// Rede
+// Pareamento e portal
 // ------------------------------------------------------------------
 
-void conectarWifi() {
-  Serial.printf("Conectando ao Wi-Fi %s", WIFI_SSID);
-  WiFi.mode(WIFI_STA);
-  WiFi.setSleep(false);  // o modem dormindo atrasa os POSTs e engasga o tempo real
-  WiFi.begin(WIFI_SSID, WIFI_SENHA);
-
-  unsigned long limite = millis() + 20000;
-  while (WiFi.status() != WL_CONNECTED && millis() < limite) {
-    delay(300);
-    Serial.print(".");
+/** Troca o código de 6 dígitos por um token próprio do aparelho. */
+bool parear(const String &codigo) {
+  if (codigo.length() == 0) {
+    return false;
   }
-  Serial.println();
-
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.print("Wi-Fi conectado, IP: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    // Não trava aqui: o loop tenta de novo sozinho, e o aparelho continua
-    // lendo o ângulo (útil para conferir a montagem pelo Monitor Serial).
-    Serial.println("Wi-Fi nao conectou agora; vou continuar tentando em segundo plano.");
-  }
-}
-
-void cuidarDoWifi() {
-  static unsigned long proximaTentativa = 0;
-  if (WiFi.status() == WL_CONNECTED) return;
-  if (millis() < proximaTentativa) return;
-  proximaTentativa = millis() + 10000;
-  Serial.println("Wi-Fi caiu — reconectando...");
-  WiFi.disconnect();
-  WiFi.begin(WIFI_SSID, WIFI_SENHA);
-}
-
-void fazerLogin(Alvo &alvo) {
-  alvo.proximaTentativaLogin = millis() + ESPERA_LOGIN_MS;
-  Serial.printf("[%s] tentando login...\n", alvo.nome);
+  Serial.println("Tentando parear com o codigo informado...");
 
   HTTPClient http;
   http.setConnectTimeout(TIMEOUT_HTTP_MS);
   http.setTimeout(TIMEOUT_HTTP_MS);
-  if (!http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/auth/login")) {
-    Serial.printf("[%s] nao consegui abrir a conexao de login\n", alvo.nome);
-    return;
-  }
+  http.begin(clienteParaUrl(BASE_URL), String(BASE_URL) + "/dispositivos/parear");
   http.addHeader("Content-Type", "application/json");
 
-  String corpo = String("{\"email\":\"") + alvo.email + "\",\"senha\":\"" + alvo.senha + "\"}";
+  String corpo = String("{\"codigo\":\"") + codigo + "\"}";
   int status = http.POST(corpo);
-
-  if (status == 200) {
-    String resposta = http.getString();
-    String token = extrairTexto(resposta, "token");
-    long id = extrairNumero(resposta, "id", -1);
-    if (token.length() > 0 && id >= 0) {
-      alvo.token = token;
-      alvo.idClinica = (int)id;
-      alvo.logado = true;
-      alvo.falhasSeguidas = 0;
-      Serial.printf("[%s] login OK, idClinica=%d\n", alvo.nome, alvo.idClinica);
-    } else {
-      Serial.printf("[%s] login respondeu 200 mas sem token/id: %s\n", alvo.nome, resposta.c_str());
-      alvo.logado = false;
-    }
-  } else if (status == 401 || status == 403) {
-    Serial.printf("[%s] login recusado (status=%d) — confira e-mail e senha da clinica.\n", alvo.nome, status);
-    alvo.logado = false;
-  } else {
-    Serial.printf("[%s] login falhou, status=%d\n", alvo.nome, status);
-    alvo.logado = false;
-  }
+  String resposta = http.getString();
   http.end();
+
+  if (status != 200) {
+    Serial.printf("Pareamento falhou (status=%d): %s\n", status, resposta.c_str());
+    return false;
+  }
+
+  String token = extrairTexto(resposta, "token");
+  if (token.length() == 0) {
+    Serial.println("Pareamento: resposta sem token.");
+    return false;
+  }
+
+  tokenDispositivo = token;
+  salvarToken(token);
+  Serial.printf("Pareado com a clinica \"%s\". Token guardado.\n",
+                extrairTexto(resposta, "nomeClinica").c_str());
+  return true;
 }
+
+void conectarOuAbrirPortal() {
+  WiFiManager wm;
+  wm.setConfigPortalTimeout(0);  // fica no portal até alguém configurar
+
+  // Campo extra no portal, além de rede e senha: é onde entra o código que a
+  // clínica vê na tela Dispositivo.
+  WiFiManagerParameter campoCodigo(
+      "codigo", "Codigo de pareamento (6 digitos)", "", 6,
+      "pattern=\"[0-9]{6}\" inputmode=\"numeric\"");
+  wm.addParameter(&campoCodigo);
+
+  Serial.printf("Se nao conectar, abra o Wi-Fi \"%s\" (senha %s) no celular.\n",
+                AP_NOME, AP_SENHA);
+
+  // autoConnect: tenta a rede salva; não tendo, sobe o ponto de acesso e
+  // bloqueia aqui até a pessoa terminar a configuração.
+  if (!wm.autoConnect(AP_NOME, AP_SENHA)) {
+    Serial.println("Falhou ao configurar. Reiniciando...");
+    delay(2000);
+    ESP.restart();
+  }
+
+  WiFi.setSleep(false);  // o modem dormindo atrasa os POSTs e engasga o tempo real
+  Serial.print("Wi-Fi conectado, IP: ");
+  Serial.println(WiFi.localIP());
+
+  String codigo = String(campoCodigo.getValue());
+  codigo.trim();
+  if (codigo.length() > 0) {
+    // Veio do portal agora: vale mais que o token antigo, porque a pessoa
+    // pode estar movendo o aparelho para outra clínica.
+    parear(codigo);
+  }
+}
+
+/** Segurar BOOT por 5s apaga a configuração e reinicia no portal. */
+void verificarBotaoDeReset() {
+  bool pressionado = digitalRead(PINO_BOTAO_RESET) == LOW;
+
+  if (!pressionado) {
+    botaoPressionadoDesde = 0;
+    return;
+  }
+  if (botaoPressionadoDesde == 0) {
+    botaoPressionadoDesde = millis();
+    return;
+  }
+  if (millis() - botaoPressionadoDesde >= SEGURAR_PARA_RESETAR_MS) {
+    Serial.println("Apagando configuracao... o aparelho vai reiniciar no portal.");
+    apagarConfiguracao();
+    delay(500);
+    ESP.restart();
+  }
+}
+
+// ------------------------------------------------------------------
+// Telemetria
+// ------------------------------------------------------------------
 
 void tratarComando(const String &comando) {
   if (comando.length() == 0 || comando == "NENHUM") return;
@@ -399,22 +453,23 @@ void tratarComando(const String &comando) {
   }
 }
 
-void enviarTelemetria(Alvo &alvo) {
+void enviarTelemetria() {
   HTTPClient http;
   http.setConnectTimeout(TIMEOUT_HTTP_MS);
   http.setTimeout(TIMEOUT_HTTP_MS);
   http.setReuse(true);
-  if (!http.begin(clienteParaUrl(alvo.baseUrl), String(alvo.baseUrl) + "/goniometro/telemetria")) {
-    alvo.falhasSeguidas++;
+  if (!http.begin(clienteParaUrl(BASE_URL), String(BASE_URL) + "/goniometro/telemetria")) {
+    Serial.println("Nao consegui abrir a conexao de telemetria.");
     return;
   }
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", "Bearer " + alvo.token);
+  http.addHeader("Authorization", "Bearer " + tokenDispositivo);
 
   int bateria = lerBateria();
+  // Sem idClinica: o servidor tira do token deste aparelho, e é isso que
+  // impede um goniômetro de escrever na clínica de outro.
   String corpo = "{";
-  corpo += "\"idClinica\":" + String(alvo.idClinica);
-  corpo += ",\"angulo\":" + String(anguloAtual(), 2);
+  corpo += "\"angulo\":" + String(anguloAtual(), 2);
   corpo += ",\"anguloBruto\":" + String(anguloFiltrado, 2);
   if (bateria >= 0) corpo += ",\"bateria\":" + String(bateria);
   corpo += ",\"rssi\":" + String(WiFi.RSSI());
@@ -428,53 +483,21 @@ void enviarTelemetria(Alvo &alvo) {
 
   if (status == 200) {
     String resposta = http.getString();
-    alvo.falhasSeguidas = 0;
     // O servidor manda o ritmo: rápido enquanto alguém olha ou grava, lento
     // quando ninguém está usando (é a bateria do aparelho em jogo).
-    long intervalo = extrairNumero(resposta, "intervaloMs", (long)alvo.intervaloMs);
+    long intervalo = extrairNumero(resposta, "intervaloMs", (long)intervaloEnvioMs);
     if (intervalo >= 50 && intervalo <= 60000) {
-      alvo.intervaloMs = (unsigned long)intervalo;
+      intervaloEnvioMs = (unsigned long)intervalo;
     }
     tratarComando(extrairTexto(resposta, "comando"));
   } else if (status == 401) {
-    Serial.printf("[%s] token expirou — vou logar de novo\n", alvo.nome);
-    alvo.logado = false;
-    alvo.proximaTentativaLogin = 0;  // sem espera: reautentica no próximo loop
+    Serial.println("Token recusado. Reconfigure segurando o botao BOOT por 5s.");
+  } else if (status == 403) {
+    Serial.println("Este aparelho foi revogado pela clinica. Pareie de novo.");
   } else {
-    alvo.falhasSeguidas++;
-    Serial.printf("[%s] envio falhou, status=%d (falha %d)\n", alvo.nome, status, alvo.falhasSeguidas);
+    Serial.printf("Envio falhou, status=%d\n", status);
   }
   http.end();
-
-  // Um alvo fora do ar não pode segurar o outro: depois de algumas falhas
-  // seguidas ele fica de castigo por um tempo, e o alvo saudável continua
-  // no ritmo normal.
-  if (alvo.falhasSeguidas >= MAX_FALHAS_ANTES_DO_CASTIGO) {
-    alvo.proximoEnvio = millis() + CASTIGO_MS;
-    Serial.printf("[%s] muitas falhas seguidas — pausando os envios por %lus\n", alvo.nome, CASTIGO_MS / 1000);
-  }
-}
-
-void cuidarDosAlvos() {
-  unsigned long agora = millis();
-  for (int i = 0; i < QTD_ALVOS; i++) {
-    Alvo &alvo = ALVOS[i];
-    if (!alvo.ativo || WiFi.status() != WL_CONNECTED) continue;
-
-    if (!alvo.logado) {
-      if (agora >= alvo.proximaTentativaLogin) {
-        fazerLogin(alvo);
-      }
-      continue;
-    }
-
-    if (agora >= alvo.proximoEnvio) {
-      // Marca o próximo envio ANTES de enviar: o POST pode demorar, e contar
-      // a partir do fim faria o intervalo real virar "intervalo + latência".
-      alvo.proximoEnvio = agora + alvo.intervaloMs;
-      enviarTelemetria(alvo);
-    }
-  }
 }
 
 // ------------------------------------------------------------------
@@ -486,6 +509,7 @@ void setup() {
   delay(500);
   Serial.printf("\nRehabit — goniometro digital, firmware %s\n", VERSAO_FIRMWARE);
 
+  pinMode(PINO_BOTAO_RESET, INPUT_PULLUP);
   pinMode(PINO_LED, OUTPUT);
   digitalWrite(PINO_LED, LOW);
   if (PINO_BATERIA >= 0) {
@@ -494,7 +518,7 @@ void setup() {
 
   Wire.begin();
   Wire.setClock(400000);  // I2C rápido: 100 leituras por segundo não cabem no modo padrão
-  clienteSeguro.setInsecure();  // TCC/demo: sem validar certificado, simplicidade acima de TLS perfeito.
+  clienteSeguro.setInsecure();  // TCC/demo: sem verificação de certificado.
 
   if (!mpu.begin()) {
     Serial.println("MPU6050 nao encontrado! Confira a fiacao (SDA=21, SCL=22, VCC=3V3, GND).");
@@ -508,8 +532,7 @@ void setup() {
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   Serial.println("MPU6050 encontrado.");
 
-  memoria.begin("rehabit", false);
-  offsetTara = memoria.getFloat("tara", 0.0f);
+  offsetTara = carregarTara();
   Serial.printf("Tara guardada: %.2f graus\n", offsetTara);
 
   calibrarGiroscopio();
@@ -518,26 +541,61 @@ void setup() {
   // o ângulo levaria alguns segundos convergindo de zero até o valor real.
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
-  anguloFiltrado = anguloPelaGravidade(accel);
+  anguloFiltrado = anguloPelaGravidade(accel.acceleration.y, accel.acceleration.z);
 
   numeroSerie = montarNumeroSerie();
   Serial.printf("Numero de serie: %s\n", numeroSerie.c_str());
 
-  conectarWifi();
+  tokenDispositivo = carregarToken();
+  if (tokenDispositivo.length() > 0) {
+    Serial.println("Token encontrado na memoria.");
+  } else {
+    Serial.println("Sem token: use o portal para parear.");
+  }
+
+  conectarOuAbrirPortal();
 }
 
 void loop() {
   atualizarAngulo();
-  cuidarDoWifi();
-  cuidarDosAlvos();
+  verificarBotaoDeReset();
   atualizarLed();
+
+  unsigned long agora = millis();
 
   // Eco no Monitor Serial, útil para conferir a montagem sem abrir o site.
   static unsigned long ultimoEco = 0;
-  if (millis() - ultimoEco > 1000) {
-    ultimoEco = millis();
+  if (agora - ultimoEco > 1000) {
+    ultimoEco = agora;
     Serial.printf("Angulo: %6.2f graus (bruto %6.2f) | bateria %d%% | RSSI %d dBm%s\n",
                   anguloAtual(), anguloFiltrado, lerBateria(), WiFi.RSSI(),
                   capturando ? " | GRAVANDO" : "");
+  }
+
+  if (tokenDispositivo.length() == 0) {
+    // Sem pareamento não há para onde enviar; avisa de vez em quando para
+    // não encher o monitor serial.
+    if (agora - ultimoAvisoPareamento > AVISO_SEM_PAREAMENTO_MS) {
+      ultimoAvisoPareamento = agora;
+      Serial.println("Aparelho ainda nao pareado. Segure BOOT por 5s para abrir o portal.");
+    }
+    return;
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    static unsigned long proximaReconexao = 0;
+    if (agora >= proximaReconexao) {
+      proximaReconexao = agora + 10000;
+      Serial.println("Wi-Fi caiu, tentando reconectar...");
+      WiFi.reconnect();
+    }
+    return;
+  }
+
+  if (agora >= proximoEnvio) {
+    // Marca o próximo envio ANTES de enviar: o POST pode demorar, e contar a
+    // partir do fim faria o intervalo real virar "intervalo + latência".
+    proximoEnvio = agora + intervaloEnvioMs;
+    enviarTelemetria();
   }
 }

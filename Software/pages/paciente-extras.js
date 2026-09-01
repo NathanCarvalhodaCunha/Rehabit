@@ -108,11 +108,16 @@
       });
     });
 
+    const TITULO_CONSULTA = {
+      REALIZADA: "Consulta — compareceu",
+      FALTOU: "Consulta — faltou",
+      REMARCADA: "Consulta remarcada",
+    };
     (agendamentos || []).forEach((a) => {
       eventos.push({
         data: a.data,
         tipo: "agendamento",
-        titulo: "Consulta agendada",
+        titulo: TITULO_CONSULTA[a.status] || "Consulta agendada",
         detalhe: `${(a.hora || "").slice(0, 5)}${a.observacao ? " — " + a.observacao : ""}`,
       });
     });
@@ -151,7 +156,13 @@
     const quando = proxima
       ? `sua sessão está marcada para ${formatarData(proxima.data)} às ${(proxima.hora || "").slice(0, 5)}`
       : "estamos à disposição para agendar sua próxima sessão";
-    const texto = `Olá, ${paciente.nome}! Aqui é da ${sessao.nome}. Lembrando que ${quando}.`;
+    // Quem se apresenta ao paciente é a clínica: sessao.nome é o nome de quem
+    // está logado e, num profissional, saía como se ele fosse a instituição.
+    const comQuemFala = paciente.nomeFisioterapeuta
+      ? ` Sua sessão é com ${paciente.nomeFisioterapeuta}.`
+      : "";
+    const texto =
+      `Olá, ${paciente.nome}! Aqui é da ${nomeDaClinica}. Lembrando que ${quando}.${comQuemFala}`;
 
     // 55 = Brasil. Se o número já vier com o país, não duplica.
     const numero = telefone.startsWith("55") ? telefone : "55" + telefone;
@@ -161,48 +172,76 @@
     });
   }
 
-  // --- Relatório em PDF (via impressão do navegador) ---
-  function ligarRelatorio() {
+  // --- Relatório em PDF ---
+  // Antes isto era um window.print() da própria tela, e o navegador carimbava
+  // a URL no rodapé do papel — inclusive o "?id=" do paciente. O arquivo agora
+  // é montado pelo RehabitRelatorio, sem endereço nenhum impresso; por isso
+  // não há volta para a impressão quando o gerador falha: ela traria o
+  // problema de novo.
+  function ligarRelatorio(paciente, sessoes, agendamentos) {
     const botao = document.querySelector('[data-acao="relatorio"]');
     if (!botao) return;
     botao.addEventListener("click", () => {
-      // Mostra tudo antes de imprimir: o que está escondido numa aba não sai
-      // no papel, e o relatório precisa do histórico e da anamnese juntos.
-      document.body.classList.add("modo-impressao");
-      document.querySelectorAll("[data-conteudo]").forEach((el) => (el.hidden = false));
-      window.print();
-      // Só volta ao normal depois que o diálogo fecha.
-      window.addEventListener(
-        "afterprint",
-        () => {
-          document.body.classList.remove("modo-impressao");
-          mostrarPainel(document.querySelector("[data-painel].is-ativa")?.dataset.painel || "historico");
-        },
-        { once: true }
-      );
+      botao.disabled = true;
+      RehabitLoader.show("Gerando relatório");
+      RehabitRelatorio.paciente({
+        clinica: nomeDaClinica,
+        paciente,
+        sessoes,
+        agendamentos,
+      })
+        .then(() => RehabitToast.sucesso("Relatório gerado."))
+        .catch((err) => RehabitToast.erro(err.message))
+        .finally(() => {
+          RehabitLoader.hide();
+          botao.disabled = false;
+        });
     });
+  }
+
+  // A sessão guardada no login já traz o nome da instituição; contas antigas
+  // (gravadas antes desse campo existir) caem no perfil do profissional.
+  let nomeDaClinica = sessao.nomeClinica || (sessao.tipo === "CLINICA" ? sessao.nome : "");
+
+  function descobrirClinica() {
+    if (nomeDaClinica || sessao.tipo !== "FISIOTERAPEUTA") return Promise.resolve();
+    return apiGet(`/fisioterapeutas/${sessao.id}`)
+      .then((perfil) => {
+        nomeDaClinica = perfil.nomeClinica || "";
+      })
+      .catch(() => {});
   }
 
   Promise.all([
     apiGet(`/pacientes/${idPaciente}`),
     apiGet(`/pacientes/${idPaciente}/sessoes`),
+    descobrirClinica(),
   ])
     .then(([paciente, sessoes]) => {
+      if (!nomeDaClinica) nomeDaClinica = "sua clínica";
       montarMeta(paciente, sessoes);
       montarAnamnese(paciente);
-      ligarRelatorio();
 
-      // A agenda é do profissional; a clínica não tem esse endpoint por
-      // paciente, então a linha do tempo dela mostra só o que já aconteceu.
-      const agendaPromessa =
-        sessao.tipo === "FISIOTERAPEUTA"
-          ? apiGet(`/agendamentos?idFisioterapeuta=${sessao.id}`).catch(() => [])
-          : Promise.resolve([]);
+      // A agenda é por profissional, e a linha do tempo precisa dos dois
+      // lados: o que já passou e o que ainda vem. A clínica também alcança
+      // essas listas, pelo profissional responsável pelo paciente.
+      const idFisio = paciente.idFisioterapeuta || (sessao.tipo === "FISIOTERAPEUTA" ? sessao.id : null);
+      const agendaPromessa = idFisio
+        ? Promise.all([
+            apiGet(`/agendamentos?idFisioterapeuta=${idFisio}`).catch(() => []),
+            apiGet(`/agendamentos/historico?idFisioterapeuta=${idFisio}`).catch(() => []),
+          ])
+        : Promise.resolve([[], []]);
 
-      return agendaPromessa.then((agendamentos) => {
-        const doPaciente = agendamentos.filter((a) => String(a.idPaciente) === String(idPaciente));
+      return agendaPromessa.then(([proximos, passados]) => {
+        const doPaciente = proximos
+          .concat(passados)
+          .filter((a) => String(a.idPaciente) === String(idPaciente));
+        // O lembrete fala da próxima consulta, então precisa da lista futura.
+        const futurasDoPaciente = proximos.filter((a) => String(a.idPaciente) === String(idPaciente));
         montarTimeline(paciente, sessoes, doPaciente);
-        ligarWhatsapp(paciente, doPaciente);
+        ligarWhatsapp(paciente, futurasDoPaciente);
+        ligarRelatorio(paciente, sessoes, doPaciente);
       });
     })
     .catch(() => {

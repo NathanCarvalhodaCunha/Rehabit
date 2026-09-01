@@ -14,7 +14,7 @@ Cada tela tem uma variante de tema claro e uma escura (ex.: `login.html` / `logi
 ## Estrutura
 
 ```
-Login/            Telas de autenticação (login, cadastro, esqueci a senha)
+Login/            Telas de autenticação (login, cadastro, esqueci a senha, redefinir senha)
 Software/         Aplicação principal (dashboard, pacientes, sessões, dispositivo, configurações)
 Firmware/         Código do goniômetro (ESP32 + MPU6050) e guia de montagem
 rehabit-api/      Backend Spring Boot (API REST + banco H2 embarcado)
@@ -44,7 +44,8 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 
 ## Funcionalidades
 
-- Cadastro e login de clínicas e fisioterapeutas, com redefinição de senha por CNPJ/COFFITO.
+- Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.
+- Recuperação de senha por e-mail: código de 6 dígitos (e link direto, quando o site tem endereço público).
 - Cadastro de pacientes e vínculo com profissionais.
 - Registro de sessões de fisioterapia e histórico de evolução por paciente.
 - Goniômetro digital integrado, em tempo real (veja abaixo).
@@ -59,6 +60,12 @@ manda para a API; o navegador recebe cada leitura por **SSE**
 Quando o SSE não sobe — proxy que corta streaming, rede corporativa — o
 cliente cai sozinho para polling e continua funcionando.
 
+O aparelho não guarda credencial nenhuma: ele se pareia com a clínica por um
+código de 6 dígitos e passa a usar um token só dele, que a clínica pode
+revogar a qualquer momento. A telemetria por isso não carrega a clínica no
+corpo — ela sai do token, e é o que impede um goniômetro de escrever na
+clínica de outro.
+
 O caminho de volta usa a resposta do próprio POST de telemetria: o ESP32 não
 abre porta nenhuma, só lê o que veio junto. É assim que os botões da tela
 Dispositivo chegam ao aparelho (zerar/tara, identificar, iniciar e parar
@@ -69,7 +76,8 @@ Na prática, dentro do sistema:
 
 - **Tela Dispositivo** — ângulo ao vivo em um mostrador, gráfico dos últimos
   60 segundos, mínimo/máximo/amplitude, bateria, sinal Wi-Fi, número de série,
-  firmware, IP e há quanto tempo chegou o último pacote.
+  firmware, IP e há quanto tempo chegou o último pacote, além da lista de
+  aparelhos pareados e do código de pareamento.
 - **Cadastrar sessão** — o mesmo canal aparece embutido no formulário: dá para
   usar o ângulo atual ou gravar o movimento completo e deixar a amplitude
   (máximo − mínimo) cair sozinha no campo, que é salvo como medição da sessão.
@@ -80,6 +88,108 @@ aparelho e a amplitude que o profissional escolheu gravar na sessão.
 
 Para montar e gravar o aparelho, veja
 [`Firmware/goniometro-esp32-GUIA.md`](Firmware/goniometro-esp32-GUIA.md).
+
+## Envio de e-mail
+
+Duas telas dependem de e-mail: a confirmação do endereço no cadastro e a
+recuperação de senha. Sem provedor configurado a API **continua funcionando** —
+ela escreve o conteúdo do e-mail (com o código) no console do backend, o que
+basta para desenvolver e demonstrar, e o cadastro passa a exigir só as
+checagens de endereço (formato, domínio descartável e DNS).
+
+Há dois caminhos de saída, escolhidos por qual estiver configurado.
+
+### Em produção (Render): API HTTP do Brevo
+
+Desde 26/09/2025 o plano gratuito do Render
+[bloqueia a saída nas portas de SMTP](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)
+(25, 465 e 587). Ou seja: lá o Gmail por SMTP não funciona, com senha de app
+certa ou errada — a conexão morre antes de chegar ao servidor. Por isso o
+envio de produção usa a [API HTTP do Brevo](https://developers.brevo.com/reference/sendtransacemail),
+que responde em HTTPS na porta 443.
+
+O plano gratuito do Brevo dá 300 e-mails por dia e aceita verificar **só um
+endereço remetente** — não exige domínio próprio, então serve uma conta
+Gmail comum.
+
+1. Crie a conta em [brevo.com](https://www.brevo.com) e verifique o e-mail
+   que vai aparecer como remetente (*Senders, Domains & Dedicated IPs →
+   Senders*). Chega uma mensagem de confirmação nesse endereço.
+2. Gere uma chave em *SMTP & API → API Keys*. Ela começa com `xkeysib-`.
+3. No Render, em *Environment*, defina:
+
+| Variável | Valor |
+| --- | --- |
+| `BREVO_API_KEY` | a chave `xkeysib-...` |
+| `MAIL_FROM` | o endereço verificado no passo 1 |
+| `REHABIT_APP_URL` | endereço público da pasta `Login/`, para o link do e-mail de recuperação |
+
+Se `BREVO_API_KEY` estiver definida e `MAIL_FROM` não, a API avisa no log e
+volta a escrever no console — o Brevo recusaria o envio de um remetente não
+verificado.
+
+### Para rodar local: SMTP
+
+Fora do Render as portas de SMTP funcionam normalmente. O jeito mais simples
+é copiar `rehabit-api/rehabit-api/config/application.properties.exemplo` para
+`application.properties` na mesma pasta e preencher. O Spring Boot lê essa
+pasta sozinho ao subir o jar, sem recompilar e sem mexer em variável de
+ambiente — e o arquivo está no `.gitignore`, então a senha não vai parar no
+repositório. Com Gmail, use uma
+[senha de app](https://support.google.com/accounts/answer/185833): a senha
+normal da conta não funciona.
+
+```properties
+# rehabit-api/rehabit-api/config/application.properties
+spring.mail.username=suaconta@gmail.com
+spring.mail.password=abcd efgh ijkl mnop
+```
+
+### Todas as opções
+
+| Variável | Para que serve | Padrão |
+| --- | --- | --- |
+| `BREVO_API_KEY` | Chave da API do Brevo. Definida, é o caminho usado. | *(vazio)* |
+| `MAIL_FROM` | Endereço remetente. Obrigatório com o Brevo, e precisa estar verificado lá. | o `MAIL_USERNAME` |
+| `MAIL_FROM_NAME` | Nome exibido como remetente. | `Rehabit` |
+| `MAIL_USERNAME` | Conta do SMTP. Usada quando não há chave do Brevo. | *(vazio)* |
+| `MAIL_PASSWORD` | Senha de app da conta acima. | *(vazio)* |
+| `MAIL_HOST` / `MAIL_PORT` | Servidor SMTP. | `smtp.gmail.com` / `587` |
+| `REHABIT_APP_URL` | Endereço público da pasta `Login/`, usado para montar o link do e-mail de recuperação. Vazio = o e-mail vai só com o código. | *(vazio)* |
+| `REHABIT_VALIDAR_EMAIL_DNS` | Checar no DNS se o domínio do e-mail recebe mensagens. | `true` |
+| `REHABIT_CONFIRMAR_CADASTRO` | Exigir o código de confirmação no cadastro. Vazio = liga sozinho quando há provedor. | *(vazio)* |
+
+A linha que o backend escreve ao subir diz qual caminho está valendo:
+`Envio de e-mail por BREVO...`, `Envio de e-mail por SMTP...` ou
+`Envio de e-mail desligado...`.
+
+### Quando o envio falha
+
+O erro vai inteiro para o log do backend, com uma dica do que conferir. Os
+que aparecem na configuração inicial:
+
+| No log | O que é |
+| --- | --- |
+| `Brevo respondeu 401: Key not found` | A chave não é reconhecida. Ou é a **chave de SMTP** (`xsmtpsib-`), que só vale para o relay SMTP, ou é a versão **mascarada** — o Brevo mostra a chave inteira uma única vez, e o que aparece na tela depois não funciona. Nos dois casos, gere uma chave de API v3 nova. |
+| `Brevo respondeu 401: unrecognised IP address` | A chave está certa; a conta do Brevo tem [restrição de IP](https://app.brevo.com/security/authorised_ips) ligada. Hospedado no Render o IP de saída vem de uma [faixa compartilhada](https://render.com/docs/outbound-ip-addresses) e muda, então autorizar o IP que aparece na mensagem resolve só até a próxima troca — o caminho estável é desligar a restrição. |
+| `Brevo respondeu 400: sender is not valid` | O endereço em `MAIL_FROM` não está verificado na conta do Brevo. |
+| `Brevo respondeu 402` ou `429` | Passou dos 300 e-mails do dia. |
+| `MailConnectException: Couldn't connect to host` (por SMTP) | O bloqueio de portas do Render. Use o Brevo. |
+| `AuthenticationFailedException: 535` (por SMTP) | Senha de app do Gmail errada. |
+
+O formato da chave também é conferido no arranque: se ela tiver cara de
+chave de SMTP ou de chave mascarada, o log avisa antes de alguém tentar se
+cadastrar.
+
+### Como o e-mail é validado no cadastro
+
+1. **Formato** — regra mais rígida que a padrão, que aceitaria coisas como `a@b`.
+2. **Domínio descartável** — bloqueia serviços de e-mail temporário
+   (lista em `src/main/resources/emails-descartaveis.txt`).
+3. **DNS** — consulta o registro MX do domínio; sem servidor de e-mail
+   publicado, aquele endereço não pode existir.
+4. **Código por e-mail** — a prova final: sem abrir a caixa de entrada e
+   digitar os 6 dígitos, a conta não é criada.
 
 ## Licença
 

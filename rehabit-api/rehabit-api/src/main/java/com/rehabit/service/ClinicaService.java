@@ -2,6 +2,7 @@ package com.rehabit.service;
 
 import com.rehabit.dto.ClinicaPerfilDTO;
 import com.rehabit.dto.ClinicaUpdateDTO;
+import com.rehabit.email.ValidadorEmailService;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Clinica;
 import com.rehabit.model.Fisioterapeuta;
@@ -33,19 +34,22 @@ public class ClinicaService {
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ValidadorEmailService validadorEmail;
 
     public ClinicaService(ClinicaRepository clinicaRepository,
                            FisioterapeutaRepository fisioterapeutaRepository,
                            PacienteRepository pacienteRepository,
                            SessaoRepository sessaoRepository,
                            MedicaoRepository medicaoRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           ValidadorEmailService validadorEmail) {
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.validadorEmail = validadorEmail;
     }
 
     public ClinicaPerfilDTO buscarPerfil(Integer id, Integer usuarioId, String usuarioTipo) {
@@ -61,10 +65,14 @@ public class ClinicaService {
         Clinica clinica = clinicaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
 
-        if (!clinica.getEmail().equalsIgnoreCase(dados.getEmail())
-                && (clinicaRepository.existsByEmail(dados.getEmail())
-                || fisioterapeutaRepository.existsByEmail(dados.getEmail()))) {
-            throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
+        String email = validadorEmail.normalizar(dados.getEmail());
+        if (!clinica.getEmail().equalsIgnoreCase(email)) {
+            // Trocar para um e-mail que não existe deixaria a conta sem
+            // recuperação de senha — mesma checagem feita no cadastro.
+            email = validadorEmail.validarENormalizar(email);
+            if (clinicaRepository.existsByEmail(email) || fisioterapeutaRepository.existsByEmail(email)) {
+                throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
+            }
         }
         if (!clinica.getCnpj().equals(dados.getCnpj())
                 && clinicaRepository.existsByCnpj(dados.getCnpj())) {
@@ -85,7 +93,7 @@ public class ClinicaService {
 
         clinica.setNome(dados.getNome());
         clinica.setCnpj(dados.getCnpj());
-        clinica.setEmail(dados.getEmail());
+        clinica.setEmail(email);
         clinica.setTelefone(vazioParaNulo(dados.getTelefone()));
         clinica.setEndereco(vazioParaNulo(dados.getEndereco()));
         clinica.setSubtitulo(vazioParaNulo(dados.getSubtitulo()));

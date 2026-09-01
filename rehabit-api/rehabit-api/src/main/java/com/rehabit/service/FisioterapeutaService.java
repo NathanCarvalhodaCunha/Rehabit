@@ -5,6 +5,7 @@ import com.rehabit.dto.FisioterapeutaCreateDTO;
 import com.rehabit.dto.FisioterapeutaPerfilDTO;
 import com.rehabit.dto.FisioterapeutaResumoDTO;
 import com.rehabit.dto.FisioterapeutaUpdateDTO;
+import com.rehabit.email.ValidadorEmailService;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.security.PosseChecker;
@@ -35,19 +36,22 @@ public class FisioterapeutaService {
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ValidadorEmailService validadorEmail;
 
     public FisioterapeutaService(FisioterapeutaRepository fisioterapeutaRepository,
                                   ClinicaRepository clinicaRepository,
                                   PacienteRepository pacienteRepository,
                                   SessaoRepository sessaoRepository,
                                   MedicaoRepository medicaoRepository,
-                                  PasswordEncoder passwordEncoder) {
+                                  PasswordEncoder passwordEncoder,
+                                  ValidadorEmailService validadorEmail) {
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.clinicaRepository = clinicaRepository;
         this.pacienteRepository = pacienteRepository;
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.validadorEmail = validadorEmail;
     }
 
     @Transactional
@@ -57,8 +61,13 @@ public class FisioterapeutaService {
             throw new AuthException("Instituição não encontrada.", HttpStatus.BAD_REQUEST);
         }
 
-        if (fisioterapeutaRepository.existsByEmail(dados.getEmail())
-                || clinicaRepository.existsByEmail(dados.getEmail())) {
+        // Mesma checagem do cadastro de instituição (formato, domínio
+        // descartável e DNS). Aqui não cabe pedir o código por e-mail: quem
+        // preenche a tela é a clínica, não a pessoa dona daquela caixa.
+        String email = validadorEmail.validarENormalizar(dados.getEmail());
+
+        if (fisioterapeutaRepository.existsByEmail(email)
+                || clinicaRepository.existsByEmail(email)) {
             throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
         }
 
@@ -70,7 +79,7 @@ public class FisioterapeutaService {
         fisioterapeuta.setIdClinica(dados.getIdClinica());
         fisioterapeuta.setNome(dados.getNome());
         fisioterapeuta.setCoffito(dados.getCoffito());
-        fisioterapeuta.setEmail(dados.getEmail());
+        fisioterapeuta.setEmail(email);
         fisioterapeuta.setSenha(passwordEncoder.encode(dados.getSenha()));
         fisioterapeuta.setTelefone(vazioParaNulo(dados.getTelefone()));
         fisioterapeuta.setEspecialidade(vazioParaNulo(dados.getEspecialidade()));
@@ -108,10 +117,12 @@ public class FisioterapeutaService {
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
         PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
 
-        if (!fisioterapeuta.getEmail().equalsIgnoreCase(dados.getEmail())
-                && (fisioterapeutaRepository.existsByEmail(dados.getEmail())
-                        || clinicaRepository.existsByEmail(dados.getEmail()))) {
-            throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
+        String email = validadorEmail.normalizar(dados.getEmail());
+        if (!fisioterapeuta.getEmail().equalsIgnoreCase(email)) {
+            email = validadorEmail.validarENormalizar(email);
+            if (fisioterapeutaRepository.existsByEmail(email) || clinicaRepository.existsByEmail(email)) {
+                throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
+            }
         }
 
         if (dados.getNovaSenha() != null && !dados.getNovaSenha().isBlank()) {
@@ -128,7 +139,7 @@ public class FisioterapeutaService {
         }
 
         fisioterapeuta.setNome(dados.getNome());
-        fisioterapeuta.setEmail(dados.getEmail());
+        fisioterapeuta.setEmail(email);
         fisioterapeuta.setTelefone(vazioParaNulo(dados.getTelefone()));
         fisioterapeuta.setEspecialidade(vazioParaNulo(dados.getEspecialidade()));
         fisioterapeuta.setLocalidade(vazioParaNulo(dados.getLocalidade()));
@@ -165,6 +176,11 @@ public class FisioterapeutaService {
         fisioterapeutaRepository.save(fisioterapeuta);
     }
 
+    private String nomeDaClinica(Integer idClinica) {
+        return idClinica == null ? null
+                : clinicaRepository.findById(idClinica).map(c -> c.getNome()).orElse(null);
+    }
+
     private FisioterapeutaPerfilDTO paraPerfilDTO(Fisioterapeuta f) {
         List<Sessao> sessoes = sessaoRepository.findByIdFisioterapeuta(f.getId());
 
@@ -184,8 +200,13 @@ public class FisioterapeutaService {
 
         long pacientesAtivos = pacienteRepository.countByIdFisioterapeutaAndStatus(f.getId(), "Ativo");
 
-        return new FisioterapeutaPerfilDTO(f.getId(), f.getNome(), f.getCoffito(), f.getEmail(), f.getTelefone(),
-                f.getEspecialidade(), f.getLocalidade(), f.getDescricao(), f.getFoto(), f.getIdClinica(),
-                pacientesAtivos, sessoesEsteMes, amplitudeMediaGeral);
+        FisioterapeutaPerfilDTO dto = new FisioterapeutaPerfilDTO(f.getId(), f.getNome(), f.getCoffito(),
+                f.getEmail(), f.getTelefone(), f.getEspecialidade(), f.getLocalidade(), f.getDescricao(),
+                f.getFoto(), f.getIdClinica(), pacientesAtivos, sessoesEsteMes, amplitudeMediaGeral);
+        // O nome da instituição acompanha o perfil porque é ele que assina o
+        // que sai para o paciente (lembrete no WhatsApp, relatório em PDF) —
+        // quem atende é o profissional, mas quem se apresenta é a clínica.
+        dto.setNomeClinica(nomeDaClinica(f.getIdClinica()));
+        return dto;
     }
 }

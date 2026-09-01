@@ -17,6 +17,10 @@ rehabit-api/rehabit-api/uploads/*
 # Embedded H2 database files (local runtime data)
 rehabit-api/rehabit-api/data/
 
+# Configuração local lida pelo Spring Boot ao subir o jar: é onde fica a
+# senha de app do e-mail. O modelo sem dados reais é o .exemplo ao lado.
+rehabit-api/rehabit-api/config/application.properties
+
 # Local tooling state (Claude Code session cache, not project source)
 .claude/
 
@@ -38,3 +42,8 @@ goniometro.jpg.jpeg
 
 # Arquivo gerado ao testar a exportação da agenda
 agenda-rehabit.ics
+
+# Pasta de trabalho da Arduino IDE: o .ino ali fica preenchido com a senha
+# do Wi-Fi e a senha da conta da clínica. O modelo versionado, sem dados
+# reais, é o Firmware/goniometro-esp32.ino.
+Firmware/goniometro-esp32/

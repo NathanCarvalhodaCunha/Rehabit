@@ -138,6 +138,16 @@
         const inicioTexto = paciente.dataInicioTratamento ? formatarDataLonga(paciente.dataInicioTratamento) : "-";
         const fisioTexto = paciente.nomeFisioterapeuta || "-";
 
+        // O cabeçalho desta tela é o mesmo da ficha do paciente, mas a foto
+        // nunca era preenchida aqui: ficava sempre o círculo cinza vazio.
+        const fotoPaciente = urlFoto(paciente.foto);
+        const avatarEl = header.querySelector(".avatar-lg");
+        if (fotoPaciente && avatarEl) {
+          avatarEl.style.backgroundImage = `url("${fotoPaciente}")`;
+          avatarEl.style.backgroundSize = "cover";
+          avatarEl.style.backgroundPosition = "center";
+        }
+
         header.querySelector("h1").textContent = paciente.nome;
         header.querySelector(".patient-meta.desktop-only").innerHTML =
           `${idadeTexto} – ${sexoTexto} – ${situacaoTexto}<br/>` +
@@ -186,6 +196,24 @@
   const form = document.getElementById("cadastrarSessaoForm");
   if (!form) return;
 
+  // Sessão é registro do que já foi atendido, então a data não pode ser
+  // futura — o campo trava no dia de hoje e o envio confere de novo.
+  const campoData = document.getElementById("s-data");
+  const hojeIso = (() => {
+    const agora = new Date();
+    return (
+      agora.getFullYear() +
+      "-" +
+      String(agora.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(agora.getDate()).padStart(2, "0")
+    );
+  })();
+  if (campoData) {
+    campoData.max = hojeIso;
+    if (!campoData.value) campoData.value = hojeIso;
+  }
+
   // Espelha o valor do controle deslizante ao lado dele.
   (function ligarEscalaDeDor() {
     const controle = document.getElementById("s-dor");
@@ -212,6 +240,10 @@
       RehabitToast.erro("Preencha ao menos a data e a duração.");
       return;
     }
+    if (data > hojeIso) {
+      RehabitToast.erro("A sessão não pode ter uma data futura. Use a Agenda para marcar o que ainda vai acontecer.");
+      return;
+    }
 
     const submitBtn = form.querySelector(".btn-primary");
     submitBtn.disabled = true;
@@ -228,6 +260,7 @@
         idFisioterapeuta: sessao.id,
       });
       form.reset();
+      if (campoData) campoData.value = hojeIso;
       await carregarPacienteEHistorico();
       RehabitToast.sucesso("Sessão cadastrada com sucesso.");
     } catch (err) {

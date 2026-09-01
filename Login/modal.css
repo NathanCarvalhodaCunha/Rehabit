@@ -140,6 +140,41 @@
 }
 .rh-submit:hover { background: #0F56BC; }
 
+/* ---- Pop-up "Confirme seu e-mail" ---- */
+.rh-modal--codigo { max-width: 440px; text-align: center; }
+.rh-modal--codigo .rh-sub { font-weight: 600; font-size: 15px; line-height: 1.45; }
+
+.rh-codigo-campo { margin-top: 24px; text-align: left; }
+.rh-codigo-input {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 10px;
+  /* o letter-spacing empurra tudo para a esquerda; compensa para o texto
+     ficar centralizado de verdade */
+  text-indent: 10px;
+  height: 56px !important;
+}
+.rh-codigo-ajuda {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #5F6C7B;
+  line-height: 1.5;
+}
+.rh-reenviar {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1565D8;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.rh-reenviar:hover { color: #0F56BC; }
+.rh-modal--codigo .rh-actions { justify-content: space-between; }
+
 /* ---- Tema escuro ---- */
 body.dark .rh-overlay { background: rgba(0, 5, 17, .68); }
 body.dark .rh-modal {
@@ -167,6 +202,10 @@ body.dark .rh-field textarea:focus {
 body.dark .rh-skip { color: #2F80F0; }
 body.dark .rh-submit { background: #1E6FE8; }
 body.dark .rh-submit:hover { background: #1560CC; }
+body.dark .rh-codigo-ajuda { color: #7C879F; }
+body.dark .rh-reenviar { color: #2F80F0; }
+body.dark .rh-reenviar:hover { color: #5AA0FF; }
+
 
 /* ---- Responsividade padrão ---- */
 @media (max-width: 991px) {
@@ -184,6 +223,8 @@ body.dark .rh-submit:hover { background: #1560CC; }
 
 @media (max-width: 575px) {
   .rh-overlay { padding: 0 10px; align-items: center; }
+  .rh-modal--codigo .rh-actions { margin-top: 26px; }
+  .rh-codigo-input { height: 46px !important; font-size: 21px; letter-spacing: 7px; text-indent: 7px; }
   .rh-modal {
     max-width: 278px;
     max-height: calc(100dvh - 42px);

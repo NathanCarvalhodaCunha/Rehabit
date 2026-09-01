@@ -132,9 +132,29 @@ public class GoniometroService {
      */
     public GoniometroComandoRespostaDTO registrarTelemetria(GoniometroTelemetriaDTO dados, Integer usuarioId,
                                                              String usuarioTipo) {
-        Integer idClinica = dados.getIdClinica();
-        verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
+        verificarPosseClinica(dados.getIdClinica(), usuarioId, usuarioTipo);
+        return aplicarTelemetria(dados.getIdClinica(), dados);
+    }
 
+    /**
+     * Telemetria vinda de um goniômetro pareado. A clínica sai do token do
+     * próprio aparelho e a posse já foi conferida ao validar o dispositivo, por
+     * isso aqui não há o que checar — e o corpo do pacote nem carrega clínica,
+     * justamente para um aparelho não conseguir escrever na clínica de outro.
+     */
+    public GoniometroComandoRespostaDTO registrarTelemetriaDeDispositivo(Integer idClinica,
+                                                                          GoniometroTelemetriaDTO dados) {
+        return aplicarTelemetria(idClinica, dados);
+    }
+
+    /** Leitura simples de um aparelho pareado (endpoint antigo, sem telemetria). */
+    public void registrarLeituraDeDispositivo(Integer idClinica, BigDecimal angulo) {
+        GoniometroTelemetriaDTO dados = new GoniometroTelemetriaDTO();
+        dados.setAngulo(angulo);
+        aplicarTelemetria(idClinica, dados);
+    }
+
+    private GoniometroComandoRespostaDTO aplicarTelemetria(Integer idClinica, GoniometroTelemetriaDTO dados) {
         EstadoVivo estado = estados.computeIfAbsent(idClinica, k -> new EstadoVivo());
         carregarCadastroSePreciso(idClinica, estado);
         Instant agora = Instant.now();

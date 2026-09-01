@@ -8,11 +8,14 @@ import com.rehabit.dto.GoniometroLeituraDTO;
 import com.rehabit.dto.GoniometroLeituraRespostaDTO;
 import com.rehabit.dto.GoniometroSincronizarDTO;
 import com.rehabit.dto.GoniometroTelemetriaDTO;
+import com.rehabit.exception.AuthException;
 import com.rehabit.security.AuthContext;
+import com.rehabit.service.DispositivoService;
 import com.rehabit.service.GoniometroService;
 import com.rehabit.service.GoniometroStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +30,13 @@ public class GoniometroController {
 
     private final GoniometroService goniometroService;
     private final GoniometroStream stream;
+    private final DispositivoService dispositivoService;
 
-    public GoniometroController(GoniometroService goniometroService, GoniometroStream stream) {
+    public GoniometroController(GoniometroService goniometroService, GoniometroStream stream,
+                                  DispositivoService dispositivoService) {
         this.goniometroService = goniometroService;
         this.stream = stream;
+        this.dispositivoService = dispositivoService;
     }
 
     // ---------------- Cadastro do aparelho ----------------
@@ -54,10 +60,22 @@ public class GoniometroController {
      * Pacote de telemetria do ESP32. A resposta carrega o próximo comando
      * pendente e o intervalo de amostragem — é o único canal de volta que o
      * aparelho tem.
+     *
+     * Vindo de um goniômetro pareado, a clínica sai do próprio token e o corpo
+     * não manda idClinica: é o que impede um aparelho de escrever na clínica de
+     * outro. A clínica logada também pode chamar (útil para testar sem
+     * hardware), e aí a clínica vem no corpo e a posse é conferida.
      */
     @PostMapping("/telemetria")
     public ResponseEntity<GoniometroComandoRespostaDTO> telemetria(@Valid @RequestBody GoniometroTelemetriaDTO dados,
                                                                      HttpServletRequest request) {
+        if (AuthContext.idClinicaDoDispositivo(request) != null) {
+            Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
+            return ResponseEntity.ok(goniometroService.registrarTelemetriaDeDispositivo(idClinicaAtiva, dados));
+        }
+        if (dados.getIdClinica() == null) {
+            throw new AuthException("A clínica é obrigatória.", HttpStatus.BAD_REQUEST);
+        }
         return ResponseEntity.ok(goniometroService.registrarTelemetria(
                 dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
@@ -123,6 +141,14 @@ public class GoniometroController {
     @PostMapping("/leitura")
     public ResponseEntity<Void> registrarLeitura(@Valid @RequestBody GoniometroLeituraDTO dados,
                                                     HttpServletRequest request) {
+        if (AuthContext.idClinicaDoDispositivo(request) != null) {
+            Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
+            goniometroService.registrarLeituraDeDispositivo(idClinicaAtiva, dados.getAngulo());
+            return ResponseEntity.ok().build();
+        }
+        if (dados.getIdClinica() == null) {
+            throw new AuthException("A clínica é obrigatória.", HttpStatus.BAD_REQUEST);
+        }
         goniometroService.registrarLeitura(
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request), dados.getAngulo());
         return ResponseEntity.ok().build();

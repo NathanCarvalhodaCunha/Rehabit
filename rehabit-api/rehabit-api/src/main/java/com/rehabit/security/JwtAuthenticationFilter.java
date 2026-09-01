@@ -49,6 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         request.setAttribute(AuthContext.ATRIBUTO_ID, dados.id());
         request.setAttribute(AuthContext.ATRIBUTO_TIPO, dados.tipo());
+        if (dados.idClinica() != null) {
+            request.setAttribute(AuthContext.ATRIBUTO_ID_CLINICA, dados.idClinica());
+        }
         filterChain.doFilter(request, response);
     }
 
@@ -89,6 +92,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
         if (path.startsWith("/uploads/") && "GET".equals(metodo)) {
+            return true;
+        }
+        // O goniômetro ainda não tem token quando vai parear — é justamente o
+        // que ele busca aqui. Protegido pelo código de uso único e curta
+        // validade, não por autenticação.
+        if (path.equals("/api/dispositivos/parear") && "POST".equals(metodo)) {
             return true;
         }
         return path.equals("/api/uploads") && "POST".equals(metodo);

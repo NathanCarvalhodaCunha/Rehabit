@@ -359,6 +359,39 @@ body.dark .agenda-presenca button { background: #101A38; border-color: #1F2A50; 
 body.dark .agenda-presenca button:hover:not(:disabled) { color: #fff; border-color: #2B3A6B; }
 body.dark .comparativo-titulo { color: #fff; }
 
+/* Goniômetros pareados (escuro) */
+body.dark .dispositivos-topo h3 { color: #fff; }
+body.dark .dispositivo-item { border-color: #1B2647; }
+body.dark .dispositivo-info strong { color: #fff; }
+body.dark .dispositivo-selo.online { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .dispositivo-selo.offline { background: rgba(152,162,188,.16); color: var(--ink-muted); }
+body.dark .dispositivo-selo.revogado { background: rgba(255,142,142,.16); color: #FF8E8E; }
+body.dark .pareamento-overlay { background: rgba(0,0,0,.65); }
+body.dark .pareamento-caixa { background: #101A38; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+body.dark .pareamento-caixa h3 { color: #fff; }
+body.dark .pareamento-codigo { background: rgba(47,128,255,.14); color: #2F80FF; }
+
+/* Cartão de informações do paciente e remarcação (escuro) */
+body.dark .resumo-overlay,
+body.dark .remarcar-overlay { background: rgba(0,0,0,.65); }
+body.dark .resumo-caixa,
+body.dark .remarcar-caixa { background: #101A38; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+body.dark .resumo-topo h3,
+body.dark .remarcar-caixa h3,
+body.dark .resumo-dado .v,
+body.dark .resumo-bloco p,
+body.dark .remarcar-atual strong { color: #fff; }
+body.dark .resumo-topo .avatar-lg { background: #1B2647; }
+body.dark .resumo-indicadores { border-color: #1B2647; }
+body.dark .resumo-indicadores strong { color: #2F80FF; }
+body.dark .resumo-bloco { background: rgba(47,128,255,.12); }
+body.dark .resumo-bloco.alerta { background: rgba(255,142,142,.12); }
+body.dark .resumo-fechar:hover { background: rgba(255,255,255,.08); color: #fff; }
+body.dark .remarcar-erro { background: rgba(255,142,142,.14); color: #FF8E8E; }
+body.dark .agenda-item .agenda-patient.link-paciente { color: #2F80FF; }
+body.dark .cal-legenda i.realizada { background: #2BD17E; }
+body.dark .cal-legenda .sep { color: #2B3A6B; }
+
 /* ---------- Goniômetro ao vivo (tema escuro) ---------- */
 body.dark .live-head h3 { color: #fff; }
 body.dark .conn-badge { background: rgba(152,162,188,.16); color: var(--ink-muted); }

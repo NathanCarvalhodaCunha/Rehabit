@@ -77,6 +77,25 @@
     submitBtn.textContent = "Salvando...";
 
     try {
+      // O seletor de foto (script.js) guarda o arquivo escolhido em
+      // arquivoFotoProfissional; sem enviá-lo ao /uploads, "Alterar foto" só
+      // trocava a prévia na tela e o perfil continuava com a imagem antiga.
+      let foto = fotoAtual;
+      if (arquivoFotoProfissional) {
+        const formData = new FormData();
+        formData.append("arquivo", arquivoFotoProfissional);
+        const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
+          method: "POST",
+          body: formData,
+        });
+        const uploadDados = await uploadResponse.json().catch(() => ({}));
+        if (!uploadResponse.ok) {
+          RehabitToast.erro(uploadDados.mensagem || "Não foi possível enviar a foto de perfil.");
+          return;
+        }
+        foto = uploadDados.url;
+      }
+
       const atualizado = await apiPut(`/fisioterapeutas/${idAlvo}`, {
         nome: document.getElementById("p-nome").value.trim(),
         email: document.getElementById("p-email").value.trim(),
@@ -84,7 +103,7 @@
         especialidade: document.getElementById("p-esp").value.trim() || null,
         localidade: document.getElementById("p-loc").value.trim() || null,
         descricao: document.getElementById("p-desc").value.trim() || null,
-        foto: fotoAtual,
+        foto,
         senhaAtual: senhaAtual || null,
         novaSenha: novaSenha || null,
       });

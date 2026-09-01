@@ -175,6 +175,34 @@
         <p class="s">Veja um passo a passo animado de como posicionar o aparelho na articulação</p>
         <a class="btn-primary" href="./tutorial-goniometro.html">Ver tutorial</a>
       </section>
+
+      <section class="card dispositivos-card" data-dispositivos hidden>
+        <div class="dispositivos-topo">
+          <div>
+            <h3>Goniômetros pareados</h3>
+            <p class="sub">Aparelhos autorizados a enviar leituras para esta clínica</p>
+          </div>
+          <button type="button" class="btn-primary" data-acao="parear">Parear novo dispositivo</button>
+        </div>
+        <ul class="dispositivos-lista" data-dispositivos-lista></ul>
+      </section>
+
+      <div class="pareamento-overlay is-hidden" data-pareamento>
+        <div class="pareamento-caixa" role="dialog" aria-modal="true" aria-labelledby="tituloPareamento">
+          <h3 id="tituloPareamento">Parear goniômetro</h3>
+          <p class="pareamento-passos">
+            1. Ligue o goniômetro e espere ele criar o Wi-Fi <strong>Rehabit-Goniometro</strong>.<br />
+            2. Conecte seu celular nesse Wi-Fi (senha <strong>rehabit123</strong>).<br />
+            3. Vai abrir um portal: escolha a rede da clínica, digite a senha dela e o código abaixo.
+          </p>
+          <div class="pareamento-codigo" data-codigo>------</div>
+          <p class="pareamento-validade" data-validade></p>
+          <div class="pareamento-acoes">
+            <button type="button" class="btn-outline" data-acao="fechar-pareamento">Fechar</button>
+            <button type="button" class="btn-primary" data-acao="novo-codigo">Gerar outro código</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Mobile bottom nav -->
@@ -201,5 +229,6 @@
   <script src="./busca.js"></script>
   <script src="./goniometro.js"></script>
   <script src="./pages/dispositivo.js"></script>
+  <script src="./pages/dispositivos-pareados.js"></script>
 </body>
 </html>
