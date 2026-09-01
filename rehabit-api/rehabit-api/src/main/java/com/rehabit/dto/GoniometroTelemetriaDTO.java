@@ -12,7 +12,12 @@ import java.math.BigDecimal;
  */
 public class GoniometroTelemetriaDTO {
 
-    @NotNull(message = "A clínica é obrigatória.")
+    /**
+     * Obrigatório só quando quem envia é a clínica logada. Um goniômetro
+     * pareado NÃO manda este campo de propósito: a clínica sai do token dele,
+     * então um aparelho não consegue mandar telemetria para a clínica de
+     * outro. A exigência para o caminho da clínica está no GoniometroController.
+     */
     private Integer idClinica;
 
     @NotNull(message = "O ângulo é obrigatório.")
