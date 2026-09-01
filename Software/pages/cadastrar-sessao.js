@@ -5,17 +5,109 @@
   const sessao = getSessao();
   if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
 
-  apiGet(`/fisioterapeutas/${sessao.id}`)
-    .then((f) => fetch(`${API_BASE_URL}/goniometro/leitura?idClinica=${f.idClinica}`, {
-      headers: { Authorization: `Bearer ${sessao.token}` },
-    }))
-    .then((r) => r.json())
-    .then((dados) => {
-      if (dados.angulo != null) {
-        document.getElementById("s-amp").value = dados.angulo;
+  /* Goniômetro ao vivo dentro do formulário: o profissional não precisa sair
+     para a tela Dispositivo, anotar o número e voltar. O painel só aparece
+     depois que o canal abre — sem aparelho na clínica, o formulário fica
+     exatamente como era. */
+  (function ligarGoniometro() {
+    const painel = document.querySelector("[data-gonio-inline]");
+    const campoAmplitude = document.getElementById("s-amp");
+    if (!painel || !campoAmplitude || typeof RehabitGoniometro === "undefined") return;
+
+    const selo = painel.querySelector(".conn-badge");
+    const seloTexto = painel.querySelector(".conn-text");
+    const valor = painel.querySelector("[data-gonio-angulo]");
+    const campoMin = painel.querySelector("[data-gonio-min]");
+    const campoMax = painel.querySelector("[data-gonio-max]");
+    const campoAmp = painel.querySelector("[data-gonio-amp]");
+    const dica = painel.querySelector("[data-gonio-dica]");
+    const botaoUsar = painel.querySelector("[data-gonio-usar]");
+    const botaoCaptura = painel.querySelector("[data-gonio-captura]");
+
+    let anguloAtual = null;
+    let capturando = false;
+
+    function grau(v) {
+      return v == null ? "–" : `${Number(v).toFixed(1).replace(".", ",")}°`;
+    }
+
+    function preencher(v) {
+      // O campo é um <input type="number">: ponto decimal, sempre.
+      campoAmplitude.value = Number(v).toFixed(1);
+      campoAmplitude.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    function desenhar(estado) {
+      painel.hidden = false;
+      anguloAtual = estado.angulo;
+      valor.textContent = estado.angulo != null ? Number(estado.angulo).toFixed(1).replace(".", ",") : "–";
+
+      const captura = estado.captura;
+      capturando = !!(captura && captura.ativa);
+
+      if (captura && (captura.ativa || captura.amostras)) {
+        campoMin.textContent = grau(captura.minimo);
+        campoMax.textContent = grau(captura.maximo);
+        campoAmp.textContent = grau(captura.amplitude);
+      } else {
+        campoMin.textContent = "–";
+        campoMax.textContent = "–";
+        campoAmp.textContent = "–";
       }
-    })
-    .catch(() => {});
+
+      if (capturando) {
+        selo.dataset.conn = "capturando";
+        seloTexto.textContent = "Gravando";
+        dica.textContent = "Peça o movimento completo e clique em Parar para trazer a amplitude.";
+      } else if (estado.conectado) {
+        selo.dataset.conn = "conectado";
+        seloTexto.textContent = "Conectado";
+        dica.textContent = "Use o ângulo atual ou grave o movimento para calcular a amplitude.";
+      } else {
+        selo.dataset.conn = estado.ultimoContato ? "desconectado" : "aguardando";
+        seloTexto.textContent = estado.ultimoContato ? "Desconectado" : "Aguardando o aparelho";
+        dica.textContent = "Ligue o goniômetro para preencher a amplitude automaticamente.";
+      }
+
+      botaoCaptura.textContent = capturando ? "Parar gravação" : "Gravar movimento";
+      botaoCaptura.disabled = !estado.conectado && !capturando;
+      botaoUsar.disabled = estado.angulo == null;
+    }
+
+    botaoUsar.addEventListener("click", () => {
+      if (anguloAtual == null) return;
+      preencher(anguloAtual);
+      RehabitToast.sucesso(`Amplitude preenchida com ${grau(anguloAtual)}.`);
+    });
+
+    botaoCaptura.addEventListener("click", async () => {
+      botaoCaptura.disabled = true;
+      try {
+        if (capturando) {
+          const estado = await RehabitGoniometro.pararCaptura();
+          const amplitude = estado && estado.captura ? estado.captura.amplitude : null;
+          if (amplitude != null) {
+            preencher(amplitude);
+            RehabitToast.sucesso(`Amplitude de ${grau(amplitude)} preenchida a partir da gravação.`);
+          } else {
+            RehabitToast.info("A gravação terminou sem leituras suficientes.");
+          }
+        } else {
+          await RehabitGoniometro.iniciarCaptura();
+          RehabitToast.info("Gravando — peça o movimento completo da articulação.");
+        }
+      } catch (err) {
+        RehabitToast.erro(err.message);
+      } finally {
+        botaoCaptura.disabled = false;
+      }
+    });
+
+    RehabitGoniometro.conectar(desenhar).catch(() => {
+      // Clínica sem goniômetro cadastrado ou API fora: o painel simplesmente
+      // não aparece e o campo de amplitude segue manual, como antes.
+    });
+  })();
 
   const params = new URLSearchParams(window.location.search);
   const idPaciente = params.get("id");

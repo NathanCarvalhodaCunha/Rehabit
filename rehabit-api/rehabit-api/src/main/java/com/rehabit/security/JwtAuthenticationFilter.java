@@ -39,8 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String header = request.getHeader("Authorization");
-        String token = (header != null && header.startsWith("Bearer ")) ? header.substring(7) : null;
+        String token = extrairToken(request);
         JwtService.TokenDados dados = token != null ? jwtService.validar(token) : null;
 
         if (dados == null) {
@@ -54,6 +53,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             request.setAttribute(AuthContext.ATRIBUTO_ID_CLINICA, dados.idClinica());
         }
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * O token normalmente vem no cabeçalho Authorization. A exceção é o SSE do
+     * goniômetro: o EventSource do navegador não permite cabeçalhos
+     * customizados, então ali — e só ali — o token também é aceito na query
+     * string. Restringir ao caminho do stream evita que tokens comecem a
+     * circular em URLs (e portanto em logs de acesso e no histórico) do resto
+     * da API.
+     */
+    private String extrairToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        if (request.getRequestURI().equals("/api/goniometro/stream")) {
+            String daQuery = request.getParameter("token");
+            if (daQuery != null && !daQuery.isBlank()) {
+                return daQuery;
+            }
+        }
+        return null;
     }
 
     /**

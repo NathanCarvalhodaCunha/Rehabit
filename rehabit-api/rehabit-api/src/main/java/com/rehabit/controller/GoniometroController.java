@@ -1,16 +1,27 @@
 package com.rehabit.controller;
 
+import com.rehabit.dto.GoniometroComandoDTO;
+import com.rehabit.dto.GoniometroComandoRespostaDTO;
 import com.rehabit.dto.GoniometroDTO;
+import com.rehabit.dto.GoniometroEstadoDTO;
 import com.rehabit.dto.GoniometroLeituraDTO;
 import com.rehabit.dto.GoniometroLeituraRespostaDTO;
 import com.rehabit.dto.GoniometroSincronizarDTO;
+import com.rehabit.dto.GoniometroTelemetriaDTO;
+import com.rehabit.exception.AuthException;
 import com.rehabit.security.AuthContext;
 import com.rehabit.service.DispositivoService;
 import com.rehabit.service.GoniometroService;
+import com.rehabit.service.GoniometroStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/goniometro")
@@ -18,13 +29,17 @@ import org.springframework.web.bind.annotation.*;
 public class GoniometroController {
 
     private final GoniometroService goniometroService;
+    private final GoniometroStream stream;
     private final DispositivoService dispositivoService;
 
-    public GoniometroController(GoniometroService goniometroService,
+    public GoniometroController(GoniometroService goniometroService, GoniometroStream stream,
                                   DispositivoService dispositivoService) {
         this.goniometroService = goniometroService;
+        this.stream = stream;
         this.dispositivoService = dispositivoService;
     }
+
+    // ---------------- Cadastro do aparelho ----------------
 
     @GetMapping
     public ResponseEntity<GoniometroDTO> buscar(@RequestParam Integer idClinica, HttpServletRequest request) {
@@ -39,25 +54,100 @@ public class GoniometroController {
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    // ---------------- Aparelho -> servidor ----------------
+
     /**
-     * Aceita tanto um goniômetro pareado quanto a clínica logada. Vindo do
-     * aparelho, a clínica sai do próprio token — o corpo não manda idClinica,
-     * então um dispositivo não consegue escrever na clínica de outro.
+     * Pacote de telemetria do ESP32. A resposta carrega o próximo comando
+     * pendente e o intervalo de amostragem — é o único canal de volta que o
+     * aparelho tem.
+     *
+     * Vindo de um goniômetro pareado, a clínica sai do próprio token e o corpo
+     * não manda idClinica: é o que impede um aparelho de escrever na clínica de
+     * outro. A clínica logada também pode chamar (útil para testar sem
+     * hardware), e aí a clínica vem no corpo e a posse é conferida.
      */
+    @PostMapping("/telemetria")
+    public ResponseEntity<GoniometroComandoRespostaDTO> telemetria(@Valid @RequestBody GoniometroTelemetriaDTO dados,
+                                                                     HttpServletRequest request) {
+        if (AuthContext.idClinicaDoDispositivo(request) != null) {
+            Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
+            return ResponseEntity.ok(goniometroService.registrarTelemetriaDeDispositivo(idClinicaAtiva, dados));
+        }
+        if (dados.getIdClinica() == null) {
+            throw new AuthException("A clínica é obrigatória.", HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok(goniometroService.registrarTelemetria(
+                dados, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    // ---------------- Servidor -> site ----------------
+
+    /** Retrato completo (usado no primeiro render e como plano B do SSE). */
+    @GetMapping("/estado")
+    public ResponseEntity<GoniometroEstadoDTO> estado(@RequestParam Integer idClinica, HttpServletRequest request) {
+        return ResponseEntity.ok(goniometroService.estado(
+                idClinica, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    /**
+     * Fluxo de eventos em tempo real.
+     *
+     * O EventSource do navegador não deixa mandar cabeçalho, então o token vem
+     * na query string — o JwtAuthenticationFilter aceita esse formato só neste
+     * caminho.
+     */
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@RequestParam Integer idClinica, HttpServletRequest request) {
+        GoniometroEstadoDTO inicial = goniometroService.estado(
+                idClinica, AuthContext.id(request), AuthContext.tipo(request));
+        goniometroService.marcarInteresse(idClinica);
+
+        SseEmitter emitter = stream.inscrever(idClinica);
+        try {
+            // Estado inicial no próprio handshake: a tela já abre preenchida,
+            // sem esperar o próximo pacote do aparelho.
+            emitter.send(SseEmitter.event().name("estado").data(inicial));
+        } catch (IOException erro) {
+            emitter.completeWithError(erro);
+        }
+        return emitter;
+    }
+
+    // ---------------- Site -> aparelho ----------------
+
+    @PostMapping("/comando")
+    public ResponseEntity<GoniometroEstadoDTO> comando(@Valid @RequestBody GoniometroComandoDTO dados,
+                                                         HttpServletRequest request) {
+        return ResponseEntity.ok(goniometroService.enfileirarComando(
+                dados.getIdClinica(), dados.getComando(), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    @PostMapping("/captura/iniciar")
+    public ResponseEntity<GoniometroEstadoDTO> iniciarCaptura(@Valid @RequestBody GoniometroSincronizarDTO dados,
+                                                                HttpServletRequest request) {
+        return ResponseEntity.ok(goniometroService.iniciarCaptura(
+                dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    @PostMapping("/captura/parar")
+    public ResponseEntity<GoniometroEstadoDTO> pararCaptura(@Valid @RequestBody GoniometroSincronizarDTO dados,
+                                                              HttpServletRequest request) {
+        return ResponseEntity.ok(goniometroService.pararCaptura(
+                dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    // ---------------- Compatibilidade com o firmware/telas antigos ----------------
+
     @PostMapping("/leitura")
     public ResponseEntity<Void> registrarLeitura(@Valid @RequestBody GoniometroLeituraDTO dados,
                                                     HttpServletRequest request) {
-        Integer idClinicaDoToken = AuthContext.idClinicaDoDispositivo(request);
-
-        if (idClinicaDoToken != null) {
+        if (AuthContext.idClinicaDoDispositivo(request) != null) {
             Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
             goniometroService.registrarLeituraDeDispositivo(idClinicaAtiva, dados.getAngulo());
             return ResponseEntity.ok().build();
         }
-
         if (dados.getIdClinica() == null) {
-            throw new com.rehabit.exception.AuthException("A clínica é obrigatória.",
-                    org.springframework.http.HttpStatus.BAD_REQUEST);
+            throw new AuthException("A clínica é obrigatória.", HttpStatus.BAD_REQUEST);
         }
         goniometroService.registrarLeitura(
                 dados.getIdClinica(), AuthContext.id(request), AuthContext.tipo(request), dados.getAngulo());

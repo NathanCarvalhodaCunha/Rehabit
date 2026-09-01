@@ -102,6 +102,28 @@
           <div class="field">
             <label for="s-amp">Amplitude média (graus)</label>
             <input id="s-amp" type="number" step="0.01" />
+            <!-- Leitura do goniômetro ligada direto ao campo acima: dá para
+                 usar o ângulo parado ou gravar o movimento inteiro e deixar
+                 a amplitude (máx - mín) cair aqui sozinha. -->
+            <div class="gonio-inline" data-gonio-inline hidden>
+              <div class="gonio-inline-topo">
+                <span class="conn-badge" data-conn="aguardando">
+                  <span class="conn-dot" aria-hidden="true"></span>
+                  <span class="conn-text">Conectando…</span>
+                </span>
+                <span class="gonio-inline-valor"><span data-gonio-angulo>–</span><span class="gonio-inline-deg">°</span></span>
+              </div>
+              <div class="gonio-inline-stats">
+                <span>Mín. <strong data-gonio-min>–</strong></span>
+                <span>Máx. <strong data-gonio-max>–</strong></span>
+                <span>Amplitude <strong data-gonio-amp>–</strong></span>
+              </div>
+              <div class="gonio-inline-acoes">
+                <button type="button" class="btn-outline" data-gonio-usar>Usar ângulo atual</button>
+                <button type="button" class="btn-outline" data-gonio-captura>Gravar movimento</button>
+              </div>
+              <p class="field-hint" data-gonio-dica>Ligue o goniômetro para preencher a amplitude automaticamente.</p>
+            </div>
           </div>
           <div class="field">
             <label for="s-dor">Dor relatada (0 a 10)</label>
@@ -143,6 +165,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./goniometro.js"></script>
   <script src="./pages/cadastrar-sessao.js"></script>
 </body>
 </html>
