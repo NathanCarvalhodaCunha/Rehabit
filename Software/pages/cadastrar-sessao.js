@@ -5,6 +5,12 @@
   const sessao = getSessao();
   if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
 
+  /* Qual captura preencheu a amplitude. Fica no escopo da tela porque quem
+     escreve é o painel do goniômetro e quem lê é o envio do formulário: vai
+     junto no POST para o servidor anexar a curva daquele movimento, e só
+     daquele. */
+  let capturaUsada = null;
+
   /* Goniômetro ao vivo dentro do formulário: o profissional não precisa sair
      para a tela Dispositivo, anotar o número e voltar. O painel só aparece
      depois que o canal abre — sem aparelho na clínica, o formulário fica
@@ -76,6 +82,8 @@
 
     botaoUsar.addEventListener("click", () => {
       if (anguloAtual == null) return;
+      // Um ângulo solto não tem curva: é um instante, não um movimento.
+      capturaUsada = null;
       preencher(anguloAtual);
       RehabitToast.sucesso(`Amplitude preenchida com ${grau(anguloAtual)}.`);
     });
@@ -87,6 +95,7 @@
           const estado = await RehabitGoniometro.pararCaptura();
           const amplitude = estado && estado.captura ? estado.captura.amplitude : null;
           if (amplitude != null) {
+            capturaUsada = estado.captura.iniciadaEm || null;
             preencher(amplitude);
             RehabitToast.sucesso(`Amplitude de ${grau(amplitude)} preenchida a partir da gravação.`);
           } else {
@@ -101,6 +110,12 @@
       } finally {
         botaoCaptura.disabled = false;
       }
+    });
+
+    /* Editar o número na mão desfaz o vínculo com a captura: a curva mostraria
+       um movimento que não bate com a amplitude registrada. */
+    campoAmplitude.addEventListener("input", (e) => {
+      if (e.isTrusted) capturaUsada = null;
     });
 
     RehabitGoniometro.conectar(desenhar).catch(() => {
@@ -257,8 +272,10 @@
         amplitudeMedia: amplitude ? Number(amplitude) : null,
         observacoes: observacoes || null,
         dor: campoDor ? Number(campoDor.value) : null,
+        capturaIniciadaEm: capturaUsada,
         idFisioterapeuta: sessao.id,
       });
+      capturaUsada = null;
       form.reset();
       if (campoData) campoData.value = hojeIso;
       await carregarPacienteEHistorico();

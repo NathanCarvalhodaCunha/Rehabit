@@ -67,6 +67,14 @@ public class GoniometroService {
     /** Depois desse tempo sem ninguém pedir dados, o aparelho volta ao ritmo lento. */
     private static final long INTERESSE_VALIDO_SEGUNDOS = 20;
 
+    /**
+     * Teto de pontos guardados na curva de uma captura. A 10 Hz dá 2 minutos
+     * de movimento; passando disso a série é decimada pela metade (e o passo
+     * dobra), então uma captura longa continua cobrindo o movimento INTEIRO,
+     * com menos resolução, em vez de ser cortada no meio.
+     */
+    private static final int MAX_PONTOS_CURVA = 1200;
+
     /** O cadastro no banco só é reescrito de tempos em tempos — não a cada amostra. */
     private static final long INTERVALO_PERSISTENCIA_SEGUNDOS = 20;
 
@@ -104,6 +112,15 @@ public class GoniometroService {
         volatile BigDecimal capturaSoma = BigDecimal.ZERO;
         volatile int capturaAmostras;
         volatile GoniometroCapturaDTO ultimaCaptura;
+
+        /** A curva em si: pares (ms desde o início, ângulo), sempre sob synchronized(estado). */
+        final List<Amostra> capturaSerie = new ArrayList<>();
+        /** Guarda 1 a cada N amostras; dobra sempre que a série bate no teto. */
+        int capturaPasso = 1;
+        int capturaVistas;
+        /** JSON da última captura encerrada, esperando ser anexado a uma sessão. */
+        volatile String ultimaCurva;
+        volatile Long ultimaCurvaIniciadaEm;
 
         final Deque<Amostra> historico = new ArrayDeque<>();
         final Queue<String> comandos = new ConcurrentLinkedQueue<>();
@@ -175,7 +192,7 @@ public class GoniometroService {
         estado.conectadoNaUltimaChecagem = true;
 
         registrarAmostra(estado, agora, angulo);
-        acumularCaptura(estado, angulo);
+        acumularCaptura(estado, angulo, agora);
         persistirSePreciso(idClinica, estado, agora, estavaOffline);
 
         stream.publicar(idClinica, "estado", montarEstado(idClinica, estado, false));
@@ -199,7 +216,7 @@ public class GoniometroService {
         }
     }
 
-    private void acumularCaptura(EstadoVivo estado, BigDecimal angulo) {
+    private void acumularCaptura(EstadoVivo estado, BigDecimal angulo, Instant agora) {
         if (!estado.capturando || angulo == null) {
             return;
         }
@@ -211,7 +228,49 @@ public class GoniometroService {
             estado.capturaMaximo = estado.capturaMaximo == null ? angulo : estado.capturaMaximo.max(angulo);
             estado.capturaSoma = estado.capturaSoma.add(angulo);
             estado.capturaAmostras++;
+
+            // Mín/máx/média veem TODAS as amostras (é o número que vai para a
+            // sessão); só a curva é rala, e apenas quando fica longa demais.
+            estado.capturaVistas++;
+            if (estado.capturaVistas % estado.capturaPasso != 0) {
+                return;
+            }
+            long desdeInicio = estado.capturaInicio == null ? 0
+                    : Duration.between(estado.capturaInicio, agora).toMillis();
+            estado.capturaSerie.add(new Amostra(desdeInicio, angulo));
+            if (estado.capturaSerie.size() >= MAX_PONTOS_CURVA) {
+                decimar(estado);
+            }
         }
+    }
+
+    /** Joga fora um ponto sim, um não, e passa a guardar metade das amostras. */
+    private void decimar(EstadoVivo estado) {
+        List<Amostra> ralo = new ArrayList<>(estado.capturaSerie.size() / 2 + 1);
+        for (int i = 0; i < estado.capturaSerie.size(); i += 2) {
+            ralo.add(estado.capturaSerie.get(i));
+        }
+        estado.capturaSerie.clear();
+        estado.capturaSerie.addAll(ralo);
+        estado.capturaPasso *= 2;
+    }
+
+    /**
+     * Serializa a curva como JSON: [[msDesdeOInicio, angulo], ...]. É montado
+     * na mão porque só há números — nada para escapar — e assim a coluna do
+     * banco fica com o formato exato que o gráfico do site consome.
+     */
+    private static String serializarCurva(List<Amostra> serie) {
+        if (serie.isEmpty()) {
+            return null;
+        }
+        StringBuilder json = new StringBuilder(serie.size() * 12).append('[');
+        for (int i = 0; i < serie.size(); i++) {
+            Amostra a = serie.get(i);
+            if (i > 0) json.append(',');
+            json.append('[').append(a.instante()).append(',').append(a.angulo().toPlainString()).append(']');
+        }
+        return json.append(']').toString();
     }
 
     /**
@@ -343,6 +402,14 @@ public class GoniometroService {
             estado.capturaSoma = estado.angulo != null ? estado.angulo : BigDecimal.ZERO;
             estado.capturaAmostras = estado.angulo != null ? 1 : 0;
             estado.ultimaCaptura = null;
+            estado.capturaSerie.clear();
+            estado.capturaPasso = 1;
+            estado.capturaVistas = 0;
+            if (estado.angulo != null) {
+                estado.capturaSerie.add(new Amostra(0, estado.angulo));
+            }
+            estado.ultimaCurva = null;
+            estado.ultimaCurvaIniciadaEm = null;
         }
         estado.comandos.add("INICIAR_CAPTURA");
         GoniometroEstadoDTO dto = montarEstado(idClinica, estado, true);
@@ -357,6 +424,7 @@ public class GoniometroService {
         synchronized (estado) {
             if (estado.capturando) {
                 estado.ultimaCaptura = montarCaptura(estado, false);
+                guardarCurva(estado);
             }
             estado.capturando = false;
         }
@@ -455,6 +523,7 @@ public class GoniometroService {
                 synchronized (estado) {
                     if (estado.capturando) {
                         estado.ultimaCaptura = montarCaptura(estado, false);
+                        guardarCurva(estado);
                         estado.capturando = false;
                     }
                 }
@@ -498,6 +567,33 @@ public class GoniometroService {
             dto.setHistorico(amostras);
         }
         return dto;
+    }
+
+    /** Chamado sempre sob synchronized(estado). */
+    private void guardarCurva(EstadoVivo estado) {
+        estado.ultimaCurva = serializarCurva(estado.capturaSerie);
+        estado.ultimaCurvaIniciadaEm = estado.capturaInicio == null ? null : estado.capturaInicio.toEpochMilli();
+    }
+
+    /**
+     * A curva da captura que o formulário de sessão diz ter usado, ou null.
+     *
+     * O id é o instante em que a captura começou: se o servidor reiniciou, se
+     * outra captura rodou por cima ou se a tela está com dado velho, os ids não
+     * batem e a sessão é salva sem curva — melhor perder o gráfico do que
+     * pendurar no paciente a curva de outro movimento.
+     */
+    public String curvaDaCaptura(Integer idClinica, Long iniciadaEm) {
+        if (idClinica == null || iniciadaEm == null) {
+            return null;
+        }
+        EstadoVivo estado = estados.get(idClinica);
+        if (estado == null) {
+            return null;
+        }
+        synchronized (estado) {
+            return iniciadaEm.equals(estado.ultimaCurvaIniciadaEm) ? estado.ultimaCurva : null;
+        }
     }
 
     private GoniometroCapturaDTO montarCaptura(EstadoVivo estado, boolean ativa) {

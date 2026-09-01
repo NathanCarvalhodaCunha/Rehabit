@@ -2736,3 +2736,35 @@ button.form-avatar {
 }
 .gonio-inline-acoes .btn-outline:disabled { opacity: .5; cursor: not-allowed; }
 .gonio-inline .field-hint { margin: 0; }
+
+/* ---------- Curva do movimento (histórico do paciente) ---------- */
+.btn-curva {
+  margin-left: 8px;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  background: #FFFFFF; color: var(--brand);
+  font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.btn-curva:hover { background: #F9FAFB; border-color: #C7D2FE; }
+/* O modal de resumo é estreito para texto; um gráfico precisa de largura. */
+.resumo-caixa.curva-larga { width: min(720px, 100%); }
+.curva-topo { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.curva-topo h3 { margin: 0; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
+.curva-topo span { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.curva-indicadores {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+  padding: 14px 0; margin-top: 10px;
+  border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+}
+.curva-indicadores div { text-align: center; min-width: 0; }
+.curva-indicadores strong {
+  display: block; font-size: 17px; font-weight: 800; color: var(--brand);
+  font-variant-numeric: tabular-nums;
+}
+.curva-indicadores span {
+  font-size: 11px; font-weight: 700; color: var(--ink-muted);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.curva-caixa { position: relative; height: 260px; margin-top: 14px; }
+.curva-legenda { margin: 10px 0 0; font-size: 12.5px; font-weight: 500; color: var(--ink-muted); }

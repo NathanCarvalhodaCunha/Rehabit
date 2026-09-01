@@ -12,6 +12,7 @@ import com.rehabit.service.SessaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,5 +71,18 @@ public class PacienteController {
     public ResponseEntity<List<SessaoDTO>> listarSessoes(@PathVariable Integer id, HttpServletRequest request) {
         return ResponseEntity.ok(sessaoService.listarPorPaciente(
                 id, AuthContext.id(request), AuthContext.tipo(request)));
+    }
+
+    /**
+     * A curva do movimento gravada naquela sessão, já no formato que o gráfico
+     * consome: [[ms desde o início, ângulo], ...]. Sai como JSON puro porque é
+     * exatamente o que foi guardado — envolver num objeto só para desembrulhar
+     * no cliente não acrescentaria nada.
+     */
+    @GetMapping(value = "/{id}/sessoes/{idSessao}/curva", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> buscarCurva(@PathVariable Integer id, @PathVariable Integer idSessao,
+                                                 HttpServletRequest request) {
+        return ResponseEntity.ok(sessaoService.buscarCurva(
+                id, idSessao, AuthContext.id(request), AuthContext.tipo(request)));
     }
 }
