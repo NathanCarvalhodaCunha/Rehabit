@@ -131,6 +131,11 @@
 
   function itemHtml(a) {
     const ehHistorico = abaAtual === "realizadas";
+    // Consulta que já aconteceu (ou que já teve presença registrada) não se
+    // remarca: mudar a data dela reescreveria o histórico e apagaria o
+    // registro do atendimento. Nesses casos o caminho é marcar um novo
+    // agendamento — o que já aconteceu fica como está.
+    const jaAconteceu = ehHistorico || a.status === "REALIZADA" || a.status === "FALTOU";
     const remarcadaDe = a.dataOriginal
       ? `<div class="agenda-obs">Remarcada de ${formatarDataCurta(a.dataOriginal)}${
           a.horaOriginal ? " às " + formatarHoraCurta(a.horaOriginal) : ""
@@ -149,7 +154,7 @@
           <div class="agenda-presenca">
             <button type="button" data-presenca="REALIZADA" data-id="${a.id}">Compareceu</button>
             <button type="button" data-presenca="FALTOU" data-id="${a.id}">Faltou</button>
-            <button type="button" data-remarcar="${a.id}">Remarcar</button>
+            ${jaAconteceu ? "" : `<button type="button" data-remarcar="${a.id}">Remarcar</button>`}
           </div>
           ${
             ehHistorico

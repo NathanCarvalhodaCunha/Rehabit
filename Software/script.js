@@ -126,6 +126,24 @@ async function apiDelete(caminho) {
   }
 }
 
+/**
+ * As bibliotecas de CDN (Toastify, GSAP, Chart.js) são carregadas com
+ * "async" para que um CDN que não responde não segure os scripts da própria
+ * tela — era isso que deixava a Home em branco, sem indicadores, sem
+ * pacientes e sem busca, até o navegador desistir do pedido. O preço é que
+ * elas podem chegar depois de nós: aqui esperamos a que faltar até o limite
+ * e chamamos `entao(false)` se ela não vier, para a tela dizer o que houve
+ * em vez de ficar esperando para sempre.
+ */
+function aoTerBiblioteca(nomeGlobal, entao, limiteMs) {
+  const prazo = Date.now() + (limiteMs || 6000);
+  (function tentar() {
+    if (typeof window[nomeGlobal] !== "undefined") return entao(true);
+    if (Date.now() > prazo) return entao(false);
+    setTimeout(tentar, 50);
+  })();
+}
+
 function urlFoto(caminhoFoto) {
   if (!caminhoFoto) return null;
   if (caminhoFoto.startsWith("http")) return caminhoFoto;
@@ -170,25 +188,44 @@ window.addEventListener("pageshow", (e) => {
 
   /**
    * Telas compartilhadas (Desempenho, por exemplo) foram feitas a partir do
-   * modelo da instituição e trazem "./instituicao.html" fixo no menu. Um
-   * profissional que clicasse em Home ali caía na tela da clínica. Aqui o
-   * link de Home de qualquer tela é reapontado para a casa de quem está
+   * modelo da instituição e trazem "./instituicao.html" e
+   * "./perfil-instituicao.html" fixos no menu. Um profissional que clicasse
+   * em Home ali caía na tela da clínica, e em Perfil no perfil dela. Aqui os
+   * dois links de qualquer tela são reapontados para a área de quem está
    * logado — e no tema certo.
    */
-  (function corrigirLinksDeHome() {
-    const home = ehClinica ? "instituicao" : "profissional";
-    const outra = ehClinica ? "profissional" : "instituicao";
-    document
-      .querySelectorAll(`a[href$="${outra}.html"], a[href$="${outra}-escuro.html"]`)
-      .forEach((link) => {
-        link.href = paginaTema(home);
+  (function corrigirLinksDeConta() {
+    // Home e Perfil são a mesma história: a tela compartilhada traz no menu
+    // o link do outro tipo de conta, e quem clica sai da própria área.
+    const paresDeTela = [
+      ehClinica ? ["profissional", "instituicao"] : ["instituicao", "profissional"],
+      ehClinica
+        ? ["perfil-profissional", "perfil-instituicao"]
+        : ["perfil-instituicao", "perfil-profissional"],
+    ];
+
+    // Comparar o nome do arquivo inteiro, e não o fim do href: "termina em
+    // profissional.html" pegava junto perfil-profissional.html,
+    // editar-perfil-profissional.html e cadastrar-profissional.html — era
+    // assim que o Perfil do profissional virava mais um atalho para a Home.
+    const nomeDoArquivo = (href) => href.split("/").pop();
+
+    document.querySelectorAll("a[href]").forEach((link) => {
+      const href = link.getAttribute("href") || "";
+      // Link com parâmetro é a clínica abrindo um profissional específico
+      // (perfil-profissional.html?id=7, profissional.html?idFisioterapeuta=7).
+      // Esse não é link de menu e não pode ser reapontado.
+      if (href.includes("?")) return;
+
+      const nome = nomeDoArquivo(href.split("#")[0]);
+      paresDeTela.forEach(([outra, propria]) => {
+        // A variante de tema também pode estar errada (link claro numa tela escura).
+        if (nome === `${outra}.html` || nome === `${outra}-escuro.html` ||
+            nome === `${propria}.html` || nome === `${propria}-escuro.html`) {
+          link.href = paginaTema(propria);
+        }
       });
-    // A variante de tema também pode estar errada (link claro numa tela escura).
-    document
-      .querySelectorAll(`a[href$="${home}.html"], a[href$="${home}-escuro.html"]`)
-      .forEach((link) => {
-        link.href = paginaTema(home);
-      });
+    });
   })();
 
   document.querySelectorAll(ehClinica ? seletorAgenda : seletorConsultas).forEach((el) => el.remove());

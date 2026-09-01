@@ -2495,7 +2495,11 @@ button.form-avatar {
   overflow-y: auto;
   background: #fff;
   border-radius: 16px;
-  padding: 26px 26px 22px;
+  /* O respiro de baixo fica no .resumo-acoes, e não como padding daqui:
+     em caixa com rolagem, Firefox e Safari não incluem o padding-bottom na
+     área rolável, então no fim da rolagem o botão encostava na borda
+     arredondada da caixa e tinha os cantos cortados. */
+  padding: 26px 26px 0;
   box-shadow: 0 24px 60px rgba(16,24,40,.3);
 }
 .resumo-fechar {
@@ -2529,7 +2533,11 @@ button.form-avatar {
 .resumo-bloco h4 { margin: 0 0 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); }
 .resumo-bloco p { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.55; color: var(--ink-strong); }
 .resumo-vazio { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
-.resumo-acoes { margin-top: 20px; }
+.resumo-acoes {
+  margin-top: 18px;
+  padding: 16px 0 24px;
+  border-top: 1px solid var(--hairline);
+}
 .resumo-acoes .btn-primary { display: block; width: 100%; text-align: center; text-decoration: none; }
 
 /* ---------- Remarcar consulta ---------- */
@@ -2543,9 +2551,13 @@ button.form-avatar {
 .remarcar-overlay.is-hidden { display: none; }
 .remarcar-caixa {
   width: min(480px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
   background: #fff;
   border-radius: 16px;
-  padding: 24px 24px 20px;
+  /* Mesma regra da caixa de resumo: o respiro de baixo é do .remarcar-acoes,
+     para os botões não encostarem na borda quando a caixa rola. */
+  padding: 24px 24px 0;
   box-shadow: 0 24px 60px rgba(16,24,40,.3);
 }
 .remarcar-caixa h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
@@ -2558,7 +2570,7 @@ button.form-avatar {
 }
 .remarcar-caixa .two-col { gap: 14px; }
 .remarcar-caixa .field-hint { margin: 0; }
-.remarcar-acoes { display: flex; gap: 10px; margin-top: 18px; }
+.remarcar-acoes { display: flex; gap: 10px; margin-top: 18px; padding-bottom: 22px; }
 .remarcar-acoes .btn-outline, .remarcar-acoes .btn-primary { flex: 1; text-align: center; }
 
 /* ---------- Agenda: consultas que já passaram ---------- */
