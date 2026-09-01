@@ -20,6 +20,8 @@ import java.time.LocalTime;
 public class ConfiguracaoService {
 
     private static final int DURACAO_PADRAO_MIN = 45;
+    private static final LocalTime ABERTURA_PADRAO = LocalTime.of(8, 0);
+    private static final LocalTime FECHAMENTO_PADRAO = LocalTime.of(18, 0);
 
     private final ConfiguracaoRepository configuracaoRepository;
     private final ClinicaRepository clinicaRepository;
@@ -42,7 +44,7 @@ public class ConfiguracaoService {
         return configuracaoRepository.findByTipoUsuarioAndIdUsuario(usuarioTipo, usuarioId)
                 .map(c -> new ConfiguracaoDTO(c.getHoraAbertura(), c.getHoraFechamento(),
                         c.getDuracaoPadraoMin(), c.isAvisarConflito()))
-                .orElseGet(() -> new ConfiguracaoDTO(LocalTime.of(8, 0), LocalTime.of(18, 0),
+                .orElseGet(() -> new ConfiguracaoDTO(ABERTURA_PADRAO, FECHAMENTO_PADRAO,
                         DURACAO_PADRAO_MIN, true));
     }
 
@@ -92,6 +94,71 @@ public class ConfiguracaoService {
         return configuracaoRepository.findByTipoUsuarioAndIdUsuario(tipoUsuario, idUsuario)
                 .map(Configuracao::isAvisarConflito)
                 .orElse(true);
+    }
+
+    /**
+     * Janela em que um profissional pode atender de fato.
+     *
+     * Cada conta guarda a própria configuração, então o horário que a clínica
+     * define ficava só no registro dela e não alcançava a agenda de ninguém:
+     * dava para marcar consulta com a clínica fechada. Aqui o horário da
+     * clínica é o limite de fora, e o do profissional só pode apertá-lo —
+     * nunca esticar. Se o profissional configurou uma faixa que não encosta
+     * na da clínica, vale a da clínica, que é quem abre as portas.
+     */
+    public ConfiguracaoDTO janelaDeAtendimento(Integer idFisioterapeuta) {
+        Configuracao doProfissional = configuracaoRepository
+                .findByTipoUsuarioAndIdUsuario("FISIOTERAPEUTA", idFisioterapeuta)
+                .orElse(null);
+        Configuracao daClinica = fisioterapeutaRepository.findById(idFisioterapeuta)
+                .flatMap(f -> configuracaoRepository.findByTipoUsuarioAndIdUsuario("CLINICA", f.getIdClinica()))
+                .orElse(null);
+
+        LocalTime abertura = maisTarde(valorOu(daClinica, Configuracao::getHoraAbertura, ABERTURA_PADRAO),
+                valorOu(doProfissional, Configuracao::getHoraAbertura, null));
+        LocalTime fechamento = maisCedo(valorOu(daClinica, Configuracao::getHoraFechamento, FECHAMENTO_PADRAO),
+                valorOu(doProfissional, Configuracao::getHoraFechamento, null));
+
+        if (!abertura.isBefore(fechamento)) {
+            abertura = valorOu(daClinica, Configuracao::getHoraAbertura, ABERTURA_PADRAO);
+            fechamento = valorOu(daClinica, Configuracao::getHoraFechamento, FECHAMENTO_PADRAO);
+        }
+
+        Integer duracao = duracaoDe(doProfissional);
+        if (duracao == null) {
+            duracao = duracaoDe(daClinica);
+        }
+
+        boolean avisarConflito = doProfissional != null ? doProfissional.isAvisarConflito()
+                : daClinica == null || daClinica.isAvisarConflito();
+
+        return new ConfiguracaoDTO(abertura, fechamento,
+                duracao == null ? DURACAO_PADRAO_MIN : duracao, avisarConflito);
+    }
+
+    private static Integer duracaoDe(Configuracao config) {
+        if (config == null || config.getDuracaoPadraoMin() == null || config.getDuracaoPadraoMin() <= 0) {
+            return null;
+        }
+        return config.getDuracaoPadraoMin();
+    }
+
+    private static LocalTime valorOu(Configuracao config, java.util.function.Function<Configuracao, LocalTime> campo,
+                                      LocalTime padrao) {
+        LocalTime valor = config == null ? null : campo.apply(config);
+        return valor == null ? padrao : valor;
+    }
+
+    private static LocalTime maisTarde(LocalTime a, LocalTime b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        return a.isAfter(b) ? a : b;
+    }
+
+    private static LocalTime maisCedo(LocalTime a, LocalTime b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        return a.isBefore(b) ? a : b;
     }
 
     @Transactional

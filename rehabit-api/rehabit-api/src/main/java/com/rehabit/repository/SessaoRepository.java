@@ -18,4 +18,6 @@ public interface SessaoRepository extends JpaRepository<Sessao, Integer> {
             List<Integer> idsFisioterapeuta, LocalDate inicio, LocalDate fim);
 
     List<Sessao> findByIdFisioterapeutaInOrderByDataSessaoDescHoraSessaoDesc(List<Integer> idsFisioterapeuta);
+
+    List<Sessao> findByIdFisioterapeutaOrderByDataSessaoDescHoraSessaoDesc(Integer idFisioterapeuta);
 }

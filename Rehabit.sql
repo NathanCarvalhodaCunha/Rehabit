@@ -4,6 +4,12 @@
 -- OS do Servidor:               Win64
 -- HeidiSQL Versão:              12.10.0.7000
 -- --------------------------------------------------------
+--
+-- Estrutura de referência do banco, equivalente ao que as entidades JPA
+-- descrevem em rehabit-api/src/main/java/com/rehabit/model. A aplicação sobe
+-- com spring.jpa.hibernate.ddl-auto=update e cria/atualiza as tabelas
+-- sozinha; este arquivo serve para montar o banco à mão ou conferir o
+-- desenho. Ao mexer numa entidade, atualize a tabela correspondente aqui.
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
@@ -23,7 +29,7 @@ USE `rehabit`;
 CREATE TABLE IF NOT EXISTS `tb01_clinica` (
   `tb01_id_clinica` int(11) NOT NULL AUTO_INCREMENT,
   `tb01_nome_clinica` varchar(150) NOT NULL,
-  `tb01_CNPJ` varchar(18) NOT NULL,
+  `tb01_CNPJ` varchar(18) DEFAULT NULL,
   `tb01_endereco_clinica` varchar(200) DEFAULT NULL,
   `tb01_telefone_clinica` varchar(20) DEFAULT NULL,
   `tb01_email_clinica` varchar(150) NOT NULL,
@@ -31,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `tb01_clinica` (
   `tb01_descricao_clinica` text DEFAULT NULL,
   `tb01_subtitulo` varchar(150) DEFAULT NULL,
   `tb01_foto_clinica` varchar(255) DEFAULT NULL,
+  `tb01_tutorial_visto` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`tb01_id_clinica`),
   UNIQUE KEY `tb01_CNPJ` (`tb01_CNPJ`),
   UNIQUE KEY `tb01_email_clinica` (`tb01_email_clinica`)
@@ -44,13 +51,14 @@ INSERT IGNORE INTO `tb01_clinica` (`tb01_id_clinica`, `tb01_nome_clinica`, `tb01
 CREATE TABLE IF NOT EXISTS `tb02_fisioterapeuta` (
   `tb02_id_fisioterapeuta` int(11) NOT NULL AUTO_INCREMENT,
   `tb02_nome_fisioterapeuta` varchar(150) NOT NULL,
-  `tb02_COFFITO` varchar(20) NOT NULL,
+  `tb02_COFFITO` varchar(20) DEFAULT NULL,
   `tb02_telefone_fisioterapeuta` varchar(20) DEFAULT NULL,
   `tb02_email_fisioterapeuta` varchar(150) NOT NULL,
   `tb02_senha_fisioterapeuta` varchar(255) NOT NULL,
   `tb02_descricao_fisioterapeuta` text DEFAULT NULL,
   `tb02_especialidade` varchar(100) DEFAULT NULL,
   `tb02_foto_fisioterapeuta` varchar(255) DEFAULT NULL,
+  `tb02_tutorial_visto` tinyint(1) NOT NULL DEFAULT 0,
   `tb02_id_clinica` int(11) NOT NULL,
   `tb02_localidade` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`tb02_id_fisioterapeuta`),
@@ -74,6 +82,15 @@ CREATE TABLE IF NOT EXISTS `tb03_paciente` (
   `tb03_data_inicio_tratamento` date DEFAULT NULL,
   `tb03_situacao` varchar(50) DEFAULT NULL,
   `tb03_status` varchar(50) DEFAULT NULL,
+  `tb03_foto_paciente` varchar(255) DEFAULT NULL,
+  -- Anamnese: o histórico que o profissional levanta na avaliação inicial.
+  `tb03_queixa_principal` text DEFAULT NULL,
+  `tb03_historico_clinico` text DEFAULT NULL,
+  `tb03_medicamentos` text DEFAULT NULL,
+  `tb03_contraindicacoes` text DEFAULT NULL,
+  -- Meta de amplitude do tratamento e o prazo combinado para alcançá-la.
+  `tb03_meta_amplitude` decimal(6,2) DEFAULT NULL,
+  `tb03_meta_data` date DEFAULT NULL,
   `tb03_id_clinica` int(11) NOT NULL,
   `tb03_id_fisioterapeuta` int(11) NOT NULL,
   PRIMARY KEY (`tb03_id_paciente`),
@@ -108,6 +125,9 @@ CREATE TABLE IF NOT EXISTS `tb05_sessoes` (
   `tb05_hora_sessoes` time DEFAULT NULL,
   `tb05_id_fisioterapeuta` int(11) NOT NULL,
   `tb05_id_paciente` int(11) NOT NULL,
+  -- Prontuário da sessão e a dor relatada pelo paciente (escala de 0 a 10).
+  `tb05_observacoes` text DEFAULT NULL,
+  `tb05_dor` int(11) DEFAULT NULL,
   PRIMARY KEY (`tb05_id_sessoes`),
   KEY `idx_tb05_id_fisioterapeuta` (`tb05_id_fisioterapeuta`),
   KEY `idx_tb05_id_paciente` (`tb05_id_paciente`),
@@ -139,6 +159,11 @@ CREATE TABLE IF NOT EXISTS `tb07_agendamento` (
   `tb07_observacao` varchar(255) DEFAULT NULL,
   `tb07_id_fisioterapeuta` int(11) NOT NULL,
   `tb07_id_paciente` int(11) NOT NULL,
+  -- AGENDADA (padrão), REALIZADA, FALTOU ou REMARCADA.
+  `tb07_status` varchar(20) DEFAULT NULL,
+  -- Data/hora em que a consulta estava marcada antes da primeira remarcação.
+  `tb07_data_original` date DEFAULT NULL,
+  `tb07_hora_original` time DEFAULT NULL,
   PRIMARY KEY (`tb07_id_agendamento`),
   KEY `idx_tb07_id_fisioterapeuta` (`tb07_id_fisioterapeuta`),
   KEY `idx_tb07_id_paciente` (`tb07_id_paciente`),
@@ -148,6 +173,75 @@ CREATE TABLE IF NOT EXISTS `tb07_agendamento` (
 
 -- Copiando dados para a tabela rehabit.tb07_agendamento: ~0 rows (aproximadamente)
 
+-- Copiando estrutura para tabela rehabit.tb07_notificacao
+-- (o prefixo tb07 repete o do agendamento; são tabelas diferentes)
+CREATE TABLE IF NOT EXISTS `tb07_notificacao` (
+  `tb07_id_notificacao` int(11) NOT NULL AUTO_INCREMENT,
+  `tb07_id_clinica` int(11) NOT NULL,
+  `tb07_tipo` varchar(255) NOT NULL,
+  `tb07_mensagem` varchar(500) NOT NULL,
+  `tb07_lida` tinyint(1) NOT NULL DEFAULT 0,
+  `tb07_criada_em` datetime(6) NOT NULL,
+  PRIMARY KEY (`tb07_id_notificacao`),
+  KEY `idx_tb07_notificacao_id_clinica` (`tb07_id_clinica`),
+  CONSTRAINT `fk_tb07_notificacao_tb01` FOREIGN KEY (`tb07_id_clinica`) REFERENCES `tb01_clinica` (`tb01_id_clinica`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb07_notificacao: ~0 rows (aproximadamente)
+
+-- Copiando estrutura para tabela rehabit.tb08_configuracao
+-- Preferências de uma conta, chaveadas por (tipo, id do usuário) em vez de
+-- virarem colunas repetidas em tb01_clinica e tb02_fisioterapeuta. Por isso
+-- não há chave estrangeira aqui: o mesmo id pode ser de uma clínica ou de um
+-- profissional, dependendo do tipo.
+CREATE TABLE IF NOT EXISTS `tb08_configuracao` (
+  `tb08_id_configuracao` int(11) NOT NULL AUTO_INCREMENT,
+  `tb08_tipo_usuario` varchar(20) NOT NULL,
+  `tb08_id_usuario` int(11) NOT NULL,
+  `tb08_hora_abertura` time DEFAULT NULL,
+  `tb08_hora_fechamento` time DEFAULT NULL,
+  `tb08_duracao_padrao_min` int(11) DEFAULT NULL,
+  `tb08_avisar_conflito` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`tb08_id_configuracao`),
+  UNIQUE KEY `uk_tb08_usuario` (`tb08_tipo_usuario`, `tb08_id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb08_configuracao: ~0 rows (aproximadamente)
+
+-- Copiando estrutura para tabela rehabit.tb09_dispositivo
+-- Um goniômetro pareado com uma clínica. tb09_ativo é a revogação: o token do
+-- aparelho é um JWT e não dá para invalidar sozinho, então cada leitura
+-- confere esta coluna.
+CREATE TABLE IF NOT EXISTS `tb09_dispositivo` (
+  `tb09_id_dispositivo` int(11) NOT NULL AUTO_INCREMENT,
+  `tb09_nome` varchar(80) NOT NULL,
+  `tb09_id_clinica` int(11) NOT NULL,
+  `tb09_ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `tb09_criado_em` datetime(6) NOT NULL,
+  `tb09_ultimo_contato` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`tb09_id_dispositivo`),
+  KEY `idx_tb09_id_clinica` (`tb09_id_clinica`),
+  CONSTRAINT `fk_tb09_tb01` FOREIGN KEY (`tb09_id_clinica`) REFERENCES `tb01_clinica` (`tb01_id_clinica`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb09_dispositivo: ~0 rows (aproximadamente)
+
+-- Copiando estrutura para tabela rehabit.tb10_pareamento
+-- Código de uso único que a clínica mostra na tela para o goniômetro trocar
+-- por um token de acesso.
+CREATE TABLE IF NOT EXISTS `tb10_pareamento` (
+  `tb10_id_pareamento` int(11) NOT NULL AUTO_INCREMENT,
+  `tb10_codigo` varchar(6) NOT NULL,
+  `tb10_id_clinica` int(11) NOT NULL,
+  `tb10_expira_em` datetime(6) NOT NULL,
+  `tb10_usado` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`tb10_id_pareamento`),
+  KEY `idx_tb10_codigo` (`tb10_codigo`),
+  KEY `idx_tb10_id_clinica` (`tb10_id_clinica`),
+  CONSTRAINT `fk_tb10_tb01` FOREIGN KEY (`tb10_id_clinica`) REFERENCES `tb01_clinica` (`tb01_id_clinica`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Copiando dados para a tabela rehabit.tb10_pareamento: ~0 rows (aproximadamente)
 -- Copiando estrutura para tabela rehabit.tb11_recuperacao_senha
 CREATE TABLE IF NOT EXISTS `tb11_recuperacao_senha` (
   `tb11_id_recuperacao` int(11) NOT NULL AUTO_INCREMENT,
