@@ -132,6 +132,7 @@ que aparecem na configuração inicial:
 | No log | O que é |
 | --- | --- |
 | `Brevo respondeu 401: Key not found` | A chave não é reconhecida. Ou é a **chave de SMTP** (`xsmtpsib-`), que só vale para o relay SMTP, ou é a versão **mascarada** — o Brevo mostra a chave inteira uma única vez, e o que aparece na tela depois não funciona. Nos dois casos, gere uma chave de API v3 nova. |
+| `Brevo respondeu 401: unrecognised IP address` | A chave está certa; a conta do Brevo tem [restrição de IP](https://app.brevo.com/security/authorised_ips) ligada. Hospedado no Render o IP de saída vem de uma [faixa compartilhada](https://render.com/docs/outbound-ip-addresses) e muda, então autorizar o IP que aparece na mensagem resolve só até a próxima troca — o caminho estável é desligar a restrição. |
 | `Brevo respondeu 400: sender is not valid` | O endereço em `MAIL_FROM` não está verificado na conta do Brevo. |
 | `Brevo respondeu 402` ou `429` | Passou dos 300 e-mails do dia. |
 | `MailConnectException: Couldn't connect to host` (por SMTP) | O bloqueio de portas do Render. Use o Brevo. |

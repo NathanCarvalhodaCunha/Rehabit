@@ -79,7 +79,7 @@ class BrevoClient {
             // valid", chave errada etc.). Não há segredo nosso nele — a
             // chave vai no cabeçalho, que não é registrado aqui.
             throw new IOException("Brevo respondeu " + resposta.statusCode() + ": " + resposta.body()
-                    + dica(resposta.statusCode()));
+                    + dica(resposta.statusCode(), resposta.body()));
         }
     }
 
@@ -87,12 +87,24 @@ class BrevoClient {
      * Traduz os erros que aparecem na configuração inicial. Sem isso, o log
      * mostra só o código do Brevo e quem lê fica sem saber onde mexer.
      */
-    private static String dica(int status) {
+    private static String dica(int status, String corpo) {
+        String texto = corpo == null ? "" : corpo;
         return switch (status) {
-            case 401 -> " | Chave recusada. Confira dois pontos: (1) tem de ser a chave de API v3, "
-                    + "que começa com \"xkeysib-\" — a chave de SMTP (\"xsmtpsib-\") serve só para o "
-                    + "relay SMTP e é recusada aqui; (2) o Brevo mostra a chave inteira uma única vez, "
-                    + "então uma versão mascarada, copiada da tela depois, não funciona: gere outra.";
+            // O Brevo devolve 401 tanto para chave inválida quanto para IP não
+            // autorizado, e o conserto é em lugares diferentes. A mensagem dele
+            // fala em "IP address" só no segundo caso.
+            case 401 -> texto.contains("IP address") || texto.contains("authorised_ips")
+                    ? " | A chave está certa; o que o Brevo barrou foi o IP de onde a chamada saiu, "
+                            + "por causa da lista de IPs autorizados da conta "
+                            + "(https://app.brevo.com/security/authorised_ips). Hospedado no Render, "
+                            + "o IP de saída vem de uma faixa compartilhada e muda, então autorizar o "
+                            + "endereço que aparece acima resolve hoje e volta a falhar depois: o "
+                            + "caminho estável é desligar a restrição de IP na conta do Brevo."
+                    : " | Chave recusada. Confira dois pontos: (1) tem de ser a chave de API v3, "
+                            + "que começa com \"xkeysib-\" — a chave de SMTP (\"xsmtpsib-\") serve só "
+                            + "para o relay SMTP e é recusada aqui; (2) o Brevo mostra a chave inteira "
+                            + "uma única vez, então uma versão mascarada, copiada da tela depois, não "
+                            + "funciona: gere outra.";
             case 400 -> " | Se a mensagem fala em \"sender\", o endereço em MAIL_FROM precisa estar "
                     + "verificado na conta do Brevo (Senders, Domains & Dedicated IPs > Senders).";
             case 402, 429 -> " | Cota do Brevo esgotada (o plano gratuito envia 300 por dia).";
