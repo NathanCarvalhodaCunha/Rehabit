@@ -185,6 +185,20 @@
     }
   }
 
+  /* Releitura sob demanda do estado, para o botão "Atualizar agora": o canal
+     ao vivo já traz tudo sozinho, mas quando ele cai (ou o profissional
+     simplesmente quer confirmar) uma busca direta responde na hora. */
+  function atualizar() {
+    return idClinica()
+      .then(function (id) {
+        return buscarSilencioso("/goniometro/estado?idClinica=" + id);
+      })
+      .then(function (estado) {
+        if (estado) avisar(estado);
+        return estado;
+      });
+  }
+
   function comando(nome) {
     return idClinica().then(function (id) {
       return buscarSilencioso("/goniometro/comando", {
@@ -230,6 +244,7 @@
   window.RehabitGoniometro = {
     conectar: conectar,
     desconectar: desconectar,
+    atualizar: atualizar,
     comando: comando,
     iniciarCaptura: function () {
       return captura("iniciar");

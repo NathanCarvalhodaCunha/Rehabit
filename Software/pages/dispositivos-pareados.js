@@ -161,5 +161,9 @@
     if (e.key === "Escape" && !overlay.classList.contains("is-hidden")) fecharPareamento();
   });
 
+  // O botão "Atualizar agora" da tela avisa por evento; assim ele não precisa
+  // alcançar esta função nem saber que esta seção existe.
+  document.addEventListener("rehabit:atualizar", carregar);
+
   carregar();
 })();

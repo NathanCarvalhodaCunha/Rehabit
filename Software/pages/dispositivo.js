@@ -41,7 +41,7 @@
   const botaoTarar = cartaoVivo.querySelector('[data-action="tarar"]');
   const botaoIdentificar = cartaoVivo.querySelector('[data-action="identificar"]');
   const botaoReiniciar = document.querySelector('[data-action="reiniciar"]');
-  const botoesSync = document.querySelectorAll('[data-action="sync"]');
+  const botoesAtualizar = document.querySelectorAll('[data-action="atualizar"]');
 
   let ultimoEstado = null;
   let capturando = false;
@@ -224,7 +224,6 @@
     definirInfo("sinal", estado.conectado ? textoSinal(estado.rssi) : "–");
     definirInfo("ip", estado.ip || "–");
     definirInfo("contato", textoContato(estado.segundosDesdeContato));
-    definirInfo("sincronizacao", estado.sincronizadoEm || "–");
 
     const bateria = estado.bateria;
     document.querySelectorAll(".battery-num").forEach((el) => {
@@ -240,7 +239,7 @@
         ? "Dispositivo conectado"
         : estado.ultimoContato
         ? "Dispositivo offline"
-        : "Nenhum dispositivo sincronizado ainda";
+        : "Nenhum goniômetro pareado ainda";
     });
     document.querySelectorAll("[data-device-sub]").forEach((el) => {
       el.textContent = estado.numeroSerie ? `Rehabit Goniômetro · ${estado.numeroSerie}` : "Rehabit Goniômetro";
@@ -318,13 +317,19 @@
     });
   }
 
-  botoesSync.forEach((botao) => {
+  /* "Atualizar agora" relê o estado e a lista de pareados na hora. Não vai
+     buscar nada no goniômetro — o aparelho não escuta em porta nenhuma, quem
+     empurra os dados é ele. Serve para quando o canal ao vivo caiu ou algo
+     mudou em outra aba. */
+  botoesAtualizar.forEach((botao) => {
     botao.addEventListener("click", async () => {
       botao.disabled = true;
       try {
-        const idClinica = await RehabitGoniometro.idClinica();
-        await apiPost("/goniometro/sincronizar", { idClinica });
-        RehabitToast.sucesso("Dispositivo sincronizado.");
+        await RehabitGoniometro.atualizar();
+        // Cada módulo da tela recarrega o que é seu; assim este botão não
+        // precisa conhecer a lista de aparelhos pareados.
+        document.dispatchEvent(new CustomEvent("rehabit:atualizar"));
+        RehabitToast.sucesso("Dados atualizados.");
       } catch (err) {
         RehabitToast.erro(err.message);
       } finally {
