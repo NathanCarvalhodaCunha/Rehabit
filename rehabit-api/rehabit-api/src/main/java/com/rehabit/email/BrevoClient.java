@@ -78,7 +78,25 @@ class BrevoClient {
             // O corpo do erro do Brevo é curto e diz o motivo ("sender not
             // valid", chave errada etc.). Não há segredo nosso nele — a
             // chave vai no cabeçalho, que não é registrado aqui.
-            throw new IOException("Brevo respondeu " + resposta.statusCode() + ": " + resposta.body());
+            throw new IOException("Brevo respondeu " + resposta.statusCode() + ": " + resposta.body()
+                    + dica(resposta.statusCode()));
         }
+    }
+
+    /**
+     * Traduz os erros que aparecem na configuração inicial. Sem isso, o log
+     * mostra só o código do Brevo e quem lê fica sem saber onde mexer.
+     */
+    private static String dica(int status) {
+        return switch (status) {
+            case 401 -> " | Chave recusada. Confira dois pontos: (1) tem de ser a chave de API v3, "
+                    + "que começa com \"xkeysib-\" — a chave de SMTP (\"xsmtpsib-\") serve só para o "
+                    + "relay SMTP e é recusada aqui; (2) o Brevo mostra a chave inteira uma única vez, "
+                    + "então uma versão mascarada, copiada da tela depois, não funciona: gere outra.";
+            case 400 -> " | Se a mensagem fala em \"sender\", o endereço em MAIL_FROM precisa estar "
+                    + "verificado na conta do Brevo (Senders, Domains & Dedicated IPs > Senders).";
+            case 402, 429 -> " | Cota do Brevo esgotada (o plano gratuito envia 300 por dia).";
+            default -> "";
+        };
     }
 }

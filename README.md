@@ -124,6 +124,23 @@ A linha que o backend escreve ao subir diz qual caminho está valendo:
 `Envio de e-mail por BREVO...`, `Envio de e-mail por SMTP...` ou
 `Envio de e-mail desligado...`.
 
+### Quando o envio falha
+
+O erro vai inteiro para o log do backend, com uma dica do que conferir. Os
+que aparecem na configuração inicial:
+
+| No log | O que é |
+| --- | --- |
+| `Brevo respondeu 401: Key not found` | A chave não é reconhecida. Ou é a **chave de SMTP** (`xsmtpsib-`), que só vale para o relay SMTP, ou é a versão **mascarada** — o Brevo mostra a chave inteira uma única vez, e o que aparece na tela depois não funciona. Nos dois casos, gere uma chave de API v3 nova. |
+| `Brevo respondeu 400: sender is not valid` | O endereço em `MAIL_FROM` não está verificado na conta do Brevo. |
+| `Brevo respondeu 402` ou `429` | Passou dos 300 e-mails do dia. |
+| `MailConnectException: Couldn't connect to host` (por SMTP) | O bloqueio de portas do Render. Use o Brevo. |
+| `AuthenticationFailedException: 535` (por SMTP) | Senha de app do Gmail errada. |
+
+O formato da chave também é conferido no arranque: se ela tiver cara de
+chave de SMTP ou de chave mascarada, o log avisa antes de alguém tentar se
+cadastrar.
+
 ### Como o e-mail é validado no cadastro
 
 1. **Formato** — regra mais rígida que a padrão, que aceitaria coisas como `a@b`.

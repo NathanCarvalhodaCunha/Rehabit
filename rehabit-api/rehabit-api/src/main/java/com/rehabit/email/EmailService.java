@@ -65,6 +65,7 @@ public class EmailService {
                     + "endereço verificado no Brevo. Enquanto isso, os e-mails vão para este console.");
         } else if (temBrevo) {
             this.transporte = Transporte.BREVO;
+            conferirFormatoDaChave(chaveBrevo.trim());
         } else if (temSmtp) {
             this.transporte = Transporte.SMTP;
         } else {
@@ -79,6 +80,24 @@ public class EmailService {
 
         if (this.transporte != Transporte.CONSOLE) {
             log.info("Envio de e-mail por {}, remetente {}", this.transporte, mascarar(this.remetente));
+        }
+    }
+
+    /**
+     * Avisa no arranque quando a chave tem cara de estar errada, em vez de
+     * deixar o problema aparecer só quando alguém tenta se cadastrar. São os
+     * dois enganos que o Brevo devolve como "401 Key not found".
+     */
+    private static void conferirFormatoDaChave(String chave) {
+        if (chave.contains("*") || chave.contains("…")) {
+            log.error("A BREVO_API_KEY parece ser a versão mascarada da chave (tem \"*\"). O Brevo "
+                    + "mostra a chave inteira uma única vez; gere outra em SMTP & API > API Keys.");
+        } else if (chave.startsWith("xsmtpsib-")) {
+            log.error("A BREVO_API_KEY parece ser a chave de SMTP (\"xsmtpsib-\"), que só vale para o "
+                    + "relay SMTP. Aqui é preciso a chave de API v3, que começa com \"xkeysib-\".");
+        } else if (!chave.startsWith("xkeysib-")) {
+            log.warn("A BREVO_API_KEY não começa com \"xkeysib-\". Se o envio for recusado com 401, "
+                    + "confira se copiou a chave de API v3 inteira.");
         }
     }
 
