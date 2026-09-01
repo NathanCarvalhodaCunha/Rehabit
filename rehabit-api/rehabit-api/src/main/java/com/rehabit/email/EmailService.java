@@ -124,11 +124,31 @@ public class EmailService {
             brevo.enviar(remetente, nomeRemetente, destinatario, assunto, corpoHtml, corpoTexto);
             log.info("E-mail \"{}\" enviado para {} pelo Brevo", assunto, mascarar(destinatario));
         } catch (IOException ex) {
-            // Exceção inteira, não só getMessage(): uma falha de conexão vem
-            // com mensagem nula e o log ficaria dizendo apenas "null".
-            log.error("Falha ao enviar o e-mail para {} pelo Brevo", mascarar(destinatario), ex);
+            // O motivo vai na própria linha da mensagem, além do rastro: é
+            // essa a linha que alguém copia do painel de logs para pedir
+            // ajuda, e sozinha ela precisa dizer o que houve.
+            log.error("Falha ao enviar o e-mail para {} pelo Brevo: {}",
+                    mascarar(destinatario), motivo(ex), ex);
             throw falhaNoEnvio();
         }
+    }
+
+    /**
+     * Descrição curta da falha para caber na linha da mensagem. Erro de
+     * conexão costuma vir com getMessage() nulo — daí cair no nome da
+     * classe e na causa, em vez de escrever "null".
+     */
+    private static String motivo(Throwable erro) {
+        if (erro.getMessage() != null && !erro.getMessage().isBlank()) {
+            return erro.getMessage();
+        }
+        String descricao = erro.getClass().getSimpleName();
+        Throwable causa = erro.getCause();
+        if (causa != null) {
+            descricao += " (" + causa.getClass().getSimpleName()
+                    + (causa.getMessage() == null ? "" : ": " + causa.getMessage()) + ")";
+        }
+        return descricao;
     }
 
     private void enviarPorSmtp(String destinatario, String assunto, String corpoHtml, String corpoTexto) {
@@ -142,10 +162,10 @@ public class EmailService {
             mailSender.send(mensagem);
             log.info("E-mail \"{}\" enviado para {} por SMTP", assunto, mascarar(destinatario));
         } catch (UnsupportedEncodingException | jakarta.mail.MessagingException ex) {
-            log.error("Falha ao montar o e-mail para {}", mascarar(destinatario), ex);
+            log.error("Falha ao montar o e-mail para {}: {}", mascarar(destinatario), motivo(ex), ex);
             throw falhaNoEnvio();
         } catch (org.springframework.mail.MailException ex) {
-            log.error("Falha ao enviar o e-mail para {} por SMTP", mascarar(destinatario), ex);
+            log.error("Falha ao enviar o e-mail para {} por SMTP: {}", mascarar(destinatario), motivo(ex), ex);
             throw falhaNoEnvio();
         }
     }
