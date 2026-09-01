@@ -352,11 +352,19 @@ function formatarDataLonga(dataIso) {
                 }</td>
               <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
               <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
+              <td class="sessao-acoes">
+                <button type="button" class="sessao-excluir" data-excluir-sessao="${s.id}"
+                  aria-label="Excluir sessão de ${escaparHtml(formatarDataLonga(s.data))}">Excluir</button>
+              </td>
             </tr>`
               )
               .join("")
-          : '<tr><td colspan="3">Ainda não há sessões registradas.</td></tr>';
+          : '<tr><td colspan="4">Ainda não há sessões registradas.</td></tr>';
         RehabitAnim.staggerList(tbody);
+        tbody.addEventListener("click", (e) => {
+          const botao = e.target.closest("[data-excluir-sessao]");
+          if (botao) RehabitSessao.excluir(idPaciente, botao.dataset.excluirSessao, botao);
+        });
       }
     })
     .catch((err) => {

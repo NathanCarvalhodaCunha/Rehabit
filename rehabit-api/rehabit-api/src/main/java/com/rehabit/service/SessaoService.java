@@ -70,6 +70,31 @@ public class SessaoService {
         return dto;
     }
 
+    /**
+     * Sessão registrada errada (paciente trocado, medição do goniômetro que
+     * saiu absurda) ficava para sempre no histórico e puxava a evolução para
+     * baixo, porque não havia como apagá-la. A medição da sessão sai junto:
+     * sozinha ela não significa nada e ainda entraria nas médias.
+     */
+    @Transactional
+    public void excluir(Integer idPaciente, Integer idSessao, Integer usuarioId, String usuarioTipo) {
+        pacienteService.carregarComPosse(idPaciente, usuarioId, usuarioTipo);
+
+        Sessao sessao = sessaoRepository.findById(idSessao)
+                .orElseThrow(() -> new AuthException("Sessão não encontrada.", HttpStatus.NOT_FOUND));
+        // A posse conferida foi a do paciente da URL; sem esta checagem daria
+        // para apagar a sessão de outro paciente citando um paciente próprio.
+        if (!sessao.getIdPaciente().equals(idPaciente)) {
+            throw new AuthException("Sessão não encontrada.", HttpStatus.NOT_FOUND);
+        }
+
+        Medicao medicao = medicaoRepository.findByIdSessao(idSessao);
+        if (medicao != null) {
+            medicaoRepository.delete(medicao);
+        }
+        sessaoRepository.delete(sessao);
+    }
+
     /** Fora de 0–10 a escala não significa nada, então guarda nulo. */
     private Integer dorValida(Integer dor) {
         if (dor == null || dor < 0 || dor > 10) {

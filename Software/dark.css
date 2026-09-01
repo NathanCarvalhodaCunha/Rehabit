@@ -350,6 +350,8 @@ body.dark .meta-topo h3 { color: #fff; }
 body.dark .meta-barra { background: #1B2647; }
 body.dark .anamnese-lista dd { color: #fff; }
 body.dark .anamnese-lista dd.vazio { color: var(--ink-muted); }
+body.dark .sessao-excluir { border-color: #1F2A50; color: #98A2BC; }
+body.dark .sessao-excluir:hover { background: rgba(255,142,142,.14); border-color: rgba(255,142,142,.4); color: #FF8E8E; }
 body.dark .timeline-item::before { background: #1B2647; }
 body.dark .timeline-marca { border-color: #101A38; }
 body.dark .timeline-item.is-agendamento .timeline-marca { background: #101A38; border-color: #2F80FF; }

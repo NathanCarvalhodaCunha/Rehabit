@@ -103,6 +103,7 @@
       eventos.push({
         data: s.data,
         tipo: "sessao",
+        idSessao: s.id,
         titulo: "Sessão realizada",
         detalhe: partes.join(" · ") + (s.observacoes ? ` — ${s.observacoes}` : ""),
       });
@@ -139,9 +140,22 @@
           <strong>${escapar(e.titulo)}</strong>
           ${e.detalhe ? `<span>${escapar(e.detalhe)}</span>` : ""}
         </div>
+        ${
+          e.idSessao
+            ? `<button type="button" class="sessao-excluir" data-excluir-sessao="${e.idSessao}"
+                 aria-label="Excluir sessão de ${escapar(formatarData(e.data))}">Excluir</button>`
+            : ""
+        }
       </li>`
       )
       .join("");
+
+    // No celular a tabela de sessões não aparece (é desktop-only), então a
+    // linha do tempo é o único lugar de onde dá para apagar uma sessão.
+    lista.addEventListener("click", (e) => {
+      const botao = e.target.closest("[data-excluir-sessao]");
+      if (botao) RehabitSessao.excluir(paciente.id, botao.dataset.excluirSessao, botao);
+    });
   }
 
   // --- WhatsApp ---

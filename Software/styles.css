@@ -818,6 +818,30 @@ button { font-family: inherit; cursor: pointer; }
 .sessions-table th { color: var(--ink-muted); font-weight: 600; }
 .sessions-table td { color: var(--ink-strong); font-weight: 600; border-top: 1px solid var(--hairline); }
 
+/* Excluir sessão: discreto na lista (é ação destrutiva, não convite) e
+   inequívoco quando o ponteiro chega nele. */
+.sessions-table td.sessao-acoes { text-align: right; width: 1%; white-space: nowrap; }
+.sessao-excluir {
+  border: 1px solid var(--hairline);
+  background: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.sessao-excluir:hover { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.35); color: #B91C1C; }
+.sessao-excluir:disabled { opacity: .5; cursor: default; }
+.sessao-excluir:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(220,38,38,.25); }
+/* Rótulo só para leitor de tela (cabeçalho da coluna de ações). */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+
 .add-card { padding: 24px; display: flex; flex-direction: column; justify-content: center; }
 .add-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
 .add-card p { margin: 0 0 16px; color: var(--ink-muted); font-weight: 600; font-size: 14px; }
@@ -2312,7 +2336,11 @@ button.form-avatar {
 
 /* ---------- Linha do tempo ---------- */
 .timeline { list-style: none; margin: 0; padding: 4px 0 0 4px; }
-.timeline-item { position: relative; padding: 0 0 20px 26px; }
+/* Linha em duas colunas: o corpo do evento e, à direita, a ação de excluir
+   (a marca do tempo é posicionada de forma absoluta e fica fora do fluxo). */
+.timeline-item { position: relative; padding: 0 0 20px 26px; display: flex; align-items: flex-start; gap: 12px; }
+.timeline-item .timeline-corpo { flex: 1; min-width: 0; }
+.timeline-item .sessao-excluir { flex-shrink: 0; padding: 4px 10px; font-size: 12px; }
 .timeline-item::before {
   content: "";
   position: absolute;
