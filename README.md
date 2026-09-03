@@ -54,8 +54,14 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 ## O goniômetro em tempo real
 
 O aparelho é um ESP32 com um MPU6050 preso ao segmento móvel da articulação.
-Ele calcula o ângulo com um filtro complementar (acelerômetro + giroscópio) e
-manda para a API; o navegador recebe cada leitura por **SSE**
+Ele estima a gravidade com um filtro complementar (acelerômetro + giroscópio)
+e mede o ângulo entre a gravidade de agora e a gravidade na pose marcada como
+zero — com o braço pendurado ao lado do tronco marca 0°, na horizontal marca
+90°, acima da cabeça ~180°. Como o zero vem dessa pose e não de um eixo
+escolhido no código, não importa em que orientação a placa é amarrada no
+braço. Em compensação a medida é sempre positiva (não distingue para que lado
+a articulação abriu) e é relativa à gravidade, não ao tronco: o paciente
+precisa estar ereto. O ângulo vai para a API; o navegador recebe cada leitura por **SSE**
 (`GET /api/goniometro/stream`), sem ficar perguntando de tempos em tempos.
 Quando o SSE não sobe — proxy que corta streaming, rede corporativa — o
 cliente cai sozinho para polling e continua funcionando.
