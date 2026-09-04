@@ -54,8 +54,14 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 ## O goniômetro em tempo real
 
 O aparelho é um ESP32 com um MPU6050 preso ao segmento móvel da articulação.
-Ele calcula o ângulo com um filtro complementar (acelerômetro + giroscópio) e
-manda para a API; o navegador recebe cada leitura por **SSE**
+Ele estima a gravidade com um filtro complementar (acelerômetro + giroscópio)
+e mede o ângulo entre a gravidade de agora e a gravidade na pose marcada como
+zero — com o braço pendurado ao lado do tronco marca 0°, na horizontal marca
+90°, acima da cabeça ~180°. Como o zero vem dessa pose e não de um eixo
+escolhido no código, não importa em que orientação a placa é amarrada no
+braço. Em compensação a medida é sempre positiva (não distingue para que lado
+a articulação abriu) e é relativa à gravidade, não ao tronco: o paciente
+precisa estar ereto. O ângulo vai para a API; o navegador recebe cada leitura por **SSE**
 (`GET /api/goniometro/stream`), sem ficar perguntando de tempos em tempos.
 Quando o SSE não sobe — proxy que corta streaming, rede corporativa — o
 cliente cai sozinho para polling e continua funcionando.
@@ -81,10 +87,22 @@ Na prática, dentro do sistema:
 - **Cadastrar sessão** — o mesmo canal aparece embutido no formulário: dá para
   usar o ângulo atual ou gravar o movimento completo e deixar a amplitude
   (máximo − mínimo) cair sozinha no campo, que é salvo como medição da sessão.
+- **Histórico do paciente** — a sessão que veio de uma gravação guarda também a
+  **curva do movimento**, e o botão "Ver curva" na linha do histórico mostra o
+  traçado inteiro: dá para ver se o paciente chegou ao máximo de uma vez ou aos
+  poucos, se travou no meio, se compensou voltando.
 
-As leituras vivem em memória enquanto a tela está aberta — são centenas por
-minuto e só interessam naquele momento. O que vai para o banco é o cadastro do
-aparelho e a amplitude que o profissional escolheu gravar na sessão.
+As leituras soltas vivem em memória enquanto a tela está aberta — são centenas
+por minuto e só interessam naquele momento. O que vai para o banco é o cadastro
+do aparelho, a amplitude que o profissional escolheu gravar na sessão e, quando
+ela veio de uma gravação, a curva daquele movimento (uma lista de pares
+`[ms desde o início, ângulo]`, decimada acima de 1200 pontos para uma captura
+longa continuar cobrindo o movimento inteiro em vez de ser cortada no meio).
+
+A curva é buscada no servidor pela identidade da captura, nunca enviada pelo
+navegador: se o profissional corrigir a amplitude à mão, o vínculo se desfaz e
+a sessão é salva sem curva — melhor não ter gráfico do que pendurar no paciente
+o traçado de um movimento que não corresponde ao número registrado.
 
 Para montar e gravar o aparelho, veja
 [`Firmware/goniometro-esp32-GUIA.md`](Firmware/goniometro-esp32-GUIA.md).

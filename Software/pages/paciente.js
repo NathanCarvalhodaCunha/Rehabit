@@ -344,12 +344,23 @@ function formatarDataLonga(dataIso) {
                     : ""
                 }</td>
               <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
-              <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
+              <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}${
+                  s.temCurva
+                    ? ` <button type="button" class="btn-curva" data-curva="${s.id}" data-curva-rotulo="${formatarDataLonga(
+                        s.data
+                      )}" title="Ver a curva do movimento">Ver curva</button>`
+                    : ""
+                }</td>
             </tr>`
               )
               .join("")
           : '<tr><td colspan="3">Ainda não há sessões registradas.</td></tr>';
         RehabitAnim.staggerList(tbody);
+        tbody.addEventListener("click", (e) => {
+          const botao = e.target.closest("[data-curva]");
+          if (!botao) return;
+          RehabitCurva.abrir(idPaciente, botao.dataset.curva, botao.dataset.curvaRotulo);
+        });
       }
     })
     .catch((err) => {

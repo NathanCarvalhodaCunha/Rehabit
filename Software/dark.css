@@ -425,3 +425,10 @@ body.dark .live-actions .btn-primary[data-capturando="true"]:hover { background:
 body.dark .gonio-inline { border-color: #1B2647; background: rgba(47,128,255,.08); }
 body.dark .gonio-inline-valor { color: #fff; }
 body.dark .gonio-inline-stats strong { color: #fff; }
+
+/* ---------- Curva do movimento (tema escuro) ---------- */
+body.dark .btn-curva { background: transparent; border-color: #2A3560; color: #2F80FF; }
+body.dark .btn-curva:hover { background: rgba(47,128,255,.10); border-color: #2F80FF; }
+body.dark .curva-topo h3 { color: #fff; }
+body.dark .curva-indicadores { border-color: #1B2647; }
+body.dark .curva-indicadores strong { color: #2F80FF; }

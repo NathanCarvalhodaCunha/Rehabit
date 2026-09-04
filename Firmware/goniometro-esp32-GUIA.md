@@ -56,9 +56,10 @@ Se a sua placa vai ficar sempre ligada no USB, abra o `.ino` e ponha
 `const int PINO_BATERIA = -1;`: o Rehabit deixa de mostrar bateria, em vez de
 mostrar um número inventado.
 
-**Onde fixar o sensor:** no segmento **móvel** da articulação (por exemplo, na
-perna, para medir o joelho), com o eixo X do chip acompanhando o osso. O outro
-segmento fica parado e serve de referência.
+**Onde fixar o sensor:** no segmento **móvel** da articulação — no braço, para
+medir o ombro; na perna, para o joelho. **Não importa a orientação** em que
+você amarra a placa: o zero não vem de um eixo escolhido no código, vem da
+pose que você marca com o botão Zerar (veja a Parte 3).
 
 ## 4. Selecionar a porta e gravar
 
@@ -91,9 +92,18 @@ goniômetro. Aparece um código de 6 dígitos com contagem regressiva: ele vale
 
 1. Ligue o aparelho. Sem configuração, ele cria um Wi-Fi chamado
    **Rehabit-Goniometro** (senha `rehabit123`).
-2. Conecte o celular nesse Wi-Fi — o portal abre sozinho.
-3. Escolha a rede da clínica, digite a senha dela e o código de 6 dígitos.
-4. O aparelho grava tudo na memória e reinicia já conectado.
+2. Conecte o celular nesse Wi-Fi.
+3. O portal costuma abrir sozinho. **Se não abrir, digite `http://192.168.4.1`
+   no navegador** — com o `http://` na frente, senão o navegador procura no
+   Google em vez de abrir a página.
+4. Escolha a rede da clínica, digite a senha dela e o código de 6 dígitos.
+5. O aparelho grava tudo na memória e reinicia já conectado.
+
+> **"Rede sem internet" é normal.** O goniômetro não é um roteador — essa
+> rede existe só para configurá-lo. Se o celular insistir em voltar para os
+> dados móveis, desligue os dados enquanto configura ou toque em "Manter
+> conexão". Prefira o celular ao notebook: no Windows o portal praticamente
+> nunca abre sozinho.
 
 Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 
@@ -109,22 +119,59 @@ valer na hora, sem mexer na senha de ninguém.
 
 ---
 
+# Parte 3 — Zerar o aparelho antes de medir
+
+Este passo é o que faz o número significar alguma coisa. Sem ele, o aparelho
+mostra o quanto se afastou da posição em que foi ligado — que não quer dizer
+nada clinicamente.
+
+1. Prenda o aparelho no **braço** do paciente (segmento móvel).
+2. Peça para ele deixar o braço **pendurado ao lado do tronco**, relaxado.
+3. Na tela **Dispositivo**, clique em **Zerar (tara)**.
+
+Pronto. Daí em diante:
+
+| Posição do braço | O aparelho marca |
+| --- | --- |
+| Pendurado ao lado do tronco | **0°** |
+| A meio caminho | ~45° |
+| Na horizontal, 90° com o tronco | **90°** |
+| Acima da cabeça | ~180° |
+
+O zero fica guardado na memória do aparelho: desligar e ligar não perde. Só
+refaça a tara ao trocar de paciente ou se remontar o aparelho no braço.
+
+## O que essa medida é (e o que não é)
+
+A conta é o **ângulo entre a gravidade de agora e a gravidade na hora da
+tara**. Duas consequências que valem saber:
+
+- **O número é sempre positivo (0 a 180).** Ele diz o quanto a articulação
+  abriu, não para que lado. Uma hiperextensão de 10° aparece como 10°, igual
+  a uma flexão de 10°.
+- **A referência é a gravidade, não o tronco.** Vale enquanto o paciente
+  estiver de pé ou sentado ereto. Se ele se inclinar 15° para a frente, o
+  aparelho marca 15° a mais do que o ângulo real da articulação. Vale lembrar
+  o paciente de manter o tronco reto durante a medida.
+
+---
+
 # Verificar que está funcionando
 
 Com o cabo USB ligado, abra o **Monitor Serial** (Ferramentas → Monitor
 Serial), velocidade **115200**. Você deve ver, em ordem:
 
 ```
-Rehabit — goniometro digital, firmware 2.1
+Rehabit — goniometro digital, firmware 2.2
 MPU6050 encontrado.
-Tara guardada: 0.00 graus
+Sem tara guardada: usando a posicao do boot como zero provisorio.
 Calibrando o giroscopio — mantenha o aparelho PARADO...
 Giroscopio calibrado (bias X=...)
 Numero de serie: A1B2-C3D4
 Sem token: use o portal para parear.      (ou: Token encontrado na memoria.)
 Wi-Fi conectado, IP: 192.168.1.55
 Pareado com a clinica "..."               (só na primeira vez)
-Angulo:  87.40 graus (bruto  87.40) | bateria 82% | RSSI -54 dBm
+Angulo:  87.40 graus (sem filtro  87.40) | bateria 82% | RSSI -54 dBm
 ```
 
 **Importante:** deixe o aparelho parado durante a calibração do giroscópio
@@ -172,7 +219,8 @@ rápido para ninguém.
 | `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
 | `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. |
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. |
-| O ângulo aumenta quando deveria diminuir | Troque `EIXO_INVERTIDO` para `true` em vez de remontar o sensor. |
+| O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
+| O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
 | O ângulo escorrega devagar com o aparelho parado | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
 | O ângulo treme demais | Abaixe `PESO_GIRO` (de `0.98` para `0.95`): o filtro passa a confiar mais na gravidade e menos na rotação. |
 | O site mostra "Desconectado" com o aparelho ligado | O site considera offline quem passa 8 segundos sem mandar pacote. Veja no Monitor Serial se os envios estão falhando e com qual status. |

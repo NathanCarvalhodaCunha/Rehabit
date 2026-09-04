@@ -11,10 +11,10 @@
   const sessao = getSessao();
   if (!sessao) return;
 
-  /* Faixa do mostrador. Vai um pouco abaixo de zero porque hiperextensão
-     existe (joelho e cotovelo passam de 0°) e o ponteiro não pode "sumir"
-     na ponta esquerda quando isso acontece. */
-  const ANGULO_MIN = -30;
+  /* Faixa do mostrador. O aparelho mede o quanto a articulação se afastou da
+     pose de zero, o que sai sempre positivo: 0° na pose marcada como zero,
+     180° no extremo oposto. */
+  const ANGULO_MIN = 0;
   const ANGULO_MAX = 180;
   const COMPRIMENTO_ARCO = 276.46;
 
@@ -291,7 +291,7 @@
     });
   }
 
-  comandoSimples(botaoTarar, "TARAR", "Tara enviada — o ângulo atual virou o zero do aparelho.");
+  comandoSimples(botaoTarar, "TARAR", "Zerado — esta posição virou 0°. Faça isso com o braço pendurado.");
   comandoSimples(botaoIdentificar, "IDENTIFICAR", "O LED do aparelho vai piscar por alguns segundos.");
   comandoSimples(botaoReiniciar, "REINICIAR", "Comando de reinício enviado ao aparelho.");
 

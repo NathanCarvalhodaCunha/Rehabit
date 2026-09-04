@@ -20,6 +20,21 @@ public class SessaoCreateDTO {
     /** Escala de dor 0–10 relatada pelo paciente. */
     private Integer dor;
 
+    /**
+     * Instante em que começou a captura do goniômetro que preencheu a
+     * amplitude, quando veio de uma. Serve de identificador: o servidor só
+     * anexa a curva se ela ainda for a mesma captura.
+     */
+    private Long capturaIniciadaEm;
+
+    public Long getCapturaIniciadaEm() {
+        return capturaIniciadaEm;
+    }
+
+    public void setCapturaIniciadaEm(Long capturaIniciadaEm) {
+        this.capturaIniciadaEm = capturaIniciadaEm;
+    }
+
     public Integer getDor() {
         return dor;
     }

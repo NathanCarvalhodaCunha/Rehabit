@@ -7,7 +7,9 @@
 //   1. Grave este código uma vez (veja o guia ao lado).
 //   2. Ao ligar sem configuração, o goniômetro cria um Wi-Fi chamado
 //      "Rehabit-Goniometro" (senha: rehabit123).
-//   3. Conecte o celular nesse Wi-Fi — abre sozinho um portal.
+//   3. Conecte o celular nesse Wi-Fi. O portal costuma abrir sozinho; se não
+//      abrir, digite http://192.168.4.1 no navegador. (O aviso de "sem
+//      internet" é esperado: essa rede serve só para configurar.)
 //   4. Escolha a rede da clínica, digite a senha dela e o código de 6
 //      dígitos que aparece na tela Dispositivo do Rehabit.
 //   5. O aparelho grava tudo na memória e reinicia já conectado.
@@ -17,11 +19,11 @@
 // passo 2.
 //
 // O que este firmware faz depois de pareado:
-//   * lê o MPU6050 a 100 Hz e calcula o ângulo com um filtro complementar
+//   * lê o MPU6050 a 100 Hz e estima a gravidade com um filtro complementar
 //     (acelerômetro + giroscópio), que não treme como o acelerômetro sozinho
 //     nem escorrega como o giroscópio sozinho;
-//   * calibra o giroscópio no boot e guarda a tara (o "zero" do aparelho) na
-//     memória, então ela sobrevive a desligar e ligar;
+//   * calibra o giroscópio no boot e guarda a pose de zero na memória, então
+//     ela sobrevive a desligar e ligar;
 //   * manda telemetria (ângulo, bateria, sinal, série, firmware) e obedece
 //     aos comandos que voltam na resposta — tarar, identificar, iniciar e
 //     parar captura, reiniciar;
@@ -37,9 +39,27 @@
 //   Botão BOOT   -> GPIO0 (já existe na placa; segurar 5 s reconfigura)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
 //
-// O MPU6050 deve ficar no segmento MÓVEL da articulação, com o eixo X do
-// chip apontando ao longo do osso. Se o ângulo crescer no sentido errado,
-// inverta EIXO_INVERTIDO abaixo em vez de remontar o sensor.
+// ================== COMO O ÂNGULO É MEDIDO ==================
+// O aparelho vai no segmento MÓVEL da articulação — no braço, para medir o
+// ombro. NÃO importa em que orientação ele é amarrado: o zero não vem de um
+// eixo escolhido no código, vem da pose que você marcar.
+//
+//   1. Prenda o aparelho no braço do paciente.
+//   2. Com o braço PENDURADO ao lado do tronco, clique em "Zerar (tara)" na
+//      tela Dispositivo. Aquela posição vira 0°.
+//   3. A partir daí o número é o quanto o braço se afastou dali:
+//        braço pendurado ................  0°
+//        braço na horizontal ............ 90°
+//        braço acima da cabeça ......... ~180°
+//
+// A conta é o ângulo entre a gravidade de agora e a gravidade na pose de
+// zero. Por sair de um produto escalar, ela é sempre positiva (0 a 180) —
+// mede o quanto o braço abriu, não para que lado. Uma hiperextensão de 10°
+// aparece como 10°, igual a uma flexão de 10°.
+//
+// A medida é em relação à GRAVIDADE, não ao tronco: vale enquanto o paciente
+// estiver de pé ou sentado ereto. Se ele se inclinar, o tronco sai da
+// vertical e o número deixa de corresponder ao ângulo da articulação.
 //
 // BIBLIOTECAS (Gerenciar Bibliotecas): "Adafruit MPU6050" e "WiFiManager"
 // (de tzapu).
@@ -61,7 +81,7 @@
 // em outro endereço.
 const char *BASE_URL = "https://rehabit-api-4tex.onrender.com/api";
 
-const char *VERSAO_FIRMWARE = "2.1";
+const char *VERSAO_FIRMWARE = "2.2";
 
 const char *AP_NOME = "Rehabit-Goniometro";
 const char *AP_SENHA = "rehabit123";
@@ -75,9 +95,6 @@ const int PINO_BATERIA = 34;
 
 const unsigned long SEGURAR_PARA_RESETAR_MS = 5000;
 const unsigned long AVISO_SEM_PAREAMENTO_MS = 30000;
-
-// Inverta se o ângulo aumentar quando deveria diminuir.
-const bool EIXO_INVERTIDO = false;
 
 // Peso do giroscópio no filtro complementar. Perto de 1 = mais suave e mais
 // sujeito a deriva; perto de 0 = mais fiel à gravidade e mais trêmulo.
@@ -100,9 +117,18 @@ Preferences memoria;
 String tokenDispositivo = "";
 String numeroSerie;
 
-float anguloFiltrado = 0.0f;
-float offsetTara = 0.0f;
-float biasGiroX = 0.0f;
+/* Gravidade estimada no referencial da placa. É a partir dela que sai o
+   ângulo: a inclinação é a diferença entre para onde a gravidade aponta agora
+   e para onde apontava na pose de zero. */
+float gx = 0.0f, gy = 0.0f, gz = 1.0f;
+
+/* A pose que vale 0°: braço pendurado ao lado do tronco. Guardada como o
+   vetor de gravidade daquele momento — e não como um número —, porque assim o
+   zero não depende de como a placa foi amarrada no braço. */
+float refX = 0.0f, refY = 0.0f, refZ = 0.0f;
+bool referenciaDefinida = false;
+
+float biasGiroX = 0.0f, biasGiroY = 0.0f, biasGiroZ = 0.0f;
 bool calibrado = false;
 bool capturando = false;
 
@@ -139,17 +165,23 @@ String carregarToken() {
   return token;
 }
 
-void salvarTara(float valor) {
+void salvarReferencia(float x, float y, float z) {
   memoria.begin("rehabit", false);
-  memoria.putFloat("tara", valor);
+  memoria.putFloat("refx", x);
+  memoria.putFloat("refy", y);
+  memoria.putFloat("refz", z);
   memoria.end();
 }
 
-float carregarTara() {
+/** Preenche refX/Y/Z do que estiver guardado; devolve false se nunca houve tara. */
+bool carregarReferencia() {
   memoria.begin("rehabit", true);
-  float valor = memoria.getFloat("tara", 0.0f);
+  refX = memoria.getFloat("refx", 0.0f);
+  refY = memoria.getFloat("refy", 0.0f);
+  refZ = memoria.getFloat("refz", 0.0f);
   memoria.end();
-  return valor;
+  // Vetor de gravidade tem módulo ~9,8; perto de zero significa "não gravado".
+  return sqrtf(refX * refX + refY * refY + refZ * refZ) > 0.5f;
 }
 
 void apagarConfiguracao() {
@@ -239,30 +271,61 @@ int lerBateria() {
 void calibrarGiroscopio() {
   Serial.println("Calibrando o giroscopio — mantenha o aparelho PARADO...");
   const int amostras = 400;
-  float soma = 0;
+  float somaX = 0, somaY = 0, somaZ = 0;
   for (int i = 0; i < amostras; i++) {
     sensors_event_t accel, gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
-    soma += gyro.gyro.x;
+    somaX += gyro.gyro.x;
+    somaY += gyro.gyro.y;
+    somaZ += gyro.gyro.z;
     delay(5);
   }
-  biasGiroX = soma / amostras;
+  // Os três eixos, e não só um: o filtro agora gira um vetor no espaço, então
+  // uma deriva em qualquer eixo entortaria a estimativa.
+  biasGiroX = somaX / amostras;
+  biasGiroY = somaY / amostras;
+  biasGiroZ = somaZ / amostras;
   calibrado = true;
-  Serial.printf("Giroscopio calibrado (bias X=%.4f rad/s)\n", biasGiroX);
+  Serial.printf("Giroscopio calibrado (bias X=%.4f Y=%.4f Z=%.4f rad/s)\n",
+                biasGiroX, biasGiroY, biasGiroZ);
 }
 
-// Ângulo que a gravidade indica agora. É a referência absoluta do filtro:
-// não escorrega com o tempo, mas balança a cada tranco do movimento.
-//
-// Recebe os eixos como float em vez de um sensors_event_t de propósito: a
-// Arduino IDE gera os protótipos das funções e os injeta no topo do sketch,
-// e um tipo customizado na assinatura faz o build quebrar antes de começar
-// (foi o que aconteceu no commit ed1a53a). Só tipos embutidos aqui.
-float anguloPelaGravidade(float acelY, float acelZ) {
-  float graus = atan2(acelY, acelZ) * 180.0f / PI;
-  return EIXO_INVERTIDO ? -graus : graus;
+/**
+ * Ângulo entre dois vetores, em graus (0 a 180).
+ *
+ * É o coração da medida: com o braço na pose de zero os dois vetores
+ * coincidem e dá 0°; com o braço na horizontal a gravidade girou um quarto de
+ * volta em relação à pose de zero e dá 90°. Como sai de um produto escalar,
+ * não depende de qual eixo do chip está apontando para onde — só de quanto a
+ * placa girou desde a tara.
+ */
+float anguloEntre(float ax, float ay, float az, float bx, float by, float bz) {
+  float modA = sqrtf(ax * ax + ay * ay + az * az);
+  float modB = sqrtf(bx * bx + by * by + bz * bz);
+  if (modA < 0.001f || modB < 0.001f) {
+    return 0.0f;
+  }
+  float cosseno = (ax * bx + ay * by + az * bz) / (modA * modB);
+  // Arredondamento pode empurrar o cosseno para fora de [-1, 1] e acosf
+  // devolveria NaN, que contaminaria tudo dali para a frente.
+  if (cosseno > 1.0f) cosseno = 1.0f;
+  if (cosseno < -1.0f) cosseno = -1.0f;
+  return acosf(cosseno) * 180.0f / PI;
 }
 
+/* Guarda a última leitura crua do acelerômetro, para o pacote de telemetria
+   poder mandar o ângulo sem filtro junto do filtrado. */
+float acelBrutoX = 0.0f, acelBrutoY = 0.0f, acelBrutoZ = 0.0f;
+
+/**
+ * Filtro complementar sobre o VETOR de gravidade.
+ *
+ * O giroscópio diz quanto a placa girou desde a amostra anterior, e girar a
+ * placa é o mesmo que girar a gravidade para o lado contrário dentro do
+ * referencial dela — daí o produto vetorial com sinal negativo. Esse palpite
+ * é suave mas escorrega com o tempo, então o acelerômetro puxa a estimativa
+ * de volta para a gravidade de verdade a cada amostra.
+ */
 void atualizarAngulo() {
   unsigned long agoraUs = micros();
   if (ultimaAmostraUs != 0 && (agoraUs - ultimaAmostraUs) < PERIODO_AMOSTRA_US) {
@@ -273,31 +336,62 @@ void atualizarAngulo() {
 
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
-  float pelaGravidade = anguloPelaGravidade(accel.acceleration.y, accel.acceleration.z);
+  acelBrutoX = accel.acceleration.x;
+  acelBrutoY = accel.acceleration.y;
+  acelBrutoZ = accel.acceleration.z;
 
   // Um envio HTTP lento pode segurar o loop por segundos. Integrar o
-  // giroscópio por um buraco desses só produz lixo — nesse caso o ângulo é
-  // ressincronizado direto pela gravidade.
+  // giroscópio por um buraco desses só produz lixo — nesse caso a estimativa
+  // é ressincronizada direto pela gravidade medida.
   if (dt <= 0.0f || dt > 0.2f) {
-    anguloFiltrado = pelaGravidade;
+    gx = acelBrutoX;
+    gy = acelBrutoY;
+    gz = acelBrutoZ;
     return;
   }
 
-  float velocidade = gyro.gyro.x - biasGiroX;  // rad/s no eixo do movimento
-  if (EIXO_INVERTIDO) velocidade = -velocidade;
-  float pelaRotacao = anguloFiltrado + velocidade * 180.0f / PI * dt;
+  float wx = gyro.gyro.x - biasGiroX;
+  float wy = gyro.gyro.y - biasGiroY;
+  float wz = gyro.gyro.z - biasGiroZ;
 
-  anguloFiltrado = PESO_GIRO * pelaRotacao + (1.0f - PESO_GIRO) * pelaGravidade;
+  // g_previsto = g - (omega x g) * dt
+  float previstoX = gx - (wy * gz - wz * gy) * dt;
+  float previstoY = gy - (wz * gx - wx * gz) * dt;
+  float previstoZ = gz - (wx * gy - wy * gx) * dt;
+
+  gx = PESO_GIRO * previstoX + (1.0f - PESO_GIRO) * acelBrutoX;
+  gy = PESO_GIRO * previstoY + (1.0f - PESO_GIRO) * acelBrutoY;
+  gz = PESO_GIRO * previstoZ + (1.0f - PESO_GIRO) * acelBrutoZ;
 }
 
+/** Quanto o braço se afastou da pose de zero: 0° pendurado, 90° na horizontal. */
 float anguloAtual() {
-  return anguloFiltrado - offsetTara;
+  if (!referenciaDefinida) {
+    return 0.0f;
+  }
+  return anguloEntre(gx, gy, gz, refX, refY, refZ);
 }
 
+/** O mesmo ângulo, mas direto do acelerômetro — mostra o quanto o filtro suavizou. */
+float anguloSemFiltro() {
+  if (!referenciaDefinida) {
+    return 0.0f;
+  }
+  return anguloEntre(acelBrutoX, acelBrutoY, acelBrutoZ, refX, refY, refZ);
+}
+
+/**
+ * Fixa a pose atual como 0°. O profissional aperta isto com o braço do
+ * paciente pendurado ao lado do tronco; a partir daí, levantar o braço até a
+ * horizontal marca 90°, e até acima da cabeça, perto de 180°.
+ */
 void aplicarTara() {
-  offsetTara = anguloFiltrado;
-  salvarTara(offsetTara);
-  Serial.printf("Tara aplicada: %.2f graus viraram o novo zero.\n", offsetTara);
+  refX = gx;
+  refY = gy;
+  refZ = gz;
+  referenciaDefinida = true;
+  salvarReferencia(refX, refY, refZ);
+  Serial.printf("Tara aplicada: a posicao atual virou 0 grau (g = %.2f, %.2f, %.2f).\n", refX, refY, refZ);
 }
 
 // ------------------------------------------------------------------
@@ -388,6 +482,10 @@ void conectarOuAbrirPortal() {
 
   Serial.printf("Se nao conectar, abra o Wi-Fi \"%s\" (senha %s) no celular.\n",
                 AP_NOME, AP_SENHA);
+  // O portal quase nunca abre sozinho (o Windows praticamente nunca detecta
+  // captive portal), e sem este endereco a pessoa fica sem saber o que fazer.
+  Serial.println("O celular vai avisar que a rede nao tem internet — e normal, ela e so para configurar.");
+  Serial.println("Se a pagina nao abrir sozinha, digite no navegador: http://192.168.4.1");
 
   // autoConnect: tenta a rede salva; não tendo, sobe o ponto de acesso e
   // bloqueia aqui até a pessoa terminar a configuração.
@@ -470,7 +568,7 @@ void enviarTelemetria() {
   // impede um goniômetro de escrever na clínica de outro.
   String corpo = "{";
   corpo += "\"angulo\":" + String(anguloAtual(), 2);
-  corpo += ",\"anguloBruto\":" + String(anguloFiltrado, 2);
+  corpo += ",\"anguloBruto\":" + String(anguloSemFiltro(), 2);
   if (bateria >= 0) corpo += ",\"bateria\":" + String(bateria);
   corpo += ",\"rssi\":" + String(WiFi.RSSI());
   corpo += ",\"numeroSerie\":\"" + numeroSerie + "\"";
@@ -532,16 +630,34 @@ void setup() {
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   Serial.println("MPU6050 encontrado.");
 
-  offsetTara = carregarTara();
-  Serial.printf("Tara guardada: %.2f graus\n", offsetTara);
+  referenciaDefinida = carregarReferencia();
 
   calibrarGiroscopio();
 
   // Primeira leitura da gravidade como ponto de partida do filtro — sem isso
-  // o ângulo levaria alguns segundos convergindo de zero até o valor real.
+  // a estimativa levaria alguns segundos convergindo até a gravidade real.
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
-  anguloFiltrado = anguloPelaGravidade(accel.acceleration.y, accel.acceleration.z);
+  gx = accel.acceleration.x;
+  gy = accel.acceleration.y;
+  gz = accel.acceleration.z;
+  acelBrutoX = gx;
+  acelBrutoY = gy;
+  acelBrutoZ = gz;
+
+  if (referenciaDefinida) {
+    Serial.printf("Tara guardada: g = %.2f, %.2f, %.2f\n", refX, refY, refZ);
+  } else {
+    // Nunca houve tara: adota a pose do boot como zero provisório, para o
+    // número na tela ser algo em vez de nada. O profissional refaz a tara com
+    // o braço pendurado, e aí o zero passa a valer de verdade.
+    refX = gx;
+    refY = gy;
+    refZ = gz;
+    referenciaDefinida = true;
+    Serial.println("Sem tara guardada: usando a posicao do boot como zero provisorio.");
+    Serial.println("Prenda o aparelho no braco, deixe o braco pendurado e use \"Zerar (tara)\" no site.");
+  }
 
   numeroSerie = montarNumeroSerie();
   Serial.printf("Numero de serie: %s\n", numeroSerie.c_str());
@@ -567,8 +683,8 @@ void loop() {
   static unsigned long ultimoEco = 0;
   if (agora - ultimoEco > 1000) {
     ultimoEco = agora;
-    Serial.printf("Angulo: %6.2f graus (bruto %6.2f) | bateria %d%% | RSSI %d dBm%s\n",
-                  anguloAtual(), anguloFiltrado, lerBateria(), WiFi.RSSI(),
+    Serial.printf("Angulo: %6.2f graus (sem filtro %6.2f) | bateria %d%% | RSSI %d dBm%s\n",
+                  anguloAtual(), anguloSemFiltro(), lerBateria(), WiFi.RSSI(),
                   capturando ? " | GRAVANDO" : "");
   }
 
