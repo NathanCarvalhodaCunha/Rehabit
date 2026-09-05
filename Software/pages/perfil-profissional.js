@@ -31,7 +31,10 @@
       });
     });
 
-    const goListBtn = document.querySelector('[data-action="go-list"]');
+    // Escopado ao cartão: o logo da sidebar e o item "Home" também são
+    // data-action="go-list", e um querySelector solto pegava o logo — o botão
+    // do cartão caía no handler global e levava a clínica para a home dela.
+    const goListBtn = document.querySelector('.access-card [data-action="go-list"]');
     if (goListBtn) {
       goListBtn.addEventListener("click", (e) => {
         e.preventDefault();
