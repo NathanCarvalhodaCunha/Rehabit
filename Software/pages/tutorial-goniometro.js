@@ -86,14 +86,4 @@
     aplicar(ABERTURA_INICIAL);
     loop();
   }
-
-  const replayBtn = document.querySelector('[data-action="replay-tutorial"]');
-  if (replayBtn) {
-    replayBtn.addEventListener("click", () => {
-      // Não interrompe um sweep já em andamento (animarSweep() ignora a
-      // chamada nesse caso) — evita duas animações concorrentes disputando
-      // o mesmo elemento.
-      animarSweep();
-    });
-  }
 })();
