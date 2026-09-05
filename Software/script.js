@@ -219,6 +219,10 @@ window.addEventListener("pageshow", (e) => {
   const ICONE_DESEMPENHO =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  const ICONE_PROFISSIONAIS =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' +
+    '<path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
   function jaTem(container, pagina) {
     return !!container.querySelector(`a[href$="${pagina}.html"], a[href$="${pagina}-escuro.html"]`);
@@ -258,6 +262,9 @@ window.addEventListener("pageshow", (e) => {
   if (ehClinica) {
     inserirNaSidebar("consultas", "Consultas", ICONE_CALENDARIO);
     inserirNaBarraMobile("consultas", "Consultas", ICONE_CALENDARIO, "configuracoes");
+    // Só a clínica tem profissionais para listar.
+    inserirNaSidebar("profissionais", "Profissionais", ICONE_PROFISSIONAIS);
+    inserirNaBarraMobile("profissionais", "Profissionais", ICONE_PROFISSIONAIS, "configuracoes");
   } else {
     inserirNaSidebar("agenda", "Agenda", ICONE_CALENDARIO);
     inserirNaBarraMobile("agenda", "Agenda", ICONE_CALENDARIO, "configuracoes");
@@ -346,6 +353,11 @@ document.addEventListener("click", (e) => {
         sessaoAtual && sessaoAtual.tipo === "CLINICA" ? paginaTema("perfil-instituicao") : paginaTema("perfil-profissional");
       break;
     }
+    // Separado de "go-list" de propósito: aquele é o atalho de Home (o logo da
+    // sidebar usa o mesmo), e mudá-lo levaria o logo para cá.
+    case "go-profissionais":
+      window.location.href = paginaTema("profissionais");
+      break;
     case "back":
       history.length > 1 ? history.back() : (window.location.href = "./");
       break;
