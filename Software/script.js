@@ -175,19 +175,38 @@ window.addEventListener("pageshow", (e) => {
    * link de Home de qualquer tela é reapontado para a casa de quem está
    * logado — e no tema certo.
    */
-  (function corrigirLinksDeHome() {
+  (function corrigirLinksDoMenu() {
     const home = ehClinica ? "instituicao" : "profissional";
     const outra = ehClinica ? "profissional" : "instituicao";
+
+    // Nomes de arquivo inteiros. Um seletor de sufixo ([href$="instituicao.html"])
+    // parece equivalente e não é: ele casa também com "perfil-instituicao.html"
+    // e "editar-perfil-instituicao.html" — e era isso que mandava o "Perfil" do
+    // menu para a Home, nos dois tipos de conta.
+    //
+    // Home e Perfil recebem o mesmo tratamento: as telas compartilhadas trazem
+    // os dois fixos no modelo da instituição, então sem isso um profissional
+    // abria o perfil da clínica pelo menu.
+    const destinos = [
+      [[home, outra], home],
+      [["perfil-" + home, "perfil-" + outra], "perfil-" + home],
+    ];
+
+    function arquivoDe(link) {
+      return (link.getAttribute("href") || "").split("/").pop().split(/[?#]/)[0];
+    }
+
+    // Só o menu. No corpo das telas existem links para a home e o perfil de UM
+    // profissional ("perfil-profissional.html?id=..."), que não são os do
+    // usuário logado: reescrevê-los apagaria o id.
     document
-      .querySelectorAll(`a[href$="${outra}.html"], a[href$="${outra}-escuro.html"]`)
+      .querySelectorAll(".sidebar .nav a[href], .mobile-bottomnav a[href]")
       .forEach((link) => {
-        link.href = paginaTema(home);
-      });
-    // A variante de tema também pode estar errada (link claro numa tela escura).
-    document
-      .querySelectorAll(`a[href$="${home}.html"], a[href$="${home}-escuro.html"]`)
-      .forEach((link) => {
-        link.href = paginaTema(home);
+        const arquivo = arquivoDe(link);
+        const destino = destinos.find(([bases]) =>
+          bases.some((base) => arquivo === `${base}.html` || arquivo === `${base}-escuro.html`)
+        );
+        if (destino) link.href = paginaTema(destino[1]);
       });
   })();
 
