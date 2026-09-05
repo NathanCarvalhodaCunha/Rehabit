@@ -53,52 +53,67 @@
     <main class="main">
       <header class="page-header desktop-only">
         <h1>Como usar o goniômetro</h1>
-        <p>Passo a passo para medir a abertura da mão com o goniômetro Rehabit</p>
+        <p>Passo a passo para medir a abertura entre o braço e o tronco com o goniômetro Rehabit</p>
       </header>
 
       <div class="tutorial-grid">
         <section class="card tutorial-illustration-card">
-          <svg viewBox="0 0 320 320" role="img" aria-label="Animação mostrando o goniômetro preso na mão do paciente durante o movimento de abertura do punho, de baixo para cima">
-            <!-- Antebraço apoiado numa superfície: fica parado o tempo todo.
-                 O pivô da animação é o punho (160,200), não o ombro nem o
-                 cotovelo — o aparelho mede só a abertura da mão. -->
-            <rect class="gonio-support" x="24" y="219" width="150" height="7" rx="3.5" />
-            <line class="gonio-limb-line" x1="46" y1="200" x2="160" y2="200" stroke-width="26" stroke-linecap="round" />
+          <svg viewBox="0 0 320 320" role="img" aria-label="Animação de um boneco esquemático com o goniômetro preso no pulso, levantando o braço pelo lado até formar 90° entre o braço e o tronco">
+            <!-- Boneco visto de frente, em pé. O goniômetro vai no pulso, mas
+                 o pivô da medida é o ombro: o que se lê é a abertura entre o
+                 braço e o tronco, de 0° (braço junto ao corpo) até 90°
+                 (braço na horizontal, na altura do ombro). -->
+            <g class="gonio-body">
+              <line x1="128" y1="64" x2="128" y2="192" />
+              <line x1="104" y1="82" x2="152" y2="82" />
+              <line x1="108" y1="192" x2="148" y2="192" />
+              <line x1="108" y1="192" x2="98" y2="280" />
+              <line x1="148" y1="192" x2="158" y2="280" />
+              <line x1="104" y1="82" x2="92" y2="176" />
+            </g>
+            <circle class="gonio-head" cx="128" cy="44" r="20" />
+            <circle class="gonio-head" cx="92" cy="184" r="9" />
 
-            <g transform="translate(160,200)">
-              <!-- Escala cobrindo o trajeto do movimento: 0° (mão fechada,
-                   para baixo) até 100° (mão aberta, acima da horizontal). -->
-              <path class="gonio-scale-arc" d="M 4.7 53.8 A 54 54 0 0 0 52.2 -14.0" />
+            <g transform="translate(152,82)">
+              <!-- Setor pintado entre o tronco e o braço: é a abertura medida.
+                   O caminho é redesenhado a cada quadro pela animação. -->
+              <path class="gonio-wedge" d="M 0 0 L 0 56 Z" />
 
-              <line class="gonio-tick" x1="4.2" y1="47.8" x2="5.1" y2="57.8" />
-              <line class="gonio-tick" x1="20.3" y1="43.5" x2="24.5" y2="52.6" />
-              <line class="gonio-tick" x1="33.9" y1="33.9" x2="41.0" y2="41.0" />
-              <line class="gonio-tick" x1="43.5" y1="20.3" x2="52.6" y2="24.5" />
-              <line class="gonio-tick" x1="47.8" y1="4.2" x2="57.8" y2="5.1" />
-              <line class="gonio-tick" x1="46.4" y1="-12.4" x2="56.0" y2="-15.0" />
+              <!-- Escala cobrindo o trajeto do movimento: 0° (braço junto ao
+                   corpo) até 90° (braço na horizontal). -->
+              <path class="gonio-scale-arc" d="M 0 56 A 56 56 0 0 0 56 0" />
 
-              <text class="gonio-tick-label" x="6.1" y="69.7">0</text>
-              <text class="gonio-tick-label" x="29.6" y="63.4">20</text>
-              <text class="gonio-tick-label" x="49.5" y="49.5">40</text>
-              <text class="gonio-tick-label" x="63.4" y="29.6">60</text>
-              <text class="gonio-tick-label" x="69.7" y="6.1">80</text>
-              <text class="gonio-tick-label" x="67.6" y="-18.1">100</text>
+              <line class="gonio-tick" x1="0" y1="50" x2="0" y2="62" />
+              <line class="gonio-tick" x1="12.9" y1="48.3" x2="16.1" y2="59.9" />
+              <line class="gonio-tick" x1="25.0" y1="43.3" x2="31.0" y2="53.7" />
+              <line class="gonio-tick" x1="35.4" y1="35.4" x2="43.8" y2="43.8" />
+              <line class="gonio-tick" x1="43.3" y1="25.0" x2="53.7" y2="31.0" />
+              <line class="gonio-tick" x1="48.3" y1="12.9" x2="59.9" y2="16.1" />
+              <line class="gonio-tick" x1="50" y1="0" x2="62" y2="0" />
 
-              <!-- Referência fixa: a posição fechada, onde a medição zera. -->
-              <line class="gonio-arm-fixed" x1="0" y1="0" x2="5.1" y2="57.8" />
+              <!-- Referência fixa: a direção do tronco, onde a medida vale 0°. -->
+              <line class="gonio-arm-fixed" x1="0" y1="0" x2="0" y2="70" />
 
-              <g class="forearm-rotate">
-                <line class="gonio-limb-line" x1="0" y1="0" x2="52" y2="0" stroke-width="24" stroke-linecap="round" />
-                <circle class="gonio-hand" cx="60" cy="0" r="15" />
-                <rect class="gonio-device" x="12" y="-13" width="22" height="26" rx="5" />
-                <line class="gonio-arm-moving" x1="0" y1="0" x2="50" y2="0" />
+              <g class="arm-rotate">
+                <line class="gonio-limb-line" x1="0" y1="0" x2="0" y2="46" stroke-width="13" stroke-linecap="round" />
+                <line class="gonio-limb-line" x1="0" y1="46" x2="0" y2="88" stroke-width="11" stroke-linecap="round" />
+                <circle class="gonio-hand" cx="0" cy="99" r="12" />
+                <rect class="gonio-device" x="-14" y="74" width="28" height="24" rx="7" />
+                <line class="gonio-arm-moving" x1="0" y1="0" x2="0" y2="62" />
               </g>
 
               <circle class="gonio-hinge" cx="0" cy="0" r="7" />
+
+              <!-- Os números vêm depois do braço para continuarem legíveis
+                   quando ele passa por cima da escala. -->
+              <text class="gonio-tick-label" x="0" y="68">0</text>
+              <text class="gonio-tick-label" x="34.0" y="58.9">30</text>
+              <text class="gonio-tick-label" x="58.9" y="34.0">60</text>
+              <text class="gonio-tick-label" x="68" y="0">90</text>
             </g>
           </svg>
-          <p class="tutorial-angle-readout">Abertura da mão: <span class="num"><span class="angle-value">0</span>°</span></p>
-          <p class="tutorial-caption">O antebraço (cinza) fica apoiado e parado; a mão (azul), com o goniômetro preso nela, faz o movimento de abertura de baixo para cima.</p>
+          <p class="tutorial-angle-readout">Abertura entre o braço e o tronco: <span class="num"><span class="angle-value">0</span>°</span></p>
+          <p class="tutorial-caption">O tronco (cinza) fica ereto e serve de referência para o 0°. O braço, com o goniômetro preso no pulso, sobe pelo lado até a horizontal — onde a abertura entre o braço e o tronco é de 90°.</p>
           <button type="button" class="btn-outline" data-action="replay-tutorial">Reproduzir animação</button>
         </section>
 
@@ -107,32 +122,32 @@
           <ol class="tutorial-steps">
             <li>
               <div>
-                <h4>Prenda o goniômetro na mão</h4>
-                <p>Fixe o dispositivo na mão do paciente, deixando o pulso livre para se mover.</p>
+                <h4>Prenda o goniômetro no pulso</h4>
+                <p>Fixe o dispositivo no pulso do paciente, com a cinta firme mas sem apertar, deixando o cotovelo livre para se estender.</p>
               </div>
             </li>
             <li>
               <div>
-                <h4>Apoie o antebraço</h4>
-                <p>Peça ao paciente para apoiar o antebraço sobre uma superfície e mantê-lo parado durante a medição.</p>
+                <h4>Posicione o paciente em pé</h4>
+                <p>Peça ao paciente para ficar em pé, de frente para você, com o tronco ereto e parado — é o tronco que serve de referência para o ângulo.</p>
               </div>
             </li>
             <li>
               <div>
-                <h4>Comece com a mão fechada, para baixo</h4>
-                <p>A mão deve começar numa posição baixa e fechada — o goniômetro só mede o movimento de abertura, sempre de baixo para cima.</p>
+                <h4>Comece com o braço junto ao corpo</h4>
+                <p>Com o braço parado nessa posição, toque em <strong>Zerar (tara)</strong> na tela Dispositivo: é esse toque que faz o aparelho adotar a pose como 0° — sem ele, a leitura não parte do lugar certo.</p>
               </div>
             </li>
             <li>
               <div>
-                <h4>Peça o movimento de abertura</h4>
-                <p>Peça ao paciente para abrir a mão de baixo para cima até o limite confortável; o ângulo aparece automaticamente na tela do Dispositivo.</p>
+                <h4>Peça para levantar o braço até 90°</h4>
+                <p>O paciente sobe o braço pelo lado, com o cotovelo estendido, até formar 90° com o tronco (braço na horizontal, na altura do ombro). O ângulo aparece automaticamente na tela do Dispositivo.</p>
               </div>
             </li>
             <li>
               <div>
-                <h4>Sincronize e registre a sessão</h4>
-                <p>Toque em Sincronizar na tela Dispositivo e anote o valor na sessão do paciente para acompanhar a evolução ao longo do tratamento.</p>
+                <h4>Capture o movimento e registre a sessão</h4>
+                <p>Toque em <strong>Iniciar captura</strong> e peça o movimento completo: o aparelho guarda o menor e o maior ângulo, e a amplitude é a diferença entre os dois. Anote o valor na sessão do paciente para acompanhar a evolução.</p>
               </div>
             </li>
           </ol>

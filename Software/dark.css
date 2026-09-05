@@ -252,6 +252,11 @@ body.dark .tutorial-tooltip p { color: var(--ink-muted); }
 body.dark .tutorial-skip { color: var(--ink-muted); }
 body.dark .tutorial-skip:hover { color: #fff; }
 
+/* Ilustração do tutorial do goniômetro: o contorno dos números e o miolo do
+   pivô acompanham o fundo do cartão escuro, não o branco do tema claro. */
+body.dark .gonio-tick-label { stroke: #101A38; }
+body.dark .gonio-hinge { stroke: #101A38; }
+
 /* Painel de indicadores e calendário no tema escuro */
 body.dark .cal-nav button { background: #101A38; border-color: #1B2647; color: #fff; }
 body.dark .cal-nav button:hover { background: #1B2647; }
