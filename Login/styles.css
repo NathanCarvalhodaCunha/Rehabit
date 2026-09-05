@@ -90,6 +90,8 @@ body {
   display: block;
   width: 280px;
   height: auto;
+  /* Nunca passa da coluna: entre 768 e ~1100px ela fica estreita. */
+  max-width: 100%;
   margin-bottom: 35px;
 }
 
@@ -331,4 +333,13 @@ h1 {
     width: auto;
     margin: 0;
   }
+}
+
+/* ---------- Desktop estreito (768–1199) ----------
+   A coluna do formulário é 48% menos 130px de respiro: numa janela de 865px
+   sobram 285px, e o logo de 340px transbordava dela, cortado na borda. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .form-side { padding: 48px 40px; }
+  .logo { width: 260px; }
+  h1 { font-size: 30px; }
 }

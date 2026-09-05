@@ -297,7 +297,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* ---------- Responsive: mobile ---------- */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   /* Sem isso, o grid (que tem min-height:100vh) estica as linhas "auto"
      (topbar/main) para preencher a viewport inteira em telas com pouco
      conteúdo, empurrando tudo para o meio da tela. */
@@ -401,7 +401,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Desktop-only contact card block hidden */
 .contact-card-mobile { display: none; }
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .contact-card-mobile { display: block; }
 }
 
@@ -410,7 +410,7 @@ button { font-family: inherit; cursor: pointer; }
    ============================================================ */
 
 .mobile-only { display: none !important; }
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .desktop-only { display: none !important; }
   .mobile-only { display: revert !important; }
 }
@@ -625,7 +625,7 @@ button { font-family: inherit; cursor: pointer; }
 .fab svg { width: 26px; height: 26px; }
 
 /* ---------- Mobile overrides for these pages ---------- */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .inst-mobile-top { justify-content: space-between; }
   .inst-mobile-top button { color: var(--ink); }
 
@@ -717,7 +717,7 @@ button { font-family: inherit; cursor: pointer; }
 .badge.estavel   { background: #6FA8DC; }
 .badge.instavel  { background: #E57373; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .pro-header { display: block; margin-bottom: 18px; padding: 0 4px; }
   .pro-greeting h1 { font-size: 24px; }
 
@@ -761,7 +761,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .agenda-cancel:hover { color: #DC2626; border-color: #DC2626; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .agenda-item { grid-template-columns: 1fr auto; padding: 12px 4px; }
   .agenda-when { grid-column: 1 / -1; order: -1; font-size: 13.5px; }
 }
@@ -831,7 +831,7 @@ button { font-family: inherit; cursor: pointer; }
 .info-strip .k { color: var(--ink-muted); font-weight: 600; font-size: 13px; }
 .info-strip .v { color: var(--ink-strong); font-weight: 700; font-size: 14.5px; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .patient-header { grid-template-columns: auto 1fr; gap: 16px; margin: 8px 0 14px; }
   .patient-header .btn-edit { display: none; }
   .patient-header .avatar-lg { width: 78px; height: 78px; }
@@ -983,7 +983,7 @@ button { font-family: inherit; cursor: pointer; }
 .edit-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 .edit-actions .btn-primary { width: auto; padding: 10px 22px; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .settings-main, .edit-main { padding: 20px 16px 96px; }
   .page-title { text-align: center; font-size: 22px; margin-bottom: 20px; }
   .settings-mobile-profile { display: block; }
@@ -1016,21 +1016,6 @@ button { font-family: inherit; cursor: pointer; }
 .register-pro-card .btn-primary { width: auto; font-size: 13px; padding: 10px 14px; border-radius: 8px; }
 
 /* ---------- Responsividade padrão Rehabit ---------- */
-@media (min-width: 768px) and (max-width: 991px) {
-  .main { width: min(100%, 760px); margin: 0 auto; }
-  .mobile-bottomnav {
-    left: 50%;
-    width: min(100%, 760px);
-    transform: translateX(-50%);
-    border-left: 1px solid var(--hairline);
-    border-right: 1px solid var(--hairline);
-  }
-  .tip-card,
-  .description-card,
-  .contact-card-mobile,
-  .settings-card,
-  .edit-info-card { max-width: 720px; margin-left: auto; margin-right: auto; }
-}
 
 @media (max-width: 575px) {
   .mobile-topbar { padding-left: 14px; padding-right: 14px; }
@@ -1103,7 +1088,7 @@ button.form-avatar {
 .add-manual-card .sub { margin: 4px 0 18px; color: var(--ink-muted); font-weight: 600; font-size: 13px; }
 .add-manual-card .form-actions { margin-top: auto; padding-top: 18px; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .form-main { padding: 12px 16px 96px; }
   .form-header { display: none; }
   .form-mobile-head { display: block; text-align: center; margin-bottom: 18px; }
@@ -1130,22 +1115,19 @@ button.form-avatar {
   .add-manual-card .btn-primary { box-shadow: none; }
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-  .form-card, .session-grid { max-width: 720px; margin-left: auto; margin-right: auto; }
-}
 
 @media (max-width: 575px) {
   .form-card { padding: 16px 14px 18px; }
   .form-avatar { width: 108px; height: 108px; }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   .info-strip.mobile-only { display: none !important; }
 }
 
 .field-id { max-width: 200px; }
 .form-col-title { align-self: flex-start; margin: 0 !important; }
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .field-id { max-width: none; }
 }
 
@@ -1162,7 +1144,7 @@ button.form-avatar {
 /* ============================================================
    Ajustes visuais V6
    ============================================================ */
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   .pro-header {
     margin-bottom: 34px;
   }
@@ -1269,7 +1251,7 @@ button.form-avatar {
   min-height: 96px;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .mobile-list-controls {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 108px;
@@ -1555,7 +1537,7 @@ button.form-avatar {
 
 /* No celular a sidebar some, então o sino também — mas se algum dia aparecer,
    o painel vira uma folha centrada em vez de um flyout fora da tela. */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .notif-dropdown {
     position: fixed;
     top: 68px;
@@ -1651,7 +1633,7 @@ button.form-avatar {
 .gonio-arm-fixed { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 5; }
 .gonio-hinge { fill: var(--brand); stroke: #fff; stroke-width: 2; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .tutorial-grid { grid-template-columns: 1fr; }
 }
 
@@ -1671,7 +1653,7 @@ button.form-avatar {
   line-height: 1.45;
   padding: 14px 18px;
 }
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .toastify.toastify-top {
     top: 78px !important;
   }
@@ -1712,7 +1694,7 @@ button.form-avatar {
 .kpi-detalhe.pos { color: var(--success); }
 .kpi-detalhe.neg { color: #E57373; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
   .kpi-card { padding: 14px 14px; }
   .kpi-valor { font-size: 24px; }
@@ -1856,7 +1838,7 @@ button.form-avatar {
 }
 /* Uma dica logo antes do próximo campo encostava no rótulo dele. */
 .field-hint + .field { margin-top: 16px; }
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
   .settings-form .form-actions { justify-content: stretch; }
   .settings-form .form-actions .btn-primary { width: 100%; }
@@ -1915,7 +1897,7 @@ button.form-avatar {
   text-align: right;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .consultas-topo { flex-direction: column; align-items: stretch; }
   .consultas-abas { width: 100%; }
   .consultas-abas button { flex: 1; }
@@ -2017,7 +1999,7 @@ button.form-avatar {
 .desempenho-tabela td.pos strong { color: var(--success); }
 .desempenho-tabela td.neg strong { color: #E57373; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .desempenho-topo { flex-direction: column; align-items: stretch; }
   .desempenho-quem h2 { font-size: 18px; }
   .chart-canvas-wrap.alto { height: 220px; }
@@ -2195,7 +2177,7 @@ button.form-avatar {
 .alerta-texto strong { font-size: 13.5px; font-weight: 700; color: var(--ink-strong); }
 .alerta-texto span { font-size: 12.5px; font-weight: 500; line-height: 1.45; color: var(--ink-muted); }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .busca-abrir { display: none; }
   .busca-overlay { padding-top: 8vh; }
 }
@@ -2336,7 +2318,7 @@ button.form-avatar {
 }
 .timeline-vazio { list-style: none; padding: 16px 0; color: var(--ink-muted); font-size: 13.5px; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .anamnese-lista { grid-template-columns: 1fr; gap: 14px; }
   .paciente-acoes .btn-outline { flex: 1; justify-content: center; }
 }
@@ -2469,7 +2451,7 @@ button.form-avatar {
 .pareamento-validade { margin: 10px 0 18px; font-size: 12.5px; font-weight: 700; color: var(--ink-muted); }
 .pareamento-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .dispositivos-topo { flex-direction: column; }
   .dispositivos-topo .btn-primary { width: 100%; }
   .pareamento-codigo { font-size: 32px; }
@@ -2692,7 +2674,7 @@ button.form-avatar {
 
 .device-botoes { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   .live-card { padding: 20px 18px; }
   .live-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .live-head { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -2708,9 +2690,6 @@ button.form-avatar {
   .device-botoes { flex-direction: row; flex-wrap: wrap; justify-content: center; }
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-  .live-card, .device-card { max-width: 720px; margin-left: auto; margin-right: auto; }
-}
 
 @media (max-width: 575px) {
   .live-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -2784,4 +2763,16 @@ button.form-avatar {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--ink-muted);
+}
+
+/* ---------- Desktop estreito (768–1199) ----------
+   Faixa que antes caía no layout de celular: uma janela de ~800px mostrava a
+   UI de telefone, com a lateral escondida e o conteúdo travado em 760px.
+   Agora ela usa a lateral, mas com a lateral e o respiro reduzidos — a 768px
+   os 240px + 56px de padding do desktop deixavam só 54% da tela para o
+   conteúdo. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .app { grid-template-columns: 200px 1fr; }
+  .sidebar { padding: 22px 14px; }
+  .main { padding: 32px 28px; }
 }
