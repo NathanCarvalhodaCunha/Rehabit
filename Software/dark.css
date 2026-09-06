@@ -140,7 +140,7 @@ body.dark .add-card p { color: var(--ink-muted); }
 body.dark .tab { background: transparent; border-color: #1F2A50; }
 body.dark .tab.active { background: rgba(47,128,255,.12); border-color: #2F80FF; color: #2F80FF; }
 body.dark .sessions-table thead { background: #0E1733; }
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   body.dark .info-strip.mobile-only { display: none !important; }
 }
 
@@ -233,7 +233,7 @@ body.dark .edit-info-card {
   background: #101A38;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
   body.dark .edit-info-card {
     background: transparent;
   }
