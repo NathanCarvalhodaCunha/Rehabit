@@ -3,7 +3,17 @@
   if (!header) return;
 
   const sessao = getSessao();
-  if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
+  if (!sessao) return;
+
+  /* A instituição chega nesta tela pela mesma aba "Sessões" da ficha do
+     paciente que o profissional usa. Antes o script parava aqui quando a
+     conta não era FISIOTERAPEUTA e a tela inteira nascia morta: círculo
+     cinza no lugar da foto, nome e dados em branco, tabela sem uma linha e
+     nem a data de hoje preenchida. Quem decide o acesso é a API — ela já
+     confere a posse do paciente em /pacientes/{id} —, então a leitura serve
+     às duas contas e só o formulário segue sendo do profissional, que é
+     quem atende. */
+  const podeRegistrar = sessao.tipo === "FISIOTERAPEUTA";
 
   /* Qual captura preencheu a amplitude. Fica no escopo da tela porque quem
      escreve é o painel do goniômetro e quem lê é o envio do formulário: vai
@@ -16,6 +26,7 @@
      depois que o canal abre — sem aparelho na clínica, o formulário fica
      exatamente como era. */
   (function ligarGoniometro() {
+    if (!podeRegistrar) return;
     const painel = document.querySelector("[data-gonio-inline]");
     const campoAmplitude = document.getElementById("s-amp");
     if (!painel || !campoAmplitude || typeof RehabitGoniometro === "undefined") return;
@@ -144,6 +155,14 @@
     return `${dia}/${mes}`;
   }
 
+  // O prontuário é texto livre digitado pelo profissional e vai para dentro
+  // de um template de HTML — precisa ser escapado.
+  function escaparHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
+  }
+
   function carregarPacienteEHistorico() {
     return Promise.all([apiGet(`/pacientes/${idPaciente}`), apiGet(`/pacientes/${idPaciente}/sessoes`)]).then(
       ([paciente, sessoes]) => {
@@ -165,9 +184,12 @@
 
         header.querySelector("h1").textContent = paciente.nome;
         header.querySelector(".patient-meta.desktop-only").innerHTML =
-          `${idadeTexto} – ${sexoTexto} – ${situacaoTexto}<br/>` +
-          `Início do tratamento: <strong>${inicioTexto}</strong> – Fisioterapia <strong>${fisioTexto}</strong>`;
-        header.querySelector(".patient-meta.mobile-only").innerHTML = `${idadeTexto} – ${sexoTexto}<br/>${situacaoTexto}`;
+          `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)} – ${escaparHtml(situacaoTexto)}<br/>` +
+          `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapia <strong>${escaparHtml(
+            fisioTexto
+          )}</strong>`;
+        header.querySelector(".patient-meta.mobile-only").innerHTML =
+          `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)}<br/>${escaparHtml(situacaoTexto)}`;
 
         const infoValores = document.querySelectorAll(".info-strip .v");
         if (infoValores[0]) infoValores[0].textContent = inicioTexto;
@@ -210,6 +232,16 @@
 
   const form = document.getElementById("cadastrarSessaoForm");
   if (!form) return;
+
+  /* Registrar sessão é ato do profissional que atendeu. Para a instituição a
+     tela vira o histórico em leitura: o formulário sai e a tabela ocupa a
+     largura toda, em vez de sobrar uma coluna vazia de 300px ao lado. */
+  if (!podeRegistrar) {
+    form.remove();
+    const grade = document.querySelector(".session-grid");
+    if (grade) grade.classList.add("sem-formulario");
+    return;
+  }
 
   // Sessão é registro do que já foi atendido, então a data não pode ser
   // futura — o campo trava no dia de hoje e o envio confere de novo.

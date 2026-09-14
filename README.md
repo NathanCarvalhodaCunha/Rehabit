@@ -209,6 +209,45 @@ cadastrar.
 4. **Código por e-mail** — a prova final: sem abrir a caixa de entrada e
    digitar os 6 dígitos, a conta não é criada.
 
+## A hibernação da API no Render
+
+O plano gratuito do Render derruba o container depois de **~15 minutos sem
+tráfego**. A primeira chamada depois disso paga o religamento inteiro. Medido
+no mesmo `POST /api/auth/login`:
+
+| Estado da instância | TTFB |
+| --- | --- |
+| Dormindo (spin-down) | **146,7 s** |
+| Acordada | **0,48 s** |
+
+DNS e TLS levaram 20 ms e 79 ms nos dois casos — a rede nunca foi o problema,
+e os assets externos somam só 212 KB, que não explicam minutos.
+
+Por muito tempo isso pareceu um defeito "do primeiro acesso em cada aparelho",
+e a confusão tinha uma razão de ser: a tela de login não chama a API ao
+carregar, então o HTML aparece rápido e a espera toda cai no botão *Entrar*.
+Como a sessão fica no `localStorage` com token de 30 dias, um aparelho já
+usado entra direto e **nunca** refaz o login — quem faz a chamada que acorda o
+servidor é sempre o aparelho novo. O gatilho real é o tempo parado; o aparelho
+novo só é quem paga a conta.
+
+Duas coisas atacam isso:
+
+- [`.github/workflows/manter-api-acordada.yml`](.github/workflows/manter-api-acordada.yml)
+  bate em `GET /api/health` a cada 10 min, das 06:00 às 23:59 (Brasília), para
+  que a ociosidade não chegue nos 15 min. A janela de 18 h/dia gasta ~540 das
+  750 horas mensais do plano gratuito e deixa folga; de madrugada a instância
+  dorme e ninguém sente. **Antes de uma apresentação**, dá para acordar a API
+  na mão: aba *Actions* → *Manter a API acordada* → *Run workflow*.
+- O loader avisa quando a espera passa do normal (5 s e 25 s), em vez de ficar
+  girando calado. Sem isso, um `Entrando...` parado por dois minutos parece
+  travado e a pessoa fecha a aba justo quando faltavam segundos.
+
+Se o ping parar sozinho, provavelmente é o GitHub desligando workflows
+agendados depois de **60 dias sem atividade no repositório** — basta reativar
+na aba *Actions*. E a solução definitiva, se um dia houver orçamento, é o
+plano pago do Render: sem spin-down, nada disso é necessário.
+
 ## Licença
 
 Distribuído sob a licença MIT — veja [LICENSE](LICENSE).

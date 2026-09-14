@@ -168,6 +168,48 @@
   }
 }
 
+/* ---------- aviso de espera longa ----------
+   Entra por baixo do texto quando a espera passa do normal, para explicar
+   que a instância gratuita da API está religando (veja loader.js). Só a
+   opacidade é animada, sem deslocamento: é uma mensagem que aparece, não
+   algo que precisa chamar atenção se movendo. */
+.rh-loader__hint {
+  margin: -8px 0 0;
+  max-width: 32ch;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+  color: #64748b;
+  /* sem fill-mode: a opacidade base é 1, então o aviso aparece mesmo que a
+     animação não rode (aba suspensa, movimento reduzido, rAF congelado).
+     Justo a mensagem que socorre alguém numa espera ruim não pode depender
+     de uma animação para estar visível. */
+  animation: rh-hint-in 0.45s ease;
+}
+
+.rh-loader--dark .rh-loader__hint {
+  color: #92a3bf;
+}
+
+@keyframes rh-hint-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 575px) {
+  .rh-loader__hint {
+    max-width: 28ch;
+    font-size: 12px;
+  }
+}
+
 /* ---------- responsividade padrão do projeto ---------- */
 @media (max-width: 991px) {
   .rh-loader__ring {
@@ -206,6 +248,7 @@
   .rh-loader__icon,
   .rh-loader__ring::before,
   .rh-loader__ring::after,
+  .rh-loader__hint,
   .rh-dots::after {
     animation: none;
   }

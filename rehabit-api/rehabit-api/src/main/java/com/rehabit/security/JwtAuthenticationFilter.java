@@ -91,6 +91,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/auth/")) {
             return true;
         }
+        // O ping que impede a instância gratuita de hibernar chega sem token
+        // nenhum (veja HealthController e o workflow manter-api-acordada.yml).
+        // Sem esta linha ele tomaria 401: este filtro roda antes do
+        // roteamento, então nem o permitAll() do SecurityConfig nem o
+        // controller chegam a ser consultados — e o ping seguiria acordando a
+        // API, mas acusando falha a cada dez minutos.
+        if (path.equals("/api/health") && "GET".equals(metodo)) {
+            return true;
+        }
         if (path.startsWith("/uploads/") && "GET".equals(metodo)) {
             return true;
         }
