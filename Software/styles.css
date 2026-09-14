@@ -1080,6 +1080,9 @@ button.form-avatar {
 
 /* Cadastrar sessão */
 .session-grid { display: grid; grid-template-columns: 1fr 300px; gap: 22px; align-items: stretch; }
+/* Sem o formulário de cadastro (conta de instituição), o histórico ocupa a
+   largura inteira em vez de deixar a coluna da direita vazia. */
+.session-grid.sem-formulario { grid-template-columns: 1fr; }
 .session-grid .sessions-table td.pos { color: var(--success); font-weight: 700; }
 .session-grid .sessions-table td.neg { color: #E57373; font-weight: 700; }
 .session-grid .sessions-table tr.empty td { height: 43px; }
