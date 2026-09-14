@@ -282,9 +282,12 @@ function formatarDataLonga(dataIso) {
 
       header.querySelector("h1").textContent = paciente.nome;
       header.querySelector(".patient-meta.desktop-only").innerHTML =
-        `${idadeTexto} – ${sexoTexto} – ${situacaoTexto}<br/>` +
-        `Início do tratamento: <strong>${inicioTexto}</strong> – Fisioterapia <strong>${fisioTexto}</strong>`;
-      header.querySelector(".patient-meta.mobile-only").innerHTML = `${idadeTexto} – ${sexoTexto}<br/>${situacaoTexto}`;
+        `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)} – ${escaparHtml(situacaoTexto)}<br/>` +
+        `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapia <strong>${escaparHtml(
+          fisioTexto
+        )}</strong>`;
+      header.querySelector(".patient-meta.mobile-only").innerHTML =
+        `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)}<br/>${escaparHtml(situacaoTexto)}`;
 
       const infoValores = document.querySelectorAll(".info-strip .v");
       if (infoValores[0]) infoValores[0].textContent = inicioTexto;
