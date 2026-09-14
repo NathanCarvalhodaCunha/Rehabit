@@ -1,0 +1,77 @@
+# Mantém a API de pé para que ninguém caia no religamento dela.
+#
+# O plano gratuito do Render derruba o container depois de ~15 min sem
+# tráfego. A chamada que o acorda leva mais de dois minutos (146 s medidos,
+# contra 0,48 s quente), e quem sempre pagava essa conta era o aparelho
+# novo — o único que precisa fazer login, porque nos outros a sessão já está
+# no localStorage. Uma batida a cada dez minutos impede que a ociosidade
+# chegue nos quinze.
+#
+# Dois detalhes que valem lembrar:
+#
+#  - O Render dá 750 horas de instância por mês no plano gratuito. A janela
+#    abaixo cobre 18 h por dia (~540 h/mês) e deixa folga; de madrugada a
+#    instância dorme e ninguém sente. Para cobrir 24 h, troque o cron por
+#    "*/10 * * * *" — passa a gastar ~730 h e não sobra espaço para nenhum
+#    outro serviço gratuito na mesma conta.
+#  - O GitHub desliga workflows agendados depois de 60 dias sem nenhuma
+#    atividade no repositório. Se o ping parar sozinho, é isso: basta
+#    reativar na aba Actions.
+name: Manter a API acordada
+
+on:
+  schedule:
+    # A cada 10 min entre 09:00 e 02:59 UTC = 06:00 às 23:59 em Brasília.
+    # O cron do GitHub é sempre UTC e não conhece fuso nem horário de verão.
+    - cron: "*/10 0-2,9-23 * * *"
+  # Permite acordar a API na mão pela aba Actions — útil uns minutos antes
+  # de uma apresentação, para a primeira pessoa a entrar já pegar tudo quente.
+  workflow_dispatch:
+
+# Se um ping ainda estiver rodando (acordando a instância) quando o próximo
+# for disparado, deixa o primeiro terminar em vez de empilhar os dois.
+concurrency:
+  group: manter-api-acordada
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Bater no /api/health
+        env:
+          URL: https://rehabit-api-4tex.onrender.com/api/health
+        run: |
+          # O corpo vai para arquivo e só as métricas para a stdout. Juntar os
+          # dois na mesma saída parece mais simples, mas cada tentativa do
+          # --retry reimprime o corpo e eles se emendam num texto sem sentido
+          # (visto na prática: três respostas grudadas numa linha só).
+          #
+          # --max-time generoso de propósito: se este ping for justamente o
+          # que encontra a instância dormindo, ele precisa esperar o boot
+          # inteiro em vez de desistir no meio e deixá-la subindo sozinha.
+          metricas=$(curl -sS --max-time 300 --retry 2 --retry-all-errors \
+                          -o resposta.json \
+                          -w '%{http_code} %{time_starttransfer}' "$URL") || {
+            echo "::error::Não consegui falar com a API — o curl nem completou."
+            exit 1
+          }
+
+          http=${metricas% *}
+          tempo=${metricas#* }
+
+          echo "HTTP $http em ${tempo}s"
+          echo "Resposta: $(cat resposta.json)"
+
+          if [ "$http" != "200" ]; then
+            echo "::error::A API respondeu $http — esperado 200."
+            exit 1
+          fi
+
+          # Acima de 10 s só pode ter sido religamento: a instância quente
+          # responde em menos de um segundo. Vale um aviso no log, porque
+          # significa que a janela de ociosidade escapou em algum momento.
+          if [ "${tempo%%.*}" -ge 10 ]; then
+            echo "::warning::Levou ${tempo}s — a instância estava dormindo."
+          fi

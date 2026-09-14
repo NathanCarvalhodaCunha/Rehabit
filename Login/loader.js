@@ -64,6 +64,61 @@
     return overlay;
   }
 
+  // --- Aviso de espera longa -----------------------------------------------
+  // A API roda no plano gratuito do Render, que derruba a instância depois de
+  // ~15 min sem tráfego. A chamada que a acorda passa de dois minutos (146 s
+  // medidos, contra 0,48 s com ela quente) e quem quase sempre cai nisso é o
+  // aparelho novo: nos já usados a sessão está no localStorage e o login, a
+  // única chamada que a tela de entrada faz, nunca acontece. Um loader parado
+  // todo esse tempo sem dizer nada parece travado, e a pessoa fecha a aba
+  // justo quando faltavam segundos.
+  //
+  // O aviso pode ser automático porque toda espera longa deste app é espera
+  // de API: passou do tempo em que uma resposta normal já teria voltado, é
+  // religamento de instância e não outra coisa.
+  var AVISO_MS = 5000;
+  var AVISO_LONGO_MS = 25000;
+  var AVISO = "O servidor hiberna quando fica sem uso, e está acordando agora.";
+  var AVISO_LONGO =
+    "Isso acontece só no primeiro acesso depois de um tempo parado e pode " +
+    "levar até 2 minutos. Pode deixar a página aberta.";
+
+  var temporizadores = [];
+
+  function escreverAviso(texto) {
+    var overlay = document.querySelector(OVERLAY_SELECTOR);
+    if (!overlay) return;
+    var box = overlay.querySelector(".rh-loader__box");
+    if (!box) return;
+    var aviso = overlay.querySelector(".rh-loader__hint");
+    if (!aviso) {
+      aviso = document.createElement("p");
+      aviso.className = "rh-loader__hint";
+      box.appendChild(aviso);
+    }
+    aviso.textContent = texto;
+  }
+
+  function agendarAvisos() {
+    temporizadores.push(
+      setTimeout(function () {
+        escreverAviso(AVISO);
+      }, AVISO_MS)
+    );
+    temporizadores.push(
+      setTimeout(function () {
+        escreverAviso(AVISO_LONGO);
+      }, AVISO_LONGO_MS)
+    );
+  }
+
+  function limparAvisos() {
+    temporizadores.forEach(clearTimeout);
+    temporizadores = [];
+    var aviso = document.querySelector(".rh-loader__hint");
+    if (aviso && aviso.parentNode) aviso.parentNode.removeChild(aviso);
+  }
+
   // Contador de chamadas simultâneas: com várias requisições em paralelo
   // (ex.: Promise.all de dois apiGet), o loader só some quando a última
   // delas terminar, em vez de sumir assim que a primeira resolve.
@@ -74,11 +129,16 @@
       pendentes++;
       var overlay = get(text);
       overlay.classList.remove("is-hidden");
+      // Só o primeiro show agenda o aviso: com requisições em paralelo, o
+      // relógio que interessa é o da espera inteira, não o da última chamada
+      // a entrar na fila.
+      if (pendentes === 1) agendarAvisos();
       return overlay;
     },
     hide: function () {
       pendentes = Math.max(0, pendentes - 1);
       if (pendentes > 0) return;
+      limparAvisos();
       var overlay = document.querySelector(OVERLAY_SELECTOR);
       if (overlay) overlay.classList.add("is-hidden");
     },
