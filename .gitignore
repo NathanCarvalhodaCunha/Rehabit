@@ -47,3 +47,7 @@ agenda-rehabit.ics
 # do Wi-Fi e a senha da conta da clínica. O modelo versionado, sem dados
 # reais, é o Firmware/goniometro-esp32.ino.
 Firmware/goniometro-esp32/
+
+# Estado local do brModelo: posição da janela (config.chc) e autosave
+# (autosave.chc), gravados na pasta de onde ele é aberto
+*.chc
