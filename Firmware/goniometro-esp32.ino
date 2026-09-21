@@ -1,5 +1,5 @@
 // Rehabit — goniômetro digital (ESP32 + MPU6050)
-// Firmware 2.1
+// Firmware 2.3
 //
 // NÃO É PRECISO EDITAR NADA AQUI. Wi-Fi e pareamento são configurados pelo
 // celular, na primeira vez que o aparelho liga:
