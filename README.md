@@ -16,6 +16,7 @@ Cada tela tem uma variante de tema claro e uma escura (ex.: `login.html` / `logi
 ```
 Login/            Telas de autenticação (login, cadastro, esqueci a senha, redefinir senha)
 Software/         Aplicação principal (dashboard, pacientes, sessões, dispositivo, configurações)
+Firmware/         Código do goniômetro (ESP32 + MPU6050) e guia de montagem
 rehabit-api/      Backend Spring Boot (API REST + banco H2 embarcado)
 Rehabit.sql       Script de referência do schema do banco
 iniciar-rehabit.bat   Compila e sobe o backend, depois abre o site
@@ -47,8 +48,64 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 - Recuperação de senha por e-mail: código de 6 dígitos (e link direto, quando o site tem endereço público).
 - Cadastro de pacientes e vínculo com profissionais.
 - Registro de sessões de fisioterapia e histórico de evolução por paciente.
-- Sincronização de medições de um goniômetro digital (amplitude de movimento articular).
+- Goniômetro digital integrado, em tempo real (veja abaixo).
 - Tema claro/escuro em todas as telas.
+
+## O goniômetro em tempo real
+
+O aparelho é um ESP32 com um MPU6050 preso ao segmento móvel da articulação.
+Ele estima a gravidade com um filtro complementar (acelerômetro + giroscópio)
+e mede o ângulo entre a gravidade de agora e a gravidade na pose marcada como
+zero — com o braço pendurado ao lado do tronco marca 0°, na horizontal marca
+90°, acima da cabeça ~180°. Como o zero vem dessa pose e não de um eixo
+escolhido no código, não importa em que orientação a placa é amarrada no
+braço. Em compensação a medida é sempre positiva (não distingue para que lado
+a articulação abriu) e é relativa à gravidade, não ao tronco: o paciente
+precisa estar ereto. O ângulo vai para a API; o navegador recebe cada leitura por **SSE**
+(`GET /api/goniometro/stream`), sem ficar perguntando de tempos em tempos.
+Quando o SSE não sobe — proxy que corta streaming, rede corporativa — o
+cliente cai sozinho para polling e continua funcionando.
+
+O aparelho não guarda credencial nenhuma: ele se pareia com a clínica por um
+código de 6 dígitos e passa a usar um token só dele, que a clínica pode
+revogar a qualquer momento. A telemetria por isso não carrega a clínica no
+corpo — ela sai do token, e é o que impede um goniômetro de escrever na
+clínica de outro.
+
+O caminho de volta usa a resposta do próprio POST de telemetria: o ESP32 não
+abre porta nenhuma, só lê o que veio junto. É assim que os botões da tela
+Dispositivo chegam ao aparelho (zerar/tara, identificar, iniciar e parar
+captura, reiniciar) e é assim que o servidor dita o ritmo de amostragem —
+10 Hz gravando, 2,5 Hz com alguém olhando, 0,5 Hz ocioso, para poupar bateria.
+
+Na prática, dentro do sistema:
+
+- **Tela Dispositivo** — ângulo ao vivo em um mostrador, gráfico dos últimos
+  60 segundos, mínimo/máximo/amplitude, bateria, sinal Wi-Fi, número de série,
+  firmware, IP e há quanto tempo chegou o último pacote, além da lista de
+  aparelhos pareados e do código de pareamento.
+- **Cadastrar sessão** — o mesmo canal aparece embutido no formulário: dá para
+  usar o ângulo atual ou gravar o movimento completo e deixar a amplitude
+  (máximo − mínimo) cair sozinha no campo, que é salvo como medição da sessão.
+- **Histórico do paciente** — a sessão que veio de uma gravação guarda também a
+  **curva do movimento**, e o botão "Ver curva" na linha do histórico mostra o
+  traçado inteiro: dá para ver se o paciente chegou ao máximo de uma vez ou aos
+  poucos, se travou no meio, se compensou voltando.
+
+As leituras soltas vivem em memória enquanto a tela está aberta — são centenas
+por minuto e só interessam naquele momento. O que vai para o banco é o cadastro
+do aparelho, a amplitude que o profissional escolheu gravar na sessão e, quando
+ela veio de uma gravação, a curva daquele movimento (uma lista de pares
+`[ms desde o início, ângulo]`, decimada acima de 1200 pontos para uma captura
+longa continuar cobrindo o movimento inteiro em vez de ser cortada no meio).
+
+A curva é buscada no servidor pela identidade da captura, nunca enviada pelo
+navegador: se o profissional corrigir a amplitude à mão, o vínculo se desfaz e
+a sessão é salva sem curva — melhor não ter gráfico do que pendurar no paciente
+o traçado de um movimento que não corresponde ao número registrado.
+
+Para montar e gravar o aparelho, veja
+[`Firmware/goniometro-esp32-GUIA.md`](Firmware/goniometro-esp32-GUIA.md).
 
 ## Envio de e-mail
 
@@ -151,6 +208,45 @@ cadastrar.
    publicado, aquele endereço não pode existir.
 4. **Código por e-mail** — a prova final: sem abrir a caixa de entrada e
    digitar os 6 dígitos, a conta não é criada.
+
+## A hibernação da API no Render
+
+O plano gratuito do Render derruba o container depois de **~15 minutos sem
+tráfego**. A primeira chamada depois disso paga o religamento inteiro. Medido
+no mesmo `POST /api/auth/login`:
+
+| Estado da instância | TTFB |
+| --- | --- |
+| Dormindo (spin-down) | **146,7 s** |
+| Acordada | **0,48 s** |
+
+DNS e TLS levaram 20 ms e 79 ms nos dois casos — a rede nunca foi o problema,
+e os assets externos somam só 212 KB, que não explicam minutos.
+
+Por muito tempo isso pareceu um defeito "do primeiro acesso em cada aparelho",
+e a confusão tinha uma razão de ser: a tela de login não chama a API ao
+carregar, então o HTML aparece rápido e a espera toda cai no botão *Entrar*.
+Como a sessão fica no `localStorage` com token de 30 dias, um aparelho já
+usado entra direto e **nunca** refaz o login — quem faz a chamada que acorda o
+servidor é sempre o aparelho novo. O gatilho real é o tempo parado; o aparelho
+novo só é quem paga a conta.
+
+Duas coisas atacam isso:
+
+- [`.github/workflows/manter-api-acordada.yml`](.github/workflows/manter-api-acordada.yml)
+  bate em `GET /api/health` a cada 10 min, das 06:00 às 23:59 (Brasília), para
+  que a ociosidade não chegue nos 15 min. A janela de 18 h/dia gasta ~540 das
+  750 horas mensais do plano gratuito e deixa folga; de madrugada a instância
+  dorme e ninguém sente. **Antes de uma apresentação**, dá para acordar a API
+  na mão: aba *Actions* → *Manter a API acordada* → *Run workflow*.
+- O loader avisa quando a espera passa do normal (5 s e 25 s), em vez de ficar
+  girando calado. Sem isso, um `Entrando...` parado por dois minutos parece
+  travado e a pessoa fecha a aba justo quando faltavam segundos.
+
+Se o ping parar sozinho, provavelmente é o GitHub desligando workflows
+agendados depois de **60 dias sem atividade no repositório** — basta reativar
+na aba *Actions*. E a solução definitiva, se um dia houver orçamento, é o
+plano pago do Render: sem spin-down, nada disso é necessário.
 
 ## Licença
 

@@ -25,8 +25,9 @@ window.RehabitRelatorio = (function () {
   var COR_MARCA = [21, 101, 216];
   var COR_LINHA = [226, 232, 240];
   var COR_FUNDO_CABECALHO = [241, 245, 249];
-  var COR_DOR = [217, 119, 6];   // âmbar: a dor tem de se distinguir da amplitude
-  var COR_META = [5, 150, 105];  // verde: a linha de referência do objetivo
+  // Mesmo par de cores dos gráficos da tela: azul para amplitude, vermelho
+  // suave para dor.
+  var COR_DOR = [229, 115, 115];
 
   var promessaBiblioteca = null;
 
@@ -66,6 +67,14 @@ window.RehabitRelatorio = (function () {
     return horaIso ? texto(horaIso).slice(0, 5) : "";
   }
 
+  /** "dd/mm" — o ano não cabe nos rótulos do eixo x de um gráfico. */
+  function formatarDataCurta(dataIso) {
+    if (!dataIso) return "";
+    var partes = texto(dataIso).slice(0, 10).split("-");
+    if (partes.length !== 3) return texto(dataIso);
+    return partes[2] + "/" + partes[1];
+  }
+
   function hojePorExtenso() {
     var agora = new Date();
     return (
@@ -90,19 +99,6 @@ window.RehabitRelatorio = (function () {
    * Folha em branco com cabeçalho e rodapé próprios. Todo desenho passa por
    * aqui, então quebra de página, numeração e margens ficam num lugar só.
    */
-  /**
-   * Passo de grade em número redondo: sem isso o eixo saía com 129°, 108°,
-   * 86° — números que ninguém lê de relance num relatório impresso.
-   */
-  function passoRedondo(bruto) {
-    var potencia = Math.pow(10, Math.floor(Math.log(Math.max(bruto, 0.1)) / Math.LN10));
-    var candidatos = [1, 2, 2.5, 5, 10];
-    for (var i = 0; i < candidatos.length; i++) {
-      if (candidatos[i] * potencia >= bruto) return candidatos[i] * potencia;
-    }
-    return 10 * potencia;
-  }
-
   function criarFolha(jsPDF, cabecalho) {
     var doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
     var y = 0;
@@ -294,160 +290,241 @@ window.RehabitRelatorio = (function () {
       y += 22;
     }
 
-    /**
-     * Gráfico de evolução desenhado em vetor no próprio PDF — sem depender do
-     * Chart.js nem de imagem da tela: o relatório pode ser gerado da Agenda,
-     * onde gráfico nenhum está desenhado, e uma captura de canvas sairia
-     * serrilhada na impressão.
-     *
-     *   rotulos    — legendas do eixo X, na ordem cronológica
-     *   series     — [{ nome, cor, valores: [n|null], eixo: "esq"|"dir" }]
-     *   eixoDir    — { titulo, min, max } quando houver série à direita
-     *   referencia — { valor, rotulo } para a linha da meta
-     */
-    function grafico(config) {
-      var series = (config.series || []).filter(function (s) {
-        return s.valores.some(function (v) {
-          return v != null;
-        });
-      });
-      if (!series.length || !config.rotulos.length) return;
+    /* ----------------------------------------------------------------
+       Gráficos
 
-      var ALTURA_AREA = 46;
-      var ALTURA_TOTAL = ALTURA_AREA + 22;
-      garantirEspaco(ALTURA_TOTAL);
+       Desenhados com as primitivas do próprio jsPDF (linhas e retângulos),
+       e não como uma imagem tirada dos canvas do Chart.js da tela. Três
+       razões: o relatório de consultas é pedido de telas que não têm
+       gráfico nenhum para fotografar; vetor não pixeliza no zoom nem na
+       impressão, que é o destino do arquivo; e um canvas de tema escuro
+       viraria um retângulo escuro no meio do papel branco.
+       ---------------------------------------------------------------- */
 
-      var temDireita = series.some(function (s) {
-        return s.eixo === "dir";
+    /** Escala "valor -> pixel", com uma folga para a linha não colar na borda. */
+    function criarEscala(valores, base) {
+      var numeros = valores.filter(function (v) {
+        return typeof v === "number" && isFinite(v);
       });
-      var esquerda = MARGEM + 11;
-      var direita = LARGURA - MARGEM - (temDireita ? 11 : 4);
-      var topo = y + 7; // espaço para a legenda
-      var base = topo + ALTURA_AREA;
-
-      // Escala da esquerda: a folga sai do intervalo dos dados, e só depois a
-      // meta entra — folga calculada sobre a meta (que costuma estar bem
-      // acima) achataria a evolução no rodapé do gráfico.
-      var valoresEsq = [];
-      series.forEach(function (s) {
-        if (s.eixo !== "dir") {
-          s.valores.forEach(function (v) {
-            if (v != null) valoresEsq.push(Number(v));
-          });
-        }
-      });
-      var minEsq = Math.min.apply(null, valoresEsq);
-      var maxEsq = Math.max.apply(null, valoresEsq);
-      var folga = Math.max((maxEsq - minEsq) * 0.12, 3);
-      minEsq -= folga;
-      maxEsq += folga;
-      if (config.referencia && config.referencia.valor != null) {
-        var meta = Number(config.referencia.valor);
-        minEsq = Math.min(minEsq, meta);
-        maxEsq = Math.max(maxEsq, meta + folga / 2);
+      var minimo = Math.min.apply(Math, numeros);
+      var maximo = Math.max.apply(Math, numeros);
+      if (base != null) {
+        minimo = Math.min(minimo, base);
+        maximo = Math.max(maximo, base);
       }
-      var passo = passoRedondo((maxEsq - minEsq) / 4);
-      minEsq = Math.max(0, Math.floor(minEsq / passo) * passo);
-      maxEsq = Math.ceil(maxEsq / passo) * passo;
-      if (maxEsq === minEsq) maxEsq = minEsq + passo;
-      var divisoes = Math.min(Math.round((maxEsq - minEsq) / passo), 6);
-
-      var minDir = (config.eixoDir && config.eixoDir.min) || 0;
-      var maxDir = (config.eixoDir && config.eixoDir.max) || 10;
-
-      function xDe(i) {
-        if (config.rotulos.length === 1) return (esquerda + direita) / 2;
-        return esquerda + ((direita - esquerda) * i) / (config.rotulos.length - 1);
+      // Série constante (uma sessão só, ou todas iguais) não tem intervalo:
+      // sem esta abertura a divisão daria zero e a linha sairia fora do quadro.
+      if (minimo === maximo) {
+        minimo -= 1;
+        maximo += 1;
       }
-      function yDe(valor, eixo) {
-        var min = eixo === "dir" ? minDir : minEsq;
-        var max = eixo === "dir" ? maxDir : maxEsq;
-        return base - ((Number(valor) - min) / (max - min)) * ALTURA_AREA;
-      }
+      var folga = (maximo - minimo) * 0.12;
+      return { minimo: minimo - folga, maximo: maximo + folga };
+    }
 
-      // Legenda
-      var xLegenda = MARGEM + 1;
-      doc.setFontSize(7.5);
-      doc.setFont("helvetica", "bold");
-      series.forEach(function (s) {
-        doc.setDrawColor.apply(doc, s.cor);
-        doc.setLineWidth(0.9);
-        doc.line(xLegenda, y + 1.6, xLegenda + 5, y + 1.6);
-        doc.setTextColor.apply(doc, COR_SUAVE);
-        doc.text(texto(s.nome), xLegenda + 6.5, y + 2.6);
-        xLegenda += 8 + doc.getTextWidth(texto(s.nome));
+    /** Mostra no máximo `limite` rótulos no eixo x, sem embolar o texto. */
+    function rotulosRareados(rotulos, limite) {
+      var passo = Math.ceil(rotulos.length / limite);
+      return rotulos.map(function (rotulo, i) {
+        return i % passo === 0 || i === rotulos.length - 1 ? rotulo : "";
       });
+    }
 
-      // Grade e rótulos do eixo esquerdo
-      doc.setLineWidth(0.2);
-      doc.setFont("helvetica", "normal");
+    function desenharMolduraEEixos(caixa, escala, sufixo) {
+      var linhas = 4;
       doc.setFontSize(7);
-      for (var i = 0; i <= divisoes; i++) {
-        var valor = minEsq + ((maxEsq - minEsq) * i) / divisoes;
-        var linhaY = base - (ALTURA_AREA * i) / divisoes;
-        doc.setDrawColor.apply(doc, COR_LINHA);
-        doc.line(esquerda, linhaY, direita, linhaY);
-        doc.setTextColor.apply(doc, COR_SUAVE);
-        doc.text(String(Math.round(valor)) + "\u00B0", esquerda - 2, linhaY + 1, { align: "right" });
-        if (temDireita) {
-          var valorDir = minDir + ((maxDir - minDir) * i) / divisoes;
-          doc.text(String(Math.round(valorDir)), direita + 2, linhaY + 1);
-        }
-      }
-
-      // Linha da meta
-      if (config.referencia && config.referencia.valor != null) {
-        var yMeta = yDe(config.referencia.valor, "esq");
-        doc.setDrawColor.apply(doc, COR_META);
-        doc.setLineWidth(0.4);
-        doc.setLineDashPattern([1.6, 1.4], 0);
-        doc.line(esquerda, yMeta, direita, yMeta);
-        doc.setLineDashPattern([], 0);
-        doc.setTextColor.apply(doc, COR_META);
-        doc.setFontSize(7);
-        doc.text(texto(config.referencia.rotulo), direita, yMeta - 1.4, { align: "right" });
-      }
-
-      // Séries
-      series.forEach(function (s) {
-        doc.setDrawColor.apply(doc, s.cor);
-        doc.setFillColor.apply(doc, s.cor);
-        doc.setLineWidth(s.eixo === "dir" ? 0.5 : 0.8);
-        if (s.eixo === "dir") doc.setLineDashPattern([1.4, 1.2], 0);
-
-        var anterior = null;
-        s.valores.forEach(function (valor, i) {
-          if (valor == null) {
-            anterior = null;
-            return;
-          }
-          var ponto = { x: xDe(i), y: yDe(valor, s.eixo) };
-          if (anterior) doc.line(anterior.x, anterior.y, ponto.x, ponto.y);
-          anterior = ponto;
-        });
-        doc.setLineDashPattern([], 0);
-
-        s.valores.forEach(function (valor, i) {
-          if (valor == null) return;
-          doc.circle(xDe(i), yDe(valor, s.eixo), s.eixo === "dir" ? 0.7 : 1, "F");
-        });
-      });
-
-      // Rótulos do eixo X — no máximo seis, para não virar borrão.
-      var passo = Math.ceil(config.rotulos.length / 6);
       doc.setFont("helvetica", "normal");
+      for (var i = 0; i <= linhas; i++) {
+        var yLinha = caixa.baixo - (caixa.altura / linhas) * i;
+        doc.setDrawColor.apply(doc, COR_LINHA);
+        doc.setLineWidth(0.15);
+        doc.line(caixa.esquerda, yLinha, caixa.direita, yLinha);
+        var valor = escala.minimo + ((escala.maximo - escala.minimo) / linhas) * i;
+        doc.setTextColor.apply(doc, COR_SUAVE);
+        doc.text(Math.round(valor) + (sufixo || ""), caixa.esquerda - 1.5, yLinha + 1, { align: "right" });
+      }
+    }
+
+    function desenharRotulosX(caixa, rotulos) {
+      var visiveis = rotulosRareados(rotulos, 9);
+      var passo = caixa.largura / rotulos.length;
       doc.setFontSize(7);
       doc.setTextColor.apply(doc, COR_SUAVE);
-      config.rotulos.forEach(function (rotulo, i) {
-        if (i % passo !== 0 && i !== config.rotulos.length - 1) return;
-        doc.text(texto(rotulo), xDe(i), base + 4.5, { align: "center" });
+      visiveis.forEach(function (rotulo, i) {
+        if (!rotulo) return;
+        doc.text(texto(rotulo), caixa.esquerda + passo * (i + 0.5), caixa.baixo + 4, { align: "center" });
+      });
+    }
+
+    function legenda(caixa, itens) {
+      if (itens.length < 2) return;
+      var x = caixa.esquerda;
+      var yLegenda = caixa.baixo + 8.5;
+      doc.setFontSize(7.5);
+      itens.forEach(function (item) {
+        doc.setFillColor.apply(doc, item.cor);
+        doc.circle(x + 1, yLegenda - 0.8, 1, "F");
+        doc.setTextColor.apply(doc, COR_SUAVE);
+        doc.setFont("helvetica", "normal");
+        doc.text(texto(item.rotulo), x + 3.5, yLegenda);
+        x += doc.getTextWidth(texto(item.rotulo)) + 11;
+      });
+    }
+
+    /**
+     * Reserva o espaço do gráfico e devolve a caixa de desenho em mm.
+     *
+     * O título da seção entra na mesma reserva, e é escrito só depois de a
+     * folha estar garantida: quando a quebra de página acontecia na hora de
+     * desenhar, o título ficava órfão no pé de uma folha e o gráfico
+     * aparecia sozinho no alto da seguinte.
+     */
+    function reservarCaixa(altura, comEixoDireito, titulo, comLegenda) {
+      // Abaixo do quadro cabem os rótulos do eixo x e, quando há mais de uma
+      // série, a legenda. Reservar a legenda em gráfico que não tem uma
+      // empurrava a folha adiante por poucos milímetros e deixava um vão em
+      // branco no pé da página anterior.
+      var alturaTotal = altura + (comLegenda ? 16 : 10);
+      garantirEspaco(alturaTotal + (titulo ? 9 : 0));
+      if (titulo) tituloSecao(titulo);
+      var esquerda = MARGEM + 11;
+      var direita = LARGURA - MARGEM - (comEixoDireito ? 11 : 1);
+      var caixa = {
+        esquerda: esquerda,
+        direita: direita,
+        largura: direita - esquerda,
+        topo: y,
+        baixo: y + altura,
+        altura: altura,
+      };
+      y += alturaTotal;
+      return caixa;
+    }
+
+    /**
+     * Linhas com marcadores. `series` aceita duas escalas — a segunda sai
+     * pelo eixo da direita — para a leitura que interessa no prontuário:
+     * a amplitude subindo enquanto a dor cai.
+     */
+    function graficoLinha(opcoes) {
+      function temNumero(s) {
+        return (
+          s &&
+          s.valores &&
+          s.valores.some(function (v) {
+            return typeof v === "number" && isFinite(v);
+          })
+        );
+      }
+
+      var todas = opcoes.series || [];
+      /* A primeira série é o assunto do gráfico: dá a escala da esquerda e é
+         a dona da linha de meta. Sem ela não há gráfico — descartá-la e
+         promover a segunda desenharia a dor sob o título da amplitude, com a
+         meta de amplitude traçada na escala de 0 a 10. */
+      if (!temNumero(todas[0]) || !opcoes.rotulos || opcoes.rotulos.length < 2) return false;
+
+      // Já a série de apoio é opcional: sem nenhum número (sessões sem dor
+      // registrada, por exemplo) ela sai, e com ela o eixo da direita e a
+      // legenda que não teriam nada para mostrar.
+      var series = todas.slice(0, 1).concat(todas.slice(1).filter(temNumero));
+
+      var secundaria = series[1];
+      var caixa = reservarCaixa(opcoes.altura || 46, !!secundaria, opcoes.titulo, series.length > 1);
+      var escalaPrincipal = criarEscala(series[0].valores, opcoes.meta != null ? opcoes.meta : null);
+      desenharMolduraEEixos(caixa, escalaPrincipal, series[0].sufixo);
+      desenharRotulosX(caixa, opcoes.rotulos);
+
+      var passo = caixa.largura / opcoes.rotulos.length;
+
+      function pontoY(valor, escala) {
+        var proporcao = (valor - escala.minimo) / (escala.maximo - escala.minimo);
+        return caixa.baixo - proporcao * caixa.altura;
+      }
+
+      // Meta de tratamento: uma tracejada de referência atrás das séries.
+      if (opcoes.meta != null) {
+        var yMeta = pontoY(Number(opcoes.meta), escalaPrincipal);
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.3);
+        if (doc.setLineDashPattern) doc.setLineDashPattern([1.4, 1.2], 0);
+        doc.line(caixa.esquerda, yMeta, caixa.direita, yMeta);
+        if (doc.setLineDashPattern) doc.setLineDashPattern([], 0);
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Meta " + Number(opcoes.meta) + (series[0].sufixo || ""), caixa.direita, yMeta - 1.2, {
+          align: "right",
+        });
+      }
+
+      series.forEach(function (serie, indice) {
+        var escala = indice === 0 ? escalaPrincipal : criarEscala(serie.valores);
+        if (indice === 1) {
+          // Eixo da direita, na cor da própria série, para não confundir
+          // com os números da esquerda.
+          doc.setFontSize(7);
+          doc.setTextColor.apply(doc, serie.cor);
+          for (var i = 0; i <= 4; i++) {
+            var yLinha = caixa.baixo - (caixa.altura / 4) * i;
+            var valor = escala.minimo + ((escala.maximo - escala.minimo) / 4) * i;
+            doc.text(Math.round(valor) + (serie.sufixo || ""), caixa.direita + 1.5, yLinha + 1);
+          }
+        }
+
+        doc.setDrawColor.apply(doc, serie.cor);
+        doc.setFillColor.apply(doc, serie.cor);
+        doc.setLineWidth(indice === 0 ? 0.7 : 0.5);
+
+        var anteriorX = null;
+        var anteriorY = null;
+        serie.valores.forEach(function (valor, i) {
+          if (valor == null || !isFinite(valor)) return;
+          var px = caixa.esquerda + passo * (i + 0.5);
+          var py = pontoY(Number(valor), escala);
+          if (anteriorX != null) doc.line(anteriorX, anteriorY, px, py);
+          anteriorX = px;
+          anteriorY = py;
+        });
+
+        // Os marcadores vêm depois das linhas para ficarem por cima delas.
+        serie.valores.forEach(function (valor, i) {
+          if (valor == null || !isFinite(valor)) return;
+          doc.circle(caixa.esquerda + passo * (i + 0.5), pontoY(Number(valor), escala), indice === 0 ? 0.9 : 0.7, "F");
+        });
       });
 
-      doc.setDrawColor.apply(doc, COR_LINHA);
-      doc.setLineWidth(0.3);
-      doc.line(esquerda, base, direita, base);
+      legenda(
+        caixa,
+        series.map(function (s) {
+          return { rotulo: s.rotulo, cor: s.cor };
+        })
+      );
+      return true;
+    }
 
-      y = base + 12;
+    /** Barras verticais — uma série só. */
+    function graficoBarras(opcoes) {
+      var valores = (opcoes.valores || []).map(Number);
+      if (!valores.length || !opcoes.rotulos || !opcoes.rotulos.length) return false;
+
+      var caixa = reservarCaixa(opcoes.altura || 42, false, opcoes.titulo, false);
+      // Barra que não começa no zero mente sobre a proporção entre elas.
+      var maximo = Math.max.apply(Math, valores);
+      var escala = { minimo: 0, maximo: maximo > 0 ? maximo * 1.15 : 1 };
+      desenharMolduraEEixos(caixa, escala, opcoes.sufixo);
+      desenharRotulosX(caixa, opcoes.rotulos);
+
+      var passo = caixa.largura / valores.length;
+      var largura = Math.min(passo * 0.6, 9);
+      var cor = opcoes.cor || COR_MARCA;
+      doc.setFillColor.apply(doc, cor);
+      valores.forEach(function (valor, i) {
+        if (!isFinite(valor)) return;
+        var altura = (valor / escala.maximo) * caixa.altura;
+        if (altura <= 0) return;
+        doc.rect(caixa.esquerda + passo * (i + 0.5) - largura / 2, caixa.baixo - altura, largura, altura, "F");
+      });
+      return true;
     }
 
     function finalizar(nomeBase) {
@@ -474,7 +551,8 @@ window.RehabitRelatorio = (function () {
       fichaDeDados: fichaDeDados,
       tabela: tabela,
       indicadores: indicadores,
-      grafico: grafico,
+      graficoLinha: graficoLinha,
+      graficoBarras: graficoBarras,
       avancar: avancar,
       finalizar: finalizar,
     };
@@ -533,6 +611,29 @@ window.RehabitRelatorio = (function () {
       if (porStatus.FALTOU) resumo.push({ valor: String(porStatus.FALTOU), rotulo: "Faltas" });
       if (porStatus.REMARCADA) resumo.push({ valor: String(porStatus.REMARCADA), rotulo: "Remarcadas" });
       folha.indicadores(resumo);
+
+      /* Volume por mês: a tabela abaixo diz o que aconteceu em cada dia, o
+         gráfico diz se o movimento da clínica cresceu ou caiu no período —
+         que é a pergunta que se faz a um relatório de consultas. */
+      var porMes = {};
+      lista.forEach(function (c) {
+        if (!c.data) return;
+        var chave = texto(c.data).slice(0, 7); // aaaa-mm
+        porMes[chave] = (porMes[chave] || 0) + 1;
+      });
+      var meses = Object.keys(porMes).sort();
+      if (meses.length >= 2) {
+        folha.graficoBarras({
+          titulo: "Consultas por mês",
+          rotulos: meses.map(function (chave) {
+            var partes = chave.split("-");
+            return partes[1] + "/" + partes[0].slice(2);
+          }),
+          valores: meses.map(function (chave) {
+            return porMes[chave];
+          }),
+        });
+      }
 
       var colunas = [
         { titulo: "Data", peso: 1.1 },
@@ -600,52 +701,6 @@ window.RehabitRelatorio = (function () {
       }
       folha.indicadores(indicadores);
 
-      // Evolução em gráfico: a tabela de sessões diz os números, mas quem lê o
-      // relatório quer ver de relance se a amplitude sobe e a dor cai.
-      folha.tituloSecao("Evolução");
-      var cronologicas = sessoes
-        .filter(function (s) {
-          return s.data && (s.amplitudeMedia != null || s.dor != null);
-        })
-        .sort(function (a, b) {
-          return a.data < b.data ? -1 : a.data > b.data ? 1 : 0;
-        });
-
-      if (cronologicas.filter(function (s) { return s.amplitudeMedia != null; }).length >= 2) {
-        folha.grafico({
-          rotulos: cronologicas.map(function (s) {
-            return formatarData(s.data).slice(0, 5);
-          }),
-          series: [
-            {
-              nome: "Amplitude (graus)",
-              cor: COR_MARCA,
-              eixo: "esq",
-              valores: cronologicas.map(function (s) {
-                return s.amplitudeMedia != null ? Number(s.amplitudeMedia) : null;
-              }),
-            },
-            {
-              nome: "Dor relatada (0-10)",
-              cor: COR_DOR,
-              eixo: "dir",
-              valores: cronologicas.map(function (s) {
-                return s.dor != null ? Number(s.dor) : null;
-              }),
-            },
-          ],
-          eixoDir: { min: 0, max: 10 },
-          referencia:
-            p.metaAmplitude != null
-              ? { valor: Number(p.metaAmplitude), rotulo: "Meta " + Number(p.metaAmplitude) + "\u00B0" }
-              : null,
-        });
-      } else {
-        folha.paragrafo(
-          "Ainda não há medições suficientes para desenhar a evolução — o gráfico aparece a partir de duas sessões com amplitude registrada."
-        );
-      }
-
       if (p.metaAmplitude != null) {
         folha.tituloSecao("Meta de tratamento");
         var prazo = p.metaData ? " · prazo " + formatarData(p.metaData) : "";
@@ -654,6 +709,45 @@ window.RehabitRelatorio = (function () {
             ? "Amplitude atual de " + atual + "° para uma meta de " + Number(p.metaAmplitude) + "°" + prazo + "."
             : "Meta de " + Number(p.metaAmplitude) + "°, ainda sem medições registradas" + prazo + "."
         );
+      }
+
+      /* A API devolve as sessões da mais nova para a mais antiga, que é a
+         ordem certa para a tabela do histórico e a errada para um gráfico de
+         evolução: no eixo do tempo o tratamento anda para a direita. */
+      var cronologicas = sessoes.slice().reverse();
+      var rotulos = cronologicas.map(function (s) {
+        return formatarDataCurta(s.data);
+      });
+      var amplitudes = cronologicas.map(function (s) {
+        return s.amplitudeMedia != null ? Number(s.amplitudeMedia) : null;
+      });
+      var dores = cronologicas.map(function (s) {
+        return s.dor != null ? Number(s.dor) : null;
+      });
+
+      if (rotulos.length >= 2) {
+        var desenhou = folha.graficoLinha({
+          titulo: "Evolução da amplitude",
+          rotulos: rotulos,
+          meta: p.metaAmplitude != null ? Number(p.metaAmplitude) : null,
+          series: [
+            { rotulo: "Amplitude (°)", valores: amplitudes, cor: COR_MARCA, sufixo: "°" },
+            { rotulo: "Dor (0–10)", valores: dores, cor: COR_DOR, sufixo: "" },
+          ],
+        });
+        if (!desenhou) {
+          folha.tituloSecao("Evolução da amplitude");
+          folha.paragrafo("Ainda não há amplitudes medidas para traçar a evolução.", { cor: COR_SUAVE });
+        }
+
+        folha.graficoBarras({
+          titulo: "Duração das sessões",
+          rotulos: rotulos,
+          valores: cronologicas.map(function (s) {
+            return s.duracao != null ? Number(s.duracao) : 0;
+          }),
+          sufixo: " min",
+        });
       }
 
       folha.tituloSecao("Anamnese");

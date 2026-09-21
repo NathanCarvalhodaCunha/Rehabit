@@ -188,44 +188,44 @@ window.addEventListener("pageshow", (e) => {
 
   /**
    * Telas compartilhadas (Desempenho, por exemplo) foram feitas a partir do
-   * modelo da instituição e trazem "./instituicao.html" e
-   * "./perfil-instituicao.html" fixos no menu. Um profissional que clicasse
-   * em Home ali caía na tela da clínica, e em Perfil no perfil dela. Aqui os
-   * dois links de qualquer tela são reapontados para a área de quem está
+   * modelo da instituição e trazem "./instituicao.html" fixo no menu. Um
+   * profissional que clicasse em Home ali caía na tela da clínica. Aqui o
+   * link de Home de qualquer tela é reapontado para a casa de quem está
    * logado — e no tema certo.
    */
-  (function corrigirLinksDeConta() {
-    // Home e Perfil são a mesma história: a tela compartilhada traz no menu
-    // o link do outro tipo de conta, e quem clica sai da própria área.
-    const paresDeTela = [
-      ehClinica ? ["profissional", "instituicao"] : ["instituicao", "profissional"],
-      ehClinica
-        ? ["perfil-profissional", "perfil-instituicao"]
-        : ["perfil-instituicao", "perfil-profissional"],
+  (function corrigirLinksDoMenu() {
+    const home = ehClinica ? "instituicao" : "profissional";
+    const outra = ehClinica ? "profissional" : "instituicao";
+
+    // Nomes de arquivo inteiros. Um seletor de sufixo ([href$="instituicao.html"])
+    // parece equivalente e não é: ele casa também com "perfil-instituicao.html"
+    // e "editar-perfil-instituicao.html" — e era isso que mandava o "Perfil" do
+    // menu para a Home, nos dois tipos de conta.
+    //
+    // Home e Perfil recebem o mesmo tratamento: as telas compartilhadas trazem
+    // os dois fixos no modelo da instituição, então sem isso um profissional
+    // abria o perfil da clínica pelo menu.
+    const destinos = [
+      [[home, outra], home],
+      [["perfil-" + home, "perfil-" + outra], "perfil-" + home],
     ];
 
-    // Comparar o nome do arquivo inteiro, e não o fim do href: "termina em
-    // profissional.html" pegava junto perfil-profissional.html,
-    // editar-perfil-profissional.html e cadastrar-profissional.html — era
-    // assim que o Perfil do profissional virava mais um atalho para a Home.
-    const nomeDoArquivo = (href) => href.split("/").pop();
+    function arquivoDe(link) {
+      return (link.getAttribute("href") || "").split("/").pop().split(/[?#]/)[0];
+    }
 
-    document.querySelectorAll("a[href]").forEach((link) => {
-      const href = link.getAttribute("href") || "";
-      // Link com parâmetro é a clínica abrindo um profissional específico
-      // (perfil-profissional.html?id=7, profissional.html?idFisioterapeuta=7).
-      // Esse não é link de menu e não pode ser reapontado.
-      if (href.includes("?")) return;
-
-      const nome = nomeDoArquivo(href.split("#")[0]);
-      paresDeTela.forEach(([outra, propria]) => {
-        // A variante de tema também pode estar errada (link claro numa tela escura).
-        if (nome === `${outra}.html` || nome === `${outra}-escuro.html` ||
-            nome === `${propria}.html` || nome === `${propria}-escuro.html`) {
-          link.href = paginaTema(propria);
-        }
+    // Só o menu. No corpo das telas existem links para a home e o perfil de UM
+    // profissional ("perfil-profissional.html?id=..."), que não são os do
+    // usuário logado: reescrevê-los apagaria o id.
+    document
+      .querySelectorAll(".sidebar .nav a[href], .mobile-bottomnav a[href]")
+      .forEach((link) => {
+        const arquivo = arquivoDe(link);
+        const destino = destinos.find(([bases]) =>
+          bases.some((base) => arquivo === `${base}.html` || arquivo === `${base}-escuro.html`)
+        );
+        if (destino) link.href = paginaTema(destino[1]);
       });
-    });
   })();
 
   document.querySelectorAll(ehClinica ? seletorAgenda : seletorConsultas).forEach((el) => el.remove());
@@ -237,6 +237,10 @@ window.addEventListener("pageshow", (e) => {
   const ICONE_DESEMPENHO =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  const ICONE_PROFISSIONAIS =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' +
+    '<path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
   function jaTem(container, pagina) {
     return !!container.querySelector(`a[href$="${pagina}.html"], a[href$="${pagina}-escuro.html"]`);
@@ -276,6 +280,9 @@ window.addEventListener("pageshow", (e) => {
   if (ehClinica) {
     inserirNaSidebar("consultas", "Consultas", ICONE_CALENDARIO);
     inserirNaBarraMobile("consultas", "Consultas", ICONE_CALENDARIO, "configuracoes");
+    // Só a clínica tem profissionais para listar.
+    inserirNaSidebar("profissionais", "Profissionais", ICONE_PROFISSIONAIS);
+    inserirNaBarraMobile("profissionais", "Profissionais", ICONE_PROFISSIONAIS, "configuracoes");
   } else {
     inserirNaSidebar("agenda", "Agenda", ICONE_CALENDARIO);
     inserirNaBarraMobile("agenda", "Agenda", ICONE_CALENDARIO, "configuracoes");
@@ -364,6 +371,11 @@ document.addEventListener("click", (e) => {
         sessaoAtual && sessaoAtual.tipo === "CLINICA" ? paginaTema("perfil-instituicao") : paginaTema("perfil-profissional");
       break;
     }
+    // Separado de "go-list" de propósito: aquele é o atalho de Home (o logo da
+    // sidebar usa o mesmo), e mudá-lo levaria o logo para cá.
+    case "go-profissionais":
+      window.location.href = paginaTema("profissionais");
+      break;
     case "back":
       history.length > 1 ? history.back() : (window.location.href = "./");
       break;

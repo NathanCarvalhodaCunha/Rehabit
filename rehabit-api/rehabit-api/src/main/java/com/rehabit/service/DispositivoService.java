@@ -30,6 +30,13 @@ public class DispositivoService {
     /** Um ano: ninguém vai refazer login num aparelho pendurado na parede. */
     private static final long VALIDADE_TOKEN_MS = Duration.ofDays(365).toMillis();
     private static final int MAX_TENTATIVAS_CODIGO = 20;
+    /**
+     * De quanto em quanto tempo o "último contato" do aparelho é regravado.
+     * A telemetria chega a 10 pacotes por segundo durante uma captura; gravar
+     * a cada um seria escrita contínua em cima da mesma linha para ganhar uma
+     * precisão que a tela nem mostra (ela fala em segundos).
+     */
+    private static final Duration INTERVALO_ULTIMO_CONTATO = Duration.ofSeconds(20);
 
     private final DispositivoRepository dispositivoRepository;
     private final CodigoPareamentoRepository codigoRepository;
@@ -140,8 +147,12 @@ public class DispositivoService {
         if (!dispositivo.isAtivo()) {
             throw new AuthException("Este dispositivo foi revogado pela clínica.", HttpStatus.FORBIDDEN);
         }
-        dispositivo.setUltimoContato(LocalDateTime.now());
-        dispositivoRepository.save(dispositivo);
+        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime anterior = dispositivo.getUltimoContato();
+        if (anterior == null || anterior.isBefore(agora.minus(INTERVALO_ULTIMO_CONTATO))) {
+            dispositivo.setUltimoContato(agora);
+            dispositivoRepository.save(dispositivo);
+        }
         return dispositivo.getIdClinica();
     }
 

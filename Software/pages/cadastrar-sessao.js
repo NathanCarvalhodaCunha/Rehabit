@@ -3,19 +3,137 @@
   if (!header) return;
 
   const sessao = getSessao();
-  if (!sessao || sessao.tipo !== "FISIOTERAPEUTA") return;
+  if (!sessao) return;
 
-  apiGet(`/fisioterapeutas/${sessao.id}`)
-    .then((f) => fetch(`${API_BASE_URL}/goniometro/leitura?idClinica=${f.idClinica}`, {
-      headers: { Authorization: `Bearer ${sessao.token}` },
-    }))
-    .then((r) => r.json())
-    .then((dados) => {
-      if (dados.angulo != null) {
-        document.getElementById("s-amp").value = dados.angulo;
+  /* A instituição chega nesta tela pela mesma aba "Sessões" da ficha do
+     paciente que o profissional usa. Antes o script parava aqui quando a
+     conta não era FISIOTERAPEUTA e a tela inteira nascia morta: círculo
+     cinza no lugar da foto, nome e dados em branco, tabela sem uma linha e
+     nem a data de hoje preenchida. Quem decide o acesso é a API — ela já
+     confere a posse do paciente em /pacientes/{id} —, então a leitura serve
+     às duas contas e só o formulário segue sendo do profissional, que é
+     quem atende. */
+  const podeRegistrar = sessao.tipo === "FISIOTERAPEUTA";
+
+  /* Qual captura preencheu a amplitude. Fica no escopo da tela porque quem
+     escreve é o painel do goniômetro e quem lê é o envio do formulário: vai
+     junto no POST para o servidor anexar a curva daquele movimento, e só
+     daquele. */
+  let capturaUsada = null;
+
+  /* Goniômetro ao vivo dentro do formulário: o profissional não precisa sair
+     para a tela Dispositivo, anotar o número e voltar. O painel só aparece
+     depois que o canal abre — sem aparelho na clínica, o formulário fica
+     exatamente como era. */
+  (function ligarGoniometro() {
+    if (!podeRegistrar) return;
+    const painel = document.querySelector("[data-gonio-inline]");
+    const campoAmplitude = document.getElementById("s-amp");
+    if (!painel || !campoAmplitude || typeof RehabitGoniometro === "undefined") return;
+
+    const selo = painel.querySelector(".conn-badge");
+    const seloTexto = painel.querySelector(".conn-text");
+    const valor = painel.querySelector("[data-gonio-angulo]");
+    const campoMin = painel.querySelector("[data-gonio-min]");
+    const campoMax = painel.querySelector("[data-gonio-max]");
+    const campoAmp = painel.querySelector("[data-gonio-amp]");
+    const dica = painel.querySelector("[data-gonio-dica]");
+    const botaoUsar = painel.querySelector("[data-gonio-usar]");
+    const botaoCaptura = painel.querySelector("[data-gonio-captura]");
+
+    let anguloAtual = null;
+    let capturando = false;
+
+    function grau(v) {
+      return v == null ? "–" : `${Number(v).toFixed(1).replace(".", ",")}°`;
+    }
+
+    function preencher(v) {
+      // O campo é um <input type="number">: ponto decimal, sempre.
+      campoAmplitude.value = Number(v).toFixed(1);
+      campoAmplitude.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    function desenhar(estado) {
+      painel.hidden = false;
+      anguloAtual = estado.angulo;
+      valor.textContent = estado.angulo != null ? Number(estado.angulo).toFixed(1).replace(".", ",") : "–";
+
+      const captura = estado.captura;
+      capturando = !!(captura && captura.ativa);
+
+      if (captura && (captura.ativa || captura.amostras)) {
+        campoMin.textContent = grau(captura.minimo);
+        campoMax.textContent = grau(captura.maximo);
+        campoAmp.textContent = grau(captura.amplitude);
+      } else {
+        campoMin.textContent = "–";
+        campoMax.textContent = "–";
+        campoAmp.textContent = "–";
       }
-    })
-    .catch(() => {});
+
+      if (capturando) {
+        selo.dataset.conn = "capturando";
+        seloTexto.textContent = "Gravando";
+        dica.textContent = "Peça o movimento completo e clique em Parar para trazer a amplitude.";
+      } else if (estado.conectado) {
+        selo.dataset.conn = "conectado";
+        seloTexto.textContent = "Conectado";
+        dica.textContent = "Use o ângulo atual ou grave o movimento para calcular a amplitude.";
+      } else {
+        selo.dataset.conn = estado.ultimoContato ? "desconectado" : "aguardando";
+        seloTexto.textContent = estado.ultimoContato ? "Desconectado" : "Aguardando o aparelho";
+        dica.textContent = "Ligue o goniômetro para preencher a amplitude automaticamente.";
+      }
+
+      botaoCaptura.textContent = capturando ? "Parar gravação" : "Gravar movimento";
+      botaoCaptura.disabled = !estado.conectado && !capturando;
+      botaoUsar.disabled = estado.angulo == null;
+    }
+
+    botaoUsar.addEventListener("click", () => {
+      if (anguloAtual == null) return;
+      // Um ângulo solto não tem curva: é um instante, não um movimento.
+      capturaUsada = null;
+      preencher(anguloAtual);
+      RehabitToast.sucesso(`Amplitude preenchida com ${grau(anguloAtual)}.`);
+    });
+
+    botaoCaptura.addEventListener("click", async () => {
+      botaoCaptura.disabled = true;
+      try {
+        if (capturando) {
+          const estado = await RehabitGoniometro.pararCaptura();
+          const amplitude = estado && estado.captura ? estado.captura.amplitude : null;
+          if (amplitude != null) {
+            capturaUsada = estado.captura.iniciadaEm || null;
+            preencher(amplitude);
+            RehabitToast.sucesso(`Amplitude de ${grau(amplitude)} preenchida a partir da gravação.`);
+          } else {
+            RehabitToast.info("A gravação terminou sem leituras suficientes.");
+          }
+        } else {
+          await RehabitGoniometro.iniciarCaptura();
+          RehabitToast.info("Gravando — peça o movimento completo da articulação.");
+        }
+      } catch (err) {
+        RehabitToast.erro(err.message);
+      } finally {
+        botaoCaptura.disabled = false;
+      }
+    });
+
+    /* Editar o número na mão desfaz o vínculo com a captura: a curva mostraria
+       um movimento que não bate com a amplitude registrada. */
+    campoAmplitude.addEventListener("input", (e) => {
+      if (e.isTrusted) capturaUsada = null;
+    });
+
+    RehabitGoniometro.conectar(desenhar).catch(() => {
+      // Clínica sem goniômetro cadastrado ou API fora: o painel simplesmente
+      // não aparece e o campo de amplitude segue manual, como antes.
+    });
+  })();
 
   const params = new URLSearchParams(window.location.search);
   const idPaciente = params.get("id");
@@ -35,6 +153,14 @@
   function formatarDataCurta(dataIso) {
     const [, mes, dia] = dataIso.split("-");
     return `${dia}/${mes}`;
+  }
+
+  // O prontuário é texto livre digitado pelo profissional e vai para dentro
+  // de um template de HTML — precisa ser escapado.
+  function escaparHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
   }
 
   function carregarPacienteEHistorico() {
@@ -58,9 +184,12 @@
 
         header.querySelector("h1").textContent = paciente.nome;
         header.querySelector(".patient-meta.desktop-only").innerHTML =
-          `${idadeTexto} – ${sexoTexto} – ${situacaoTexto}<br/>` +
-          `Início do tratamento: <strong>${inicioTexto}</strong> – Fisioterapia <strong>${fisioTexto}</strong>`;
-        header.querySelector(".patient-meta.mobile-only").innerHTML = `${idadeTexto} – ${sexoTexto}<br/>${situacaoTexto}`;
+          `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)} – ${escaparHtml(situacaoTexto)}<br/>` +
+          `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapia <strong>${escaparHtml(
+            fisioTexto
+          )}</strong>`;
+        header.querySelector(".patient-meta.mobile-only").innerHTML =
+          `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)}<br/>${escaparHtml(situacaoTexto)}`;
 
         const infoValores = document.querySelectorAll(".info-strip .v");
         if (infoValores[0]) infoValores[0].textContent = inicioTexto;
@@ -103,6 +232,16 @@
 
   const form = document.getElementById("cadastrarSessaoForm");
   if (!form) return;
+
+  /* Registrar sessão é ato do profissional que atendeu. Para a instituição a
+     tela vira o histórico em leitura: o formulário sai e a tabela ocupa a
+     largura toda, em vez de sobrar uma coluna vazia de 300px ao lado. */
+  if (!podeRegistrar) {
+    form.remove();
+    const grade = document.querySelector(".session-grid");
+    if (grade) grade.classList.add("sem-formulario");
+    return;
+  }
 
   // Sessão é registro do que já foi atendido, então a data não pode ser
   // futura — o campo trava no dia de hoje e o envio confere de novo.
@@ -165,8 +304,10 @@
         amplitudeMedia: amplitude ? Number(amplitude) : null,
         observacoes: observacoes || null,
         dor: campoDor ? Number(campoDor.value) : null,
+        capturaIniciadaEm: capturaUsada,
         idFisioterapeuta: sessao.id,
       });
+      capturaUsada = null;
       form.reset();
       if (campoData) campoData.value = hojeIso;
       await carregarPacienteEHistorico();

@@ -282,9 +282,12 @@ function formatarDataLonga(dataIso) {
 
       header.querySelector("h1").textContent = paciente.nome;
       header.querySelector(".patient-meta.desktop-only").innerHTML =
-        `${idadeTexto} – ${sexoTexto} – ${situacaoTexto}<br/>` +
-        `Início do tratamento: <strong>${inicioTexto}</strong> – Fisioterapia <strong>${fisioTexto}</strong>`;
-      header.querySelector(".patient-meta.mobile-only").innerHTML = `${idadeTexto} – ${sexoTexto}<br/>${situacaoTexto}`;
+        `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)} – ${escaparHtml(situacaoTexto)}<br/>` +
+        `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapia <strong>${escaparHtml(
+          fisioTexto
+        )}</strong>`;
+      header.querySelector(".patient-meta.mobile-only").innerHTML =
+        `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)}<br/>${escaparHtml(situacaoTexto)}`;
 
       const infoValores = document.querySelectorAll(".info-strip .v");
       if (infoValores[0]) infoValores[0].textContent = inicioTexto;
@@ -351,7 +354,13 @@ function formatarDataLonga(dataIso) {
                     : ""
                 }</td>
               <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
-              <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
+              <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}${
+                  s.temCurva
+                    ? ` <button type="button" class="btn-curva" data-curva="${s.id}" data-curva-rotulo="${formatarDataLonga(
+                        s.data
+                      )}" title="Ver a curva do movimento">Ver curva</button>`
+                    : ""
+                }</td>
               <td class="sessao-acoes">
                 <button type="button" class="sessao-excluir" data-excluir-sessao="${s.id}"
                   aria-label="Excluir sessão de ${escaparHtml(formatarDataLonga(s.data))}">Excluir</button>
@@ -362,8 +371,14 @@ function formatarDataLonga(dataIso) {
           : '<tr><td colspan="4">Ainda não há sessões registradas.</td></tr>';
         RehabitAnim.staggerList(tbody);
         tbody.addEventListener("click", (e) => {
-          const botao = e.target.closest("[data-excluir-sessao]");
-          if (botao) RehabitSessao.excluir(idPaciente, botao.dataset.excluirSessao, botao);
+          const excluir = e.target.closest("[data-excluir-sessao]");
+          if (excluir) {
+            RehabitSessao.excluir(idPaciente, excluir.dataset.excluirSessao, excluir);
+            return;
+          }
+          const botao = e.target.closest("[data-curva]");
+          if (!botao) return;
+          RehabitCurva.abrir(idPaciente, botao.dataset.curva, botao.dataset.curvaRotulo);
         });
       }
     })

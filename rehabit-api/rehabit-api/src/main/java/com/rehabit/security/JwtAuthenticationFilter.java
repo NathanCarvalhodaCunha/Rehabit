@@ -39,8 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String header = request.getHeader("Authorization");
-        String token = (header != null && header.startsWith("Bearer ")) ? header.substring(7) : null;
+        String token = extrairToken(request);
         JwtService.TokenDados dados = token != null ? jwtService.validar(token) : null;
 
         if (dados == null) {
@@ -57,6 +56,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
+     * O token normalmente vem no cabeçalho Authorization. A exceção é o SSE do
+     * goniômetro: o EventSource do navegador não permite cabeçalhos
+     * customizados, então ali — e só ali — o token também é aceito na query
+     * string. Restringir ao caminho do stream evita que tokens comecem a
+     * circular em URLs (e portanto em logs de acesso e no histórico) do resto
+     * da API.
+     */
+    private String extrairToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        if (request.getRequestURI().equals("/api/goniometro/stream")) {
+            String daQuery = request.getParameter("token");
+            if (daQuery != null && !daQuery.isBlank()) {
+                return daQuery;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Compara o path bruto da requisição contra os caminhos públicos. Isso é
      * seguro porque o Spring Security usa StrictHttpFirewall por padrão
      * (via FilterChainProxy), que rejeita URIs não-canônicas (com "..",
@@ -68,6 +89,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String metodo = request.getMethod();
         if (path.startsWith("/api/auth/")) {
+            return true;
+        }
+        // O ping que impede a instância gratuita de hibernar chega sem token
+        // nenhum (veja HealthController e o workflow manter-api-acordada.yml).
+        // Sem esta linha ele tomaria 401: este filtro roda antes do
+        // roteamento, então nem o permitAll() do SecurityConfig nem o
+        // controller chegam a ser consultados — e o ping seguiria acordando a
+        // API, mas acusando falha a cada dez minutos.
+        if (path.equals("/api/health") && "GET".equals(metodo)) {
             return true;
         }
         if (path.startsWith("/uploads/") && "GET".equals(metodo)) {

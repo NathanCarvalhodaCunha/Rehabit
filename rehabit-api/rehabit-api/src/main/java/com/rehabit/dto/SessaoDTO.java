@@ -36,6 +36,17 @@ public class SessaoDTO {
 
     private Integer dor;
 
+    /** A curva não vem na listagem — são centenas de pontos por sessão. */
+    private boolean temCurva;
+
+    public boolean isTemCurva() {
+        return temCurva;
+    }
+
+    public void setTemCurva(boolean temCurva) {
+        this.temCurva = temCurva;
+    }
+
     public Integer getDor() {
         return dor;
     }

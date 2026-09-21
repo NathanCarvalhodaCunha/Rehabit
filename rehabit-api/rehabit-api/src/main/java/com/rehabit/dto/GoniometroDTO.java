@@ -10,6 +10,9 @@ public class GoniometroDTO {
     private LocalDate dataSincronizacao;
     private LocalTime horaSincronizacao;
     private Integer idClinica;
+    private String numeroSerie;
+    private String firmware;
+    private Integer rssi;
 
     public GoniometroDTO() {
     }
@@ -61,5 +64,29 @@ public class GoniometroDTO {
 
     public void setIdClinica(Integer idClinica) {
         this.idClinica = idClinica;
+    }
+
+    public String getNumeroSerie() {
+        return numeroSerie;
+    }
+
+    public void setNumeroSerie(String numeroSerie) {
+        this.numeroSerie = numeroSerie;
+    }
+
+    public String getFirmware() {
+        return firmware;
+    }
+
+    public void setFirmware(String firmware) {
+        this.firmware = firmware;
+    }
+
+    public Integer getRssi() {
+        return rssi;
+    }
+
+    public void setRssi(Integer rssi) {
+        this.rssi = rssi;
     }
 }

@@ -110,8 +110,14 @@ CREATE TABLE IF NOT EXISTS `tb04_goniometro` (
   `tb04_data_sincronizacao` date DEFAULT NULL,
   `tb04_hora_sincronizacao` time DEFAULT NULL,
   `tb04_id_clinica` int(11) NOT NULL,
+  `tb04_numero_serie` varchar(32) DEFAULT NULL,
+  `tb04_firmware` varchar(32) DEFAULT NULL,
+  `tb04_rssi` int(11) DEFAULT NULL,
+  `tb04_ip` varchar(45) DEFAULT NULL,
+  `tb04_ultimo_contato` datetime DEFAULT NULL,
   PRIMARY KEY (`tb04_id_goniometro`),
   KEY `idx_tb04_id_clinica` (`tb04_id_clinica`),
+  KEY `idx_tb04_numero_serie` (`tb04_numero_serie`),
   CONSTRAINT `fk_tb04_tb01` FOREIGN KEY (`tb04_id_clinica`) REFERENCES `tb01_clinica` (`tb01_id_clinica`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -144,6 +150,7 @@ CREATE TABLE IF NOT EXISTS `tb06_medicao` (
   `tb06_data_medicao` date DEFAULT NULL,
   `tb06_hora_medicao` time DEFAULT NULL,
   `tb06_id_sessoes` int(11) NOT NULL,
+  `tb06_curva` longtext DEFAULT NULL,
   PRIMARY KEY (`tb06_id_medicao`),
   KEY `idx_tb06_id_sessoes` (`tb06_id_sessoes`),
   CONSTRAINT `fk_tb06_tb05` FOREIGN KEY (`tb06_id_sessoes`) REFERENCES `tb05_sessoes` (`tb05_id_sessoes`) ON UPDATE CASCADE
