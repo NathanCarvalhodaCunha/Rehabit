@@ -63,7 +63,17 @@ bateria com o aparelho desligado.
 Ajuste o trimpot para **5 V**, medindo a saída com multímetro e **sem o ESP32
 conectado**. Ligar antes de ajustar queima a placa.
 
-![Esquema de ligação](esquema-ligacao.png)
+### A montagem atual (projeto no Cirkit Designer)
+
+![Esquema montado no Cirkit Designer](esquema-cirkit.png)
+
+**Atenção: falta o divisor de bateria neste esquema.** Enquanto ele não for
+acrescentado, mantenha `PINO_BATERIA = -1` no `.ino` — senão o site mostra
+uma carga de bateria inventada.
+
+### A referência, com o divisor no lugar
+
+![Esquema de ligação com o divisor](esquema-ligacao.png)
 
 **Onde fixar o sensor:** no segmento **móvel** da articulação — no braço, para
 medir o ombro; na perna, para o joelho. **Não importa a orientação** em que
