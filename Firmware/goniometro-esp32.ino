@@ -1,5 +1,5 @@
 // Rehabit — goniômetro digital (ESP32 + MPU6050)
-// Firmware 2.1
+// Firmware 2.3
 //
 // NÃO É PRECISO EDITAR NADA AQUI. Wi-Fi e pareamento são configurados pelo
 // celular, na primeira vez que o aparelho liga:
@@ -35,9 +35,12 @@
 //   MPU6050 GND  -> GND
 //   MPU6050 SDA  -> GPIO21
 //   MPU6050 SCL  -> GPIO22
-//   LED de status-> GPIO2 (o LED azul já soldado na maioria das DevKit)
+//   LED de status-> GPIO19 (LED externo + resistor de 220 ohm para o GND)
 //   Botão BOOT   -> GPIO0 (já existe na placa; segurar 5 s reconfigura)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
+//
+// SEM o divisor montado, ponha PINO_BATERIA = -1 abaixo. Deixar o pino solto
+// faz o ADC ler ruído, e o site passa a mostrar uma bateria inventada.
 //
 // ================== COMO O ÂNGULO É MEDIDO ==================
 // O aparelho vai no segmento MÓVEL da articulação — no braço, para medir o
@@ -81,13 +84,16 @@
 // em outro endereço.
 const char *BASE_URL = "https://rehabit-api-4tex.onrender.com/api";
 
-const char *VERSAO_FIRMWARE = "2.2";
+const char *VERSAO_FIRMWARE = "2.3";
 
 const char *AP_NOME = "Rehabit-Goniometro";
 const char *AP_SENHA = "rehabit123";
 
 const int PINO_BOTAO_RESET = 0;  // BOOT na maioria das placas DevKit
-const int PINO_LED = 2;
+/* GPIO19, e não o GPIO2 do LED embutido: o 2 é pino de strapping (o ESP32 lê
+   o nível dele no boot para decidir o modo), então pendurar LED ali pode
+   atrapalhar a gravação. Um pino comum evita o problema de vez. */
+const int PINO_LED = 19;
 // Pino do divisor de tensão da bateria. Ponha -1 se a placa é alimentada só
 // por USB — aí o Rehabit simplesmente não mostra bateria, em vez de mostrar
 // um número inventado.

@@ -43,7 +43,7 @@ próprias, de propósito, para não depender de mais bibliotecas.
 | GND | GND |
 | SDA | GPIO21 |
 | SCL | GPIO22 |
-| LED de status | GPIO2 (o LED azul que já vem soldado na maioria das DevKit) |
+| LED de status | GPIO19 (LED externo + resistor de 220 Ω para o GND) |
 | Botão de reconfiguração | GPIO0 — é o BOOT, já existe na placa |
 | Bateria (opcional) | divisor 100 kΩ / 100 kΩ → GPIO34 |
 
@@ -52,9 +52,28 @@ da sua se for diferente.
 
 **Sobre a bateria:** o pino GPIO34 não aguenta os 4,2 V de uma LiPo, por isso o
 divisor com dois resistores de 100 kΩ — ele entrega metade da tensão ao pino.
-Se a sua placa vai ficar sempre ligada no USB, abra o `.ino` e ponha
-`const int PINO_BATERIA = -1;`: o Rehabit deixa de mostrar bateria, em vez de
-mostrar um número inventado.
+O divisor sai do lado LIGADO da chave (VIN+ do MT3608), para não consumir da
+bateria com o aparelho desligado.
+
+> **Se você não montar o divisor, ponha `const int PINO_BATERIA = -1;` no
+> `.ino`.** Um pino de ADC solto lê ruído, e o site passa a mostrar uma
+> porcentagem de bateria inventada — pior do que não mostrar nada.
+
+**Sobre o MT3608:** ele sai de fábrica desajustado e pode entregar até 28 V.
+Ajuste o trimpot para **5 V**, medindo a saída com multímetro e **sem o ESP32
+conectado**. Ligar antes de ajustar queima a placa.
+
+### A montagem atual (projeto no Cirkit Designer)
+
+![Esquema montado no Cirkit Designer](esquema-cirkit.png)
+
+**Atenção: falta o divisor de bateria neste esquema.** Enquanto ele não for
+acrescentado, mantenha `PINO_BATERIA = -1` no `.ino` — senão o site mostra
+uma carga de bateria inventada.
+
+### A referência, com o divisor no lugar
+
+![Esquema de ligação com o divisor](esquema-ligacao.png)
 
 **Onde fixar o sensor:** no segmento **móvel** da articulação — no braço, para
 medir o ombro; na perna, para o joelho. **Não importa a orientação** em que
