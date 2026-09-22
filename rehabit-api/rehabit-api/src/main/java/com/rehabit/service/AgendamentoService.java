@@ -93,6 +93,8 @@ public class AgendamentoService {
                     HttpStatus.BAD_REQUEST);
         }
 
+        exigirQueAindaNaoTenhaAcontecido(agendamento);
+
         Integer idFisioterapeuta = agendamento.getIdFisioterapeuta();
         exigirDataFutura(dados.getData(), dados.getHora());
         exigirDentroDoExpediente(idFisioterapeuta, dados.getData(), dados.getHora());
@@ -240,6 +242,30 @@ public class AgendamentoService {
         PosseChecker.exigirDonoOuClinicaDona(fisioterapeuta.getId(), fisioterapeuta.getIdClinica(),
                 usuarioId, usuarioTipo);
         return fisioterapeuta;
+    }
+
+    /**
+     * Remarcar é mover uma consulta que ainda vai acontecer. Consulta de um
+     * dia que já passou, ou que já teve presença registrada, é histórico:
+     * mudar a data dela reescreveria o passado e apagaria o registro do
+     * atendimento (ou da falta). Para atender de novo, marca-se uma consulta
+     * nova, e a antiga fica como está.
+     */
+    private void exigirQueAindaNaoTenhaAcontecido(Agendamento agendamento) {
+        String status = agendamento.getStatus();
+        if ("REALIZADA".equals(status) || "FALTOU".equals(status)) {
+            throw new AuthException(
+                    "Esta consulta já teve a presença registrada e não pode ser remarcada. "
+                            + "Marque uma nova consulta para o paciente.",
+                    HttpStatus.BAD_REQUEST);
+        }
+        if (agendamento.getDataAgendamento() != null
+                && agendamento.getDataAgendamento().isBefore(LocalDate.now())) {
+            throw new AuthException(
+                    "Esta consulta já aconteceu e não pode ser remarcada. "
+                            + "Marque uma nova consulta para o paciente.",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**

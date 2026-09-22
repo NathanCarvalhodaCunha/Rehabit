@@ -126,6 +126,24 @@ async function apiDelete(caminho) {
   }
 }
 
+/**
+ * As bibliotecas de CDN (Toastify, GSAP, Chart.js) são carregadas com
+ * "async" para que um CDN que não responde não segure os scripts da própria
+ * tela — era isso que deixava a Home em branco, sem indicadores, sem
+ * pacientes e sem busca, até o navegador desistir do pedido. O preço é que
+ * elas podem chegar depois de nós: aqui esperamos a que faltar até o limite
+ * e chamamos `entao(false)` se ela não vier, para a tela dizer o que houve
+ * em vez de ficar esperando para sempre.
+ */
+function aoTerBiblioteca(nomeGlobal, entao, limiteMs) {
+  const prazo = Date.now() + (limiteMs || 6000);
+  (function tentar() {
+    if (typeof window[nomeGlobal] !== "undefined") return entao(true);
+    if (Date.now() > prazo) return entao(false);
+    setTimeout(tentar, 50);
+  })();
+}
+
 function urlFoto(caminhoFoto) {
   if (!caminhoFoto) return null;
   if (caminhoFoto.startsWith("http")) return caminhoFoto;

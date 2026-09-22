@@ -318,12 +318,17 @@ function formatarDataLonga(dataIso) {
             : "Sem histórico suficiente";
         deltaAmplitudeEl.classList.toggle("negative", diferencaAmplitude != null && diferencaAmplitude < 0);
         // Havendo dor registrada, mostra os dois juntos; senão, só amplitude.
-        if (!construirGraficoAmplitudeXDor(cartoes[0], pontosAmplitude)) {
-          construirGraficoLinha(cartoes[0], pontosAmplitude);
-        } else {
-          const sub = cartoes[0].querySelector(".sub");
-          if (sub) sub.textContent = "Amplitude e dor relatada";
-        }
+        // O Chart.js vem de CDN com "async" (para um CDN mudo não travar a
+        // tela) e pode chegar depois dos dados: espera-se por ele antes de
+        // desenhar; se não vier, o próprio construtor avisa no cartão.
+        aoTerBiblioteca("Chart", function () {
+          if (!construirGraficoAmplitudeXDor(cartoes[0], pontosAmplitude)) {
+            construirGraficoLinha(cartoes[0], pontosAmplitude);
+          } else {
+            const sub = cartoes[0].querySelector(".sub");
+            if (sub) sub.textContent = "Amplitude e dor relatada";
+          }
+        });
       }
       if (cartoes[1]) {
         const ultima = pontosDuracao.length ? pontosDuracao[pontosDuracao.length - 1].valor : null;
@@ -331,7 +336,9 @@ function formatarDataLonga(dataIso) {
         cartoes[1].querySelector(".delta").textContent = pontosDuracao.length
           ? `${pontosDuracao.length} sessões recentes`
           : "Sem histórico ainda";
-        construirGraficoBarras(cartoes[1], pontosDuracao);
+        aoTerBiblioteca("Chart", function () {
+          construirGraficoBarras(cartoes[1], pontosDuracao);
+        });
       }
 
       const tbody = document.querySelector(".sessions-table tbody");
@@ -354,12 +361,21 @@ function formatarDataLonga(dataIso) {
                       )}" title="Ver a curva do movimento">Ver curva</button>`
                     : ""
                 }</td>
+              <td class="sessao-acoes">
+                <button type="button" class="sessao-excluir" data-excluir-sessao="${s.id}"
+                  aria-label="Excluir sessão de ${escaparHtml(formatarDataLonga(s.data))}">Excluir</button>
+              </td>
             </tr>`
               )
               .join("")
-          : '<tr><td colspan="3">Ainda não há sessões registradas.</td></tr>';
+          : '<tr><td colspan="4">Ainda não há sessões registradas.</td></tr>';
         RehabitAnim.staggerList(tbody);
         tbody.addEventListener("click", (e) => {
+          const excluir = e.target.closest("[data-excluir-sessao]");
+          if (excluir) {
+            RehabitSessao.excluir(idPaciente, excluir.dataset.excluirSessao, excluir);
+            return;
+          }
           const botao = e.target.closest("[data-curva]");
           if (!botao) return;
           RehabitCurva.abrir(idPaciente, botao.dataset.curva, botao.dataset.curvaRotulo);

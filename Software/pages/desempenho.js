@@ -217,8 +217,14 @@
     }
 
     preencherIndicadores(d);
-    desenharGraficoSessoes(d);
-    desenharGraficoGanhos(d);
+    // O Chart.js vem de CDN com "async" (para um CDN mudo não travar a tela),
+    // então pode ainda estar a caminho quando os dados chegam: os gráficos
+    // esperam por ele em vez de desistirem na primeira olhada.
+    aoTerBiblioteca("Chart", function (chegou) {
+      if (!chegou) return;
+      desenharGraficoSessoes(d);
+      desenharGraficoGanhos(d);
+    });
     preencherTabela(d);
   }
 

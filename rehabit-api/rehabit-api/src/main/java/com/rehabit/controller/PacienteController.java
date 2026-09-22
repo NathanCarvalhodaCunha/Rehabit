@@ -85,4 +85,11 @@ public class PacienteController {
         return ResponseEntity.ok(sessaoService.buscarCurva(
                 id, idSessao, AuthContext.id(request), AuthContext.tipo(request)));
     }
+
+    @DeleteMapping("/{id}/sessoes/{idSessao}")
+    public ResponseEntity<Void> excluirSessao(@PathVariable Integer id, @PathVariable Integer idSessao,
+                                                 HttpServletRequest request) {
+        sessaoService.excluir(id, idSessao, AuthContext.id(request), AuthContext.tipo(request));
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -5,8 +5,27 @@
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
+  // O <script> do GSAP virou "async" para que um CDN que não responde não
+  // segure os scripts da própria tela (era assim que a tela ficava sem
+  // reagir a nada). O preço é que ele pode chegar depois daqui: esperamos um
+  // instante e, se não vier, a tela entra sem animação. Esperar mais seria
+  // pior — o gsap.from() esconde o que já está desenhado, e o conteúdo
+  // piscaria antes de reaparecer.
+  function quandoGsapChegar(aoChegar) {
+    var limite = Date.now() + 500;
+    (function tentar() {
+      if (typeof gsap !== "undefined") return aoChegar();
+      if (Date.now() > limite) return;
+      setTimeout(tentar, 40);
+    })();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
-    if (typeof gsap === "undefined" || prefersReducedMotion()) return;
+    if (prefersReducedMotion()) return;
+    quandoGsapChegar(animarEntrada);
+  });
+
+  function animarEntrada() {
 
     var photo = document.querySelector(".photo");
     var divider = document.querySelector(".divider");
@@ -31,5 +50,5 @@
     if (heading.length) tl.from(heading, { opacity: 0, y: 14, duration: 0.4, stagger: 0.08 }, "-=0.15");
     if (fields.length) tl.from(fields, { opacity: 0, y: 12, duration: 0.35, stagger: 0.06 }, "-=0.15");
     if (rest.length) tl.from(rest, { opacity: 0, y: 10, duration: 0.35, stagger: 0.06 }, "-=0.1");
-  });
+  }
 })();
