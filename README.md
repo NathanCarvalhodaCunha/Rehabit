@@ -231,22 +231,50 @@ usado entra direto e **nunca** refaz o login — quem faz a chamada que acorda o
 servidor é sempre o aparelho novo. O gatilho real é o tempo parado; o aparelho
 novo só é quem paga a conta.
 
-Duas coisas atacam isso:
+### O que mantém a API acordada
 
-- [`.github/workflows/manter-api-acordada.yml`](.github/workflows/manter-api-acordada.yml)
-  bate em `GET /api/health` a cada 10 min, das 06:00 às 23:59 (Brasília), para
-  que a ociosidade não chegue nos 15 min. A janela de 18 h/dia gasta ~540 das
-  750 horas mensais do plano gratuito e deixa folga; de madrugada a instância
-  dorme e ninguém sente. **Antes de uma apresentação**, dá para acordar a API
-  na mão: aba *Actions* → *Manter a API acordada* → *Run workflow*.
-- O loader avisa quando a espera passa do normal (5 s e 25 s), em vez de ficar
-  girando calado. Sem isso, um `Entrando...` parado por dois minutos parece
-  travado e a pessoa fecha a aba justo quando faltavam segundos.
+A primeira tentativa foi um workflow do GitHub batendo em `/api/health` a cada
+10 min, e ela **não funcionou**. O agendador do GitHub Actions é "melhor
+esforço": na virada de cada hora, sob carga, ele atrasa e descarta execuções.
+Pedindo 108 por dia, entregou **5 a 6**, com intervalos de 2 a 7 horas, e todas
+encontraram a API dormindo (124 a 146 s de resposta). Ninguém percebeu por
+dias porque cada execução saía verde: o 200 acabava chegando, e o aviso de
+"instância dormindo" ficava escondido embaixo do check.
 
-Se o ping parar sozinho, provavelmente é o GitHub desligando workflows
-agendados depois de **60 dias sem atividade no repositório** — basta reativar
-na aba *Actions*. E a solução definitiva, se um dia houver orçamento, é o
-plano pago do Render: sem spin-down, nada disso é necessário.
+Hoje o relógio é o da própria API:
+
+- **`ManterApiAcordada`** (`rehabit-api/.../service/`) chama o próprio
+  `/api/health` a cada **5 min**, pela URL **pública**. Tem de ser a pública, e
+  não `localhost`: o Render só conta como tráfego o que passa pelo proxy de
+  entrada dele. A URL vem de `RENDER_EXTERNAL_URL`, que o Render define sozinho,
+  então não há nada para configurar. Fora do Render essa variável não existe e o
+  ping fica desligado, para que rodar a API local não saia batendo na produção.
+- **O `/api/health` mostra se está funcionando**, sem precisar dos logs do
+  Render:
+
+  ```json
+  {"status":"ok","uptimeSegundos":5400,"autoPing":true,"ultimoAutoPingSegundosAtras":42}
+  ```
+
+  `autoPing: false` em produção quer dizer que ele está desligado.
+  `ultimoAutoPingSegundosAtras` acima de ~300, com a instância de pé há mais de
+  10 min, quer dizer que ele parou de funcionar.
+- **O workflow** [`manter-api-acordada.yml`](.github/workflows/manter-api-acordada.yml)
+  virou rede de segurança e alarme. Ele acorda a instância se ela parar por
+  outro motivo (o auto-ping não roda com o processo parado) e **falha**, com
+  e-mail do GitHub, se encontrar a API dormindo ou o auto-ping parado. Antes
+  de uma apresentação, dá para rodá-lo na mão: aba *Actions* → *Manter a API
+  acordada* → *Run workflow*.
+- **O loader** avisa quando a espera passa do normal (5 s e 25 s), para o caso
+  em que alguém ainda pegar a instância subindo, logo depois de um deploy.
+
+**Horas do plano gratuito.** Acordada 24 h, a instância gasta ~720 a 744 horas
+por mês das **750** gratuitas. Isso só fecha se ela for o **único** web service
+gratuito da conta no Render (o front-end está no GitHub Pages, então não
+conta). Se houver outro, as horas acabam antes do fim do mês e o Render suspende
+os serviços: nesse caso, defina `REHABIT_KEEPALIVE_ATIVO=false` no Render e
+desative o workflow. A solução definitiva, se um dia houver orçamento, é o plano
+pago, que não hiberna.
 
 ## Licença
 

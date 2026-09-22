@@ -1,35 +1,40 @@
-# Mantém a API de pé para que ninguém caia no religamento dela.
+# Rede de segurança do auto-ping, e alarme quando ele falha.
 #
-# O plano gratuito do Render derruba o container depois de ~15 min sem
-# tráfego. A chamada que o acorda leva mais de dois minutos (146 s medidos,
-# contra 0,48 s quente), e quem sempre pagava essa conta era o aparelho
-# novo — o único que precisa fazer login, porque nos outros a sessão já está
-# no localStorage. Uma batida a cada dez minutos impede que a ociosidade
-# chegue nos quinze.
+# Quem mantém a API acordada é ela mesma: ManterApiAcordada chama o próprio
+# /api/health pela URL pública a cada 5 min, e o Render conta isso como
+# tráfego. Este workflow já foi o mecanismo principal e não funcionou — o
+# agendador do GitHub é "melhor esforço" e, pedindo uma execução a cada
+# 10 min, entregou 6 por dia, com intervalos de 2 a 7 horas. Cada uma
+# encontrava a API dormindo e saía verde mesmo assim, porque o 200 acabava
+# chegando; a falha passou dias escondida atrás de um aviso que ninguém lê.
 #
-# Dois detalhes que valem lembrar:
+# Agora ele tem dois papéis:
 #
-#  - O Render dá 750 horas de instância por mês no plano gratuito. A janela
-#    abaixo cobre 18 h por dia (~540 h/mês) e deixa folga; de madrugada a
-#    instância dorme e ninguém sente. Para cobrir 24 h, troque o cron por
-#    "*/10 * * * *" — passa a gastar ~730 h e não sobra espaço para nenhum
-#    outro serviço gratuito na mesma conta.
-#  - O GitHub desliga workflows agendados depois de 60 dias sem nenhuma
-#    atividade no repositório. Se o ping parar sozinho, é isso: basta
-#    reativar na aba Actions.
+#  - Acordar a instância se ela parar por algum motivo que o auto-ping não
+#    cobre (ele não roda com o processo parado).
+#  - FALHAR, com e-mail do GitHub, quando encontrar sinal de que o auto-ping
+#    não está segurando a instância. Com o auto-ping funcionando, nenhuma
+#    execução deveria encontrar a API dormindo.
+#
+# Se a conta do Render tiver outro web service gratuito e o auto-ping for
+# desligado (REHABIT_KEEPALIVE_ATIVO=false), desative este workflow também
+# na aba Actions: ele passaria a falhar em toda execução, com razão.
+#
+# O GitHub desliga workflows agendados depois de 60 dias sem atividade no
+# repositório; se as execuções pararem, é só reativar na aba Actions.
 name: Manter a API acordada
 
 on:
   schedule:
-    # A cada 10 min entre 09:00 e 02:59 UTC = 06:00 às 23:59 em Brasília.
-    # O cron do GitHub é sempre UTC e não conhece fuso nem horário de verão.
-    - cron: "*/10 0-2,9-23 * * *"
-  # Permite acordar a API na mão pela aba Actions — útil uns minutos antes
-  # de uma apresentação, para a primeira pessoa a entrar já pegar tudo quente.
+    # Minuto 3, 13, 23... e não 0, 10, 20: a virada da hora é o horário de
+    # maior carga do agendador do GitHub, e é quando ele mais atrasa ou
+    # descarta execuções. Não resolve o atraso — por isso ele não é mais o
+    # mecanismo principal —, só melhora as chances.
+    - cron: "3-59/10 * * * *"
+  # Permite checar (ou acordar) a API na mão pela aba Actions — útil uns
+  # minutos antes de uma apresentação.
   workflow_dispatch:
 
-# Se um ping ainda estiver rodando (acordando a instância) quando o próximo
-# for disparado, deixa o primeiro terminar em vez de empilhar os dois.
 concurrency:
   group: manter-api-acordada
   cancel-in-progress: false
@@ -39,18 +44,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Bater no /api/health
+      - name: Bater no /api/health e conferir o auto-ping
         env:
           URL: https://rehabit-api-4tex.onrender.com/api/health
         run: |
-          # O corpo vai para arquivo e só as métricas para a stdout. Juntar os
-          # dois na mesma saída parece mais simples, mas cada tentativa do
-          # --retry reimprime o corpo e eles se emendam num texto sem sentido
-          # (visto na prática: três respostas grudadas numa linha só).
-          #
-          # --max-time generoso de propósito: se este ping for justamente o
-          # que encontra a instância dormindo, ele precisa esperar o boot
-          # inteiro em vez de desistir no meio e deixá-la subindo sozinha.
+          # O corpo vai para arquivo e só as métricas para a stdout: cada
+          # tentativa do --retry reimprime o corpo, e na mesma saída eles se
+          # emendariam. --max-time generoso porque, se a instância estiver
+          # dormindo, este ping precisa esperar o boot inteiro.
           metricas=$(curl -sS --max-time 300 --retry 2 --retry-all-errors \
                           -o resposta.json \
                           -w '%{http_code} %{time_starttransfer}' "$URL") || {
@@ -60,7 +61,6 @@ jobs:
 
           http=${metricas% *}
           tempo=${metricas#* }
-
           echo "HTTP $http em ${tempo}s"
           echo "Resposta: $(cat resposta.json)"
 
@@ -69,9 +69,26 @@ jobs:
             exit 1
           fi
 
-          # Acima de 10 s só pode ter sido religamento: a instância quente
-          # responde em menos de um segundo. Vale um aviso no log, porque
-          # significa que a janela de ociosidade escapou em algum momento.
+          auto=$(jq -r '.autoPing' resposta.json)
+          uptime=$(jq -r '.uptimeSegundos' resposta.json)
+          ultimo=$(jq -r '.ultimoAutoPingSegundosAtras // "nunca"' resposta.json)
+          falhou=0
+
+          # Quente, a API responde em menos de 1 s; acima de 10 s foi boot.
           if [ "${tempo%%.*}" -ge 10 ]; then
-            echo "::warning::Levou ${tempo}s — a instância estava dormindo."
+            echo "::error::Levou ${tempo}s: a instância estava dormindo, o auto-ping não a segurou."
+            falhou=1
           fi
+          if [ "$auto" != "true" ]; then
+            echo "::error::O auto-ping está desligado em produção (autoPing=$auto). Confira RENDER_EXTERNAL_URL e REHABIT_KEEPALIVE_ATIVO no Render."
+            falhou=1
+          fi
+          # Nos primeiros 10 min depois de um boot o auto-ping ainda pode não
+          # ter voltado nenhuma vez (o primeiro sai após 1 min); passado isso,
+          # o último sucesso tem de ser recente, ou ele parou de funcionar.
+          if [ "$uptime" -gt 600 ] && { [ "$ultimo" = "nunca" ] || [ "$ultimo" -gt 600 ]; }; then
+            echo "::error::Último auto-ping bem-sucedido: $ultimo (s atrás), com a instância de pé há ${uptime}s. Veja os logs do Render (\"Auto-ping falhou\")."
+            falhou=1
+          fi
+
+          exit $falhou
