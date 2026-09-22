@@ -1,20 +1,25 @@
 package com.rehabit.service;
 
 import com.rehabit.dto.AuthResponseDTO;
+import com.rehabit.dto.ExclusaoProfissionalDTO;
 import com.rehabit.dto.FisioterapeutaCreateDTO;
 import com.rehabit.dto.FisioterapeutaPerfilDTO;
 import com.rehabit.dto.FisioterapeutaResumoDTO;
 import com.rehabit.dto.FisioterapeutaUpdateDTO;
 import com.rehabit.email.ValidadorEmailService;
 import com.rehabit.exception.AuthException;
+import com.rehabit.model.Agendamento;
 import com.rehabit.model.Fisioterapeuta;
+import com.rehabit.model.Paciente;
 import com.rehabit.security.PosseChecker;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Sessao;
+import com.rehabit.repository.AgendamentoRepository;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
+import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.repository.SessaoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,9 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +45,9 @@ public class FisioterapeutaService {
     private final MedicaoRepository medicaoRepository;
     private final PasswordEncoder passwordEncoder;
     private final ValidadorEmailService validadorEmail;
+    private final AgendamentoRepository agendamentoRepository;
+    private final AgendamentoService agendamentoService;
+    private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
 
     public FisioterapeutaService(FisioterapeutaRepository fisioterapeutaRepository,
                                   ClinicaRepository clinicaRepository,
@@ -44,7 +55,10 @@ public class FisioterapeutaService {
                                   SessaoRepository sessaoRepository,
                                   MedicaoRepository medicaoRepository,
                                   PasswordEncoder passwordEncoder,
-                                  ValidadorEmailService validadorEmail) {
+                                  ValidadorEmailService validadorEmail,
+                                  AgendamentoRepository agendamentoRepository,
+                                  AgendamentoService agendamentoService,
+                                  RecuperacaoSenhaRepository recuperacaoSenhaRepository) {
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.clinicaRepository = clinicaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -52,6 +66,9 @@ public class FisioterapeutaService {
         this.medicaoRepository = medicaoRepository;
         this.passwordEncoder = passwordEncoder;
         this.validadorEmail = validadorEmail;
+        this.agendamentoRepository = agendamentoRepository;
+        this.agendamentoService = agendamentoService;
+        this.recuperacaoSenhaRepository = recuperacaoSenhaRepository;
     }
 
     @Transactional
@@ -98,7 +115,7 @@ public class FisioterapeutaService {
 
     public List<FisioterapeutaResumoDTO> listarPorClinica(Integer idClinica, Integer usuarioId, String usuarioTipo) {
         PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
-        return fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(idClinica).stream()
+        return fisioterapeutaRepository.findByIdClinicaAndExcluidoEmIsNullOrderByNomeAsc(idClinica).stream()
                 .map(f -> new FisioterapeutaResumoDTO(f.getId(), f.getNome(), f.getEspecialidade(), f.getFoto(),
                         pacienteRepository.countByIdFisioterapeutaAndStatus(f.getId(), "Ativo")))
                 .collect(Collectors.toList());
@@ -151,21 +168,84 @@ public class FisioterapeutaService {
         return paraPerfilDTO(fisioterapeutaRepository.save(fisioterapeuta));
     }
 
+    /**
+     * Tira o profissional do sistema sem apagar o registro dele.
+     *
+     * Pacientes e agenda de hoje em diante vão para {@code idDestino}, um
+     * profissional ativo da mesma clínica. Sessões e consultas passadas ficam
+     * onde estão: o prontuário continua dizendo quem de fato atendeu.
+     *
+     * E-mail, COFFITO e senha são descartados porque os dois primeiros são
+     * únicos no banco — sem liberá-los, esta pessoa nunca mais poderia ser
+     * cadastrada, nem aqui nem em outra clínica. De quebra, login e
+     * recuperação de senha passam a falhar sozinhos. O nome fica: é o que o
+     * histórico mostra.
+     */
     @Transactional
-    public void excluir(Integer id, Integer usuarioId, String usuarioTipo) {
-        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
+    public ExclusaoProfissionalDTO excluir(Integer id, Integer idDestino, Integer usuarioId, String usuarioTipo) {
+        Fisioterapeuta excluido = fisioterapeutaRepository.findById(id)
+                .filter(f -> !f.isExcluido())
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
-        PosseChecker.exigirClinicaDona(fisioterapeuta.getIdClinica(), usuarioId, usuarioTipo);
+        PosseChecker.exigirClinicaDona(excluido.getIdClinica(), usuarioId, usuarioTipo);
 
-        long totalPacientes = pacienteRepository.countByIdFisioterapeuta(id);
-        if (totalPacientes > 0) {
-            throw new AuthException(
-                    "Não é possível excluir: este profissional tem " + totalPacientes
-                            + " paciente(s) cadastrado(s). Transfira ou remova os pacientes antes de excluir.",
-                    HttpStatus.CONFLICT);
+        List<Paciente> seusPacientes = pacienteRepository.findByIdFisioterapeutaOrderByNomeAsc(id);
+        List<Agendamento> agendaFutura = agendamentoRepository
+                .findByIdFisioterapeutaAndDataAgendamentoGreaterThanEqualOrderByDataAgendamentoAscHoraAgendamentoAsc(
+                        id, LocalDate.now());
+
+        int colisoes = 0;
+        if (!seusPacientes.isEmpty() || !agendaFutura.isEmpty()) {
+            Fisioterapeuta destino = exigirDestino(excluido, idDestino, seusPacientes.size());
+
+            // Conta antes de mover: a comparação é com a agenda que o destino
+            // já tinha, não com as consultas que estão chegando.
+            colisoes = (int) agendaFutura.stream()
+                    .filter(a -> agendamentoService.conflitaComAgenda(
+                            destino.getId(), a.getDataAgendamento(), a.getHoraAgendamento()))
+                    .count();
+
+            seusPacientes.forEach(p -> p.setIdFisioterapeuta(destino.getId()));
+            agendaFutura.forEach(a -> a.setIdFisioterapeuta(destino.getId()));
+            pacienteRepository.saveAll(seusPacientes);
+            agendamentoRepository.saveAll(agendaFutura);
         }
 
-        fisioterapeutaRepository.delete(fisioterapeuta);
+        // Um link de "redefinir senha" pedido antes da exclusão não pode
+        // sobreviver a ela. Precisa sair antes da troca do e-mail, que é a
+        // única ligação entre o pedido e a conta.
+        recuperacaoSenhaRepository.deleteByEmail(excluido.getEmail());
+
+        excluido.setExcluidoEm(LocalDateTime.now());
+        excluido.setEmail("excluido-" + excluido.getId() + "@rehabit.invalid");
+        excluido.setCoffito(null);
+        excluido.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
+        fisioterapeutaRepository.save(excluido);
+
+        return new ExclusaoProfissionalDTO(seusPacientes.size(), agendaFutura.size(), colisoes);
+    }
+
+    private Fisioterapeuta exigirDestino(Fisioterapeuta excluido, Integer idDestino, int totalPacientes) {
+        boolean haOutroAtivo = fisioterapeutaRepository
+                .findByIdClinicaAndExcluidoEmIsNullOrderByNomeAsc(excluido.getIdClinica()).stream()
+                .anyMatch(f -> !f.getId().equals(excluido.getId()));
+        if (!haOutroAtivo) {
+            throw new AuthException(
+                    "Cadastre outro profissional antes de excluir este: ele tem " + totalPacientes
+                            + " paciente(s) e não há ninguém na clínica para recebê-los.",
+                    HttpStatus.CONFLICT);
+        }
+        if (idDestino == null) {
+            throw new AuthException(
+                    "Escolha para quem transferir os " + totalPacientes + " paciente(s) deste profissional.",
+                    HttpStatus.BAD_REQUEST);
+        }
+        return fisioterapeutaRepository.findById(idDestino)
+                .filter(f -> !f.isExcluido())
+                .filter(f -> f.getIdClinica().equals(excluido.getIdClinica()))
+                .filter(f -> !f.getId().equals(excluido.getId()))
+                .orElseThrow(() -> new AuthException(
+                        "Escolha um profissional ativo da mesma clínica para receber os pacientes.",
+                        HttpStatus.BAD_REQUEST));
     }
 
     @Transactional

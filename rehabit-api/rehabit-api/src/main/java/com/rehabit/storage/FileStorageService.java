@@ -10,4 +10,12 @@ public interface FileStorageService {
      * "https://res.cloudinary.com/...") no modo nuvem.
      */
     String salvar(MultipartFile arquivo);
+
+    /**
+     * Apaga um arquivo que {@link #salvar} guardou. Melhor esforço, e nunca
+     * lança: um arquivo que já não existe, ou uma URL que não é deste
+     * armazenamento, simplesmente não faz nada. Quem chama não deve depender
+     * de ter dado certo.
+     */
+    void excluir(String url);
 }

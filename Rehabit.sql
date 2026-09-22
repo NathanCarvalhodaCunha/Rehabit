@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS `tb02_fisioterapeuta` (
   `tb02_tutorial_visto` tinyint(1) NOT NULL DEFAULT 0,
   `tb02_id_clinica` int(11) NOT NULL,
   `tb02_localidade` varchar(100) DEFAULT NULL,
+  -- Quando a clínica excluiu o profissional; NULL enquanto ativo. A exclusão
+  -- é lógica para que as sessões passadas continuem assinadas por quem atendeu.
+  `tb02_excluido_em` datetime DEFAULT NULL,
   PRIMARY KEY (`tb02_id_fisioterapeuta`),
   UNIQUE KEY `tb02_COFFITO` (`tb02_COFFITO`),
   UNIQUE KEY `tb02_email_fisioterapeuta` (`tb02_email_fisioterapeuta`),

@@ -157,7 +157,7 @@ public class AgendamentoService {
             return List.of();
         }
         Map<Integer, String> nomePorId = profissionais.stream()
-                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNome));
+                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNomeParaExibicao));
         List<Integer> ids = new ArrayList<>(nomePorId.keySet());
 
         List<Agendamento> agendamentos = apenasFuturos
@@ -185,7 +185,7 @@ public class AgendamentoService {
             return List.of();
         }
         Map<Integer, String> nomePorId = profissionais.stream()
-                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNome));
+                .collect(Collectors.toMap(Fisioterapeuta::getId, Fisioterapeuta::getNomeParaExibicao));
 
         return sessaoRepository
                 .findByIdFisioterapeutaInOrderByDataSessaoDescHoraSessaoDesc(new ArrayList<>(nomePorId.keySet()))
@@ -203,7 +203,7 @@ public class AgendamentoService {
         return sessaoRepository.findByIdFisioterapeutaOrderByDataSessaoDescHoraSessaoDesc(idFisioterapeuta)
                 .stream()
                 .map(s -> sessaoParaDTO(s.getId(), s.getDataSessao(), s.getHoraSessao(), s.getDuracao(),
-                        s.getIdPaciente(), s.getIdFisioterapeuta(), fisioterapeuta.getNome()))
+                        s.getIdPaciente(), s.getIdFisioterapeuta(), fisioterapeuta.getNomeParaExibicao()))
                 .collect(Collectors.toList());
     }
 
@@ -288,14 +288,32 @@ public class AgendamentoService {
      * deixa de fora a própria consulta que está sendo remarcada.
      */
     private void exigirHorarioLivre(Integer idFisioterapeuta, LocalDate data, LocalTime hora, Integer idIgnorar) {
+        if (conflita(idFisioterapeuta, data, hora, idIgnorar)) {
+            throw new AuthException(
+                    "Já existe uma consulta nesse horário. Escolha outro ou desligue o aviso de conflito nas configurações.",
+                    HttpStatus.CONFLICT);
+        }
+    }
+
+    /**
+     * Se uma consulta nesse dia e hora se sobreporia à agenda atual do
+     * profissional. É a mesma regra que barra um agendamento novo — exposta
+     * para quem precisa só perguntar, como a transferência de agenda na
+     * exclusão de um profissional, que avisa das colisões em vez de barrar.
+     */
+    public boolean conflitaComAgenda(Integer idFisioterapeuta, LocalDate data, LocalTime hora) {
+        return conflita(idFisioterapeuta, data, hora, null);
+    }
+
+    private boolean conflita(Integer idFisioterapeuta, LocalDate data, LocalTime hora, Integer idIgnorar) {
         ConfiguracaoDTO config = configuracaoService.janelaDeAtendimento(idFisioterapeuta);
         if (!config.isAvisarConflito()) {
-            return;
+            return false;
         }
         int duracao = config.getDuracaoPadraoMin();
         LocalTime fimNovo = hora.plusMinutes(duracao);
 
-        boolean conflita = agendamentoRepository
+        return agendamentoRepository
                 .findByIdFisioterapeutaAndDataAgendamento(idFisioterapeuta, data)
                 .stream()
                 .filter(existente -> idIgnorar == null || !idIgnorar.equals(existente.getId()))
@@ -304,12 +322,6 @@ public class AgendamentoService {
                     LocalTime fimExistente = inicioExistente.plusMinutes(duracao);
                     return hora.isBefore(fimExistente) && inicioExistente.isBefore(fimNovo);
                 });
-
-        if (conflita) {
-            throw new AuthException(
-                    "Já existe uma consulta nesse horário. Escolha outro ou desligue o aviso de conflito nas configurações.",
-                    HttpStatus.CONFLICT);
-        }
     }
 
     private String nomeDoPaciente(Integer idPaciente) {

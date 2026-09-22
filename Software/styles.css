@@ -1832,6 +1832,18 @@ button.form-avatar {
 .settings-form { padding-top: 4px; }
 .settings-form .field { margin-bottom: 14px; }
 .settings-form .form-actions { margin-top: 4px; display: flex; justify-content: flex-end; }
+
+/* "Excluir conta", abaixo da troca de senha e separado dela por uma linha:
+   perto o bastante para ser encontrado, longe o bastante para não ser
+   clicado por engano no lugar de "Alterar senha". */
+.settings-perigo {
+  margin-top: 22px; padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+}
+.settings-perigo .t { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--ink-strong); flex-basis: 100%; }
+.settings-perigo .s { margin: -8px 0 0; font-size: 13.5px; font-weight: 500; color: var(--ink-muted); flex: 1 1 240px; }
+.settings-perigo .btn-danger { align-self: center; }
 .settings-form .settings-check { margin: 4px 0 18px; }
 .field-hint {
   margin: 6px 0 0;
@@ -2515,33 +2527,60 @@ button.form-avatar {
 .resumo-acoes .btn-primary { display: block; width: 100%; text-align: center; text-decoration: none; }
 
 /* ---------- Remarcar consulta ---------- */
-.remarcar-overlay {
+/* O diálogo de remarcar serve de molde para os outros diálogos de
+   confirmação (as classes .dialogo-*, usadas pela exclusão de profissional
+   e de conta): mesma caixa, mesmo texto de contexto, mesma área de erro. */
+.remarcar-overlay, .dialogo-overlay {
   position: fixed; inset: 0; z-index: 1250;
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
   background: rgba(16,24,40,.5);
   backdrop-filter: blur(2px);
 }
-.remarcar-overlay.is-hidden { display: none; }
-.remarcar-caixa {
+.remarcar-overlay.is-hidden, .dialogo-overlay.is-hidden { display: none; }
+.remarcar-caixa, .dialogo-caixa {
   width: min(480px, 100%);
   background: #fff;
   border-radius: 16px;
   padding: 24px 24px 20px;
   box-shadow: 0 24px 60px rgba(16,24,40,.3);
 }
-.remarcar-caixa h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
-.remarcar-atual { margin: 0 0 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
-.remarcar-atual strong { color: var(--ink-strong); }
-.remarcar-erro {
+.remarcar-caixa h3, .dialogo-caixa h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
+.remarcar-atual, .dialogo-texto { margin: 0 0 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+.remarcar-atual strong, .dialogo-texto strong { color: var(--ink-strong); }
+.remarcar-erro, .dialogo-erro {
   margin: 4px 0 0; padding: 9px 12px; border-radius: 9px;
   background: rgba(220,38,38,.09); color: #B91C1C;
   font-size: 12.5px; font-weight: 700; line-height: 1.45;
 }
 .remarcar-caixa .two-col { gap: 14px; }
-.remarcar-caixa .field-hint { margin: 0; }
-.remarcar-acoes { display: flex; gap: 10px; margin-top: 18px; }
-.remarcar-acoes .btn-outline, .remarcar-acoes .btn-primary { flex: 1; text-align: center; }
+.remarcar-caixa .field-hint, .dialogo-caixa .field-hint { margin: 0; }
+.remarcar-acoes, .dialogo-acoes { display: flex; gap: 10px; margin-top: 18px; }
+.remarcar-acoes .btn-outline, .remarcar-acoes .btn-primary,
+.dialogo-acoes .btn-outline, .dialogo-acoes .btn-perigo { flex: 1; text-align: center; }
+
+/* O que uma exclusão vai levar junto, antes de a pessoa confirmar. */
+.dialogo-lista {
+  margin: 0 0 16px; padding: 12px 14px 12px 32px; border-radius: 10px;
+  background: rgba(220,38,38,.06);
+  font-size: 13.5px; font-weight: 600; color: var(--ink-strong); line-height: 1.7;
+}
+
+/* Botão da ação destrutiva de um diálogo: vermelho cheio, para não ser
+   confundido com o azul de "seguir em frente". O .btn-danger contornado
+   continua sendo o que abre o diálogo. */
+.btn-perigo {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 40px; padding: 0 22px; border: 0; border-radius: 8px;
+  background: #DC2626; color: #fff;
+  font-weight: 700; font-size: 14.5px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-perigo:hover { background: #B91C1C; }
+.btn-perigo:disabled { opacity: .5; cursor: not-allowed; }
+/* O display dos botões acima vence a regra do navegador para [hidden]; sem
+   isto, o diálogo que não tem nada a confirmar mostrava um botão vazio. */
+.dialogo-caixa [hidden] { display: none !important; }
 
 /* ---------- Agenda: consultas que já passaram ---------- */
 .agenda-item.is-passada .agenda-when { color: var(--ink-muted); }
