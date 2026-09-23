@@ -298,6 +298,11 @@
 
     try {
       const registrada = await apiPost(`/pacientes/${idPaciente}/sessoes`, {
+        // Compatibilidade: o site publica sozinho no merge, mas a API do
+        // Render não, e a versão antiga exige "data". A nova ignora o campo
+        // e carimba o momento ela mesma. Pode sair depois que o Render
+        // estiver com a API nova.
+        data: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()),
         duracao: Number(duracao),
         amplitudeMedia: amplitude ? Number(amplitude) : null,
         observacoes: observacoes || null,
