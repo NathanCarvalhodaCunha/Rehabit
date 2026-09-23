@@ -51,7 +51,7 @@
         <p>Atualize as informações do paciente</p>
       </header>
 
-      <form class="edit-grid" onsubmit="event.preventDefault();">
+      <form class="edit-grid" onsubmit="event.preventDefault();" novalidate>
         <input type="file" id="pfoto" accept="image/*" hidden />
         <section class="card edit-avatar-card">
           <div class="avatar-lg" aria-hidden="true" data-avatar-picker style="cursor:pointer;"></div>
@@ -62,6 +62,7 @@
 
         <section class="card edit-info-card">
           <h3>Informações</h3>
+          <p class="legenda-obrigatorio"><span aria-hidden="true">*</span> Campos obrigatórios</p>
           <div class="edit-section">
             <div class="field">
               <label for="p-cpf">CPF</label>
@@ -69,7 +70,7 @@
             </div>
             <div class="field">
               <label for="p-nome">Nome completo</label>
-              <input id="p-nome" type="text" value="" />
+              <input id="p-nome" type="text" value="" required />
             </div>
             <div class="two-col">
               <div class="field">
@@ -178,6 +179,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./campos-obrigatorios.js"></script>
   <script src="./pages/editar-paciente.js"></script>
 </body>
 </html>

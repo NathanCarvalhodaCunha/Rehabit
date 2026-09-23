@@ -2,6 +2,7 @@ package com.rehabit.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class SessaoDTO {
 
@@ -35,6 +36,17 @@ public class SessaoDTO {
     }
 
     private Integer dor;
+
+    /** Hora em que a sessão foi registrada, no fuso das clínicas. */
+    private LocalTime hora;
+
+    public LocalTime getHora() {
+        return hora;
+    }
+
+    public void setHora(LocalTime hora) {
+        this.hora = hora;
+    }
 
     /** A curva não vem na listagem — são centenas de pontos por sessão. */
     private boolean temCurva;

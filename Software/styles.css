@@ -9,6 +9,8 @@
   --hairline: #E5E7EB;
   --card-border: #E5E7EB;
   --success: #16A34A;
+  --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, 0.14);
   --bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
   --shadow-card: 0 1px 2px rgba(16,24,40,0.04), 0 1px 1px rgba(16,24,40,0.03);
@@ -16,6 +18,13 @@
 }
 
 * { box-sizing: border-box; }
+
+/* O atributo hidden é só um display:none do navegador, e qualquer classe com
+   display (.btn-outline, .card em flex...) passa por cima dele. Foi assim que
+   o "Lembrete no WhatsApp" aparecia em paciente sem telefone, sem nenhuma ação
+   ligada: um botão morto. Três telas já tinham remendo local para isso; esta
+   regra vale para todas. */
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -1841,6 +1850,63 @@ button.form-avatar {
 }
 /* Uma dica logo antes do próximo campo encostava no rótulo dele. */
 .field-hint + .field { margin-top: 16px; }
+
+/* ---------- Campos obrigatórios ----------
+   O asterisco sai do próprio atributo required: marcação e validação nunca
+   discordam, e um campo novo com required já nasce marcado. O "/ ''" tira o
+   asterisco da leitura de tela, que já anuncia "obrigatório" pelo required.
+   O segundo seletor cobre o campo de senha, que fica dentro do botão de
+   mostrar/ocultar. */
+.field:has(> :is(input, select, textarea):required) > label::after,
+.field:has(> * > :is(input, select, textarea):required) > label::after {
+  content: " *";
+  content: " *" / "";
+  color: var(--danger);
+  font-weight: 700;
+}
+.legenda-obrigatorio {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+.legenda-obrigatorio span { color: var(--danger); font-weight: 700; }
+.field [aria-invalid="true"] {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.campo-erro {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Momento do registro da sessão: é informação, não campo — a data e a hora
+   são carimbadas pelo servidor quando a sessão é salva. */
+.registro-agora { margin-bottom: 16px; }
+.registro-agora-rotulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.registro-agora-valor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(21, 101, 216, 0.08);
+  color: var(--ink-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.registro-agora-valor svg { flex: none; width: 16px; height: 16px; color: var(--brand); }
+.sessao-hora { color: var(--ink-muted); font-weight: 500; }
 @media (max-width: 767px) {
   .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
   .settings-form .form-actions { justify-content: stretch; }

@@ -341,7 +341,7 @@ function formatarDataLonga(dataIso) {
               .map(
                 (s) => `
             <tr>
-              <td>${formatarDataLonga(s.data)}${
+              <td>${formatarDataLonga(s.data)}${s.hora ? ` <span class="sessao-hora">${s.hora.slice(0, 5)}</span>` : ""}${
                   s.observacoes
                     ? `<div class="sessao-obs">${escaparHtml(s.observacoes)}</div>`
                     : ""

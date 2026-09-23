@@ -57,7 +57,7 @@
         <p class="caption">Foto de perfil</p>
       </div>
 
-      <form id="cadastrarProfissionalForm" class="card form-card">
+      <form id="cadastrarProfissionalForm" class="card form-card" novalidate>
         <input type="file" id="pfoto" accept="image/*" hidden />
         <div class="form-split">
           <div class="form-avatar-col">
@@ -67,9 +67,10 @@
           </div>
           <div>
             <h3>Insira o COFFITO do profissional</h3>
+            <p class="legenda-obrigatorio"><span aria-hidden="true">*</span> Campos obrigatórios</p>
             <div class="field field-id">
               <label for="pid">COFFITO</label>
-              <input id="pid" type="text" required />
+              <input id="pid" type="text" placeholder="Ex: CREFITO-3/123456-F" required />
             </div>
             <hr class="form-sep" />
             <div class="two-col">
@@ -79,7 +80,7 @@
               </div>
               <div class="field">
                 <label for="ptel">Telefone</label>
-                <input id="ptel" type="tel" />
+                <input id="ptel" type="tel" inputmode="tel" placeholder="(11) 98765-4321" />
               </div>
             </div>
             <div class="two-col">
@@ -89,7 +90,8 @@
               </div>
               <div class="field">
                 <label for="psenha">Senha</label>
-                <input id="psenha" type="password" autocomplete="new-password" required />
+                <input id="psenha" type="password" autocomplete="new-password" minlength="6" required />
+                <p class="field-hint">Mínimo de 6 caracteres. É com ela que o profissional entra no Rehabit.</p>
               </div>
             </div>
             <div class="two-col">
@@ -137,5 +139,6 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./campos-obrigatorios.js"></script>
 </body>
 </html>
