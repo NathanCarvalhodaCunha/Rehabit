@@ -88,20 +88,28 @@
           </table>
         </div>
 
-        <form id="cadastrarSessaoForm" class="card add-manual-card">
-          <h3>Adicionar dados manualmente</h3>
-          <p class="sub">Registre os dados de uma sessão</p>
-          <div class="field">
-            <label for="s-data">Data</label>
-            <input id="s-data" type="date" required />
+        <form id="cadastrarSessaoForm" class="card add-manual-card" novalidate>
+          <h3>Registrar sessão</h3>
+          <p class="sub">Registre o atendimento que está acontecendo agora</p>
+          <p class="legenda-obrigatorio"><span aria-hidden="true">*</span> Campos obrigatórios</p>
+          <!-- A sessão é registrada enquanto acontece: data e hora são as do
+               momento do cadastro, carimbadas pelo servidor. Aqui só se mostra
+               esse momento; não há campo para mudar. -->
+          <div class="registro-agora">
+            <span class="registro-agora-rotulo">Data e hora</span>
+            <p class="registro-agora-valor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+              <time data-agora>Agora</time>
+            </p>
+            <p class="field-hint">Preenchidas sozinhas com o momento do registro.</p>
           </div>
           <div class="field">
             <label for="s-dur">Duração (minutos)</label>
-            <input id="s-dur" type="number" min="1" required />
+            <input id="s-dur" type="number" inputmode="numeric" min="1" max="600" required />
           </div>
           <div class="field">
             <label for="s-amp">Amplitude média (graus)</label>
-            <input id="s-amp" type="number" step="0.01" />
+            <input id="s-amp" type="number" inputmode="decimal" step="0.01" min="0" max="360" />
             <!-- Leitura do goniômetro ligada direto ao campo acima: dá para
                  usar o ângulo parado ou gravar o movimento inteiro e deixar
                  a amplitude (máx - mín) cair aqui sozinha. -->
@@ -138,7 +146,7 @@
             <textarea id="s-obs" rows="4" placeholder="O que foi trabalhado, evolução observada, conduta para a próxima sessão"></textarea>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn-primary">Cadastrar sessão</button>
+            <button type="submit" class="btn-primary">Registrar sessão</button>
           </div>
         </form>
       </section>
@@ -166,6 +174,7 @@
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
   <script src="./goniometro.js"></script>
+  <script src="./campos-obrigatorios.js"></script>
   <script src="./pages/cadastrar-sessao.js"></script>
 </body>
 </html>

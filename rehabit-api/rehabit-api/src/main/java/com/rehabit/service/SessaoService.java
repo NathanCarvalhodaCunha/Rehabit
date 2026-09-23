@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.SessaoCreateDTO;
 import com.rehabit.exception.AuthException;
 import com.rehabit.dto.SessaoDTO;
@@ -14,8 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,32 +28,33 @@ public class SessaoService {
     private final PacienteService pacienteService;
     private final NotificacaoService notificacaoService;
     private final GoniometroService goniometroService;
+    private final Clock relogio;
 
     public SessaoService(SessaoRepository sessaoRepository, MedicaoRepository medicaoRepository,
                           PacienteService pacienteService, NotificacaoService notificacaoService,
-                          GoniometroService goniometroService) {
+                          GoniometroService goniometroService, Clock relogio) {
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
         this.pacienteService = pacienteService;
         this.notificacaoService = notificacaoService;
         this.goniometroService = goniometroService;
+        this.relogio = relogio;
     }
 
     @Transactional
     public SessaoDTO cadastrar(Integer idPaciente, SessaoCreateDTO dados, Integer usuarioId, String usuarioTipo) {
         Paciente paciente = pacienteService.carregarComPosse(idPaciente, usuarioId, usuarioTipo);
 
-        // A sessão é o registro de um atendimento que já aconteceu; datar no
-        // futuro estragaria a evolução do paciente e os números do painel.
-        if (dados.getData() != null && dados.getData().isAfter(LocalDate.now())) {
-            throw new AuthException(
-                    "A sessão não pode ter uma data futura. Use a Agenda para marcar o que ainda vai acontecer.",
-                    HttpStatus.BAD_REQUEST);
-        }
+        // A sessão é registrada enquanto acontece, então o momento do registro
+        // é o momento da sessão. Quem carimba é o servidor: uma data digitada
+        // (ou o relógio errado do computador da clínica) deslocaria a evolução
+        // do paciente e os números do painel. A sessão e a sua medição levam
+        // o mesmo instante, lido uma vez só.
+        LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)).withNano(0);
 
         Sessao sessao = new Sessao();
-        sessao.setDataSessao(dados.getData());
-        sessao.setHoraSessao(LocalTime.now().withNano(0));
+        sessao.setDataSessao(agora.toLocalDate());
+        sessao.setHoraSessao(agora.toLocalTime());
         sessao.setDuracao(dados.getDuracao());
         sessao.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
         sessao.setIdPaciente(paciente.getId());
@@ -62,8 +64,8 @@ public class SessaoService {
 
         Medicao medicao = new Medicao();
         medicao.setAmplitudeMedia(dados.getAmplitudeMedia());
-        medicao.setDataMedicao(dados.getData());
-        medicao.setHoraMedicao(LocalTime.now().withNano(0));
+        medicao.setDataMedicao(agora.toLocalDate());
+        medicao.setHoraMedicao(agora.toLocalTime());
         medicao.setIdSessao(sessaoSalva.getId());
         // A curva vem do estado ao vivo, não do navegador: são centenas de
         // pontos que o servidor já tem, e assim ninguém consegue inventar uma.
@@ -75,6 +77,7 @@ public class SessaoService {
 
         SessaoDTO dto = new SessaoDTO(sessaoSalva.getId(), sessaoSalva.getDataSessao(), sessaoSalva.getDuracao(),
                 medicaoSalva.getAmplitudeMedia(), sessaoSalva.getObservacoes());
+        dto.setHora(sessaoSalva.getHoraSessao());
         dto.setDor(sessaoSalva.getDor());
         dto.setTemCurva(medicaoSalva.getCurva() != null);
         return dto;
@@ -116,6 +119,7 @@ public class SessaoService {
                     Medicao medicao = medicaoRepository.findByIdSessao(s.getId());
                     SessaoDTO dto = new SessaoDTO(s.getId(), s.getDataSessao(), s.getDuracao(),
                             medicao != null ? medicao.getAmplitudeMedia() : null, s.getObservacoes());
+                    dto.setHora(s.getHoraSessao());
                     dto.setDor(s.getDor());
                     dto.setTemCurva(medicao != null && medicao.getCurva() != null);
                     return dto;

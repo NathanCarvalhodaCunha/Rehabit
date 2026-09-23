@@ -1882,6 +1882,31 @@ button.form-avatar {
   color: var(--danger);
 }
 
+/* Momento do registro da sessão: é informação, não campo — a data e a hora
+   são carimbadas pelo servidor quando a sessão é salva. */
+.registro-agora { margin-bottom: 16px; }
+.registro-agora-rotulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.registro-agora-valor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(21, 101, 216, 0.08);
+  color: var(--ink-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.registro-agora-valor svg { flex: none; width: 16px; height: 16px; color: var(--brand); }
+.sessao-hora { color: var(--ink-muted); font-weight: 500; }
 @media (max-width: 767px) {
   .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
   .settings-form .form-actions { justify-content: stretch; }
