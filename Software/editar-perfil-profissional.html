@@ -51,7 +51,7 @@
         <p>Atualize suas informações</p>
       </header>
 
-      <form class="edit-grid" onsubmit="event.preventDefault();">
+      <form class="edit-grid" onsubmit="event.preventDefault();" novalidate>
         <input type="file" id="pfoto" accept="image/*" hidden />
         <section class="card edit-avatar-card">
           <div class="avatar-lg" aria-hidden="true" data-avatar-picker style="cursor:pointer;"></div>
@@ -63,6 +63,7 @@
 
         <section class="card edit-info-card">
           <h3>Informações</h3>
+          <p class="legenda-obrigatorio"><span aria-hidden="true">*</span> Campos obrigatórios</p>
           <div class="edit-section">
             <div class="field">
               <label for="p-coffito">COFFITO</label>
@@ -70,12 +71,12 @@
             </div>
             <div class="field">
               <label for="p-nome">Nome completo</label>
-              <input id="p-nome" type="text" value="" />
+              <input id="p-nome" type="text" value="" required />
             </div>
             <div class="two-col">
               <div class="field">
                 <label for="p-email">E-mail</label>
-                <input id="p-email" type="email" value="" />
+                <input id="p-email" type="email" value="" required />
               </div>
               <div class="field">
                 <label for="p-tel">Telefone</label>
@@ -143,6 +144,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./campos-obrigatorios.js"></script>
   <script src="./pages/editar-perfil-profissional.js"></script>
 </body>
 </html>

@@ -9,6 +9,8 @@
   --hairline: #E5E7EB;
   --card-border: #E5E7EB;
   --success: #16A34A;
+  --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, 0.14);
   --bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
   --shadow-card: 0 1px 2px rgba(16,24,40,0.04), 0 1px 1px rgba(16,24,40,0.03);
@@ -1848,6 +1850,38 @@ button.form-avatar {
 }
 /* Uma dica logo antes do próximo campo encostava no rótulo dele. */
 .field-hint + .field { margin-top: 16px; }
+
+/* ---------- Campos obrigatórios ----------
+   O asterisco sai do próprio atributo required: marcação e validação nunca
+   discordam, e um campo novo com required já nasce marcado. O "/ ''" tira o
+   asterisco da leitura de tela, que já anuncia "obrigatório" pelo required.
+   O segundo seletor cobre o campo de senha, que fica dentro do botão de
+   mostrar/ocultar. */
+.field:has(> :is(input, select, textarea):required) > label::after,
+.field:has(> * > :is(input, select, textarea):required) > label::after {
+  content: " *";
+  content: " *" / "";
+  color: var(--danger);
+  font-weight: 700;
+}
+.legenda-obrigatorio {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+.legenda-obrigatorio span { color: var(--danger); font-weight: 700; }
+.field [aria-invalid="true"] {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.campo-erro {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
 @media (max-width: 767px) {
   .settings-form .two-col { grid-template-columns: 1fr; gap: 0; }
   .settings-form .form-actions { justify-content: stretch; }

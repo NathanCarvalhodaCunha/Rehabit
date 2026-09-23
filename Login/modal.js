@@ -80,7 +80,13 @@
   var arquivoSelecionado = null;
 
   function render(tipo) {
-    var campos = CAMPOS[tipo] || CAMPOS.instituicao;
+    // Campo que já está no formulário principal não se repete aqui: o CNPJ,
+    // que a API exige, foi para junto dos outros obrigatórios, e este pop-up
+    // ficou só com o que é opcional de verdade.
+    var principal = document.getElementById('registerForm');
+    var campos = (CAMPOS[tipo] || CAMPOS.instituicao).filter(function (c) {
+      return !(principal && principal.querySelector('#' + c.id));
+    });
     fieldsEl.innerHTML = campos
       .map(function (c) {
         var input =
@@ -112,7 +118,8 @@
   });
 
   // Tanto "Cadastrar" quanto "Pular" concluem o cadastro: os campos deste
-  // pop-up são todos opcionais (exceto CNPJ, exigido pela própria API), então
+  // pop-up são todos opcionais (o CNPJ, que a API exige, fica no formulário
+  // principal da tela de cadastro), então
   // "Pular" significa "cadastrar sem preencher esses extras", não "cancelar".
   //
   // Antes de criar a conta, o e-mail passa por uma confirmação: a API manda um
@@ -158,6 +165,8 @@
       var id = el.id.replace(/^rh-/, '');
       extras[id] = (el.value || '').trim();
     });
+    var campoCnpj = mainForm.querySelector('#cnpj');
+    if (campoCnpj) extras.cnpj = campoCnpj.value.trim();
 
     if (!extras.cnpj) {
       RehabitToast.erro('Informe o CNPJ da instituição.');
@@ -429,11 +438,24 @@
 
   window.RehabitModal = { open: open, close: close };
 
-  // Integração com a tela de cadastro: abre o pop-up ao enviar o formulário
+  // Integração com a tela de cadastro: abre o pop-up ao enviar o formulário.
+  // Antes ele abria direto, e um campo obrigatório vazio só era cobrado no
+  // fim, com o pop-up tampando justamente o campo que faltava.
   var form = document.getElementById('registerForm');
   if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (window.RehabitCampos) {
+        if (!RehabitCampos.validar(form)) return;
+        var senha = form.querySelector('#password');
+        var confirmar = form.querySelector('#confirm');
+        if (senha && confirmar && senha.value !== confirmar.value) {
+          RehabitCampos.marcar(confirmar, 'As senhas não conferem.');
+          confirmar.focus();
+          RehabitToast.erro('As senhas não conferem.');
+          return;
+        }
+      }
       open('instituicao');
     });
   }

@@ -1,5 +1,8 @@
 /* Rehabit — tema escuro para as telas internas (aplica-se com <body class="dark">) */
 body.dark {
+  /* O vermelho do tema claro fica abaixo do contraste mínimo neste fundo. */
+  --danger: #F87171;
+  --danger-soft: rgba(248, 113, 113, 0.18);
   --ink: #E6EAF5;
   --ink-strong: #FFFFFF;
   --ink-muted: #98A2BC;
