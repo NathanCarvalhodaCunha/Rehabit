@@ -17,6 +17,13 @@
 
 * { box-sizing: border-box; }
 
+/* O atributo hidden é só um display:none do navegador, e qualquer classe com
+   display (.btn-outline, .card em flex...) passa por cima dele. Foi assim que
+   o "Lembrete no WhatsApp" aparecia em paciente sem telefone, sem nenhuma ação
+   ligada: um botão morto. Três telas já tinham remendo local para isso; esta
+   regra vale para todas. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
