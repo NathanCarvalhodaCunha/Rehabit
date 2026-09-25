@@ -519,6 +519,21 @@ button { font-family: inherit; cursor: pointer; }
 .tip-t { margin: 0 0 6px; font-weight: 700; color: var(--ink-strong); font-size: 15px; }
 .tip-s { margin: 0; color: var(--ink-muted); font-weight: 500; line-height: 1.55; font-size: 14.5px; }
 
+/* Atalhos no fim da tela Dispositivo (tutorial e luzes), lado a lado. */
+.access-row { display: flex; flex-wrap: wrap; column-gap: 22px; }
+.access-row .access-card { flex: 0 1 340px; }
+@media (max-width: 767px) {
+  .access-row .access-card { flex-basis: 100%; }
+}
+
+/* Só aparece com o aparelho fora do ar: é a hora em que a luz dele explica
+   o que o site não tem como saber. */
+.device-ajuda {
+  display: block; margin: -8px 0 18px; text-align: center;
+  font-size: 13.5px; font-weight: 600; color: var(--brand);
+}
+.device-ajuda:hover { text-decoration: underline; }
+
 /* ---------- Instituição page ---------- */
 .inst-header {
   display: grid;
@@ -2871,6 +2886,211 @@ button.form-avatar {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--ink-muted);
+}
+
+/* ---------- Luzes do goniômetro ---------- */
+.luzes-intro-topo {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px;
+}
+.luzes-intro-topo h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink-strong); }
+
+.luzes-legenda {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px;
+}
+.luzes-legenda li { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.luzes-legenda strong { display: block; font-size: 14px; font-weight: 700; color: var(--ink-strong); }
+.luzes-legenda-texto { display: block; font-size: 13px; line-height: 1.45; color: var(--ink-muted); }
+
+.luzes-trilha-bloco { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--hairline); }
+.luzes-trilha-bloco h4 { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--ink-strong); }
+.luzes-trilha-bloco p { margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; color: var(--ink-muted); }
+
+/* A trilha é a ordem em que o aparelho se prepara ao ligar: 1 → 5 → pronto. */
+.luzes-trilha {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); row-gap: 16px;
+}
+.luzes-trilha li { position: relative; }
+.luzes-trilha li:not(:last-child)::after {
+  content: ""; position: absolute; top: 19px; height: 2px;
+  left: calc(50% + 26px); right: calc(-50% + 26px);
+  background: var(--hairline);
+}
+.luzes-trilha a { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.luzes-trilha a:focus-visible { outline: none; }
+.trilha-num {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(220,38,38,.3);
+  background: rgba(220,38,38,.07); color: #B91C1C;
+  font-size: 16px; font-weight: 800;
+  transition: background .15s, border-color .15s, color .15s, transform .15s;
+}
+.trilha-num svg { width: 18px; height: 18px; }
+.luzes-trilha a:hover .trilha-num { background: #DC2626; border-color: #DC2626; color: #fff; transform: translateY(-1px); }
+.luzes-trilha a:focus-visible .trilha-num { box-shadow: 0 0 0 3px rgba(21,101,216,.3); }
+.luzes-trilha .is-pronto .trilha-num { border-color: rgba(22,163,74,.35); background: rgba(22,163,74,.08); color: #15803D; }
+.luzes-trilha .is-pronto a:hover .trilha-num { background: #16A34A; border-color: #16A34A; color: #fff; }
+.trilha-nome { font-size: 12.5px; font-weight: 700; color: var(--ink-strong); text-align: center; }
+
+.luzes-secao { margin: 32px 0 14px; }
+.luzes-secao h2 { margin: 0; font-size: 19px; font-weight: 800; color: var(--ink-strong); letter-spacing: -0.01em; }
+.luzes-secao p { margin: 3px 0 0; font-size: 13.5px; font-weight: 600; color: var(--ink-muted); }
+
+/* A face do aparelho é escura nos dois temas: é o corpo do goniômetro, não
+   um cartão da interface — e um LED só parece aceso contra fundo escuro. */
+.luz-face {
+  display: inline-flex; align-items: flex-start; gap: 18px; flex: none;
+  padding: 12px 18px 8px; border-radius: 14px;
+  background: #111827;
+}
+.luz-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.luz-led {
+  position: relative; display: block;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--apagada);
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.5);
+}
+.luz-led.verde { --apagada: #1C3B2B; --acesa: #22C55E; --reflexo: #DCFCE7; --brilho: rgba(34,197,94,.65); }
+.luz-led.vermelha { --apagada: #3F1F23; --acesa: #EF4444; --reflexo: #FEE2E2; --brilho: rgba(239,68,68,.65); }
+.luz-brilho {
+  position: absolute; inset: 0; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle at 35% 35%, var(--reflexo) 0 15%, var(--acesa) 60%);
+  box-shadow: 0 0 12px 3px var(--brilho);
+}
+.luz-led.acesa .luz-brilho { opacity: 1; }
+.luz-rotulo { font-size: 10px; font-weight: 700; letter-spacing: .02em; color: #9CA3AF; }
+
+.luz-face.mini { gap: 8px; padding: 8px 10px; border-radius: 10px; }
+.luz-face.mini .luz-led { width: 14px; height: 14px; }
+.luz-face.mini .luz-brilho { box-shadow: 0 0 7px 2px var(--brilho); }
+.luz-face.mini .luz-rotulo { display: none; }
+
+.luz-demo { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+
+/* O ciclo desenhado no tempo, com um cursor que anda no mesmo relógio da
+   luz: dá para ler o ritmo mesmo com a animação parada. */
+.ritmo {
+  position: relative; display: flex; flex-direction: column; gap: 4px;
+  width: 100%; padding: 3px 0; overflow: hidden;
+}
+.ritmo-faixa { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--hairline); }
+.ritmo-trecho { flex-shrink: 0; flex-basis: 0; min-width: 0; }
+.ritmo-faixa.verde .ritmo-trecho.is-acesa { background: #22C55E; }
+.ritmo-faixa.vermelha .ritmo-trecho.is-acesa { background: #EF4444; }
+.ritmo-cursor {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 100%;
+  border-left: 2px solid var(--ink-strong);
+  pointer-events: none;
+}
+
+.luzes-erros { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 1200px) {
+  .luzes-erros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.luz-card {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 22px; align-items: start;
+  scroll-margin-top: 20px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.luz-card:focus { outline: none; }
+.luz-card.is-destaque,
+.luz-card:target { border-color: rgba(220,38,38,.55); box-shadow: 0 0 0 3px rgba(220,38,38,.14); }
+
+.luz-texto { min-width: 0; }
+.luz-texto h3 { margin: 0 0 6px; font-size: 17px; font-weight: 800; color: var(--ink-strong); }
+.luz-texto p { margin: 0 0 8px; font-size: 14px; line-height: 1.55; color: var(--ink); }
+.luz-texto .luz-causa { color: var(--ink-muted); }
+.luz-texto h4 {
+  margin: 14px 0 6px; font-size: 11.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted);
+}
+.luz-texto .luz-codigo {
+  display: inline-block; margin: 0 0 8px; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; line-height: 1.5;
+  text-transform: uppercase; letter-spacing: .05em;
+  background: rgba(220,38,38,.09); color: #B91C1C;
+}
+.luz-texto .luz-codigo.neutro { background: rgba(107,114,128,.12); color: #4B5563; }
+.luz-passos {
+  margin: 0; padding-left: 20px; display: grid; gap: 6px;
+  font-size: 14px; line-height: 1.5; color: var(--ink-strong);
+}
+
+.luzes-estados-card { padding: 4px 22px; }
+.luzes-estados { list-style: none; margin: 0; padding: 0; }
+.luz-estado {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 22px; align-items: center;
+  margin: 0 -12px; padding: 18px 12px; border-bottom: 1px solid var(--hairline);
+  scroll-margin-top: 20px;
+  transition: background .2s;
+}
+.luz-estado:last-child { border-bottom: none; }
+.luz-estado:focus { outline: none; }
+.luz-estado.is-destaque,
+.luz-estado:target { background: rgba(22,163,74,.07); border-radius: 10px; }
+.luz-estado .luz-texto h3 { margin: 0 0 2px; font-size: 15.5px; }
+.luz-estado .luz-texto p { margin: 0; font-size: 13.5px; color: var(--ink-muted); }
+.luz-estado .luz-texto .luz-ritmo-nome { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
+
+.luzes-tecnico { margin-top: 26px; padding: 0; }
+.luzes-tecnico summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 22px; cursor: pointer; list-style: none;
+  font-size: 15px; font-weight: 700; color: var(--ink-strong);
+}
+.luzes-tecnico summary::-webkit-details-marker { display: none; }
+.luzes-tecnico summary::after {
+  content: ""; flex: none; width: 8px; height: 8px; margin-right: 4px;
+  border-right: 2px solid var(--ink-muted); border-bottom: 2px solid var(--ink-muted);
+  transform: rotate(45deg); transition: transform .2s;
+}
+.luzes-tecnico details[open] > summary::after { transform: rotate(225deg); }
+.luzes-tecnico summary:focus-visible { outline: none; border-radius: 12px; box-shadow: inset 0 0 0 3px rgba(21,101,216,.3); }
+.luzes-tecnico-corpo { padding: 0 22px 22px; }
+.luzes-tecnico-corpo > p,
+.luzes-regras li { margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+.luzes-tecnico-corpo h4 {
+  margin: 20px 0 8px; font-size: 11.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted);
+}
+.luzes-tecnico-corpo code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px;
+  padding: 1px 5px; border-radius: 4px; background: rgba(107,114,128,.12);
+}
+.luzes-tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.luzes-tabela th {
+  padding: 8px 10px; text-align: left; white-space: nowrap;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-muted); border-bottom: 1px solid var(--hairline);
+}
+.luzes-tabela td {
+  padding: 10px; vertical-align: top; line-height: 1.45;
+  color: var(--ink-strong); border-bottom: 1px solid var(--hairline);
+}
+.luzes-tabela tr:last-child td { border-bottom: none; }
+.luzes-regras { margin: 0; padding-left: 20px; }
+
+@media (max-width: 767px) {
+  .luzes-legenda { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 575px) {
+  /* Seis passos não cabem numa linha de celular: viram duas de três, e a
+     linha que liga um passo ao outro some no fim de cada uma. */
+  .luzes-trilha { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .luzes-trilha li:nth-child(3n)::after { display: none; }
+  .luz-card { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .luz-card .luz-demo { max-width: 200px; margin: 0 auto; }
+  .luz-estado { grid-template-columns: 104px minmax(0, 1fr); gap: 14px; align-items: start; }
+  /* Com os rótulos, a face normal mede 130px e vazaria da coluna de 104px. */
+  .luz-estado .luz-face { gap: 8px; padding: 10px 8px 6px; }
+  .luz-estado .luz-rotulo { font-size: 9px; }
+  .luzes-estados-card { padding: 4px 16px; }
+  .luzes-tecnico summary { padding: 16px; }
+  .luzes-tecnico-corpo { padding: 0 16px 18px; }
 }
 
 /* ---------- Desktop estreito (768–1199) ----------

@@ -244,6 +244,11 @@
     document.querySelectorAll("[data-device-sub]").forEach((el) => {
       el.textContent = estado.numeroSerie ? `Rehabit Goniômetro · ${estado.numeroSerie}` : "Rehabit Goniômetro";
     });
+    // Sem pacote chegando, a tela não sabe o motivo; o aparelho sabe e diz
+    // pela luz. O atalho para os códigos só aparece nessa hora.
+    document.querySelectorAll("[data-ajuda-luzes]").forEach((el) => {
+      el.hidden = !!estado.conectado;
+    });
   }
 
   function desenharBotoes(estado) {

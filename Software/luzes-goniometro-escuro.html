@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Luzes do goniômetro — Rehabit</title>
+  <link rel="icon" href="../favicon.ico" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dark.css" />
+  <link rel="stylesheet" href="./loader.css" />
+</head>
+<body class="dark">
+  <div class="app">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar">
+      <a href="#" class="logo" data-action="go-list" aria-label="Ir para a Home"><img src="./assets/rehabit-logo-dark.png" alt="Rehabit" /></a>
+      <nav class="nav">
+        <a href="#" data-action="go-list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          Home
+        </a>
+        <a href="./dispositivo-escuro.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Dispositivo
+        </a>
+        <a href="./agenda-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Agenda
+        </a>
+        <a href="#" data-action="go-profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Perfil
+        </a>
+        <a href="./configuracoes-escuro.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Configurações
+        </a>
+      </nav>
+      <a href="#" class="logout" data-action="logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </a>
+    </aside>
+
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <button data-action="back" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h2 class="mobile-title">Luzes do aparelho</h2>
+      <span aria-hidden="true" style="width:32px"></span>
+    </div>
+
+    <main class="main">
+      <header class="page-header desktop-only">
+        <h1>Luzes do goniômetro</h1>
+        <p>O que cada piscada do aparelho quer dizer — e como resolver quando é um erro</p>
+      </header>
+
+      <!-- Legenda, trilha, cartões, animações e especificação saem de
+           pages/luzes-goniometro.js: é lá que ficam os códigos e os ritmos. -->
+      <section class="card luzes-intro">
+        <div class="luzes-intro-topo">
+          <h3>Como ler as luzes</h3>
+          <button type="button" class="btn-outline btn-pequeno" data-luzes-pausa>Pausar as luzes</button>
+        </div>
+        <ul class="luzes-legenda" data-luzes-legenda></ul>
+        <div class="luzes-trilha-bloco">
+          <h4>Quantas vezes a vermelha pisca?</h4>
+          <p>Os códigos seguem a ordem em que o aparelho se prepara ao ligar: quanto maior o número, mais longe ele chegou antes de parar. Escolha um número para ver o que fazer.</p>
+          <ol class="luzes-trilha" data-luzes-trilha></ol>
+        </div>
+      </section>
+
+      <div class="luzes-secao">
+        <h2>Erros</h2>
+        <p>Só a vermelha pisca. Conte as piscadas entre uma pausa e outra.</p>
+      </div>
+      <div class="luzes-erros" data-luzes-erros></div>
+
+      <div class="luzes-secao">
+        <h2>Funcionamento normal</h2>
+        <p>A verde mostra o que o aparelho está fazendo.</p>
+      </div>
+      <section class="card luzes-estados-card">
+        <ul class="luzes-estados" data-luzes-estados></ul>
+      </section>
+
+      <section class="card luzes-tecnico">
+        <details>
+          <summary>Especificação para quem monta o aparelho</summary>
+          <div class="luzes-tecnico-corpo" data-luzes-tecnico></div>
+        </details>
+      </section>
+    </main>
+
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-bottomnav">
+      <a href="./dispositivo-escuro.html" aria-label="Dispositivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      </a>
+      <a href="#" aria-label="Home" data-action="go-list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+      </a>
+      <a href="./configuracoes-escuro.html" aria-label="Configurações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </a>
+    </nav>
+  </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="./toast.js"></script>
+  <script src="./loader.js"></script>
+  <script src="./script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="./animations.js"></script>
+  <script src="./notificacoes.js"></script>
+  <script src="./busca.js"></script>
+  <script src="./pages/luzes-goniometro.js"></script>
+</body>
+</html>

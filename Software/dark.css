@@ -449,3 +449,30 @@ body.dark .btn-curva:hover { background: rgba(47,128,255,.10); border-color: #2F
 body.dark .curva-topo h3 { color: #fff; }
 body.dark .curva-indicadores { border-color: #1B2647; }
 body.dark .curva-indicadores strong { color: #2F80FF; }
+
+/* ---------- Luzes do goniômetro (tema escuro) ---------- */
+/* Mais escura que o cartão, com borda: sem ela a face some no fundo azul. */
+body.dark .luz-face { background: #050B1C; box-shadow: inset 0 0 0 1px #1F2A50; }
+body.dark .luzes-intro-topo h3,
+body.dark .luzes-legenda strong,
+body.dark .luzes-trilha-bloco h4,
+body.dark .trilha-nome,
+body.dark .luzes-secao h2,
+body.dark .luz-texto h3,
+body.dark .luz-passos,
+body.dark .luzes-tecnico summary,
+body.dark .luzes-tabela td { color: #fff; }
+body.dark .trilha-num { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.4); color: #F87171; }
+body.dark .luzes-trilha a:hover .trilha-num { background: #DC2626; border-color: #DC2626; color: #fff; }
+body.dark .luzes-trilha .is-pronto .trilha-num { background: rgba(43,209,126,.12); border-color: rgba(43,209,126,.4); color: #2BD17E; }
+body.dark .luzes-trilha .is-pronto a:hover .trilha-num { background: #16A34A; border-color: #16A34A; color: #fff; }
+body.dark .luz-texto .luz-codigo { background: rgba(248,113,113,.16); color: #F87171; }
+body.dark .luz-texto .luz-codigo.neutro { background: rgba(152,162,188,.16); color: var(--ink-muted); }
+body.dark .ritmo-faixa.verde .ritmo-trecho.is-acesa { background: #2BD17E; }
+body.dark .ritmo-faixa.vermelha .ritmo-trecho.is-acesa { background: #F87171; }
+body.dark .luz-card.is-destaque,
+body.dark .luz-card:target { border-color: rgba(248,113,113,.6); box-shadow: 0 0 0 3px rgba(248,113,113,.18); }
+body.dark .luz-estado.is-destaque,
+body.dark .luz-estado:target { background: rgba(43,209,126,.10); }
+body.dark .luzes-tecnico-corpo code { background: rgba(255,255,255,.08); color: var(--ink); }
+body.dark .device-ajuda { color: #2F80FF; }
