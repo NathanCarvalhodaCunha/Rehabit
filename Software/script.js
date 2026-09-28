@@ -393,6 +393,8 @@ if (cadastrarProfissionalForm) {
       return;
     }
 
+    if (!RehabitCampos.validar(cadastrarProfissionalForm)) return;
+
     const coffito = document.getElementById("pid").value.trim();
     const nome = document.getElementById("pnome").value.trim();
     const telefone = document.getElementById("ptel").value.trim();
@@ -402,11 +404,10 @@ if (cadastrarProfissionalForm) {
     const localidade = document.getElementById("ploc").value.trim();
     const descricao = document.getElementById("pdesc").value.trim();
 
-    if (!coffito || !nome || !email || !senha) {
-      RehabitToast.erro("Preencha COFFITO, nome, e-mail e senha.");
-      return;
-    }
+    // Pela regra do navegador, o minlength só confere valor editado pela
+    // pessoa; um valor posto por script passaria. Esta checagem cobre o resto.
     if (senha.length < 6) {
+      RehabitCampos.marcar(document.getElementById("psenha"), "Use ao menos 6 caracteres.");
       RehabitToast.erro("A senha deve ter ao menos 6 caracteres.");
       return;
     }

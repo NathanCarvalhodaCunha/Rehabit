@@ -72,7 +72,7 @@ public class EstatisticasService {
                 "de " + pacienteRepository.countByIdClinica(idClinica) + " no total"));
         cards.add(cardSessoesMes(ids));
         cards.add(new EstatisticaCardDTO("Profissionais",
-                String.valueOf(fisioterapeutaRepository.countByIdClinica(idClinica)),
+                String.valueOf(fisioterapeutaRepository.countByIdClinicaAndExcluidoEmIsNull(idClinica)),
                 "vinculados à instituição"));
         return cards;
     }

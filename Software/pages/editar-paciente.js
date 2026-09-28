@@ -60,12 +60,9 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!RehabitCampos.validar(form)) return;
 
     const nome = document.getElementById("p-nome").value.trim();
-    if (!nome) {
-      RehabitToast.erro("Preencha o nome do paciente.");
-      return;
-    }
 
     const submitBtn = form.querySelector(".btn-primary");
     submitBtn.disabled = true;

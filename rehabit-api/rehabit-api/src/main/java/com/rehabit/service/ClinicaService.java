@@ -136,7 +136,8 @@ public class ClinicaService {
 
         return new ClinicaPerfilDTO(clinica.getId(), clinica.getNome(), clinica.getCnpj(), clinica.getEmail(),
                 clinica.getTelefone(), clinica.getEndereco(), clinica.getSubtitulo(), clinica.getDescricao(),
-                clinica.getFoto(), fisioterapeutas.size(), pacienteRepository.countByIdClinica(clinica.getId()),
+                clinica.getFoto(), fisioterapeutaRepository.countByIdClinicaAndExcluidoEmIsNull(clinica.getId()),
+                pacienteRepository.countByIdClinica(clinica.getId()),
                 sessoesEsteMes, amplitudeMediaGeral);
     }
 

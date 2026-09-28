@@ -1,6 +1,8 @@
 package com.rehabit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rehabit.repository.ClinicaRepository;
+import com.rehabit.repository.FisioterapeutaRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +19,15 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final ClinicaRepository clinicaRepository;
+    private final FisioterapeutaRepository fisioterapeutaRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, ClinicaRepository clinicaRepository,
+                                   FisioterapeutaRepository fisioterapeutaRepository) {
         this.jwtService = jwtService;
+        this.clinicaRepository = clinicaRepository;
+        this.fisioterapeutaRepository = fisioterapeutaRepository;
     }
 
     @Override
@@ -42,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = extrairToken(request);
         JwtService.TokenDados dados = token != null ? jwtService.validar(token) : null;
 
-        if (dados == null) {
+        if (dados == null || !contaAindaValida(dados)) {
             escreverNaoAutenticado(response);
             return;
         }
@@ -53,6 +60,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             request.setAttribute(AuthContext.ATRIBUTO_ID_CLINICA, dados.idClinica());
         }
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * O token é stateless e vale 30 dias: assinatura e validade em dia não
+     * dizem se a conta ainda existe. Sem esta consulta, uma clínica ou um
+     * profissional excluídos seguiriam usando a API com o token que já
+     * tinham até ele vencer — inclusive em outros aparelhos logados.
+     *
+     * É uma busca por chave primária a mais por requisição, e fica sem cache
+     * de propósito — um cache reabriria justamente a janela que isto fecha.
+     *
+     * Token de dispositivo não passa por aqui: DispositivoService
+     * .exigirDispositivoAtivo já confere o aparelho a cada leitura, e é o que
+     * dá efeito imediato ao botão "Revogar".
+     */
+    private boolean contaAindaValida(JwtService.TokenDados dados) {
+        if ("CLINICA".equals(dados.tipo())) {
+            return clinicaRepository.existsById(dados.id());
+        }
+        if ("FISIOTERAPEUTA".equals(dados.tipo())) {
+            return fisioterapeutaRepository.findById(dados.id())
+                    .map(f -> !f.isExcluido())
+                    .orElse(false);
+        }
+        return true;
     }
 
     /**

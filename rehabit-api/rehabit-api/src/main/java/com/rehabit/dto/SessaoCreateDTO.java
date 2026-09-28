@@ -7,12 +7,14 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
+/**
+ * O que o formulário manda ao registrar uma sessão. Não tem data nem hora de
+ * propósito: a sessão é registrada enquanto acontece, e quem carimba o momento
+ * é o servidor (SessaoService). Um "data" que ainda chegue de uma tela antiga
+ * é ignorado.
+ */
 public class SessaoCreateDTO {
-
-    @NotNull(message = "A data é obrigatória.")
-    private LocalDate data;
 
     // Sem faixa, o prontuário aceitava duração negativa e amplitude
     // impossível (-500 min, 9999°). Além de sair assim no histórico, isso
@@ -60,14 +62,6 @@ public class SessaoCreateDTO {
     private Integer idFisioterapeuta;
 
     public SessaoCreateDTO() {
-    }
-
-    public LocalDate getData() {
-        return data;
-    }
-
-    public void setData(LocalDate data) {
-        this.data = data;
     }
 
     public Integer getDuracao() {

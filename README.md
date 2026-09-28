@@ -42,6 +42,38 @@ java -jar target/rehabit-api-1.0.0.jar
 
 E abra `Login/login.html` diretamente no navegador (o frontend é servido como arquivo local, sem servidor de desenvolvimento).
 
+### Conta de demonstração
+
+Com `REHABIT_DEMO=true`, a API cria na subida uma clínica completa para
+apresentar e testar o sistema: a **Clínica Movimento Fisioterapia**, com cinco
+fisioterapeutas de especialidades diferentes e dezesseis pacientes com
+anamnese, metas, meses de sessões com a evolução da amplitude e da dor, faltas,
+uma consulta remarcada e a agenda das próximas duas semanas. As datas são
+relativas ao dia em que a conta é criada.
+
+| Conta | E-mail |
+|---|---|
+| Clínica | `contato@movimento.example` |
+| Ana Paula Ribeiro (ortopedia) | `ana.ribeiro@movimento.example` |
+| Rafael Moura (esportiva) | `rafael.moura@movimento.example` |
+| Juliana Castro (neurofuncional) | `juliana.castro@movimento.example` |
+| Carlos Eduardo Tanaka (reumatologia) | `carlos.tanaka@movimento.example` |
+| Fernanda Oliveira Lima (gerontologia) | `fernanda.lima@movimento.example` |
+
+Todas entram com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`). A
+criação é idempotente — se a clínica já existe, nada acontece —, então a
+variável pode ficar ligada. Os e-mails usam o domínio reservado `.example`, e
+os telefones são fictícios: para testar o lembrete no WhatsApp de verdade,
+troque o telefone de um paciente pelo seu em "Editar paciente".
+
+```bash
+# local
+java -DREHABIT_DEMO=true -jar target/rehabit-api-1.0.0.jar
+```
+
+No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
+(e, se quiser outra senha, `REHABIT_DEMO_SENHA`), depois *Manual Deploy*.
+
 ## Funcionalidades
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.

@@ -11,16 +11,15 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    if (!RehabitCampos.validar(form)) return;
+
     const nome = document.getElementById("nome").value.trim();
     const cpf = document.getElementById("cpf").value.trim();
     const dataNascimento = document.getElementById("nasc").value || null;
     const sexo = document.getElementById("sexo").value || null;
     const situacao = document.getElementById("situacao").value.trim() || null;
-
-    if (!nome || !cpf) {
-      RehabitToast.erro("Preencha nome e CPF.");
-      return;
-    }
+    const telefone = document.getElementById("tel").value.trim() || null;
+    const email = document.getElementById("email").value.trim() || null;
 
     const submitBtn = form.querySelector(".btn-primary");
     submitBtn.disabled = true;
@@ -47,6 +46,8 @@
       const paciente = await apiPost("/pacientes", {
         nome,
         cpf,
+        telefone,
+        email,
         dataNascimento,
         sexo,
         situacao,

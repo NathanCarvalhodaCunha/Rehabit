@@ -36,8 +36,10 @@ public class BuscaService {
         List<BuscaResultadoDTO> resultados = new ArrayList<>();
 
         if ("CLINICA".equals(usuarioTipo)) {
+            // Só ativos: um excluído não é mais alguém a encontrar. Os
+            // pacientes dele não se perdem — foram transferidos na exclusão.
             List<Fisioterapeuta> profissionais =
-                    fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(usuarioId);
+                    fisioterapeutaRepository.findByIdClinicaAndExcluidoEmIsNullOrderByNomeAsc(usuarioId);
 
             profissionais.stream()
                     .filter(f -> normalizar(f.getNome()).contains(alvo))

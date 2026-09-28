@@ -2,6 +2,7 @@ package com.rehabit.controller;
 
 import com.rehabit.dto.AuthResponseDTO;
 import com.rehabit.dto.DesempenhoDTO;
+import com.rehabit.dto.ExclusaoProfissionalDTO;
 import com.rehabit.dto.FisioterapeutaCreateDTO;
 import com.rehabit.dto.FisioterapeutaPerfilDTO;
 import com.rehabit.dto.FisioterapeutaResumoDTO;
@@ -62,10 +63,17 @@ public class FisioterapeutaController {
                 id, dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /**
+     * Exclui o profissional. Se ele tiver pacientes ou agenda futura,
+     * {@code transferirPara} diz qual profissional ativo da mesma clínica
+     * recebe tudo isso.
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Integer id, HttpServletRequest request) {
-        fisioterapeutaService.excluir(id, AuthContext.id(request), AuthContext.tipo(request));
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ExclusaoProfissionalDTO> excluir(@PathVariable Integer id,
+                                                           @RequestParam(required = false) Integer transferirPara,
+                                                           HttpServletRequest request) {
+        return ResponseEntity.ok(fisioterapeutaService.excluir(
+                id, transferirPara, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
     /** Indicadores e evolução dos pacientes deste profissional. */

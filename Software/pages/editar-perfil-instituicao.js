@@ -33,14 +33,17 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!RehabitCampos.validar(form)) return;
 
     const senhaAtual = document.getElementById("i-senha-atual").value;
     const novaSenha = document.getElementById("i-senha-nova").value;
     if (novaSenha && novaSenha.length < 6) {
+      RehabitCampos.marcar(document.getElementById("i-senha-nova"), "Use ao menos 6 caracteres.");
       RehabitToast.erro("A nova senha deve ter ao menos 6 caracteres.");
       return;
     }
     if (novaSenha && !senhaAtual) {
+      RehabitCampos.marcar(document.getElementById("i-senha-atual"), "Obrigatória para trocar de senha.");
       RehabitToast.erro("Informe a senha atual para trocar de senha.");
       return;
     }

@@ -49,4 +49,33 @@ public class CloudinaryFileStorageService implements FileStorageService {
             throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Override
+    public void excluir(String url) {
+        String publicId = publicIdDe(url);
+        if (publicId == null) {
+            return;
+        }
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (Exception ex) {
+            logger.warn("Falha ao apagar do Cloudinary o arquivo {}", publicId, ex);
+        }
+    }
+
+    /**
+     * O public_id de uma URL devolvida por {@link #salvar}. O upload é feito
+     * sem pasta, então a URL termina em ".../upload/v<versão>/<id>.<ext>" e
+     * o id é o último trecho sem a extensão. Nulo para o que não é do
+     * Cloudinary — uma foto antiga do disco local, por exemplo.
+     */
+    static String publicIdDe(String url) {
+        if (url == null || !url.startsWith("https://res.cloudinary.com/") || !url.contains("/upload/")) {
+            return null;
+        }
+        String ultimoTrecho = url.substring(url.lastIndexOf('/') + 1);
+        int ponto = ultimoTrecho.lastIndexOf('.');
+        String id = ponto > 0 ? ultimoTrecho.substring(0, ponto) : ultimoTrecho;
+        return id.isBlank() ? null : id;
+    }
 }

@@ -1,5 +1,8 @@
 /* Rehabit Auth — tema escuro (aplica-se com <body class="dark">) */
 body.dark {
+  /* O vermelho do tema claro fica abaixo do contraste mínimo neste fundo. */
+  --danger: #F87171;
+  --danger-soft: rgba(248, 113, 113, 0.18);
   --ink: #FFFFFF;
   --ink-muted: #9AA4BD;
   --hairline: #24305C;

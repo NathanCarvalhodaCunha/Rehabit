@@ -44,7 +44,37 @@ public class Fisioterapeuta {
     @Column(name = "tb02_localidade", length = 100)
     private String localidade;
 
+    /**
+     * Quando a clínica excluiu este profissional; nulo enquanto ele está ativo.
+     *
+     * A exclusão é lógica: a linha fica para que as sessões passadas continuem
+     * assinadas por quem de fato atendeu. Sai das listas, do login e dos
+     * seletores; continua nas estatísticas e no histórico.
+     */
+    @Column(name = "tb02_excluido_em")
+    private java.time.LocalDateTime excluidoEm;
+
     public Fisioterapeuta() {
+    }
+
+    public java.time.LocalDateTime getExcluidoEm() {
+        return excluidoEm;
+    }
+
+    public void setExcluidoEm(java.time.LocalDateTime excluidoEm) {
+        this.excluidoEm = excluidoEm;
+    }
+
+    public boolean isExcluido() {
+        return excluidoEm != null;
+    }
+
+    /**
+     * O nome como o histórico deve mostrar. "Conta excluída", e não
+     * "excluído/excluída", para não depender de saber o gênero da pessoa.
+     */
+    public String getNomeParaExibicao() {
+        return isExcluido() ? nome + " (conta excluída)" : nome;
     }
 
     // Getters e Setters

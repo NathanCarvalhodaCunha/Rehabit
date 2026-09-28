@@ -1,6 +1,8 @@
 package com.rehabit.storage;
 
 import com.rehabit.exception.AuthException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +19,9 @@ import java.util.UUID;
  * arquivos daqui são perdidos a cada novo deploy/restart.
  */
 public class LocalFileStorageService implements FileStorageService {
+
+    private static final Logger logger = LoggerFactory.getLogger(LocalFileStorageService.class);
+    private static final String PREFIXO = "/uploads/";
 
     private final String uploadDir;
 
@@ -42,6 +47,27 @@ public class LocalFileStorageService implements FileStorageService {
             throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return "/uploads/" + nomeArquivo;
+        return PREFIXO + nomeArquivo;
+    }
+
+    @Override
+    public void excluir(String url) {
+        if (url == null || !url.startsWith(PREFIXO)) {
+            return;
+        }
+        Path pasta = Path.of(uploadDir).toAbsolutePath().normalize();
+        Path alvo = pasta.resolve(url.substring(PREFIXO.length())).normalize();
+
+        // salvar() só grava direto na pasta. Qualquer outra coisa é uma URL
+        // forjada ("/uploads/../algo") tentando apagar fora dela.
+        if (!pasta.equals(alvo.getParent())) {
+            logger.warn("Recusei apagar um arquivo fora da pasta de uploads: {}", url);
+            return;
+        }
+        try {
+            Files.deleteIfExists(alvo);
+        } catch (IOException ex) {
+            logger.warn("Falha ao apagar o arquivo {}", alvo, ex);
+        }
     }
 }

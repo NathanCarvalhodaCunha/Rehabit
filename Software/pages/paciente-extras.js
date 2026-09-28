@@ -145,29 +145,52 @@
   }
 
   // --- WhatsApp ---
-  function ligarWhatsapp(paciente, agendamentos) {
+  /* Número no formato do wa.me: 55 + DDD + número, só dígitos. Decide pelo
+     tamanho, e não por começar com "55": esse também é o DDD de Santa Maria
+     (RS), e um (55) 99123-4567 virava wa.me/55991234567 — sem o país, um
+     número que não existe. Devolve null quando não dá para montar um. */
+  function numeroWhatsapp(telefone) {
+    const digitos = String(telefone || "").replace(/\D/g, "").replace(/^0+/, "");
+    if (digitos.length === 10 || digitos.length === 11) return "55" + digitos;
+    if ((digitos.length === 12 || digitos.length === 13) && digitos.startsWith("55")) return digitos;
+    return null;
+  }
+
+  // Chegam depois do paciente; até lá o lembrete sai sem a data da consulta.
+  let proximasConsultas = [];
+
+  /* O clique é ligado assim que o paciente carrega, e não depois da agenda:
+     antes o botão aparecia (o CSS vencia o hidden) e ficava mudo enquanto a
+     agenda não chegava — e para sempre quando o paciente não tinha telefone,
+     que era o caso de todo paciente novo, porque o cadastro nem pedia um. */
+  function ligarWhatsapp(paciente) {
     const botao = document.querySelector('[data-acao="whatsapp"]');
     if (!botao) return;
 
-    const telefone = (paciente.telefone || "").replace(/\D/g, "");
-    if (!telefone) return;
-
-    const proxima = (agendamentos || [])[0];
-    const quando = proxima
-      ? `sua sessão está marcada para ${formatarData(proxima.data)} às ${(proxima.hora || "").slice(0, 5)}`
-      : "estamos à disposição para agendar sua próxima sessão";
-    // Quem se apresenta ao paciente é a clínica: sessao.nome é o nome de quem
-    // está logado e, num profissional, saía como se ele fosse a instituição.
-    const comQuemFala = paciente.nomeFisioterapeuta
-      ? ` Sua sessão é com ${paciente.nomeFisioterapeuta}.`
-      : "";
-    const texto =
-      `Olá, ${paciente.nome}! Aqui é da ${nomeDaClinica}. Lembrando que ${quando}.${comQuemFala}`;
-
-    // 55 = Brasil. Se o número já vier com o país, não duplica.
-    const numero = telefone.startsWith("55") ? telefone : "55" + telefone;
     botao.hidden = false;
     botao.addEventListener("click", () => {
+      const numero = numeroWhatsapp(paciente.telefone);
+      if (!numero) {
+        RehabitToast.erro(
+          paciente.telefone
+            ? `O telefone ${paciente.telefone} está incompleto: use DDD + número. Corrija em "Editar paciente".`
+            : 'Este paciente não tem telefone cadastrado. Adicione um em "Editar paciente" para enviar o lembrete.'
+        );
+        return;
+      }
+
+      const proxima = proximasConsultas[0];
+      const quando = proxima
+        ? `sua sessão está marcada para ${formatarData(proxima.data)} às ${(proxima.hora || "").slice(0, 5)}`
+        : "estamos à disposição para agendar sua próxima sessão";
+      // Quem se apresenta ao paciente é a clínica: sessao.nome é o nome de quem
+      // está logado e, num profissional, saía como se ele fosse a instituição.
+      const comQuemFala = paciente.nomeFisioterapeuta
+        ? ` Sua sessão é com ${paciente.nomeFisioterapeuta}.`
+        : "";
+      const texto =
+        `Olá, ${paciente.nome}! Aqui é da ${nomeDaClinica}. Lembrando que ${quando}.${comQuemFala}`;
+
       window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
     });
   }
@@ -221,6 +244,7 @@
       if (!nomeDaClinica) nomeDaClinica = "sua clínica";
       montarMeta(paciente, sessoes);
       montarAnamnese(paciente);
+      ligarWhatsapp(paciente);
 
       // A agenda é por profissional, e a linha do tempo precisa dos dois
       // lados: o que já passou e o que ainda vem. A clínica também alcança
@@ -238,9 +262,8 @@
           .concat(passados)
           .filter((a) => String(a.idPaciente) === String(idPaciente));
         // O lembrete fala da próxima consulta, então precisa da lista futura.
-        const futurasDoPaciente = proximos.filter((a) => String(a.idPaciente) === String(idPaciente));
+        proximasConsultas = proximos.filter((a) => String(a.idPaciente) === String(idPaciente));
         montarTimeline(paciente, sessoes, doPaciente);
-        ligarWhatsapp(paciente, futurasDoPaciente);
         ligarRelatorio(paciente, sessoes, doPaciente);
       });
     })

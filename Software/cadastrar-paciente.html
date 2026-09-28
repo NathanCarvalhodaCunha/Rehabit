@@ -62,7 +62,7 @@
         <p class="caption">Foto de perfil</p>
       </div>
 
-      <form id="cadastrarPacienteForm" class="card form-card">
+      <form id="cadastrarPacienteForm" class="card form-card" novalidate>
         <input type="file" id="pfoto" accept="image/*" hidden />
         <div class="form-split">
           <div class="form-avatar-col">
@@ -71,9 +71,10 @@
             <button type="button" class="form-avatar" data-avatar-picker aria-label="Escolher foto de perfil"></button>
           </div>
           <div>
+            <p class="legenda-obrigatorio"><span aria-hidden="true">*</span> Campos obrigatórios</p>
             <div class="field field-id">
               <label for="cpf">CPF</label>
-              <input id="cpf" type="text" required />
+              <input id="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" required />
             </div>
             <hr class="form-sep" />
             <div class="two-col">
@@ -99,6 +100,17 @@
               <div class="field">
                 <label for="situacao">Situação</label>
                 <input id="situacao" type="text" placeholder="Ex: Lesão de manguito rotador" />
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="tel">Telefone</label>
+                <input id="tel" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 98765-4321" />
+                <p class="field-hint">Com DDD. É para ele que vai o lembrete no WhatsApp.</p>
+              </div>
+              <div class="field">
+                <label for="email">E-mail</label>
+                <input id="email" type="email" autocomplete="off" placeholder="paciente@email.com" />
               </div>
             </div>
           </div>
@@ -131,6 +143,7 @@
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>
+  <script src="./campos-obrigatorios.js"></script>
   <script src="./pages/cadastrar-paciente.js"></script>
 </body>
 </html>

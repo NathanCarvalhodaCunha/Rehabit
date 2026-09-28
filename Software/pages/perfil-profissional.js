@@ -53,22 +53,100 @@
         <button class="btn-danger" type="button">Excluir profissional</button>
       `;
       accessCard.insertAdjacentElement("afterend", excluirCard);
-      excluirCard.querySelector(".btn-danger").addEventListener("click", async () => {
-        const confirmado = window.confirm(
-          "Tem certeza que deseja excluir este profissional? Essa ação não pode ser desfeita."
-        );
-        if (!confirmado) return;
-        try {
-          await apiDelete(`/fisioterapeutas/${idAlvo}`);
-          RehabitToast.sucesso("Profissional excluído com sucesso.");
-          setTimeout(() => {
-            window.location.href = paginaTema("instituicao");
-          }, 1200);
-        } catch (err) {
-          RehabitToast.erro(err.message);
-        }
-      });
+      excluirCard.querySelector(".btn-danger").addEventListener("click", abrirExclusao);
     }
+  }
+
+  /* Excluir não apaga o registro: o profissional perde o acesso e sai das
+     listas, mas as sessões que ele atendeu continuam no histórico. Se ele
+     tiver pacientes, eles — e a agenda de hoje em diante — precisam ir para
+     outro profissional da clínica antes. */
+  async function abrirExclusao() {
+    const escapar = RehabitConfirmarExclusao.escapar;
+    const nome = header.querySelector("h1").textContent.trim() || "este profissional";
+
+    let seusPacientes;
+    let colegas;
+    try {
+      [seusPacientes, colegas] = await Promise.all([
+        apiGet(`/pacientes?idFisioterapeuta=${idAlvo}`),
+        apiGet(`/fisioterapeutas?idClinica=${sessao.id}`),
+      ]);
+    } catch (err) {
+      RehabitToast.erro(err.message);
+      return;
+    }
+    colegas = colegas.filter((f) => String(f.id) !== String(idAlvo));
+
+    const total = seusPacientes.length;
+    const pacientesTexto = total === 1 ? "1 paciente" : `${total} pacientes`;
+    const efeito =
+      `<p class="dialogo-texto"><strong>${escapar(nome)}</strong> perde o acesso ao Rehabit e sai das listas. ` +
+      "As sessões que já atendeu continuam no histórico, identificadas como conta excluída.</p>";
+
+    if (total === 0) {
+      RehabitConfirmarExclusao.abrir({
+        titulo: `Excluir ${nome}`,
+        corpo: efeito,
+        rotuloConfirmar: "Excluir profissional",
+        aoConfirmar: () => excluir(null, nome, null),
+      });
+      return;
+    }
+
+    if (colegas.length === 0) {
+      RehabitConfirmarExclusao.abrir({
+        titulo: `Excluir ${nome}`,
+        corpo:
+          `<p class="dialogo-texto"><strong>${escapar(nome)}</strong> tem ${pacientesTexto} e não há outro ` +
+          "profissional na clínica para recebê-los.</p>" +
+          '<p class="dialogo-texto">Cadastre outro profissional primeiro; depois volte aqui para excluir.</p>',
+        rotuloConfirmar: null,
+      });
+      return;
+    }
+
+    const opcoes = colegas
+      .map((f) => `<option value="${escapar(f.id)}">${escapar(f.nome)}</option>`)
+      .join("");
+    RehabitConfirmarExclusao.abrir({
+      titulo: `Excluir ${nome}`,
+      corpo:
+        efeito +
+        '<div class="field">' +
+        `<label for="dlg-destino">${escapar(nome)} tem ${pacientesTexto}. Para quem eles vão?</label>` +
+        `<select id="dlg-destino" required><option value="">Escolha um profissional</option>${opcoes}</select>` +
+        "</div>" +
+        '<p class="field-hint">Os pacientes seguem com todo o histórico de sessões, e a agenda de hoje em diante passa junto.</p>',
+      rotuloConfirmar: "Transferir e excluir",
+      podeConfirmar: (caixa) => !!caixa.querySelector("#dlg-destino").value,
+      aoConfirmar: (caixa) => {
+        const select = caixa.querySelector("#dlg-destino");
+        return excluir(select.value, nome, select.options[select.selectedIndex].text);
+      },
+    });
+  }
+
+  async function excluir(idDestino, nome, nomeDestino) {
+    const consulta = idDestino ? `?transferirPara=${encodeURIComponent(idDestino)}` : "";
+    const resultado = await apiDelete(`/fisioterapeutas/${idAlvo}${consulta}`);
+
+    const transferidos = resultado && resultado.pacientesTransferidos ? resultado.pacientesTransferidos : 0;
+    RehabitToast.sucesso(
+      transferidos
+        ? `A conta de ${nome} foi excluída. ${transferidos === 1 ? "1 paciente passou" : `${transferidos} pacientes passaram`} para ${nomeDestino}.`
+        : `A conta de ${nome} foi excluída.`
+    );
+    const colisoes = resultado && resultado.colisoesDeAgenda ? resultado.colisoesDeAgenda : 0;
+    if (colisoes) {
+      RehabitToast.info(
+        `${colisoes === 1 ? "1 consulta transferida caiu" : `${colisoes} consultas transferidas caíram`} em horário ` +
+          `já ocupado na agenda de ${nomeDestino}. Vale conferir a agenda.`
+      );
+    }
+    setTimeout(() => {
+      window.location.href = paginaTema("instituicao");
+    }, colisoes ? 3500 : 1600);
   }
 
   function definirTextoAposSvg(row, texto) {

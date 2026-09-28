@@ -394,6 +394,7 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!RehabitCampos.validar(form)) return;
 
     const idPaciente = selectPaciente.value;
     const data = campoData.value;

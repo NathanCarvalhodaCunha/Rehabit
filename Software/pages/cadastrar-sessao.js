@@ -207,14 +207,17 @@
             let avancoTexto = "0°";
             let avancoClasse = "";
             if (anterior && anterior.amplitudeMedia != null && s.amplitudeMedia != null) {
-              const diferenca = Number(s.amplitudeMedia) - Number(anterior.amplitudeMedia);
-              avancoTexto = `${diferenca >= 0 ? "+" : ""}${diferenca.toFixed(0)}°`;
+              // Arredonda antes de decidir o sinal: -0,1° saía como "-0°" em vermelho.
+              const diferenca = Math.round(Number(s.amplitudeMedia) - Number(anterior.amplitudeMedia));
+              avancoTexto = `${diferenca >= 0 ? "+" : ""}${diferenca}°`;
               if (diferenca > 0) avancoClasse = "pos";
               else if (diferenca < 0) avancoClasse = "neg";
             }
             return `
               <tr>
-                <td><span class="desktop-only">${formatarDataLonga(s.data)}</span><span class="mobile-only">${formatarDataCurta(s.data)}</span></td>
+                <td><span class="desktop-only">${formatarDataLonga(s.data)}</span><span class="mobile-only">${formatarDataCurta(s.data)}</span>${
+                  s.hora ? ` <span class="sessao-hora">${s.hora.slice(0, 5)}</span>` : ""
+                }</td>
                 <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
                 <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
                 <td class="${avancoClasse}">${avancoTexto}</td>
@@ -243,23 +246,28 @@
     return;
   }
 
-  // Sessão é registro do que já foi atendido, então a data não pode ser
-  // futura — o campo trava no dia de hoje e o envio confere de novo.
-  const campoData = document.getElementById("s-data");
-  const hojeIso = (() => {
+  /* A sessão é registrada enquanto acontece: data e hora são as do momento do
+     registro, e quem carimba é o servidor. Antes havia um campo de data que
+     aceitava qualquer dia passado — e a hora gravada era sempre a do envio,
+     então uma sessão "de ontem" saía com o horário de hoje. Aqui só se mostra
+     o relógio, no fuso das clínicas, para ninguém procurar onde mudar. */
+  const relogioTela = form.querySelector("[data-agora]");
+  const formatoAgora = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  function mostrarAgora() {
+    if (!relogioTela) return;
     const agora = new Date();
-    return (
-      agora.getFullYear() +
-      "-" +
-      String(agora.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(agora.getDate()).padStart(2, "0")
-    );
-  })();
-  if (campoData) {
-    campoData.max = hojeIso;
-    if (!campoData.value) campoData.value = hojeIso;
+    relogioTela.textContent = formatoAgora.format(agora).replace(", ", " às ");
+    relogioTela.dateTime = agora.toISOString();
   }
+  mostrarAgora();
+  setInterval(mostrarAgora, 15000);
 
   // Espelha o valor do controle deslizante ao lado dele.
   (function ligarEscalaDeDor() {
@@ -275,22 +283,13 @@
   })();
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!RehabitCampos.validar(form)) return;
 
-    const data = document.getElementById("s-data").value;
     const duracao = document.getElementById("s-dur").value;
     const amplitude = document.getElementById("s-amp").value;
     const campoObs = document.getElementById("s-obs");
     const observacoes = campoObs ? campoObs.value.trim() : "";
     const campoDor = document.getElementById("s-dor");
-
-    if (!data || !duracao) {
-      RehabitToast.erro("Preencha ao menos a data e a duração.");
-      return;
-    }
-    if (data > hojeIso) {
-      RehabitToast.erro("A sessão não pode ter uma data futura. Use a Agenda para marcar o que ainda vai acontecer.");
-      return;
-    }
 
     const submitBtn = form.querySelector(".btn-primary");
     submitBtn.disabled = true;
@@ -298,8 +297,12 @@
     submitBtn.textContent = "Salvando...";
 
     try {
-      await apiPost(`/pacientes/${idPaciente}/sessoes`, {
-        data,
+      const registrada = await apiPost(`/pacientes/${idPaciente}/sessoes`, {
+        // Compatibilidade: o site publica sozinho no merge, mas a API do
+        // Render não, e a versão antiga exige "data". A nova ignora o campo
+        // e carimba o momento ela mesma. Pode sair depois que o Render
+        // estiver com a API nova.
+        data: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()),
         duracao: Number(duracao),
         amplitudeMedia: amplitude ? Number(amplitude) : null,
         observacoes: observacoes || null,
@@ -309,9 +312,13 @@
       });
       capturaUsada = null;
       form.reset();
-      if (campoData) campoData.value = hojeIso;
       await carregarPacienteEHistorico();
-      RehabitToast.sucesso("Sessão cadastrada com sucesso.");
+      // O horário do aviso é o que o servidor gravou, não o do navegador.
+      RehabitToast.sucesso(
+        registrada.hora
+          ? `Sessão registrada em ${formatarDataLonga(registrada.data)} às ${registrada.hora.slice(0, 5)}.`
+          : "Sessão registrada com sucesso."
+      );
     } catch (err) {
       RehabitToast.erro(err.message);
     } finally {
