@@ -58,12 +58,16 @@ if (loginForm) {
     submitBtn.disabled = true;
     const textoOriginal = submitBtn.textContent;
     submitBtn.textContent = 'Entrando...';
-    RehabitLoader.show('Entrando');
 
     try {
+      // O token vem antes do loader: se a Cloudflare pedir o clique, o cartão
+      // dela tem de ficar à vista, e o loader passaria a falar de servidor
+      // acordando enquanto quem demora é a pessoa.
+      const antiRobo = await RehabitTurnstile.cabecalho();
+      RehabitLoader.show('Entrando');
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...antiRobo },
         body: JSON.stringify({ email, senha }),
       });
 
@@ -114,12 +118,14 @@ if (esqueciSenhaForm) {
       botao.disabled = true;
       botao.textContent = 'Enviando...';
     }
-    RehabitLoader.show('Enviando e-mail');
 
     try {
+      // Token antes do loader, pelo mesmo motivo do login.
+      const antiRobo = await RehabitTurnstile.cabecalho();
+      RehabitLoader.show('Enviando e-mail');
       const response = await fetch(`${API_BASE_URL}/auth/esqueci-senha`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...antiRobo },
         body: JSON.stringify({ email }),
       });
       const dados = await response.json().catch(() => ({}));
