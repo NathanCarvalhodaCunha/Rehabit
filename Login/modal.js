@@ -191,11 +191,15 @@
 
   /** Pede o código para o e-mail informado. */
   async function enviarCodigo(email, silencioso) {
-    RehabitLoader.show('Enviando código');
     try {
+      // O token vem antes do loader: se a Cloudflare pedir o clique, o cartão
+      // dela tem de ficar à vista, e o loader passaria a falar de servidor
+      // acordando enquanto quem demora é a pessoa.
+      var antiRobo = await RehabitTurnstile.cabecalho();
+      RehabitLoader.show('Enviando código');
       var res = await fetch(base() + '/auth/verificar-email/enviar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, antiRobo),
         body: JSON.stringify({ email: email }),
       });
       var data = await res.json().catch(function () { return {}; });

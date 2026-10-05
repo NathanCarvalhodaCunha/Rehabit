@@ -78,6 +78,7 @@ No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.
 - Recuperação de senha por e-mail: código de 6 dígitos (e link direto, quando o site tem endereço público).
+- Verificação anti-robô (Cloudflare Turnstile) no login e nas telas que mandam e-mail.
 - Cadastro de pacientes e vínculo com profissionais.
 - Registro de sessões de fisioterapia e histórico de evolução por paciente.
 - Goniômetro digital integrado, em tempo real (veja abaixo).
@@ -240,6 +241,76 @@ cadastrar.
    publicado, aquele endereço não pode existir.
 4. **Código por e-mail** — a prova final: sem abrir a caixa de entrada e
    digitar os 6 dígitos, a conta não é criada.
+
+## Verificação anti-robô (Cloudflare Turnstile)
+
+Três rotas da API recebem um token anti-robô da Cloudflare: o **login**
+(onde um robô tentaria adivinhar senha), o **envio do código de cadastro** e
+o **e-mail de recuperação de senha** — essas duas gastam da cota de 300
+e-mails por dia do Brevo, e um robô martelando qualquer uma delas esgotaria a
+cota e deixaria todo mundo sem e-mail até o dia seguinte. O `/register` não
+precisa: com o envio de e-mail ligado ele exige o código, que só sai por uma
+delas.
+
+No navegador, [`Login/turnstile.js`](Login/turnstile.js) carrega o widget
+assim que a tela abre e deixa o token pronto antes do clique. Na maior parte
+das vezes ninguém vê nada. Quando a Cloudflare desconfia, aparece um cartão
+no pé da tela pedindo para marcar "Confirme que é humano", e a ação segue
+sozinha depois do clique. Cada token vale uma vez só; o widget já pede o
+próximo, e é isso que deixa o "Enviar de novo" funcionar. O token vai no
+cabeçalho `X-Turnstile-Token`, e a API confere com a Cloudflare antes de
+fazer qualquer coisa.
+
+| Onde o site está aberto | O que acontece |
+| --- | --- |
+| GitHub Pages | Widget com a site key de `Login/turnstile.js` (vazia = sem verificação) |
+| `localhost` | Widget com a [chave de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) da Cloudflare, que aprova sempre |
+| `file://` | Sem verificação — o Turnstile não roda sem endereço |
+
+Do lado da API, sem `TURNSTILE_SECRET_KEY` a verificação fica desligada,
+como o envio de e-mail sem provedor: rodando local e nos testes nada muda, e
+o log de arranque diz qual é o caso. Com a chave definida:
+
+- token ausente, inválido, vencido ou já usado → **403** com "Não conseguimos
+  confirmar que você não é um robô";
+- Cloudflare fora do ar, lenta (mais de 5 s) ou com erro interno → **passa**,
+  com aviso no log. Barrar aí trancaria todo mundo do lado de fora por um
+  problema que não é de quem está entrando — no dia de uma apresentação, por
+  exemplo.
+
+### Como ligar
+
+Precisa de uma conta gratuita na Cloudflare; não precisa de domínio próprio
+nem de cartão. **A ordem importa**: com a chave secreta no Render e o site
+publicado sem a site key, ninguém consegue entrar.
+
+1. Em [dash.cloudflare.com](https://dash.cloudflare.com) → *Turnstile* →
+   *Add widget*: hostname `nathancarvalhodacunha.github.io`, modo
+   **Managed**.
+2. Copie a **site key** para `CHAVE_DO_SITE` em `Login/turnstile.js` e leve
+   para a `main`. Ela é pública: só funciona nos hostnames cadastrados no
+   widget. O GitHub Pages publica sozinho em segundos.
+3. Abra o site publicado e faça um login: no console do navegador não pode
+   aparecer nenhum aviso `[Turnstile]`.
+4. Confira que o Render já está com a versão nova da API — no *Logs* dele
+   aparece `Verificação anti-robô (Cloudflare Turnstile) desligada`. Merge na
+   `main` não garante que ele publicou (já levou dias); se a linha não
+   aparecer, rode *Manual Deploy → Deploy latest commit*.
+5. Só então, em *Environment* no Render, defina `TURNSTILE_SECRET_KEY` com a
+   **secret key** do widget. Ela nunca vai para o repositório. Depois do
+   redeploy o log passa a dizer `ligada`.
+
+Para desligar de volta, basta apagar a variável no Render.
+
+### Quando algo dá errado
+
+| Sintoma | O que é |
+| --- | --- |
+| Todo mundo recebe "Não conseguimos confirmar que você não é um robô" | O site publicado está sem a site key, com a site key de outro widget, ou o hostname não está cadastrado no widget. Olhe os avisos `[Turnstile]` no console. Para destravar na hora, apague a `TURNSTILE_SECRET_KEY` no Render. |
+| Console: `[Turnstile] erro 110200` | Hostname não autorizado: cadastre o endereço do site no widget. |
+| Console: `[Turnstile] erro 110100` ou `110110` | Site key inválida — confira o que foi copiado para `Login/turnstile.js`. |
+| Log da API: `invalid-input-secret` | A `TURNSTILE_SECRET_KEY` está errada. Enquanto isso todo pedido passa — a verificação está ligada só no nome. |
+| Log da API: `Não consegui conferir o token anti-robô com a Cloudflare` | A Cloudflare não respondeu a tempo; o pedido passou. Se for constante, é rede do Render. |
 
 ## A hibernação da API no Render
 

@@ -10,6 +10,7 @@ import com.rehabit.dto.RedefinirSenhaRequestDTO;
 import com.rehabit.dto.RegisterRequestDTO;
 import com.rehabit.dto.VerificacaoEnviadaDTO;
 import com.rehabit.dto.VerificarEmailRequestDTO;
+import com.rehabit.security.TurnstileService;
 import com.rehabit.service.AuthService;
 import com.rehabit.service.RecuperacaoSenhaService;
 import com.rehabit.service.VerificacaoEmailService;
@@ -26,17 +27,28 @@ public class AuthController {
     private final AuthService authService;
     private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final VerificacaoEmailService verificacaoEmailService;
+    private final TurnstileService turnstileService;
 
     public AuthController(AuthService authService,
                           RecuperacaoSenhaService recuperacaoSenhaService,
-                          VerificacaoEmailService verificacaoEmailService) {
+                          VerificacaoEmailService verificacaoEmailService,
+                          TurnstileService turnstileService) {
         this.authService = authService;
         this.recuperacaoSenhaService = recuperacaoSenhaService;
         this.verificacaoEmailService = verificacaoEmailService;
+        this.turnstileService = turnstileService;
     }
 
+    // As três rotas que recebem o token anti-robô (TurnstileService) são as
+    // que um robô teria interesse em martelar: o login, para adivinhar senha,
+    // e as duas que mandam e-mail. O /register não precisa: com o envio de
+    // e-mail ligado ele exige o código, que só sai por uma delas.
+
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO dados) {
+    public ResponseEntity<AuthResponseDTO> login(
+            @Valid @RequestBody LoginRequestDTO dados,
+            @RequestHeader(value = TurnstileService.CABECALHO, required = false) String tokenAntiRobo) {
+        turnstileService.verificar(tokenAntiRobo);
         return ResponseEntity.ok(authService.login(dados));
     }
 
@@ -57,7 +69,9 @@ public class AuthController {
     /** Valida o endereço e manda o código de 6 dígitos para ele. */
     @PostMapping("/verificar-email/enviar")
     public ResponseEntity<VerificacaoEnviadaDTO> enviarCodigoEmail(
-            @Valid @RequestBody VerificarEmailRequestDTO dados) {
+            @Valid @RequestBody VerificarEmailRequestDTO dados,
+            @RequestHeader(value = TurnstileService.CABECALHO, required = false) String tokenAntiRobo) {
+        turnstileService.verificar(tokenAntiRobo);
         return ResponseEntity.ok(verificacaoEmailService.enviarCodigo(dados.getEmail()));
     }
 
@@ -77,7 +91,10 @@ public class AuthController {
      * quais e-mails estão cadastrados.
      */
     @PostMapping("/esqueci-senha")
-    public ResponseEntity<MensagemDTO> esqueciSenha(@Valid @RequestBody EsqueciSenhaRequestDTO dados) {
+    public ResponseEntity<MensagemDTO> esqueciSenha(
+            @Valid @RequestBody EsqueciSenhaRequestDTO dados,
+            @RequestHeader(value = TurnstileService.CABECALHO, required = false) String tokenAntiRobo) {
+        turnstileService.verificar(tokenAntiRobo);
         recuperacaoSenhaService.solicitar(dados);
         return ResponseEntity.ok(new MensagemDTO(recuperacaoSenhaService.getRespostaNeutra()));
     }
