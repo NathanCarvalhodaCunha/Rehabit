@@ -9,19 +9,27 @@
      const antiRobo = await RehabitTurnstile.cabecalho();
      fetch(url, { headers: { 'Content-Type': 'application/json', ...antiRobo }, ... });
 
-   O widget começa a trabalhar assim que a página abre, para o token já estar
-   pronto quando a pessoa clicar. Ele é invisível: só aparece, num cartão no
-   pé da tela, quando a Cloudflare desconfia e pede um clique. O cartão fica
-   por cima de tudo, porque a pergunta pode chegar com o pop-up do cadastro
-   aberto. Peça o token antes de mostrar o loader: com ele na tela, a espera
-   pelo clique viraria o aviso de "servidor acordando".
+   Caixinha visível: a página põe um <div data-rh-captcha> acima do botão do
+   formulário, e ali aparece o "Confirme que é humano" da Cloudflare. O botão
+   fica apagado até a caixinha ficar verde. Quem decide se precisa de clique
+   é a Cloudflare (modo Managed): quase sempre ela se marca sozinha.
+
+   Cartão flutuante: quando o token é pedido com a caixinha fora de alcance
+   ("Enviar de novo" com o formulário escondido ou coberto pelo pop-up do
+   cadastro), ou numa página sem caixinha, entra um widget invisível que só
+   aparece, num cartão no pé da tela, se a Cloudflare pedir o clique.
+
+   Peça o token antes de mostrar o loader: com ele na tela, a espera pelo
+   clique viraria o aviso de "servidor acordando".
 
    Cada token vale uma vez só. Depois de entregar um, o widget já pede o
    próximo — é o que deixa o "Enviar de novo" funcionar.
 
    Quando a verificação não roda (script da Cloudflare bloqueado, rede caída,
-   navegador sem suporte), a chamada segue sem token e quem decide é a API:
-   com a TURNSTILE_SECRET_KEY definida ela recusa com uma mensagem própria.
+   navegador sem suporte, chave recusada), o botão é liberado e a chamada
+   segue sem token: quem decide é a API, que com a TURNSTILE_SECRET_KEY
+   definida recusa com uma mensagem própria. Um botão morto, sem explicação,
+   seria pior.
 */
 (function () {
   "use strict";
@@ -39,7 +47,7 @@
   var CABECALHO = "X-Turnstile-Token";
 
   // Quanto esperar um token que não chega (Cloudflare lenta, erro repetido)
-  // antes de seguir sem ele. Enquanto o cartão pede o clique não conta: aí
+  // antes de seguir sem ele. Enquanto um desafio pede o clique não conta: aí
   // quem decide o tempo é a pessoa (e o tempo limite do próprio desafio).
   var ESPERA_MAXIMA_MS = 30000;
 
@@ -52,18 +60,20 @@
   }
 
   var chave = chaveDestaPagina();
-  var widgetId = null;
-  var tokenPronto = null;
   var desligado = !chave;
   var pedidos = []; // quem chamou cabecalho() e espera o próximo token
+  var lugarDaCaixa = document.querySelector("[data-rh-captcha]");
+  var caixa = null; // widget visível, no formulário
+  var flutuante = null; // widget invisível, no cartão do pé da tela
   var cartao = null;
 
   /* ---- Token ---- */
 
-  function consumir() {
-    var token = tokenPronto;
-    tokenPronto = null;
-    window.turnstile.reset(widgetId);
+  function consumir(widget) {
+    var token = widget.token;
+    widget.token = null;
+    window.turnstile.reset(widget.id);
+    atualizarBotao();
     return token;
   }
 
@@ -87,26 +97,64 @@
     }, ESPERA_MAXIMA_MS);
   }
 
+  function alguemPedindoClique() {
+    return !!((caixa && caixa.interativo) || (flutuante && flutuante.interativo));
+  }
+
+  // Na tela e sem nada por cima: é onde a pessoa consegue responder.
+  function caixaAoAlcance() {
+    if (!caixa) return false;
+    var r = lugarDaCaixa.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    var x = Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1);
+    var y = Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1);
+    var noPonto = document.elementFromPoint(x, y);
+    return !!noPonto && lugarDaCaixa.contains(noPonto);
+  }
+
   function token() {
     if (desligado) return Promise.resolve(null);
-    if (tokenPronto) return Promise.resolve(consumir());
+    if (caixa && caixa.token) return Promise.resolve(consumir(caixa));
+    if (flutuante && flutuante.token) return Promise.resolve(consumir(flutuante));
+    if (!caixaAoAlcance()) garantirFlutuante();
     return new Promise(function (resolver) {
       var pedido = { resolver: resolver, relogio: null };
       pedidos.push(pedido);
-      if (!cartaoVisivel()) aguardarAteDesistir(pedido);
+      if (!alguemPedindoClique()) aguardarAteDesistir(pedido);
     });
   }
 
-  function chegouToken(novo) {
-    tokenPronto = novo;
-    if (pedidos.length) atender(pedidos[0], consumir());
+  function chegouToken(widget) {
+    if (pedidos.length) atender(pedidos[0], consumir(widget));
   }
 
-  /* ---- Cartão do desafio ---- */
+  /* ---- Botão do formulário ---- */
+
+  // Apagado enquanto a caixinha não fica verde (ou nem carregou ainda). Com
+  // classe e aria-disabled, e não com disabled, porque os formulários já
+  // usam o disabled para o "Entrando..." e o devolveriam ao fim da chamada.
+  function atualizarBotao() {
+    if (!lugarDaCaixa) return;
+    var form = lugarDaCaixa.closest("form");
+    var botao = form && form.querySelector('[type="submit"]');
+    if (!botao) return;
+    var esperando = !desligado && (!caixa || (!caixa.token && !caixa.erro));
+    botao.classList.toggle("rh-captcha-pendente", esperando);
+    if (esperando) botao.setAttribute("aria-disabled", "true");
+    else botao.removeAttribute("aria-disabled");
+  }
+
+  /* ---- Estilo ---- */
 
   function injetarEstilo() {
     var estilo = document.createElement("style");
     estilo.textContent =
+      ".rh-captcha{width:100%;min-height:65px;margin-top:24px}" +
+      ".rh-captcha+.btn-primary{margin-top:16px}" +
+      // filter, e não opacity: a entrada da página (animations.js) anima o
+      // opacity do botão até o valor que ele tem ao carregar — que seria o
+      // apagado — e o deixa gravado no style depois que a classe sai.
+      ".rh-captcha-pendente{filter:opacity(.55);pointer-events:none}" +
       ".rh-turnstile{position:fixed;left:50%;bottom:16px;z-index:10000;" +
       "max-width:calc(100vw - 16px);box-sizing:border-box;padding:12px 12px 8px;" +
       "border-radius:12px;background:#fff;color:#000;" +
@@ -122,10 +170,11 @@
     document.head.appendChild(estilo);
   }
 
+  /* ---- Cartão flutuante ---- */
+
   // Fica no DOM desde o início, só transparente e fora da tela: escondido
   // com display:none o widget não consegue rodar o desafio.
   function criarCartao() {
-    injetarEstilo();
     cartao = document.createElement("div");
     cartao.className = "rh-turnstile";
     cartao.setAttribute("role", "region");
@@ -135,54 +184,103 @@
     return cartao.lastChild;
   }
 
-  function cartaoVisivel() {
-    return !!cartao && cartao.classList.contains("is-visivel");
-  }
-
   function mostrarCartao() {
     cartao.firstChild.textContent = "Confirme que você não é um robô para continuar.";
     cartao.classList.add("is-visivel");
-    // A pessoa está respondendo: ninguém desiste por tempo enquanto isso.
-    pedidos.forEach(function (pedido) {
-      clearTimeout(pedido.relogio);
-    });
   }
 
   function esconderCartao() {
     cartao.classList.remove("is-visivel");
     cartao.firstChild.textContent = "";
-    pedidos.forEach(aguardarAteDesistir);
+  }
+
+  // Só nasce quando precisa: numa página com caixinha, é a reserva para o
+  // token pedido com ela fora de alcance.
+  function garantirFlutuante() {
+    if (flutuante || !window.turnstile) return;
+    flutuante = criarWidget(criarCartao(), {
+      appearance: "interaction-only",
+      aoPedirClique: mostrarCartao,
+      aoSairDoClique: esconderCartao,
+    });
   }
 
   /* ---- Widget ---- */
 
-  function renderizar() {
-    widgetId = window.turnstile.render(criarCartao(), {
+  function criarWidget(alvo, opcoes) {
+    var widget = { id: null, token: null, erro: false, interativo: false };
+
+    function mudouDesafio(interativo) {
+      widget.interativo = interativo;
+      if (interativo) {
+        // A pessoa está respondendo: ninguém desiste por tempo enquanto isso.
+        pedidos.forEach(function (pedido) {
+          clearTimeout(pedido.relogio);
+        });
+      } else if (!alguemPedindoClique()) {
+        pedidos.forEach(aguardarAteDesistir);
+      }
+    }
+
+    widget.id = window.turnstile.render(alvo, {
       sitekey: chave,
       theme: document.body.classList.contains("dark") ? "dark" : "light",
       language: "pt-br",
-      appearance: "interaction-only",
-      callback: chegouToken,
+      appearance: opcoes.appearance,
+      size: opcoes.size || "normal",
+      callback: function (novo) {
+        widget.token = novo;
+        widget.erro = false;
+        atualizarBotao();
+        chegouToken(widget);
+      },
       "expired-callback": function () {
-        tokenPronto = null; // a Cloudflare renova sozinha e chama o callback de novo
+        widget.token = null; // a Cloudflare renova sozinha e chama o callback de novo
+        atualizarBotao();
       },
       // Sem este callback o erro vira exceção na página. O true diz que já
       // foi registrado aqui; a Cloudflare tenta de novo sozinha.
+      //
+      // 600xxx é o veredito "parece robô": o botão continua apagado. Os
+      // outros (chave, domínio, rede) são falha de configuração ou de
+      // conexão, e aí o botão é liberado e quem responde é a API.
       "error-callback": function (codigo) {
-        tokenPronto = null;
+        widget.token = null;
+        widget.erro = !/^600/.test(String(codigo));
+        atualizarBotao();
         console.warn("[Turnstile] erro " + codigo + "; a Cloudflare vai tentar de novo.");
         return true;
       },
-      "before-interactive-callback": mostrarCartao,
-      "after-interactive-callback": esconderCartao,
+      "before-interactive-callback": function () {
+        mudouDesafio(true);
+        if (opcoes.aoPedirClique) opcoes.aoPedirClique();
+      },
+      "after-interactive-callback": function () {
+        mudouDesafio(false);
+        if (opcoes.aoSairDoClique) opcoes.aoSairDoClique();
+      },
       // Desafio exibido e não respondido a tempo: quem estava esperando
       // segue sem token e recebe a recusa da API, em vez de ficar travado.
       "timeout-callback": seguirSemToken,
-      "unsupported-callback": function () {
-        desligado = true;
-        seguirSemToken();
-      },
+      "unsupported-callback": desligar,
     });
+    return widget;
+  }
+
+  function desligar() {
+    desligado = true;
+    if (lugarDaCaixa) lugarDaCaixa.hidden = true;
+    atualizarBotao();
+    seguirSemToken();
+  }
+
+  function renderizar() {
+    if (lugarDaCaixa) {
+      caixa = criarWidget(lugarDaCaixa, { appearance: "always", size: "flexible" });
+      atualizarBotao();
+    } else {
+      garantirFlutuante();
+    }
   }
 
   function carregarCloudflare() {
@@ -194,13 +292,19 @@
     script.defer = true;
     script.onerror = function () {
       console.warn("[Turnstile] não consegui carregar o script da Cloudflare.");
-      desligado = true;
-      seguirSemToken();
+      desligar();
     };
     document.head.appendChild(script);
   }
 
-  if (!desligado) carregarCloudflare();
+  if (desligado) {
+    // Sem verificação (aberto como arquivo): nada de espaço vazio no form.
+    if (lugarDaCaixa) lugarDaCaixa.hidden = true;
+  } else {
+    injetarEstilo();
+    atualizarBotao(); // já nasce apagado: a caixinha ainda não carregou
+    carregarCloudflare();
+  }
 
   window.RehabitTurnstile = {
     cabecalho: function () {

@@ -252,20 +252,34 @@ cota e deixaria todo mundo sem e-mail até o dia seguinte. O `/register` não
 precisa: com o envio de e-mail ligado ele exige o código, que só sai por uma
 delas.
 
-No navegador, [`Login/turnstile.js`](Login/turnstile.js) carrega o widget
-assim que a tela abre e deixa o token pronto antes do clique. Na maior parte
-das vezes ninguém vê nada. Quando a Cloudflare desconfia, aparece um cartão
-no pé da tela pedindo para marcar "Confirme que é humano", e a ação segue
-sozinha depois do clique. Cada token vale uma vez só; o widget já pede o
-próximo, e é isso que deixa o "Enviar de novo" funcionar. O token vai no
-cabeçalho `X-Turnstile-Token`, e a API confere com a Cloudflare antes de
-fazer qualquer coisa.
+No login, no cadastro e no "esqueci a senha", a caixinha "Confirme que é
+humano" da Cloudflare fica no formulário, acima do botão, e o botão só acende
+quando ela fica verde ("Sucesso!"). Quem decide se precisa clicar é a
+Cloudflare (o widget está no modo **Managed**): quase sempre a caixinha se
+marca sozinha em cerca de um segundo, e só pede o clique quando desconfia —
+não existe modo que obrigue o clique toda vez. Quem faz isso é
+[`Login/turnstile.js`](Login/turnstile.js); cada página só põe um
+`<div class="rh-captcha" data-rh-captcha>` antes do botão.
+
+Cada token vale uma vez só. Depois de usado, a caixinha se confere de novo
+sozinha e o botão espera outra vez. Os dois "Enviar de novo" (no pop-up do
+código de cadastro e no "esqueci a senha") usam o token que ela já renovou;
+se ela estiver escondida ou coberta pelo pop-up e ainda sem token, entra um
+widget invisível que só aparece, num cartão no pé da tela, se a Cloudflare
+pedir o clique. O token vai no cabeçalho `X-Turnstile-Token`, e a API
+confere com a Cloudflare antes de fazer qualquer coisa.
+
+Se a verificação não consegue rodar (script da Cloudflare bloqueado, chave ou
+domínio recusados), o botão é liberado e a chamada vai sem token: quem
+responde é a API, com a mensagem dela, em vez de um botão morto sem
+explicação. Já o veredito "parece robô" (erro `600xxx`) mantém o botão
+apagado.
 
 | Onde o site está aberto | O que acontece |
 | --- | --- |
-| GitHub Pages | Widget com a site key de `Login/turnstile.js` (vazia = sem verificação) |
-| `localhost` | Widget com a [chave de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) da Cloudflare, que aprova sempre |
-| `file://` | Sem verificação — o Turnstile não roda sem endereço |
+| GitHub Pages | Caixinha com a site key de `Login/turnstile.js` (vazia = sem verificação) |
+| `localhost` | Caixinha com a [chave de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) da Cloudflare, que aprova sempre (com a faixa "Somente para teste") |
+| `file://` | Sem verificação — o Turnstile não roda sem endereço; a caixinha some e o botão fica liberado |
 
 Do lado da API, sem `TURNSTILE_SECRET_KEY` a verificação fica desligada,
 como o envio de e-mail sem provedor: rodando local e nos testes nada muda, e
@@ -307,6 +321,7 @@ Para desligar de volta, basta apagar a variável no Render.
 | Sintoma | O que é |
 | --- | --- |
 | Todo mundo recebe "Não conseguimos confirmar que você não é um robô" | O site publicado está sem a site key, com a site key de outro widget, ou o hostname não está cadastrado no widget. Olhe os avisos `[Turnstile]` no console. Para destravar na hora, apague a `TURNSTILE_SECRET_KEY` no Render. |
+| A caixinha mostra "Falha" e o botão não acende | A Cloudflare reprovou o navegador (console: `[Turnstile] erro 600010`). Recarregar a página costuma resolver; em navegador controlado por automação é o esperado. |
 | Console: `[Turnstile] erro 110200` | Hostname não autorizado: cadastre o endereço do site no widget. |
 | Console: `[Turnstile] erro 110100` ou `110110` | Site key inválida — confira o que foi copiado para `Login/turnstile.js`. |
 | Log da API: `invalid-input-secret` | A `TURNSTILE_SECRET_KEY` está errada. Enquanto isso todo pedido passa — a verificação está ligada só no nome. |
