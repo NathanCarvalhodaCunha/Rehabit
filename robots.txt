@@ -1,0 +1,7 @@
+# As telas do sistema (Software/) ficam abertas ao robô de propósito: é lendo
+# a página que ele vê o "noindex" e a tira da busca. Bloqueá-las aqui faria o
+# Google listar o endereço sem conseguir ler o aviso.
+User-agent: *
+Allow: /
+
+Sitemap: https://rehabit.com.br/sitemap.xml

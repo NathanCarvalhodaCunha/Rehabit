@@ -1,0 +1,14 @@
+{
+  "name": "Rehabit",
+  "short_name": "Rehabit",
+  "description": "Acompanhamento de fisioterapia para clínicas, com goniômetro digital.",
+  "lang": "pt-BR",
+  "start_url": "/Login/login.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1565d8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
