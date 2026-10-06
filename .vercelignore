@@ -1,0 +1,10 @@
+# O Vercel publica a raiz do repositório como site estático (rehabit.com.br):
+# index.html leva ao Login/, que leva ao Software/. Sem este arquivo, todo o
+# resto também viraria endereço público no domínio — o código da API (que roda
+# no Render), o firmware do goniômetro, o script do banco e a documentação.
+/rehabit-api
+/Firmware
+/docs
+/.github
+/Rehabit.sql
+/iniciar-rehabit.bat
