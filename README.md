@@ -74,6 +74,39 @@ java -DREHABIT_DEMO=true -jar target/rehabit-api-1.0.0.jar
 No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
 (e, se quiser outra senha, `REHABIT_DEMO_SENHA`), depois *Manual Deploy*.
 
+## Onde o site está publicado
+
+O site fica em **https://rehabit.com.br**, publicado pela
+[Vercel](https://vercel.com) (projeto `rehabit`, plano Hobby, entrando com o
+GitHub `NathanCarvalhodaCunha`). Cada merge na `main` vai para o ar sozinho, e
+cada branch enviado ganha um endereço de prévia `*.vercel.app`. A Vercel serve
+a raiz do repositório como site estático (preset *Other*, sem build), e o
+[`.vercelignore`](.vercelignore) tira dela o que não é página. A API continua
+no Render: o front escolhe a API pelo endereço (`localhost` usa a local,
+qualquer outro usa a do Render), então trocar de hospedagem não muda código.
+
+O domínio foi registrado no [registro.br](https://registro.br) e usa o DNS de
+lá, no modo avançado, com dois registros:
+
+| Tipo | Nome | Valor |
+| --- | --- | --- |
+| A | `rehabit.com.br` | `216.198.79.1` |
+| CNAME | `www.rehabit.com.br` | `0720e30296230fa6.vercel-dns-017.com` |
+
+O `www` redireciona para o endereço sem `www` (308, configurado em *Domains*
+na Vercel). O GitHub Pages (`nathancarvalhodacunha.github.io/Rehabit`) segue
+publicando a mesma `main` e serve de reserva.
+
+Ao pôr o site em um endereço novo, dois ajustes fora do repositório:
+
+1. Cadastre o hostname no widget do Turnstile (veja
+   [Verificação anti-robô](#verificação-anti-robô-cloudflare-turnstile)).
+   Sem isso, todo login naquele endereço recebe 403. Por isso as prévias
+   `*.vercel.app` não fazem login: teste o login em `localhost`.
+2. No Render, aponte `REHABIT_APP_URL` para a pasta `Login/` do endereço novo
+   (`https://rehabit.com.br/Login`), que é o link do e-mail de "esqueci a
+   senha". A variável só vale depois de um deploy da API.
+
 ## Funcionalidades
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.
@@ -277,7 +310,7 @@ apagado.
 
 | Onde o site está aberto | O que acontece |
 | --- | --- |
-| GitHub Pages | Caixinha com a site key de `Login/turnstile.js` (vazia = sem verificação) |
+| `rehabit.com.br` e GitHub Pages | Caixinha com a site key de `Login/turnstile.js` (vazia = sem verificação) |
 | `localhost` | Caixinha com a [chave de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) da Cloudflare, que aprova sempre (com a faixa "Somente para teste") |
 | `file://` | Sem verificação — o Turnstile não roda sem endereço; a caixinha some e o botão fica liberado |
 
@@ -299,8 +332,8 @@ nem de cartão. **A ordem importa**: com a chave secreta no Render e o site
 publicado sem a site key, ninguém consegue entrar.
 
 1. Em [dash.cloudflare.com](https://dash.cloudflare.com) → *Turnstile* →
-   *Add widget*: hostname `nathancarvalhodacunha.github.io`, modo
-   **Managed**.
+   *Add widget*: hostnames `rehabit.com.br` e
+   `nathancarvalhodacunha.github.io`, modo **Managed**.
 2. Copie a **site key** para `CHAVE_DO_SITE` em `Login/turnstile.js` e leve
    para a `main`. Ela é pública: só funciona nos hostnames cadastrados no
    widget. O GitHub Pages publica sozinho em segundos.
