@@ -2884,3 +2884,15 @@ button.form-avatar {
   .sidebar { padding: 22px 14px; }
   .main { padding: 32px 28px; }
 }
+
+/* Aviso da conta de demonstração (veja avisoDeDemonstracao em script.js) */
+.aviso-demo {
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(21, 101, 216, .25);
+  background: rgba(21, 101, 216, .07);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}

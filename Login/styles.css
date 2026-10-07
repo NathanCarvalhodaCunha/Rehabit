@@ -376,3 +376,17 @@ form:has(.legenda-obrigatorio) .field:has(> * > input:required) > label::after {
   .logo { width: 260px; }
   h1 { font-size: 30px; }
 }
+
+/* Aviso da conta de demonstração (login.html?demo, veja demonstracao.js) */
+.aviso-demo {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(21, 101, 216, .25);
+  background: rgba(21, 101, 216, .07);
+  color: #1F2937;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+}
+.aviso-demo + .fields { margin-top: 20px; }

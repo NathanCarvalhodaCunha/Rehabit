@@ -449,3 +449,9 @@ body.dark .btn-curva:hover { background: rgba(47,128,255,.10); border-color: #2F
 body.dark .curva-topo h3 { color: #fff; }
 body.dark .curva-indicadores { border-color: #1B2647; }
 body.dark .curva-indicadores strong { color: #2F80FF; }
+
+body.dark .aviso-demo {
+  border-color: rgba(122, 175, 255, .35);
+  background: rgba(47, 128, 255, .12);
+  color: var(--ink);
+}
