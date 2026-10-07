@@ -498,3 +498,20 @@ if (cadastrarProfissionalForm) {
     });
   });
 })();
+
+// Conta de demonstração: a senha está publicada na página inicial e a API
+// recusa qualquer alteração dela (JwtAuthenticationFilter). O aviso fica no
+// topo de toda tela para ninguém estranhar quando um "Salvar" não salva.
+(function avisoDeDemonstracao() {
+  const sessao = getSessao();
+  if (!sessao || !/@movimento\.example$/i.test(sessao.email || "")) return;
+  const main = document.querySelector(".main");
+  if (!main) return;
+  const aviso = document.createElement("p");
+  aviso.className = "aviso-demo";
+  aviso.setAttribute("role", "note");
+  aviso.innerHTML =
+    "<strong>Conta de demonstração.</strong> Os dados são fictícios: explore à vontade, " +
+    "mas nada do que for alterado será salvo.";
+  main.prepend(aviso);
+})();

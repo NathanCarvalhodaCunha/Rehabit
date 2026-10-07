@@ -14,7 +14,7 @@ Cada tela tem uma variante de tema claro e uma escura (ex.: `login.html` / `logi
 ## Estrutura
 
 ```
-index.html        Página inicial: apresentação do projeto (estilo em inicio.css, imagens em assets/inicio/)
+index.html        Página inicial: apresentação do projeto (inicio.css, inicio.js, imagens em assets/inicio/)
 Login/            Telas de autenticação (login, cadastro, esqueci a senha, redefinir senha)
 Software/         Aplicação principal (dashboard, pacientes, sessões, dispositivo, configurações)
 Firmware/         Código do goniômetro (ESP32 + MPU6050) e guia de montagem
@@ -61,11 +61,17 @@ relativas ao dia em que a conta é criada.
 | Carlos Eduardo Tanaka (reumatologia) | `carlos.tanaka@movimento.example` |
 | Fernanda Oliveira Lima (gerontologia) | `fernanda.lima@movimento.example` |
 
-Todas entram com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`). A
-criação é idempotente — se a clínica já existe, nada acontece —, então a
-variável pode ficar ligada. Os e-mails usam o domínio reservado `.example`, e
-os telefones são fictícios: para testar o lembrete no WhatsApp de verdade,
-troque o telefone de um paciente pelo seu em "Editar paciente".
+Todas entram com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`), e
+essa senha é pública: o botão "Entrar na demonstração" da página inicial abre
+`Login/login.html?demo` com a conta da Ana Paula já preenchida
+([`Login/demonstracao.js`](Login/demonstracao.js)). Por isso a conta é **só de
+leitura**: a API recusa com 403 qualquer alteração vinda da clínica de
+demonstração ou de um profissional dela (`JwtAuthenticationFilter`), e as telas
+mostram um aviso no topo. Se trocar `REHABIT_DEMO_SENHA` no Render, troque
+também no `demonstracao.js`. A criação é idempotente — se a clínica já existe,
+nada acontece —, então a variável pode ficar ligada. Os e-mails usam o domínio
+reservado `.example`, e os telefones são fictícios: para testar o lembrete no
+WhatsApp de verdade, use uma conta comum.
 
 ```bash
 # local

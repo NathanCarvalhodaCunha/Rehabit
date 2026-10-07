@@ -1,6 +1,8 @@
 package com.rehabit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rehabit.demo.ContaDeDemonstracao;
+import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import jakarta.servlet.FilterChain;
@@ -54,6 +56,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (alteraDados(request) && ehDaDemonstracao(dados)) {
+            escreverErro(response, HttpStatus.FORBIDDEN,
+                    "Esta é a conta de demonstração: dá para ver tudo, mas nada pode ser alterado.");
+            return;
+        }
+
         request.setAttribute(AuthContext.ATRIBUTO_ID, dados.id());
         request.setAttribute(AuthContext.ATRIBUTO_TIPO, dados.tipo());
         if (dados.idClinica() != null) {
@@ -85,6 +93,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(false);
         }
         return true;
+    }
+
+    private static boolean alteraDados(HttpServletRequest request) {
+        String metodo = request.getMethod();
+        return !"GET".equals(metodo) && !"HEAD".equals(metodo);
+    }
+
+    /**
+     * A senha da conta de demonstração está publicada na página inicial, então
+     * ela é só de leitura: a clínica e os profissionais dela consultam tudo,
+     * mas qualquer alteração — inclusive excluir a conta ou trocar a senha —
+     * é recusada aqui, antes de chegar aos controllers. Só roda em requisição
+     * que altera dados, então a consulta a mais não pesa na navegação.
+     *
+     * Token de dispositivo fica de fora: um goniômetro pareado com a clínica
+     * de demonstração pode mandar leituras normalmente.
+     */
+    private boolean ehDaDemonstracao(JwtService.TokenDados dados) {
+        Integer idClinica = switch (dados.tipo()) {
+            case "CLINICA" -> dados.id();
+            case "FISIOTERAPEUTA" -> fisioterapeutaRepository.findById(dados.id())
+                    .map(Fisioterapeuta::getIdClinica)
+                    .orElse(null);
+            default -> null;
+        };
+        return idClinica != null && clinicaRepository.findById(idClinica)
+                .map(c -> ContaDeDemonstracao.EMAIL_CLINICA.equalsIgnoreCase(c.getEmail()))
+                .orElse(false);
     }
 
     /**
@@ -145,11 +181,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void escreverNaoAutenticado(HttpServletResponse response) throws IOException {
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        escreverErro(response, HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Faça login novamente.");
+    }
+
+    private void escreverErro(HttpServletResponse response, HttpStatus status, String mensagem) throws IOException {
+        response.setStatus(status.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         Map<String, String> corpo = new HashMap<>();
-        corpo.put("mensagem", "Sessão inválida ou expirada. Faça login novamente.");
+        corpo.put("mensagem", mensagem);
         response.getWriter().write(objectMapper.writeValueAsString(corpo));
     }
 }

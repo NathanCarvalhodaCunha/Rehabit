@@ -48,3 +48,9 @@ body.dark .rh-pwd-toggle:hover { color: #fff; }
 body.dark .footer-link { color: var(--ink-muted); }
 body.dark .footer-link a { color: var(--brand); }
 body.dark .footer-link a:hover { color: #4E8BEE; }
+
+body.dark .aviso-demo {
+  border-color: rgba(122, 175, 255, .35);
+  background: rgba(47, 128, 255, .12);
+  color: #E6EAF5;
+}
