@@ -1,15 +1,336 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=Login/login.html" />
-    <title>Rehabit — Software para clínicas de fisioterapia</title>
-    <meta name="description" content="O Rehabit organiza a clínica de fisioterapia: pacientes, profissionais, agenda, sessões e amplitude de movimento medida com goniômetro digital." />
-    <link rel="canonical" href="https://rehabit.com.br/Login/login.html" />
-    <link rel="icon" href="favicon.ico" sizes="32x32" />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  </head>
-  <body>
-    <p>Redirecionando para <a href="Login/login.html">Rehabit</a>...</p>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rehabit — Fisioterapia com goniômetro digital | TCC</title>
+  <link rel="icon" href="favicon.ico" sizes="32x32" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#060d22" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="Rehabit é um sistema web para clínicas de fisioterapia integrado a um goniômetro digital: a amplitude de movimento chega à tela em tempo real e vira histórico de evolução. Projeto de TCC." />
+  <link rel="canonical" href="https://rehabit.com.br/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Rehabit" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:url" content="https://rehabit.com.br/" />
+  <meta property="og:title" content="Rehabit — Fisioterapia com goniômetro digital" />
+  <meta property="og:description" content="Sistema web para clínicas de fisioterapia com a amplitude de movimento medida por um goniômetro digital, em tempo real. Projeto de TCC." />
+  <meta property="og:image" content="https://rehabit.com.br/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Logo do Rehabit ao lado de um fisioterapeuta examinando o joelho de um paciente" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://rehabit.com.br/#site",
+        "name": "Rehabit",
+        "url": "https://rehabit.com.br/",
+        "inLanguage": "pt-BR"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Rehabit",
+        "url": "https://rehabit.com.br/",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "pt-BR",
+        "description": "Sistema de acompanhamento de fisioterapia para clínicas: cadastro de pacientes e profissionais, agenda, registro de sessões e medição da amplitude de movimento com um goniômetro digital em tempo real. Trabalho de Conclusão de Curso do Ensino Médio Técnico.",
+        "image": "https://rehabit.com.br/og-image.jpg",
+        "screenshot": "https://rehabit.com.br/assets/inicio/tela-paciente.jpg"
+      }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="inicio.css" />
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="topo">
+    <div class="faixa topo-linha">
+      <a class="marca" href="./" aria-label="Rehabit, página inicial">
+        <picture>
+          <source srcset="Login/assets/rehabit-logo-dark.png" media="(prefers-color-scheme: dark)" />
+          <img src="Login/assets/rehabit-logo.png" width="706" height="218" alt="Rehabit" />
+        </picture>
+      </a>
+      <nav class="menu" aria-label="Seções da página">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#telas">Telas</a>
+        <a href="#goniometro">Goniômetro</a>
+        <a class="btn btn-contorno btn-pequeno" href="Login/login.html">Entrar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <!-- Abertura -->
+    <section class="abertura">
+      <div class="faixa abertura-grade">
+        <div class="abertura-texto">
+          <p class="selo">Trabalho de Conclusão de Curso · 2026</p>
+          <h1>Fisioterapia com a amplitude de movimento <em>medida</em>, não estimada.</h1>
+          <p class="destaque">O Rehabit é um sistema web para clínicas de fisioterapia ligado a um goniômetro digital: o ângulo da articulação chega à tela em tempo real e vira o histórico de evolução de cada paciente.</p>
+          <div class="acoes">
+            <a class="btn btn-primario" href="Login/login.html">Entrar no sistema</a>
+            <a class="btn btn-contorno" href="#como-funciona">Como funciona</a>
+          </div>
+        </div>
+        <figure class="janela abertura-tela">
+          <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="assets/inicio/tela-inicio-escuro.jpg" media="(prefers-color-scheme: dark)" />
+            <img src="assets/inicio/tela-inicio.jpg" width="1200" height="750" fetchpriority="high"
+                 alt="Tela inicial do fisioterapeuta no Rehabit, com consultas da semana, pacientes ativos, sessões do mês e amplitude média" />
+          </picture>
+        </figure>
+      </div>
+    </section>
+
+    <!-- O problema -->
+    <section class="secao secao-suave" id="problema" aria-labelledby="problema-titulo">
+      <div class="faixa">
+        <div class="cabeca">
+          <p class="sobretitulo">O problema</p>
+          <h2 id="problema-titulo">A evolução do paciente costuma ficar no papel</h2>
+          <p>A amplitude de movimento é um dos principais sinais de que um tratamento está funcionando. No dia a dia ela é medida com o goniômetro universal, lida a olho e anotada numa ficha, o que torna difícil comparar sessões e mostrar o progresso.</p>
+        </div>
+        <ul class="cartoes tres">
+          <li class="cartao">
+            <h3>Leitura visual</h3>
+            <p>O número depende de quem mede e de como o aparelho foi alinhado na articulação.</p>
+          </li>
+          <li class="cartao">
+            <h3>Registro espalhado</h3>
+            <p>Cada medição vai para uma ficha diferente, e juntar o histórico vira trabalho manual.</p>
+          </li>
+          <li class="cartao">
+            <h3>Progresso invisível</h3>
+            <p>Sem um gráfico, o paciente não enxerga quanto já avançou, e isso pesa na adesão ao tratamento.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Como funciona -->
+    <section class="secao" id="como-funciona" aria-labelledby="como-titulo">
+      <div class="faixa">
+        <div class="cabeca">
+          <p class="sobretitulo">Como funciona</p>
+          <h2 id="como-titulo">Do sensor ao histórico do paciente</h2>
+        </div>
+        <ol class="passos">
+          <li>
+            <span class="passo-num" aria-hidden="true">1</span>
+            <h3>Mede</h3>
+            <p>O goniômetro, preso ao segmento que se move, calcula o ângulo da articulação com um acelerômetro e um giroscópio.</p>
+          </li>
+          <li>
+            <span class="passo-num" aria-hidden="true">2</span>
+            <h3>Transmite</h3>
+            <p>Pelo Wi-Fi, cada leitura chega ao sistema e aparece na tela do fisioterapeuta em tempo real.</p>
+          </li>
+          <li>
+            <span class="passo-num" aria-hidden="true">3</span>
+            <h3>Registra</h3>
+            <p>O fisioterapeuta grava o movimento completo: a amplitude e a curva do movimento ficam salvas na sessão e entram no gráfico de evolução.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Funcionalidades -->
+    <section class="secao secao-suave" id="funcionalidades" aria-labelledby="func-titulo">
+      <div class="faixa">
+        <div class="cabeca">
+          <p class="sobretitulo">Funcionalidades</p>
+          <h2 id="func-titulo">O que o sistema faz</h2>
+        </div>
+        <ul class="cartoes quatro">
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5c1.8.8 3 2.7 3 5.5"/></svg>
+            <h3>Pacientes e profissionais</h3>
+            <p>Cadastro de pacientes com anamnese e meta de tratamento, e de fisioterapeutas ligados à clínica.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+            <h3>Agenda e consultas</h3>
+            <p>Marcação de sessões, presença e faltas, exportação para o Google Agenda e lembrete pelo WhatsApp.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M16 6h4v4"/></svg>
+            <h3>Evolução em gráfico</h3>
+            <p>Cada sessão guarda duração, dor relatada e amplitude, e a ficha mostra a evolução e o progresso até a meta.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.5-6"/><circle cx="12" cy="17" r="1.3"/></svg>
+            <h3>Goniômetro ao vivo</h3>
+            <p>Mostrador com o ângulo atual, gráfico dos últimos 60 segundos, mínimo, máximo e amplitude.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>
+            <h3>Desempenho</h3>
+            <p>Indicadores por profissional: sessões realizadas, altas concedidas e ganho médio de amplitude.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"/><path d="M14 2.5V8h5.5M8.5 13h7M8.5 17h5"/></svg>
+            <h3>Relatórios em PDF</h3>
+            <p>Relatório da evolução do paciente e das consultas, pronto para imprimir ou enviar.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+            <h3>Acesso protegido</h3>
+            <p>Confirmação do e-mail por código, verificação anti-robô e recuperação de senha.</p>
+          </li>
+          <li class="cartao">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+            <h3>Tema claro e escuro</h3>
+            <p>Todas as telas têm as duas versões, para o uso confortável em qualquer ambiente.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Telas -->
+    <section class="secao" id="telas" aria-labelledby="telas-titulo">
+      <div class="faixa">
+        <div class="cabeca">
+          <p class="sobretitulo">Telas</p>
+          <h2 id="telas-titulo">Por dentro do Rehabit</h2>
+          <p>Imagens com dados de demonstração: uma clínica fictícia criada para apresentar o projeto.</p>
+        </div>
+        <div class="galeria">
+          <figure>
+            <div class="janela">
+              <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
+              <picture>
+                <source srcset="assets/inicio/tela-paciente-escuro.jpg" media="(prefers-color-scheme: dark)" />
+                <img src="assets/inicio/tela-paciente.jpg" width="1200" height="750" loading="lazy"
+                     alt="Ficha do paciente com o gráfico de amplitude de movimento e dor relatada ao longo das sessões" />
+              </picture>
+            </div>
+            <figcaption><strong>Ficha do paciente.</strong> Amplitude e dor sessão a sessão, com a meta de tratamento.</figcaption>
+          </figure>
+          <figure>
+            <div class="janela">
+              <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
+              <picture>
+                <source srcset="assets/inicio/tela-sessao-escuro.jpg" media="(prefers-color-scheme: dark)" />
+                <img src="assets/inicio/tela-sessao.jpg" width="1200" height="750" loading="lazy"
+                     alt="Registro de sessão com o painel do goniômetro embutido no formulário" />
+              </picture>
+            </div>
+            <figcaption><strong>Registro de sessão.</strong> O goniômetro preenche a amplitude direto no formulário.</figcaption>
+          </figure>
+          <figure>
+            <div class="janela">
+              <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
+              <picture>
+                <source srcset="assets/inicio/tela-agenda-escuro.jpg" media="(prefers-color-scheme: dark)" />
+                <img src="assets/inicio/tela-agenda.jpg" width="1200" height="750" loading="lazy"
+                     alt="Agenda com formulário de novo agendamento, calendário do mês e próximas consultas" />
+              </picture>
+            </div>
+            <figcaption><strong>Agenda.</strong> Consultas do mês, presença, faltas e remarcações.</figcaption>
+          </figure>
+          <figure>
+            <div class="janela">
+              <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
+              <picture>
+                <source srcset="assets/inicio/tela-desempenho-escuro.jpg" media="(prefers-color-scheme: dark)" />
+                <img src="assets/inicio/tela-desempenho.jpg" width="1200" height="750" loading="lazy"
+                     alt="Painel de desempenho do profissional com sessões por mês e ganho de amplitude por paciente" />
+              </picture>
+            </div>
+            <figcaption><strong>Desempenho.</strong> Sessões por mês e ganho de amplitude de cada paciente.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Goniômetro -->
+    <section class="secao secao-suave" id="goniometro" aria-labelledby="gonio-titulo">
+      <div class="faixa gonio-grade">
+        <figure class="gonio-foto">
+          <img src="assets/inicio/goniometro.jpg" width="1200" height="530" loading="lazy"
+               alt="Protótipo do goniômetro: placa ESP32 ligada por fios a um sensor MPU6050 numa protoboard" />
+          <figcaption>Protótipo: ESP32 e sensor MPU6050 na protoboard.</figcaption>
+        </figure>
+        <div>
+          <p class="sobretitulo">Hardware</p>
+          <h2 id="gonio-titulo">O goniômetro digital</h2>
+          <p>Um ESP32 com um sensor MPU6050 (acelerômetro e giroscópio), programado pela equipe, mede o ângulo e envia cada leitura ao sistema pelo Wi-Fi.</p>
+          <ul class="lista-tecnica">
+            <li><strong>Zero na pose do paciente.</strong> O ângulo é medido a partir do braço pendurado ao lado do tronco, então a placa funciona presa em qualquer orientação.</li>
+            <li><strong>Leitura estável.</strong> Um filtro complementar combina acelerômetro e giroscópio.</li>
+            <li><strong>Tempo real.</strong> As leituras chegam ao navegador por <span lang="en">Server-Sent Events</span>, com consulta periódica como reserva.</li>
+            <li><strong>Pareamento seguro.</strong> O aparelho se liga à clínica por um código de 6 dígitos e usa um token próprio, que pode ser revogado.</li>
+            <li><strong>Economia de bateria.</strong> O servidor dita o ritmo: 10 leituras por segundo gravando, uma a cada 2 segundos parado.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tecnologias -->
+    <section class="secao" id="tecnologias" aria-labelledby="tec-titulo">
+      <div class="faixa">
+        <div class="cabeca">
+          <p class="sobretitulo">Tecnologias</p>
+          <h2 id="tec-titulo">Como foi construído</h2>
+        </div>
+        <dl class="tecnologias">
+          <div><dt>Front-end</dt><dd>HTML, CSS e JavaScript puros, com animações em GSAP</dd></div>
+          <div><dt>Back-end</dt><dd>API REST em Java 17 com Spring Boot</dd></div>
+          <div><dt>Banco de dados</dt><dd>PostgreSQL (H2 no desenvolvimento)</dd></div>
+          <div><dt>Hardware</dt><dd>ESP32 e MPU6050, firmware em C++ (Arduino)</dd></div>
+          <div><dt>Hospedagem</dt><dd>Vercel para o site e Render para a API</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Chamada final -->
+    <section class="chamada" aria-labelledby="chamada-titulo">
+      <div class="faixa">
+        <div class="chamada-caixa">
+          <h2 id="chamada-titulo">Conheça o Rehabit por dentro</h2>
+          <p>Entre com sua conta ou cadastre uma clínica para experimentar o sistema.</p>
+          <div class="acoes">
+            <a class="btn btn-claro" href="Login/login.html">Entrar</a>
+            <a class="btn btn-vazado" href="Login/register.html">Cadastrar clínica</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="faixa rodape-linha">
+      <p>Rehabit · Trabalho de Conclusão de Curso do Ensino Médio Técnico · 2026</p>
+      <nav aria-label="Links do rodapé">
+        <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">Código no GitHub</a>
+        <a href="Login/login.html">Entrar</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // O login tem uma versão escura em página separada; quem usa o aparelho
+    // no tema escuro entra direto nela, igual ao resto desta página.
+    if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.querySelectorAll('a[href^="Login/"]').forEach(function (a) {
+        a.setAttribute('href', a.getAttribute('href').replace(/\.html$/, '-escuro.html'));
+      });
+    }
+  </script>
+</body>
 </html>
