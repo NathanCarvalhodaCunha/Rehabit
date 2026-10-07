@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Só as páginas que devem aparecer no Google. As demais têm "noindex". -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://rehabit.com.br/</loc>
+    <lastmod>2026-10-06</lastmod>
+  </url>
+  <url>
+    <loc>https://rehabit.com.br/Login/login.html</loc>
+    <lastmod>2026-10-06</lastmod>
+  </url>
+  <url>
+    <loc>https://rehabit.com.br/Login/register.html</loc>
+    <lastmod>2026-10-06</lastmod>
+  </url>
+</urlset>

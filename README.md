@@ -14,6 +14,7 @@ Cada tela tem uma variante de tema claro e uma escura (ex.: `login.html` / `logi
 ## Estrutura
 
 ```
+index.html        Página inicial: apresentação do projeto (estilo em inicio.css, imagens em assets/inicio/)
 Login/            Telas de autenticação (login, cadastro, esqueci a senha, redefinir senha)
 Software/         Aplicação principal (dashboard, pacientes, sessões, dispositivo, configurações)
 Firmware/         Código do goniômetro (ESP32 + MPU6050) e guia de montagem
