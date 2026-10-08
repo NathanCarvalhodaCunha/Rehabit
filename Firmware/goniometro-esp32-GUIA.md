@@ -43,18 +43,35 @@ próprias, de propósito, para não depender de mais bibliotecas.
 | GND | GND |
 | SDA | GPIO21 |
 | SCL | GPIO22 |
-| LED de status | GPIO2 (o LED azul que já vem soldado na maioria das DevKit) |
+| LED de status | GPIO19 → resistor 220 Ω → LED azul → GND |
 | Botão de reconfiguração | GPIO0 — é o BOOT, já existe na placa |
 | Bateria (opcional) | divisor 100 kΩ / 100 kΩ → GPIO34 |
+
+E a alimentação, pela bateria:
+
+| De | Para |
+| --- | --- |
+| Bateria 18650 + / − | TP4056 B+ / B− |
+| TP4056 OUT+ | chave liga/desliga → MT3608 VIN+ |
+| TP4056 OUT− | MT3608 VIN− |
+| MT3608 VOUT+ (regulado em **5 V**) | ESP32 VIN |
+| MT3608 VOUT− | ESP32 GND |
 
 SDA/SCL são os pinos padrão de I2C na maioria das DevKit; confira a serigrafia
 da sua se for diferente.
 
-**Sobre a bateria:** o pino GPIO34 não aguenta os 4,2 V de uma LiPo, por isso o
-divisor com dois resistores de 100 kΩ — ele entrega metade da tensão ao pino.
-Se a sua placa vai ficar sempre ligada no USB, abra o `.ino` e ponha
-`const int PINO_BATERIA = -1;`: o Rehabit deixa de mostrar bateria, em vez de
-mostrar um número inventado.
+**Acabou de soldar?** Antes de gravar este firmware, siga o
+[`teste-hardware-GUIA.md`](teste-hardware-GUIA.md): ele confere as ligações
+com o multímetro, regula o MT3608 sem queimar o ESP32 e roda um sketch de
+teste que diz qual peça falhou.
+
+**Sobre a bateria:** o firmware vem com `const int PINO_BATERIA = -1;`, porque
+o diagrama de montagem não tem como medir a bateria — e, com o pino solto, o
+Rehabit mostraria um número inventado em vez de simplesmente não mostrar
+bateria. Para medir, solde o divisor: o pino GPIO34 não aguenta os 4,2 V de
+uma LiPo, por isso os dois resistores de 100 kΩ, que entregam metade da
+tensão ao pino. Depois ponha `const int PINO_BATERIA = 34;`. O
+[`teste-hardware-GUIA.md`](teste-hardware-GUIA.md) mostra onde ligar.
 
 **Onde fixar o sensor:** no segmento **móvel** da articulação — no braço, para
 medir o ombro; na perna, para o joelho. **Não importa a orientação** em que
@@ -171,7 +188,7 @@ Numero de serie: A1B2-C3D4
 Sem token: use o portal para parear.      (ou: Token encontrado na memoria.)
 Wi-Fi conectado, IP: 192.168.1.55
 Pareado com a clinica "..."               (só na primeira vez)
-Angulo:  87.40 graus (sem filtro  87.40) | bateria 82% | RSSI -54 dBm
+Angulo:  87.40 graus (sem filtro  87.40) | bateria sem medidor | RSSI -54 dBm
 ```
 
 **Importante:** deixe o aparelho parado durante a calibração do giroscópio

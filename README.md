@@ -17,7 +17,7 @@ Cada tela tem uma variante de tema claro e uma escura (ex.: `login.html` / `logi
 index.html        Página inicial: apresentação do projeto (inicio.css, inicio.js, imagens em assets/inicio/)
 Login/            Telas de autenticação (login, cadastro, esqueci a senha, redefinir senha)
 Software/         Aplicação principal (dashboard, pacientes, sessões, dispositivo, configurações)
-Firmware/         Código do goniômetro (ESP32 + MPU6050) e guia de montagem
+Firmware/         Código do goniômetro (ESP32 + MPU6050), teste de hardware e guias de montagem
 rehabit-api/      Backend Spring Boot (API REST + banco H2 embarcado)
 Rehabit.sql       Script de referência do schema do banco
 iniciar-rehabit.bat   Compila e sobe o backend, depois abre o site
@@ -178,7 +178,9 @@ a sessão é salva sem curva — melhor não ter gráfico do que pendurar no pac
 o traçado de um movimento que não corresponde ao número registrado.
 
 Para montar e gravar o aparelho, veja
-[`Firmware/goniometro-esp32-GUIA.md`](Firmware/goniometro-esp32-GUIA.md).
+[`Firmware/goniometro-esp32-GUIA.md`](Firmware/goniometro-esp32-GUIA.md). Para
+testar a placa logo depois de soldar, antes do firmware principal, veja
+[`Firmware/teste-hardware-GUIA.md`](Firmware/teste-hardware-GUIA.md).
 
 ## Envio de e-mail
 

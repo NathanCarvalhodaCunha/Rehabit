@@ -35,9 +35,13 @@
 //   MPU6050 GND  -> GND
 //   MPU6050 SDA  -> GPIO21
 //   MPU6050 SCL  -> GPIO22
-//   LED de status-> GPIO2 (o LED azul já soldado na maioria das DevKit)
+//   LED de status-> GPIO19 -> resistor 220 ohm -> LED azul -> GND
 //   Botão BOOT   -> GPIO0 (já existe na placa; segurar 5 s reconfigura)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
+//
+// Antes de gravar este firmware numa placa recém-soldada, rode o
+// teste-hardware/teste-hardware.ino: ele confere cada ligação e diz qual
+// falhou (passo a passo em teste-hardware-GUIA.md).
 //
 // ================== COMO O ÂNGULO É MEDIDO ==================
 // O aparelho vai no segmento MÓVEL da articulação — no braço, para medir o
@@ -87,11 +91,14 @@ const char *AP_NOME = "Rehabit-Goniometro";
 const char *AP_SENHA = "rehabit123";
 
 const int PINO_BOTAO_RESET = 0;  // BOOT na maioria das placas DevKit
-const int PINO_LED = 2;
-// Pino do divisor de tensão da bateria. Ponha -1 se a placa é alimentada só
-// por USB — aí o Rehabit simplesmente não mostra bateria, em vez de mostrar
-// um número inventado.
-const int PINO_BATERIA = 34;
+// LED azul externo, o do diagrama de montagem. Numa placa sem ele, ponha 2:
+// é o LED que já vem soldado na maioria das DevKit.
+const int PINO_LED = 19;
+// Pino do divisor de tensão da bateria. Fica -1 porque o diagrama de
+// montagem não tem o divisor: com o pino solto, a leitura seria ruído, e o
+// Rehabit mostraria um número inventado em vez de simplesmente não mostrar
+// bateria. Soldou o divisor (veja o guia)? Ponha 34.
+const int PINO_BATERIA = -1;
 
 const unsigned long SEGURAR_PARA_RESETAR_MS = 5000;
 const unsigned long AVISO_SEM_PAREAMENTO_MS = 30000;
@@ -683,8 +690,15 @@ void loop() {
   static unsigned long ultimoEco = 0;
   if (agora - ultimoEco > 1000) {
     ultimoEco = agora;
-    Serial.printf("Angulo: %6.2f graus (sem filtro %6.2f) | bateria %d%% | RSSI %d dBm%s\n",
-                  anguloAtual(), anguloSemFiltro(), lerBateria(), WiFi.RSSI(),
+    int bateria = lerBateria();
+    char textoBateria[16];
+    if (bateria >= 0) {
+      snprintf(textoBateria, sizeof(textoBateria), "%d%%", bateria);
+    } else {
+      snprintf(textoBateria, sizeof(textoBateria), "sem medidor");
+    }
+    Serial.printf("Angulo: %6.2f graus (sem filtro %6.2f) | bateria %s | RSSI %d dBm%s\n",
+                  anguloAtual(), anguloSemFiltro(), textoBateria, WiFi.RSSI(),
                   capturando ? " | GRAVANDO" : "");
   }
 
