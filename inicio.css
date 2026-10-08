@@ -6,6 +6,30 @@
    põe o atributo antes da primeira pintura (escolha salva no botão de tema
    ou, sem ela, o tema do aparelho). */
 
+/* Fonte reserva com as medidas da Inter. A Inter carrega sem travar a
+   página; até ela chegar o texto sai nesta Arial ajustada, que ocupa quase o
+   mesmo espaço — sem o ajuste, o título mudava de quebra na troca e empurrava
+   a página inteira 35 px (CLS de 0,25). Larguras medidas no Chrome: a Inter
+   é 6–8% mais larga que a Arial nos pesos normais e 2–3% nos negritos. */
+@font-face {
+  font-family: "Inter Reserva";
+  font-weight: 100 600;
+  src: local("Arial"), local("ArialMT"), local("Helvetica Neue"), local("Helvetica"), local("Liberation Sans"), local("Roboto");
+  size-adjust: 107%;
+  ascent-override: 90.5%;
+  descent-override: 22.6%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Inter Reserva";
+  font-weight: 700 900;
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Neue Bold"), local("Helvetica Bold"), local("Liberation Sans Bold"), local("Roboto Bold");
+  size-adjust: 102.5%;
+  ascent-override: 94.5%;
+  descent-override: 23.6%;
+  line-gap-override: 0%;
+}
+
 :root {
   --brand: #1565D8;
   --brand-hover: #0F56BC;
@@ -18,6 +42,8 @@
   --card-border: #E5E7EB;
   --card-bg: #FFFFFF;
   --success: #16A34A;
+  --success-texto: #15803D;
+  --dor: #E06C6C;
   --bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
   --hover-bg: #F3F4F6;
@@ -39,6 +65,8 @@
   --card-border: #1B2647;
   --card-bg: #101A38;
   --success: #4ADE80;
+  --success-texto: #4ADE80;
+  --dor: #F08B8B;
   --bg: #060D22;
   --sidebar-bg: #060D22;
   --hover-bg: rgba(255, 255, 255, .06);
@@ -49,20 +77,24 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Com a imagem ampliada aberta, a página de trás não rola. */
+html:has(dialog[open]) { overflow: hidden; }
 body {
   margin: 0;
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Inter Reserva', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--ink);
   background: var(--bg);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* Rede de segurança: palavra que não cabe quebra em vez de vazar. */
+  overflow-wrap: break-word;
 }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
-h1, h2, h3 { margin: 0; color: var(--ink-strong); }
+h1, h2, h3 { margin: 0; color: var(--ink-strong); text-wrap: balance; }
 p { margin: 0; }
+p, li, dd, figcaption { text-wrap: pretty; }
 figure { margin: 0; }
 ::selection { background: rgba(21, 101, 216, .22); }
 :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(21, 101, 216, .35); border-radius: 8px; }
@@ -86,7 +118,7 @@ figure { margin: 0; }
   padding: 28px 22px;
   display: flex; flex-direction: column;
   background: var(--sidebar-bg);
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto;
   z-index: 30;
 }
 .sidebar .logo { display: block; margin-bottom: 36px; }
@@ -113,6 +145,21 @@ figure { margin: 0; }
 [data-tema="escuro"] .nav a:hover,
 [data-tema="escuro"] .logout:hover { color: #fff; }
 
+/* Notebook de tela baixa (1280×720, 1366×768): a barra lateral precisa de
+   ~730 px no tamanho normal; aqui ela encolhe para caber sem rolar. */
+@media (min-width: 768px) and (max-height: 820px) {
+  .sidebar { padding: 22px 18px; }
+  .sidebar .logo { margin-bottom: 22px; }
+  .nav { gap: 2px; }
+  .nav a, .logout { padding: 9px 12px; font-size: 16px; }
+  .sidebar-rodape { margin-top: 16px; gap: 2px; }
+}
+@media (min-width: 768px) and (max-height: 640px) {
+  .sidebar .logo { margin-bottom: 14px; }
+  .sidebar .logo img { width: 130px; }
+  .nav a, .logout { padding: 7px 12px; font-size: 15px; }
+}
+
 /* Botão de tema: mesma linha do "Sair" do sistema. O rótulo diz para qual
    tema o clique leva (inicio.js troca ícone e texto). */
 .botao-tema { width: 100%; border: 0; background: none; font-family: inherit; cursor: pointer; text-align: left; }
@@ -123,7 +170,10 @@ figure { margin: 0; }
 }
 .botao-icone .ico { width: 20px; height: 20px; }
 
-.main { padding: 48px 56px; min-width: 0; max-width: 1240px; }
+/* Em tela larga o conteúdo fica no meio do espaço ao lado da barra, em vez
+   de colado nela com um vão vazio à direita. */
+.main { padding: 48px 56px; min-width: 0; width: 100%; max-width: 1240px; margin-inline: auto; }
+@media (min-width: 768px) and (max-width: 1099px) { .main { padding: 36px 32px; } }
 
 .mobile-topbar, .mobile-bottomnav { display: none; }
 
@@ -177,8 +227,8 @@ cite { font-style: normal; white-space: nowrap; }
 .pro-greeting h1 em { font-style: normal; color: var(--brand-texto); }
 .pro-greeting p { color: var(--ink-muted); font-weight: 600; font-size: 15px; max-width: 46em; }
 .pro-user { display: flex; align-items: center; gap: 14px; }
-.pro-user strong { display: block; color: var(--ink-strong); font-size: 15px; }
-.pro-user div span { color: var(--ink-muted); font-size: 14px; font-weight: 600; }
+.pro-user strong { display: block; color: var(--ink-strong); font-size: 15px; text-wrap: balance; }
+.pro-user div span { display: block; color: var(--ink-muted); font-size: 14px; font-weight: 600; text-wrap: balance; }
 .pro-user .avatar-iniciais { width: 62px; height: 62px; font-size: 15px; }
 @media (max-width: 1099px) { .pro-header { grid-template-columns: 1fr; } }
 
@@ -191,11 +241,17 @@ cite { font-style: normal; white-space: nowrap; }
 /* ---------- Indicadores (Home do sistema) ---------- */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .kpi-card { padding: 18px 20px; }
-.kpi-rotulo { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .03em; }
+.kpi-rotulo { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .03em; text-wrap: balance; }
 .kpi-valor { font-size: 30px; font-weight: 800; color: var(--ink-strong); line-height: 1.1; }
 .kpi-detalhe { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
-.kpi-detalhe.pos { color: var(--success); }
+.kpi-detalhe.pos { color: var(--success-texto); }
 .kpi-texto { font-size: 15px; font-weight: 600; color: var(--ink-strong); line-height: 1.45; }
+/* Rótulo, número e detalhe alinhados entre os cartões da mesma linha, mesmo
+   quando um rótulo quebra em duas linhas e os outros não. */
+@supports (grid-template-rows: subgrid) {
+  .kpi-grid:not(.tecnologias) .kpi-card { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
+  .kpi-grid:not(.tecnologias) .kpi-rotulo { align-self: start; }
+}
 
 /* ---------- Duas colunas (Home do sistema) ---------- */
 .page-grid { display: grid; gap: 22px; }
@@ -203,6 +259,25 @@ cite { font-style: normal; white-space: nowrap; }
 @media (min-width: 1100px) {
   .page-grid { grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
 }
+
+/* Gráfico "Amplitude de Movimento" em SVG: só no celular, no lugar do print. */
+.grafico-demo { display: none; }
+.grafico-contexto { color: var(--ink-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+.grafico-sub { color: var(--ink-muted); font-size: 14px; font-weight: 600; }
+.grafico-valor { margin-top: 12px; font-size: 36px; font-weight: 800; color: var(--ink-strong); line-height: 1.1; letter-spacing: -.02em; }
+.grafico-delta { margin-top: 4px; color: var(--success-texto); font-size: 14px; font-weight: 700; }
+.grafico { display: block; width: 100%; height: auto; margin-top: 10px; overflow: visible; }
+.grafico text { font-family: inherit; font-size: 11px; font-weight: 600; fill: var(--ink-muted); }
+.grafico .g-legenda text { fill: var(--ink); font-weight: 600; }
+.grafico .g-grade line { stroke: var(--hairline); stroke-width: 1; }
+.grafico .g-area { fill: var(--brand); fill-opacity: .10; }
+.grafico .g-amp { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.grafico .g-dor { fill: none; stroke: var(--dor); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; }
+.grafico .g-ponto-amp { fill: var(--brand); }
+.grafico .g-ponto-dor { fill: var(--dor); }
+[data-tema="escuro"] .grafico .g-amp { stroke: #4D8EF0; }
+[data-tema="escuro"] .grafico .g-ponto-amp { fill: #4D8EF0; }
+.grafico-demo .link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; }
 
 /* ---------- Seções ---------- */
 .secao { scroll-margin-top: 24px; }
@@ -254,7 +329,7 @@ cite { font-style: normal; white-space: nowrap; }
   display: inline-block; margin-bottom: 12px; padding: 4px 10px; border-radius: 999px;
   font-size: 12px; font-weight: 700; background: rgba(107, 114, 128, .15); color: #4B5563;
 }
-.badge-status.ok { background: rgba(22, 163, 74, .12); color: #15803D; }
+.badge-status.ok { background: rgba(22, 163, 74, .12); color: #166534; }
 [data-tema="escuro"] .badge-status { background: rgba(255, 255, 255, .08); color: #C3CAD9; }
 [data-tema="escuro"] .badge-status.ok { background: rgba(34, 197, 94, .14); color: #4ADE80; }
 
@@ -284,7 +359,7 @@ cite { font-style: normal; white-space: nowrap; }
 .lista-links { list-style: none; margin: 8px 0 0; padding: 0; }
 .lista-links li { display: grid; gap: 2px; padding: 11px 0; border-bottom: 1px solid var(--hairline); }
 .lista-links li:last-child { border-bottom: 0; padding-bottom: 0; }
-.lista-links a { color: var(--brand-texto); font-weight: 600; }
+.lista-links a { justify-self: start; color: var(--brand-texto); font-weight: 600; }
 .lista-links a:hover { text-decoration: underline; }
 .lista-links span { color: var(--ink-muted); font-size: 14px; }
 .referencias ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-muted); font-size: 14px; }
@@ -303,14 +378,16 @@ cite { font-style: normal; white-space: nowrap; }
 /* Rodapé */
 .rodape {
   margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--hairline);
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px;
   color: var(--ink-muted); font-size: 14px;
 }
 .rodape nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .rodape a:hover { color: var(--brand-texto); text-decoration: underline; }
 
 /* ---------- Simulação da tela Dispositivo (inicio.js) ---------- */
-.simulacao { padding: 24px 28px; }
+/* O arranjo segue a largura do próprio cartão (container query), não a da
+   tela: em tablet o cartão é estreito mesmo numa tela larga. */
+.simulacao { padding: 24px 28px; container: sim / inline-size; }
 .sim-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .sim-titulo { font-weight: 700; color: var(--ink-strong); font-size: 16px; }
 .sim-sub { color: var(--ink-muted); font-size: 14px; }
@@ -323,8 +400,8 @@ cite { font-style: normal; white-space: nowrap; }
   .simulacao:not(.pausada) .sim-ponto { animation: piscar 1.6s ease-in-out infinite; }
   @keyframes piscar { 50% { opacity: .3; } }
 }
-.sim-corpo { display: grid; gap: 24px; margin-top: 18px; align-items: center; }
-@media (min-width: 900px) { .sim-corpo { grid-template-columns: 280px minmax(0, 1fr); gap: 32px; } }
+.sim-corpo { display: grid; gap: 22px; margin-top: 18px; align-items: center; }
+@container sim (min-width: 720px) { .sim-corpo { grid-template-columns: 260px minmax(0, 1fr); gap: 32px; } }
 .sim-mostrador { text-align: center; }
 .sim-mostrador svg { width: 100%; max-width: 260px; margin: 0 auto; display: block; }
 .sim-arco-fundo, .sim-arco { fill: none; stroke-width: 12; stroke-linecap: round; }
@@ -339,40 +416,54 @@ cite { font-style: normal; white-space: nowrap; }
 .sim-medidas dt { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-muted); }
 .sim-medidas dd { margin: 6px 0 0; font-size: 22px; font-weight: 800; color: var(--ink-strong); font-variant-numeric: tabular-nums; }
 .sim-medidas .sim-amplitude { border-color: var(--brand); background: rgba(21, 101, 216, .06); }
+.sim-medidas .sim-amplitude dt,
 .sim-medidas .sim-amplitude dd { color: var(--brand-texto); }
+/* Cartão estreito (celular): mínimo, máximo e amplitude viram linhas. */
+@container sim (max-width: 419px) {
+  .sim-medidas { grid-template-columns: 1fr; gap: 8px; }
+  .sim-medidas div { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; }
+  .sim-medidas dd { margin: 0; font-size: 20px; }
+}
 .sim-grafico { display: block; width: 100%; height: 110px; margin-top: 12px; border-radius: 10px; background: var(--suave); border: 1px solid var(--hairline); }
 .sim-grafico polyline { fill: none; stroke: var(--brand-texto); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .sim-janela { margin-top: 6px; text-align: right; color: var(--ink-muted); font-size: 12px; font-weight: 600; }
 .sim-rodape { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
 .sim-rodape figcaption { color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
 .sim-rodape .btn-edit { flex: none; }
+@container sim (max-width: 519px) { .sim-rodape { flex-direction: column; align-items: stretch; } }
 
 /* ---------- Imagem ampliada (inicio.js) ---------- */
 .ampliada {
-  width: min(1200px, 96vw); max-height: 94vh; padding: 0; border: 0; border-radius: 12px;
+  width: min(1200px, 96vw); max-height: 94vh; max-height: 94dvh; padding: 0; border: 0; border-radius: 12px;
   background: var(--card-bg); color: var(--ink); box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  overscroll-behavior: contain;
 }
 .ampliada::backdrop { background: rgba(6, 13, 34, .72); }
-.ampliada img { width: 100%; height: auto; max-height: calc(94vh - 64px); object-fit: contain; background: var(--suave); }
-.ampliada-legenda { padding: 12px 18px 14px; font-size: 14px; color: var(--ink-muted); }
+.ampliada img { width: 100%; height: auto; max-height: calc(94vh - 64px); max-height: calc(94dvh - 64px); object-fit: contain; background: var(--suave); }
+.ampliada-legenda { padding: 12px 64px 14px 18px; font-size: 14px; color: var(--ink-muted); }
 .ampliada form { position: absolute; top: 8px; right: 8px; }
-.fechar { width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(6, 13, 34, .7); color: #fff; font-size: 24px; line-height: 1; }
+.fechar { width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(6, 13, 34, .7); color: #fff; font-size: 26px; line-height: 1; }
 
-/* ---------- Celular: barra superior e menu inferior, como no sistema ---------- */
-@media (max-width: 767px) {
-  .app { grid-template-columns: 1fr; align-content: start; }
+/* ---------- Celular e telas baixas: barra superior e menu inferior ----------
+   Mesmo layout do sistema no celular. Vale também para celular deitado e
+   tablet baixo (até 1024 × 500), onde a barra lateral não caberia. */
+@media (max-width: 767px), (max-width: 1024px) and (max-height: 500px) {
+  .app { grid-template-columns: minmax(0, 1fr); align-content: start; }
   .sidebar { display: none; }
 
   .mobile-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-bottom: 1px solid var(--hairline); background: var(--bg);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 18px; border-bottom: 1px solid var(--hairline); background: var(--bg);
   }
+  .mobile-topbar .logo { display: flex; align-items: center; min-height: 44px; }
   .mobile-topbar .logo img { width: 120px; }
   .topbar-acoes { display: flex; align-items: center; gap: 8px; }
+  .botao-icone { width: 44px; height: 44px; }
+  .mobile-topbar .btn-pequeno { height: 44px; padding: 0 16px; }
 
   .main { padding: 22px 18px calc(96px + env(safe-area-inset-bottom)); }
   .pro-greeting h1 { font-size: 24px; }
-  .pro-header { margin-bottom: 20px; gap: 16px; }
+  .pro-header { grid-template-columns: 1fr; margin-bottom: 20px; gap: 16px; }
   .pro-user .avatar-iniciais { width: 48px; height: 48px; font-size: 13px; }
 
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
@@ -385,11 +476,16 @@ cite { font-style: normal; white-space: nowrap; }
   .titulo-secao h2 { font-size: 24px; }
 
   .simulacao { padding: 18px; }
-  .sim-medidas { gap: 8px; }
-  .sim-medidas div { padding: 10px; }
-  .sim-medidas dt { font-size: 11px; letter-spacing: .02em; }
-  .sim-medidas dd { font-size: 18px; }
-  .sim-rodape { flex-direction: column; }
+
+  /* Alvos de toque de pelo menos 44 px. */
+  .card-cabeca .link { display: inline-flex; align-items: center; min-height: 44px; }
+  .sim-rodape .btn-pequeno { height: 44px; }
+  .lista-links li { padding: 6px 0; }
+  .lista-links a { display: inline-flex; align-items: center; min-height: 44px; }
+  .lista-links span { margin-top: -8px; }
+  .rodape { gap: 4px 24px; }
+  .rodape nav { gap: 0 20px; }
+  .rodape nav a { display: inline-flex; align-items: center; min-height: 44px; }
 
   .lista-equipe li { grid-template-columns: 44px minmax(0, 1fr); }
   .lista-equipe .avatar-iniciais { width: 44px; height: 44px; font-size: 13px; }
@@ -398,12 +494,53 @@ cite { font-style: normal; white-space: nowrap; }
   .mobile-bottomnav {
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
     background: var(--bg); border-top: 1px solid var(--hairline);
   }
   .mobile-bottomnav a {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    color: var(--ink-muted); font-size: 11px; font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 52px; color: var(--ink-muted); font-size: 12px; font-weight: 600;
   }
   .mobile-bottomnav a.active { color: var(--brand-texto); }
+}
+
+/* Só pela largura: no celular em pé o print da tela inicial vira o gráfico
+   em SVG (no celular deitado há espaço para o print). */
+@media (max-width: 767px) {
+  .tela-destaque { display: none; }
+  .grafico-demo { display: block; }
+}
+
+/* Celular bem estreito (iPhone SE, 320 px): indicadores em uma coluna, senão
+   "AUTOMATIZADOS" e "DEMONSTRAÇÃO" não cabem. */
+@media (max-width: 374px) {
+  .kpi-grid { grid-template-columns: minmax(0, 1fr); }
+  .tecnologias .kpi-card:last-child:nth-child(odd) { grid-column: auto; }
+  .main { padding-left: 14px; padding-right: 14px; }
+  .mobile-topbar { padding-left: 14px; padding-right: 14px; }
+  .mobile-topbar .logo img { width: 108px; }
+}
+
+/* ---------- Menos movimento ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .btn-primary:hover, .ampliar:hover img { transform: none; }
+}
+
+/* ---------- Impressão: só o conteúdo, sempre no tema claro ---------- */
+@media print {
+  :root, :root[data-tema="escuro"] {
+    color-scheme: light;
+    --bg: #fff; --card-bg: #fff; --suave: #F9FAFB; --sidebar-bg: #fff;
+    --ink: #1F2937; --ink-strong: #111827; --ink-muted: #4B5563;
+    --hairline: #D1D5DB; --card-border: #D1D5DB; --brand-texto: #1565D8;
+    --avatar-bg: #E5E7EB; --avatar-ink: #374151; --shadow-card: none;
+  }
+  .sidebar, .mobile-topbar, .mobile-bottomnav, .pular, .ampliada, .sim-rodape button,
+  .col-side, .grafico-demo .link { display: none !important; }
+  .app { display: block; }
+  .main { max-width: none; padding: 0; }
+  .card, figure { break-inside: avoid; }
+  .page-grid { grid-template-columns: 1fr; }
 }

@@ -81,16 +81,29 @@ if (window.matchMedia) {
 // visível fica azul (na barra lateral e no menu inferior do celular).
 (function menuAtivo() {
   const secoes = Array.from(document.querySelectorAll("main .secao[id]"));
-  const links = Array.from(document.querySelectorAll('.nav a[href^="#"], .mobile-bottomnav a[href^="#"]'));
-  if (!secoes.length || !links.length || !("IntersectionObserver" in window)) return;
+  const ids = secoes.map(function (s) { return s.id; });
+  const lateral = Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+  const inferior = Array.from(document.querySelectorAll('.mobile-bottomnav a[href^="#"]'));
+  if (!secoes.length || !("IntersectionObserver" in window)) return;
+
+  function ativar(a, ativo) {
+    a.classList.toggle("active", ativo);
+    if (ativo) a.setAttribute("aria-current", "true");
+    else a.removeAttribute("aria-current");
+  }
 
   function marcar(id) {
-    links.forEach(function (a) {
-      const ativo = a.getAttribute("href") === "#" + id;
-      a.classList.toggle("active", ativo);
-      if (ativo) a.setAttribute("aria-current", "true");
-      else a.removeAttribute("aria-current");
+    // Barra lateral: tem um item para cada seção.
+    lateral.forEach(function (a) { ativar(a, a.getAttribute("href") === "#" + id); });
+    // Menu inferior: só 5 itens. Seção sem item próprio (Como funciona,
+    // Goniômetro, Documentação) acende o último item que vem antes dela.
+    const atual = ids.indexOf(id);
+    let escolhido = null;
+    inferior.forEach(function (a) {
+      const posicao = ids.indexOf(a.getAttribute("href").slice(1));
+      if (posicao !== -1 && posicao <= atual) escolhido = a;
     });
+    inferior.forEach(function (a) { ativar(a, a === escolhido); });
   }
 
   // A seção "atual" é a que cruza uma faixa fina perto do topo da tela.
