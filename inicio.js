@@ -2,15 +2,112 @@
 // a página continua inteira, os links das telas abrem a imagem e a simulação
 // fica parada no primeiro quadro.
 
-const temaEscuro = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+// ---- Tema claro / escuro ------------------------------------------------
+// O script do <head> já pôs data-tema no <html> antes da primeira pintura.
+// Aqui ficam o botão de tema e o que o CSS sozinho não troca: as imagens com
+// versão escura, a cor da barra do navegador e os links do login (o sistema
+// tem páginas -escuro separadas, então quem está no escuro entra nelas).
+const CHAVE_TEMA = "rehabit_tema";
+const raizDoc = document.documentElement;
 
-// O login tem uma versão escura em página separada; quem usa o aparelho no
-// tema escuro entra direto nela, igual ao resto desta página.
-if (temaEscuro) {
+function temaAtual() {
+  return raizDoc.getAttribute("data-tema") === "escuro" ? "escuro" : "claro";
+}
+
+function aplicarTema(tema) {
+  const escuro = tema === "escuro";
+  raizDoc.setAttribute("data-tema", tema);
+
+  // As fontes escuras das imagens nascem com media="(prefers-color-scheme:
+  // dark)" (vale sem JavaScript); data-tema-escuro guarda a condição sem o
+  // tema, que passa a valer quando o tema escolhido é o escuro.
+  document.querySelectorAll("source[data-tema-escuro]").forEach(function (fonte) {
+    const media = escuro ? fonte.getAttribute("data-tema-escuro") : "not all";
+    if (fonte.getAttribute("media") !== media) fonte.setAttribute("media", media);
+  });
+
+  document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+    meta.setAttribute("content", escuro ? "#060d22" : "#ffffff");
+  });
+
   document.querySelectorAll('a[href^="Login/"]').forEach(function (a) {
-    a.setAttribute("href", a.getAttribute("href").replace(/\.html(?=$|[?#])/, "-escuro.html"));
+    const claro = a.getAttribute("href").replace(/-escuro\.html/, ".html");
+    a.setAttribute("href", escuro ? claro.replace(/\.html(?=$|[?#])/, "-escuro.html") : claro);
+  });
+
+  // O botão mostra para onde o clique leva: no claro, lua e "Tema escuro";
+  // no escuro, sol e "Tema claro".
+  document.querySelectorAll("[data-tema-botao]").forEach(function (botao) {
+    const destino = escuro ? "claro" : "escuro";
+    const icone = botao.querySelector("use[data-icone-tema]");
+    if (icone) icone.setAttribute("href", escuro ? "#i-sol" : "#i-lua");
+    const rotulo = botao.querySelector("[data-rotulo-tema]");
+    if (rotulo) rotulo.textContent = "Tema " + destino;
+    if (botao.hasAttribute("aria-label")) {
+      botao.setAttribute("aria-label", "Mudar para o tema " + destino);
+      botao.setAttribute("title", "Mudar para o tema " + destino);
+    }
   });
 }
+
+function temaSalvo() {
+  try {
+    const tema = localStorage.getItem(CHAVE_TEMA);
+    return tema === "claro" || tema === "escuro" ? tema : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+aplicarTema(temaAtual());
+
+document.querySelectorAll("[data-tema-botao]").forEach(function (botao) {
+  botao.addEventListener("click", function () {
+    const novo = temaAtual() === "escuro" ? "claro" : "escuro";
+    try { localStorage.setItem(CHAVE_TEMA, novo); } catch (e) {}
+    aplicarTema(novo);
+  });
+});
+
+// Sem escolha salva, a página acompanha o aparelho se ele trocar de tema.
+if (window.matchMedia) {
+  const midiaEscura = matchMedia("(prefers-color-scheme: dark)");
+  const aoMudar = function (e) { if (!temaSalvo()) aplicarTema(e.matches ? "escuro" : "claro"); };
+  if (midiaEscura.addEventListener) midiaEscura.addEventListener("change", aoMudar);
+}
+
+// ---- Menu: destaca a seção que está na tela ------------------------------
+// Como a barra lateral do sistema marca a página atual, aqui o item da seção
+// visível fica azul (na barra lateral e no menu inferior do celular).
+(function menuAtivo() {
+  const secoes = Array.from(document.querySelectorAll("main .secao[id]"));
+  const links = Array.from(document.querySelectorAll('.nav a[href^="#"], .mobile-bottomnav a[href^="#"]'));
+  if (!secoes.length || !links.length || !("IntersectionObserver" in window)) return;
+
+  function marcar(id) {
+    links.forEach(function (a) {
+      const ativo = a.getAttribute("href") === "#" + id;
+      a.classList.toggle("active", ativo);
+      if (ativo) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+  }
+
+  // A seção "atual" é a que cruza uma faixa fina perto do topo da tela.
+  const observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (entrada) {
+      if (entrada.isIntersecting) marcar(entrada.target.id);
+    });
+  }, { rootMargin: "-20% 0px -75% 0px" });
+  secoes.forEach(function (secao) { observador.observe(secao); });
+
+  // A última seção é curta e às vezes nunca chega à faixa: no fim da página,
+  // ela é a atual.
+  window.addEventListener("scroll", function () {
+    const noFim = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    if (noFim) marcar(secoes[secoes.length - 1].id);
+  }, { passive: true });
+})();
 
 // ---- Telas ampliáveis --------------------------------------------------
 (function telasAmpliaveis() {
@@ -19,12 +116,23 @@ if (temaEscuro) {
   const imagem = dialogo.querySelector("img");
   const legenda = dialogo.querySelector(".ampliada-legenda");
 
+  // Título e descrição do cartão, sem os links que estejam no cabeçalho.
+  function textoDaLegenda(link, miniatura) {
+    const cabeca = link.closest("figure") && link.closest("figure").querySelector("figcaption");
+    if (!cabeca) return miniatura.alt;
+    const partes = Array.from(cabeca.children)
+      .filter(function (el) { return el.tagName !== "A"; })
+      .map(function (el) { return el.textContent.trim(); })
+      .filter(Boolean);
+    return partes.length ? partes.join(" — ") : miniatura.alt;
+  }
+
   document.querySelectorAll("a.ampliar").forEach(function (link) {
     link.addEventListener("click", function (e) {
       e.preventDefault();
       const miniatura = link.querySelector("img");
-      const textoLegenda = link.closest("figure")?.querySelector("figcaption")?.textContent || miniatura.alt;
-      imagem.src = (temaEscuro && link.dataset.escuro) || link.getAttribute("href");
+      const textoLegenda = textoDaLegenda(link, miniatura);
+      imagem.src = (temaAtual() === "escuro" && link.dataset.escuro) || link.getAttribute("href");
       imagem.alt = miniatura.alt;
       legenda.textContent = textoLegenda;
       dialogo.showModal();

@@ -67,6 +67,18 @@
        pintura por ~0,8 s no 4G). -->
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
+  <script>
+    // Tema antes da primeira pintura, para a página não piscar clara: a
+    // escolha salva no botão de tema ou, sem ela, o tema do aparelho.
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem("rehabit_tema"); } catch (e) {}
+      if (tema !== "claro" && tema !== "escuro") {
+        tema = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
+      }
+      document.documentElement.setAttribute("data-tema", tema);
+    })();
+  </script>
   <link rel="stylesheet" href="inicio.css" />
   <script defer src="inicio.js"></script>
   <!-- Vercel Web Analytics: conta visitas sem cookie. Fora da Vercel (GitHub
@@ -76,446 +88,520 @@
 <body>
   <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
-  <header class="topo">
-    <div class="faixa topo-linha">
-      <a class="marca" href="./" aria-label="Rehabit, página inicial">
+  <!-- Ícones no mesmo traço do sistema (stroke 2), declarados uma vez e
+       usados na barra lateral e no menu inferior do celular. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></symbol>
+      <symbol id="i-projeto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-aovivo" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+      <symbol id="i-como" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+      <symbol id="i-telas" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+      <symbol id="i-goniometro" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+      <symbol id="i-equipe" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+      <symbol id="i-entrar" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
+      <symbol id="i-lua" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+      <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <!-- Barra lateral (computador), igual à do sistema -->
+    <aside class="sidebar">
+      <a href="#inicio" class="logo" aria-label="Rehabit, início da página">
         <picture>
-          <source srcset="assets/inicio/logo-escuro.png" media="(prefers-color-scheme: dark)" />
-          <img src="assets/inicio/logo.png" width="128" height="40" alt="Rehabit" fetchpriority="high" />
+          <source srcset="assets/inicio/logo-escuro.png" media="(prefers-color-scheme: dark)" data-tema-escuro="all" />
+          <img src="assets/inicio/logo.png" width="150" height="46" alt="Rehabit" fetchpriority="high" />
         </picture>
       </a>
-      <nav class="menu" aria-label="Seções da página">
-        <a href="#projeto">Projeto</a>
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#telas">Telas</a>
-        <a href="#equipe">Equipe</a>
-        <a class="btn btn-contorno btn-pequeno" href="Login/login.html">Entrar</a>
+      <nav class="nav" aria-label="Seções da página">
+        <a href="#inicio" class="active"><svg class="ico" aria-hidden="true"><use href="#i-inicio"/></svg>Início</a>
+        <a href="#projeto"><svg class="ico" aria-hidden="true"><use href="#i-projeto"/></svg>Projeto</a>
+        <a href="#funcionando"><svg class="ico" aria-hidden="true"><use href="#i-aovivo"/></svg>Ao vivo</a>
+        <a href="#como-funciona"><svg class="ico" aria-hidden="true"><use href="#i-como"/></svg>Como funciona</a>
+        <a href="#telas"><svg class="ico" aria-hidden="true"><use href="#i-telas"/></svg>Telas</a>
+        <a href="#goniometro"><svg class="ico" aria-hidden="true"><use href="#i-goniometro"/></svg>Goniômetro</a>
+        <a href="#documentacao"><svg class="ico" aria-hidden="true"><use href="#i-doc"/></svg>Documentação</a>
+        <a href="#equipe"><svg class="ico" aria-hidden="true"><use href="#i-equipe"/></svg>Equipe</a>
       </nav>
-    </div>
-  </header>
+      <div class="sidebar-rodape">
+        <a class="btn-primary btn-largo" href="Login/login.html?demo">Entrar na demonstração</a>
+        <button type="button" class="logout botao-tema" data-tema-botao>
+          <svg class="ico" aria-hidden="true"><use data-icone-tema href="#i-lua"/></svg><span data-rotulo-tema>Tema escuro</span>
+        </button>
+        <a class="logout" href="Login/login.html"><svg class="ico" aria-hidden="true"><use href="#i-entrar"/></svg>Entrar</a>
+      </div>
+    </aside>
 
-  <main id="conteudo">
-    <!-- Abertura -->
-    <section class="abertura">
-      <div class="faixa abertura-grade">
-        <div class="abertura-texto">
-          <p class="selo">TCC · Etec Prof. Carmine Biagio Tundisi · 2026</p>
-          <h1>A evolução do paciente, <em>medida em graus</em>.</h1>
-          <p class="destaque">O Rehabit une um goniômetro digital a um sistema web para clínicas de fisioterapia: o ângulo da articulação chega à tela em tempo real, e cada sessão vira um ponto no gráfico de evolução do paciente.</p>
-          <div class="acoes">
-            <a class="btn btn-primario" href="#funcionando">Ver funcionando</a>
-            <a class="btn btn-contorno" href="Login/login.html?demo">Entrar na demonstração</a>
+    <!-- Barra superior (celular) -->
+    <header class="mobile-topbar">
+      <a href="#inicio" class="logo" aria-label="Rehabit, início da página">
+        <picture>
+          <source srcset="assets/inicio/logo-escuro.png" media="(prefers-color-scheme: dark)" data-tema-escuro="all" />
+          <img src="assets/inicio/logo.png" width="120" height="37" alt="Rehabit" />
+        </picture>
+      </a>
+      <div class="topbar-acoes">
+        <button type="button" class="botao-icone" data-tema-botao aria-label="Mudar para o tema escuro" title="Mudar para o tema escuro">
+          <svg class="ico" aria-hidden="true"><use data-icone-tema href="#i-lua"/></svg>
+        </button>
+        <a class="btn-edit btn-pequeno" href="Login/login.html">Entrar</a>
+      </div>
+    </header>
+
+    <main class="main" id="conteudo">
+
+      <!-- Início -->
+      <section class="secao" id="inicio" aria-labelledby="inicio-titulo">
+        <header class="pro-header">
+          <div class="pro-greeting">
+            <h1 id="inicio-titulo">A evolução do paciente, <em>medida em graus</em>.</h1>
+            <p>O Rehabit une um goniômetro digital a um sistema web para clínicas de fisioterapia: o ângulo da articulação chega à tela em tempo real, e cada sessão vira um ponto no gráfico de evolução do paciente.</p>
+          </div>
+          <div class="pro-user">
+            <span class="avatar-iniciais" aria-hidden="true">TCC</span>
+            <div>
+              <strong>Trabalho de Conclusão de Curso</strong>
+              <span>Etec Prof. Carmine Biagio Tundisi · 2026</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="kpi-grid">
+          <div class="card kpi-card">
+            <p class="kpi-rotulo">Integrantes</p>
+            <p class="kpi-valor">5</p>
+            <p class="kpi-detalhe">e 2 professores orientadores</p>
+          </div>
+          <div class="card kpi-card">
+            <p class="kpi-rotulo">Leituras por segundo</p>
+            <p class="kpi-valor">10</p>
+            <p class="kpi-detalhe">durante a captura do movimento</p>
+          </div>
+          <div class="card kpi-card">
+            <p class="kpi-rotulo">Testes automatizados</p>
+            <p class="kpi-valor">60</p>
+            <p class="kpi-detalhe pos">na API do sistema</p>
+          </div>
+          <div class="card kpi-card">
+            <p class="kpi-rotulo">Pacientes na demonstração</p>
+            <p class="kpi-valor">16</p>
+            <p class="kpi-detalhe">com meses de sessões fictícias</p>
           </div>
         </div>
-        <figure class="janela abertura-tela">
-          <div class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></div>
-          <picture>
-            <!-- No celular a tela inteira vira miniatura ilegível: ali entra só o gráfico de amplitude. -->
-            <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="assets/inicio/grafico-amplitude-escuro.jpg" width="566" height="390" />
-            <source media="(max-width: 640px)" srcset="assets/inicio/grafico-amplitude.jpg" width="566" height="390" />
-            <source media="(prefers-color-scheme: dark)" sizes="(min-width: 960px) 540px, 100vw"
-                    srcset="assets/inicio/tela-inicio-escuro-600.jpg 600w, assets/inicio/tela-inicio-escuro-900.jpg 900w, assets/inicio/tela-inicio-escuro.jpg 1200w" />
-            <img src="assets/inicio/tela-inicio.jpg" width="1200" height="750" fetchpriority="high"
-                 sizes="(min-width: 960px) 540px, 100vw"
-                 srcset="assets/inicio/tela-inicio-600.jpg 600w, assets/inicio/tela-inicio-900.jpg 900w, assets/inicio/tela-inicio.jpg 1200w"
-                 alt="Tela do Rehabit com os indicadores da fisioterapeuta e o gráfico de amplitude de movimento de um paciente" />
-          </picture>
-        </figure>
-      </div>
-    </section>
 
-    <!-- O projeto -->
-    <section class="secao secao-suave" id="projeto" aria-labelledby="projeto-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">O projeto</p>
+        <div class="page-grid">
+          <figure class="card tela-destaque">
+            <figcaption class="card-cabeca">
+              <h2 class="card-titulo">Por dentro do sistema</h2>
+              <a class="link" href="#funcionando">Ver funcionando</a>
+            </figcaption>
+            <a class="ampliar" href="assets/inicio/tela-inicio.jpg" data-escuro="assets/inicio/tela-inicio-escuro.jpg">
+              <picture>
+                <!-- No celular a tela inteira vira miniatura ilegível: ali entra só o gráfico de amplitude. -->
+                <source media="(max-width: 640px) and (prefers-color-scheme: dark)" data-tema-escuro="(max-width: 640px)" srcset="assets/inicio/grafico-amplitude-escuro.jpg" width="566" height="390" />
+                <source media="(max-width: 640px)" srcset="assets/inicio/grafico-amplitude.jpg" width="566" height="390" />
+                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 1100px) 560px, 100vw"
+                        srcset="assets/inicio/tela-inicio-escuro-600.jpg 600w, assets/inicio/tela-inicio-escuro-900.jpg 900w, assets/inicio/tela-inicio-escuro.jpg 1200w" />
+                <img src="assets/inicio/tela-inicio.jpg" width="1200" height="750" fetchpriority="high"
+                     sizes="(min-width: 1100px) 560px, 100vw"
+                     srcset="assets/inicio/tela-inicio-600.jpg 600w, assets/inicio/tela-inicio-900.jpg 900w, assets/inicio/tela-inicio.jpg 1200w"
+                     alt="Tela do Rehabit com os indicadores da fisioterapeuta e o gráfico de amplitude de movimento de um paciente" />
+              </picture>
+            </a>
+          </figure>
+
+          <div class="col-side">
+            <div class="card access-card">
+              <p class="t">Conta de demonstração</p>
+              <p class="s">Entre com um perfil de teste: uma fisioterapeuta de clínica fictícia, com pacientes e meses de sessões. Dá para ver tudo; nada pode ser alterado.</p>
+              <a class="btn-primary" href="Login/login.html?demo">Entrar na demonstração</a>
+              <p class="s alternativa">Prefere usar dados seus? <a class="link" href="Login/register.html">Cadastre sua clínica</a>.</p>
+            </div>
+            <div class="card access-card">
+              <p class="t">Veja o goniômetro em ação</p>
+              <p class="s">Uma simulação da tela Dispositivo mostra como o ângulo chega ao sistema e como a amplitude é calculada.</p>
+              <a class="btn-edit" href="#funcionando">Ver funcionando</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Projeto -->
+      <section class="secao" id="projeto" aria-labelledby="projeto-titulo">
+        <header class="titulo-secao">
           <h2 id="projeto-titulo">Por que um goniômetro digital</h2>
           <p>A amplitude de movimento é um dos principais sinais de que a fisioterapia está funcionando. Na prática, ela ainda é muito avaliada a olho, e mesmo com o goniômetro manual falta um padrão de medida. A ideia surgiu de quem viveu isso de perto: um professor da escola e um integrante do grupo, ambos em tratamento, não tinham um jeito confiável de comparar o avanço de uma sessão para a outra.</p>
-        </div>
-        <ul class="cartoes tres">
-          <li class="cartao">
+        </header>
+        <ul class="grade grade-3">
+          <li class="card description-card">
             <h3>Estimativa visual</h3>
             <p>A avaliação feita a olho é menos precisa do que a medida com goniômetro <cite>(ANDRADE et al., 2003)</cite>.</p>
           </li>
-          <li class="cartao">
+          <li class="card description-card">
             <h3>Falta de padrão</h3>
             <p>Sem um protocolo para posicionar o paciente e o aparelho, as medidas deixam de ser comparáveis entre sessões e entre profissionais <cite>(NORKIN; WHITE, 2016)</cite>.</p>
           </li>
-          <li class="cartao">
+          <li class="card description-card">
             <h3>Evolução invisível</h3>
             <p>Anotadas em fichas, as medições não viram um gráfico que o profissional e o paciente consigam acompanhar.</p>
           </li>
         </ul>
-        <div class="objetivo">
-          <div>
+        <div class="card objetivo">
+          <div class="description-card">
             <h3>Objetivo</h3>
             <p>Desenvolver um goniômetro digital integrado a um software que ajude fisioterapeutas a realizar e acompanhar medições articulares, com mais precisão, padronização e praticidade na avaliação dos pacientes.</p>
           </div>
-          <div>
+          <div class="description-card">
             <h3>Metodologia</h3>
             <p>Levantamento bibliográfico nas bases Google Acadêmico, SciELO, PubMed e Nature, e entrevista com profissional de fisioterapia atuante no mercado.</p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Funcionando -->
-    <section class="secao" id="funcionando" aria-labelledby="funcionando-titulo">
-      <div class="faixa funcionando-grade">
-        <div>
-          <p class="sobretitulo">Veja funcionando</p>
+      <!-- Ao vivo -->
+      <section class="secao" id="funcionando" aria-labelledby="funcionando-titulo">
+        <header class="titulo-secao">
           <h2 id="funcionando-titulo">O goniômetro em ação</h2>
-          <p class="texto-secao">Na tela Dispositivo, o mostrador acompanha cada leitura enviada pelo aparelho. Durante a captura, o sistema guarda o menor e o maior ângulo do movimento, e a amplitude é a diferença entre os dois.</p>
-          <p class="texto-secao">Quer ver o sistema por dentro? A conta de demonstração tem uma clínica fictícia com pacientes e meses de sessões. Dá para navegar à vontade: nada pode ser alterado.</p>
-          <div class="acoes">
-            <a class="btn btn-primario" href="Login/login.html?demo">Entrar na demonstração</a>
-          </div>
-        </div>
-        <!-- Quando houver um vídeo do aparelho real, ele pode entrar aqui ao
-             lado (ou no lugar) da simulação: <video controls preload="none"
+          <p>Acompanhe a leitura do goniômetro em tempo real e capture a amplitude do movimento, como na tela Dispositivo do sistema.</p>
+        </header>
+
+        <!-- Quando houver um vídeo do aparelho real, ele pode entrar ao lado
+             (ou no lugar) da simulação: <video controls preload="none"
              poster="..." src="assets/inicio/goniometro.mp4"></video> -->
-        <figure class="simulacao" data-simulacao aria-labelledby="simulacao-legenda">
+        <figure class="card simulacao" data-simulacao aria-labelledby="simulacao-legenda">
           <div class="sim-topo">
             <div>
               <p class="sim-titulo">Leitura ao vivo</p>
-              <p class="sim-sub">Ângulo enviado pelo goniômetro</p>
+              <p class="sim-sub">Ângulo enviado pelo goniômetro em tempo real</p>
             </div>
             <span class="sim-status"><span class="sim-ponto" aria-hidden="true"></span>Simulação</span>
           </div>
           <div class="sim-corpo">
             <div class="sim-mostrador">
-              <svg viewBox="0 0 200 116" aria-hidden="true">
+              <svg viewBox="0 0 200 124" aria-hidden="true">
                 <path class="sim-arco-fundo" d="M 20 100 A 80 80 0 0 1 180 100" />
                 <path class="sim-arco" d="M 20 100 A 80 80 0 0 1 180 100" pathLength="180" stroke-dasharray="0 180" />
                 <line class="sim-ponteiro" x1="100" y1="100" x2="34" y2="100" />
                 <circle class="sim-centro" cx="100" cy="100" r="6" />
+                <text class="sim-escala" x="20" y="121" text-anchor="middle">0°</text>
+                <text class="sim-escala" x="180" y="121" text-anchor="middle">180°</text>
               </svg>
               <p class="sim-valor"><span data-sim="angulo">0</span>°</p>
             </div>
-            <dl class="sim-medidas">
-              <div><dt>Mínimo</dt><dd data-sim="minimo">–</dd></div>
-              <div><dt>Máximo</dt><dd data-sim="maximo">–</dd></div>
-              <div class="sim-amplitude"><dt>Amplitude</dt><dd data-sim="amplitude">–</dd></div>
-            </dl>
+            <div class="sim-lado">
+              <dl class="sim-medidas">
+                <div><dt>Mínimo</dt><dd data-sim="minimo">–</dd></div>
+                <div><dt>Máximo</dt><dd data-sim="maximo">–</dd></div>
+                <div class="sim-amplitude"><dt>Amplitude</dt><dd data-sim="amplitude">–</dd></div>
+              </dl>
+              <svg class="sim-grafico" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true">
+                <polyline data-sim="curva" points="" />
+              </svg>
+              <p class="sim-janela">últimos 6 s</p>
+            </div>
           </div>
-          <svg class="sim-grafico" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true">
-            <polyline data-sim="curva" points="" />
-          </svg>
           <div class="sim-rodape">
-            <figcaption id="simulacao-legenda">Simulação com dados fictícios, no mesmo formato da tela Dispositivo: flexão e extensão do ombro, 10 leituras por segundo.</figcaption>
-            <button type="button" class="sim-pausar" data-sim="pausar" aria-pressed="false">Pausar</button>
+            <figcaption id="simulacao-legenda">Simulação com dados fictícios, no mesmo formato da tela Dispositivo: flexão e extensão do ombro, 10 leituras por segundo. A captura registra o menor e o maior ângulo do movimento; a amplitude sai da diferença entre os dois.</figcaption>
+            <button type="button" class="btn-edit btn-pequeno" data-sim="pausar" aria-pressed="false">Pausar</button>
           </div>
         </figure>
-      </div>
-    </section>
 
-    <!-- Como funciona -->
-    <section class="secao secao-suave" id="como-funciona" aria-labelledby="como-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Como funciona</p>
-          <h2 id="como-titulo">Do sensor ao histórico do paciente</h2>
+        <div class="grade grade-2 abaixo">
+          <div class="card description-card">
+            <h3>Do aparelho para a sessão</h3>
+            <p>No sistema, o mesmo painel aparece dentro do formulário de sessão: o fisioterapeuta grava o movimento completo e a amplitude cai sozinha no campo, junto com a curva do movimento.</p>
+          </div>
+          <div class="card access-card">
+            <p class="t">Quer ver por dentro?</p>
+            <p class="s">Use o perfil de teste da conta de demonstração e navegue pelas telas com dados fictícios.</p>
+            <a class="btn-primary" href="Login/login.html?demo">Entrar na demonstração</a>
+          </div>
         </div>
-        <ol class="passos">
-          <li>
+      </section>
+
+      <!-- Como funciona -->
+      <section class="secao" id="como-funciona" aria-labelledby="como-titulo">
+        <header class="titulo-secao">
+          <h2 id="como-titulo">Do sensor ao histórico do paciente</h2>
+          <p>Três passos, do braço do paciente ao gráfico de evolução.</p>
+        </header>
+        <ol class="grade grade-3 passos">
+          <li class="card description-card">
             <span class="passo-num" aria-hidden="true">1</span>
             <h3>Mede</h3>
             <p>O goniômetro, preso ao segmento que se move, calcula o ângulo da articulação com um acelerômetro e um giroscópio.</p>
           </li>
-          <li>
+          <li class="card description-card">
             <span class="passo-num" aria-hidden="true">2</span>
             <h3>Transmite</h3>
             <p>Pelo Wi-Fi, cada leitura chega ao sistema e aparece na tela do fisioterapeuta em tempo real.</p>
           </li>
-          <li>
+          <li class="card description-card">
             <span class="passo-num" aria-hidden="true">3</span>
             <h3>Registra</h3>
-            <p>O fisioterapeuta grava o movimento completo: a amplitude e a curva do movimento ficam salvas na sessão e entram no gráfico de evolução.</p>
+            <p>O fisioterapeuta grava o movimento completo: a amplitude e a curva ficam salvas na sessão e entram no gráfico de evolução.</p>
           </li>
         </ol>
 
-        <h3 class="fluxo-titulo">Arquitetura</h3>
-        <div class="fluxo" role="img" aria-label="O goniômetro manda as leituras pela internet para a API, que guarda os dados no banco PostgreSQL e repassa cada leitura ao navegador em tempo real.">
-          <div class="no">
-            <strong>Goniômetro</strong>
-            <span>ESP32 + MPU6050</span>
-          </div>
-          <div class="seta"><span>Wi-Fi · HTTPS</span><span>leituras do ângulo</span></div>
-          <div class="no no-central">
-            <strong>API</strong>
-            <span>Java · Spring Boot · Render</span>
-            <div class="no-banco"><strong>Banco de dados</strong><span>PostgreSQL</span></div>
-          </div>
-          <div class="seta"><span>SSE</span><span>tempo real</span></div>
-          <div class="no">
-            <strong>Navegador</strong>
-            <span>site na Vercel</span>
+        <div class="card arquitetura">
+          <h3 class="card-titulo">Arquitetura</h3>
+          <div class="fluxo" role="img" aria-label="O goniômetro manda as leituras pela internet para a API, que guarda os dados no banco PostgreSQL e repassa cada leitura ao navegador em tempo real.">
+            <div class="no">
+              <strong>Goniômetro</strong>
+              <span>ESP32 + MPU6050</span>
+            </div>
+            <div class="seta"><span>Wi-Fi · HTTPS</span><span>leituras do ângulo</span></div>
+            <div class="no no-central">
+              <strong>API</strong>
+              <span>Java · Spring Boot · Render</span>
+              <div class="no-banco"><strong>Banco de dados</strong><span>PostgreSQL</span></div>
+            </div>
+            <div class="seta"><span>SSE</span><span>tempo real</span></div>
+            <div class="no">
+              <strong>Navegador</strong>
+              <span>site na Vercel</span>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Funcionalidades -->
-    <section class="secao" id="funcionalidades" aria-labelledby="func-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Funcionalidades</p>
-          <h2 id="func-titulo">O que o sistema faz</h2>
-        </div>
-        <ul class="cartoes quatro">
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5c1.8.8 3 2.7 3 5.5"/></svg>
+        <h3 class="subtitulo">O que o sistema faz</h3>
+        <ul class="grade grade-4">
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5c1.8.8 3 2.7 3 5.5"/></svg></span>
             <h3>Pacientes e profissionais</h3>
             <p>Cadastro de pacientes com anamnese e meta de tratamento, e de fisioterapeutas ligados à clínica.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span>
             <h3>Agenda e consultas</h3>
             <p>Marcação de sessões, presença e faltas, exportação para o Google Agenda e lembrete pelo WhatsApp.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M16 6h4v4"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M16 6h4v4"/></svg></span>
             <h3>Evolução em gráfico</h3>
             <p>Cada sessão guarda duração, dor relatada e amplitude, e a ficha mostra a evolução e o progresso até a meta.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.5-6"/><circle cx="12" cy="17" r="1.3"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.5-6"/><circle cx="12" cy="17" r="1.3"/></svg></span>
             <h3>Goniômetro ao vivo</h3>
             <p>Mostrador com o ângulo atual, gráfico dos últimos 60 segundos, mínimo, máximo e amplitude.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></span>
             <h3>Desempenho</h3>
             <p>Indicadores por profissional: sessões realizadas, altas concedidas e ganho médio de amplitude.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"/><path d="M14 2.5V8h5.5M8.5 13h7M8.5 17h5"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"/><path d="M14 2.5V8h5.5M8.5 13h7M8.5 17h5"/></svg></span>
             <h3>Relatórios em PDF</h3>
             <p>Relatório da evolução do paciente e das consultas, pronto para imprimir ou enviar.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>
             <h3>Acesso protegido</h3>
             <p>Confirmação do e-mail por código, verificação anti-robô e recuperação de senha.</p>
           </li>
-          <li class="cartao">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></span>
             <h3>Tema claro e escuro</h3>
             <p>Todas as telas têm as duas versões, para o uso confortável em qualquer ambiente.</p>
           </li>
         </ul>
-      </div>
-    </section>
+      </section>
 
-    <!-- Telas -->
-    <section class="secao secao-suave" id="telas" aria-labelledby="telas-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Telas</p>
-          <h2 id="telas-titulo">Por dentro do Rehabit</h2>
+      <!-- Telas -->
+      <section class="secao" id="telas" aria-labelledby="telas-titulo">
+        <header class="titulo-secao">
+          <h2 id="telas-titulo">Telas do sistema</h2>
           <p>Imagens da conta de demonstração, uma clínica fictícia criada para apresentar o projeto. Clique numa tela para ampliar.</p>
-        </div>
-        <div class="galeria">
-          <figure>
-            <a class="janela ampliar" href="assets/inicio/tela-paciente.jpg" data-escuro="assets/inicio/tela-paciente-escuro.jpg">
-              <span class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></span>
+        </header>
+        <div class="grade grade-2">
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Ficha do paciente</h3><span>Amplitude e dor sessão a sessão, com a meta de tratamento.</span></figcaption>
+            <a class="ampliar" href="assets/inicio/tela-paciente.jpg" data-escuro="assets/inicio/tela-paciente-escuro.jpg">
               <picture>
-                <source media="(prefers-color-scheme: dark)" sizes="(min-width: 860px) 540px, 100vw"
+                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 1100px) 480px, 100vw"
                         srcset="assets/inicio/tela-paciente-escuro-600.jpg 600w, assets/inicio/tela-paciente-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-paciente-600.jpg" width="1200" height="750" loading="lazy"
-                     sizes="(min-width: 860px) 540px, 100vw"
+                     sizes="(min-width: 1100px) 480px, 100vw"
                      srcset="assets/inicio/tela-paciente-600.jpg 600w, assets/inicio/tela-paciente.jpg 1200w"
                      alt="Ficha do paciente com o gráfico de amplitude de movimento e dor relatada ao longo das sessões" />
               </picture>
             </a>
-            <figcaption><strong>Ficha do paciente.</strong> Amplitude e dor sessão a sessão, com a meta de tratamento.</figcaption>
           </figure>
-          <figure>
-            <a class="janela ampliar" href="assets/inicio/tela-sessao.jpg" data-escuro="assets/inicio/tela-sessao-escuro.jpg">
-              <span class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></span>
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Registro de sessão</h3><span>O goniômetro preenche a amplitude direto no formulário.</span></figcaption>
+            <a class="ampliar" href="assets/inicio/tela-sessao.jpg" data-escuro="assets/inicio/tela-sessao-escuro.jpg">
               <picture>
-                <source media="(prefers-color-scheme: dark)" sizes="(min-width: 860px) 540px, 100vw"
+                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 1100px) 480px, 100vw"
                         srcset="assets/inicio/tela-sessao-escuro-600.jpg 600w, assets/inicio/tela-sessao-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-sessao-600.jpg" width="1200" height="750" loading="lazy"
-                     sizes="(min-width: 860px) 540px, 100vw"
+                     sizes="(min-width: 1100px) 480px, 100vw"
                      srcset="assets/inicio/tela-sessao-600.jpg 600w, assets/inicio/tela-sessao.jpg 1200w"
                      alt="Registro de sessão com o painel do goniômetro embutido no formulário" />
               </picture>
             </a>
-            <figcaption><strong>Registro de sessão.</strong> O goniômetro preenche a amplitude direto no formulário.</figcaption>
           </figure>
-          <figure>
-            <a class="janela ampliar" href="assets/inicio/tela-agenda.jpg" data-escuro="assets/inicio/tela-agenda-escuro.jpg">
-              <span class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></span>
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Agenda</h3><span>Consultas do mês, presença, faltas e remarcações.</span></figcaption>
+            <a class="ampliar" href="assets/inicio/tela-agenda.jpg" data-escuro="assets/inicio/tela-agenda-escuro.jpg">
               <picture>
-                <source media="(prefers-color-scheme: dark)" sizes="(min-width: 860px) 540px, 100vw"
+                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 1100px) 480px, 100vw"
                         srcset="assets/inicio/tela-agenda-escuro-600.jpg 600w, assets/inicio/tela-agenda-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-agenda-600.jpg" width="1200" height="750" loading="lazy"
-                     sizes="(min-width: 860px) 540px, 100vw"
+                     sizes="(min-width: 1100px) 480px, 100vw"
                      srcset="assets/inicio/tela-agenda-600.jpg 600w, assets/inicio/tela-agenda.jpg 1200w"
                      alt="Agenda com formulário de novo agendamento, calendário do mês e próximas consultas" />
               </picture>
             </a>
-            <figcaption><strong>Agenda.</strong> Consultas do mês, presença, faltas e remarcações.</figcaption>
           </figure>
-          <figure>
-            <a class="janela ampliar" href="assets/inicio/tela-desempenho.jpg" data-escuro="assets/inicio/tela-desempenho-escuro.jpg">
-              <span class="janela-barra" aria-hidden="true"><span></span><span></span><span></span></span>
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Desempenho</h3><span>Sessões por mês e ganho de amplitude de cada paciente.</span></figcaption>
+            <a class="ampliar" href="assets/inicio/tela-desempenho.jpg" data-escuro="assets/inicio/tela-desempenho-escuro.jpg">
               <picture>
-                <source media="(prefers-color-scheme: dark)" sizes="(min-width: 860px) 540px, 100vw"
+                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 1100px) 480px, 100vw"
                         srcset="assets/inicio/tela-desempenho-escuro-600.jpg 600w, assets/inicio/tela-desempenho-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-desempenho-600.jpg" width="1200" height="750" loading="lazy"
-                     sizes="(min-width: 860px) 540px, 100vw"
+                     sizes="(min-width: 1100px) 480px, 100vw"
                      srcset="assets/inicio/tela-desempenho-600.jpg 600w, assets/inicio/tela-desempenho.jpg 1200w"
                      alt="Painel de desempenho do profissional com sessões por mês e ganho de amplitude por paciente" />
               </picture>
             </a>
-            <figcaption><strong>Desempenho.</strong> Sessões por mês e ganho de amplitude de cada paciente.</figcaption>
           </figure>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Goniômetro -->
-    <section class="secao" id="goniometro" aria-labelledby="gonio-titulo">
-      <div class="faixa gonio-grade">
-        <figure class="gonio-foto">
-          <img src="assets/inicio/goniometro.jpg" width="1200" height="530" loading="lazy"
-               alt="Protótipo do goniômetro: placa ESP32 ligada por fios a um sensor MPU6050 numa protoboard" />
-          <figcaption>Protótipo: ESP32 e sensor MPU6050 na protoboard.</figcaption>
-        </figure>
-        <div>
-          <p class="sobretitulo">Hardware</p>
+      <!-- Goniômetro -->
+      <section class="secao" id="goniometro" aria-labelledby="gonio-titulo">
+        <header class="titulo-secao">
           <h2 id="gonio-titulo">O goniômetro digital</h2>
-          <p class="texto-secao">Um ESP32 com um sensor MPU6050 (acelerômetro e giroscópio), programado pela equipe, mede o ângulo e envia cada leitura ao sistema pelo Wi-Fi.</p>
-          <ul class="lista-tecnica">
-            <li><strong>Zero na pose do paciente.</strong> O ângulo é medido a partir do braço pendurado ao lado do tronco, então a placa funciona presa em qualquer orientação.</li>
-            <li><strong>Leitura estável.</strong> Um filtro complementar combina acelerômetro e giroscópio.</li>
-            <li><strong>Tempo real.</strong> As leituras chegam ao navegador por <span lang="en">Server-Sent Events</span>, com consulta periódica como reserva.</li>
-            <li><strong>Pareamento seguro.</strong> O aparelho se liga à clínica por um código de 6 dígitos e usa um token próprio, que pode ser revogado.</li>
-            <li><strong>Economia de bateria.</strong> O servidor dita o ritmo: 10 leituras por segundo gravando, uma a cada 2 segundos parado.</li>
-          </ul>
+          <p>Um ESP32 com um sensor MPU6050 (acelerômetro e giroscópio), programado pela equipe, mede o ângulo e envia cada leitura ao sistema pelo Wi-Fi.</p>
+        </header>
+        <div class="grade grade-2 gonio">
+          <figure class="card gonio-foto">
+            <img src="assets/inicio/goniometro.jpg" width="1200" height="530" loading="lazy"
+                 alt="Protótipo do goniômetro: placa ESP32 ligada por fios a um sensor MPU6050 numa protoboard" />
+            <figcaption>Protótipo: ESP32 e sensor MPU6050 na protoboard.</figcaption>
+          </figure>
+          <div class="card">
+            <h3 class="card-titulo">Informações do dispositivo</h3>
+            <dl class="lista-info">
+              <div><dt>Zero na pose do paciente</dt><dd>O ângulo é medido a partir do braço pendurado ao lado do tronco, então a placa funciona presa em qualquer orientação.</dd></div>
+              <div><dt>Leitura estável</dt><dd>Um filtro complementar combina acelerômetro e giroscópio.</dd></div>
+              <div><dt>Tempo real</dt><dd>As leituras chegam ao navegador por <span lang="en">Server-Sent Events</span>, com consulta periódica como reserva.</dd></div>
+              <div><dt>Pareamento seguro</dt><dd>O aparelho se liga à clínica por um código de 6 dígitos e usa um token próprio, que pode ser revogado.</dd></div>
+              <div><dt>Economia de bateria</dt><dd>O servidor dita o ritmo: 10 leituras por segundo gravando, uma a cada 2 segundos parado.</dd></div>
+            </dl>
+          </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Validação -->
-    <section class="secao secao-suave" id="validacao" aria-labelledby="validacao-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Validação</p>
-          <h2 id="validacao-titulo">Como o projeto está sendo testado</h2>
-          <p>O plano do projeto prevê testes funcionais e unitários para validar a precisão dos sensores, o tempo de resposta do sistema e a segurança dos dados.</p>
-        </div>
-        <ul class="cartoes tres">
-          <li class="cartao">
-            <span class="etiqueta etiqueta-ok">Em uso</span>
+        <h3 class="subtitulo">Validação</h3>
+        <p class="texto-apoio">O plano do projeto prevê testes funcionais e unitários para validar a precisão dos sensores, o tempo de resposta do sistema e a segurança dos dados.</p>
+        <ul class="grade grade-3">
+          <li class="card description-card">
+            <span class="badge-status ok">Em uso</span>
             <h3>Testes automatizados da API</h3>
             <p>Testes de integração cobrem as regras mais sensíveis: exclusão de conta, sessões, conta de demonstração e verificação anti-robô.</p>
           </li>
-          <li class="cartao">
-            <span class="etiqueta">Previsto</span>
+          <li class="card description-card">
+            <span class="badge-status">Previsto</span>
             <h3>Precisão do sensor</h3>
             <p>Comparar as leituras do aparelho com as de um goniômetro universal em ângulos conhecidos e registrar a diferença.</p>
           </li>
-          <li class="cartao">
-            <span class="etiqueta">Previsto</span>
+          <li class="card description-card">
+            <span class="badge-status">Previsto</span>
             <h3>Tempo de resposta</h3>
             <p>Medir quanto tempo leva entre o movimento do paciente e a leitura aparecer na tela do fisioterapeuta.</p>
           </li>
         </ul>
-      </div>
-    </section>
+      </section>
 
-    <!-- Tecnologias e documentação -->
-    <section class="secao" id="tecnologias" aria-labelledby="tec-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Tecnologias</p>
-          <h2 id="tec-titulo">Como foi construído</h2>
+      <!-- Documentação -->
+      <section class="secao" id="documentacao" aria-labelledby="doc-titulo">
+        <header class="titulo-secao">
+          <h2 id="doc-titulo">Documentação</h2>
+          <p>Como o Rehabit foi construído, o modelo do banco de dados e as referências do projeto.</p>
+        </header>
+        <div class="kpi-grid tecnologias">
+          <div class="card kpi-card"><p class="kpi-rotulo">Front-end</p><p class="kpi-texto">HTML, CSS e JavaScript puros, com animações em GSAP</p></div>
+          <div class="card kpi-card"><p class="kpi-rotulo">Back-end</p><p class="kpi-texto">API REST em Java 17 com Spring Boot</p></div>
+          <div class="card kpi-card"><p class="kpi-rotulo">Banco de dados</p><p class="kpi-texto">PostgreSQL (H2 no desenvolvimento)</p></div>
+          <div class="card kpi-card"><p class="kpi-rotulo">Hardware</p><p class="kpi-texto">ESP32 e MPU6050, firmware em C++ (Arduino)</p></div>
+          <div class="card kpi-card"><p class="kpi-rotulo">Hospedagem</p><p class="kpi-texto">Vercel para o site e Render para a API</p></div>
         </div>
-        <dl class="tecnologias">
-          <div><dt>Front-end</dt><dd>HTML, CSS e JavaScript puros, com animações em GSAP</dd></div>
-          <div><dt>Back-end</dt><dd>API REST em Java 17 com Spring Boot</dd></div>
-          <div><dt>Banco de dados</dt><dd>PostgreSQL (H2 no desenvolvimento)</dd></div>
-          <div><dt>Hardware</dt><dd>ESP32 e MPU6050, firmware em C++ (Arduino)</dd></div>
-          <div><dt>Hospedagem</dt><dd>Vercel para o site e Render para a API</dd></div>
-        </dl>
 
-        <div class="documentacao">
-          <a class="janela ampliar mer" href="assets/inicio/mer.png">
-            <img src="assets/inicio/mer.png" width="1400" height="1349" loading="lazy"
-                 alt="Modelo entidade-relacionamento do banco de dados do Rehabit, com clínicas, fisioterapeutas, pacientes, sessões, medições, agendamentos e goniômetros" />
-          </a>
-          <div>
-            <h3>Documentação</h3>
-            <p class="texto-secao">O modelo do banco de dados (clique na imagem para ampliar) mostra como clínicas, profissionais, pacientes, sessões e medições se relacionam. Todo o código, inclusive o firmware do goniômetro, é aberto.</p>
-            <ul class="links-doc">
-              <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit">Código no GitHub</a></li>
-              <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/goniometro-esp32-GUIA.md">Guia de montagem do goniômetro</a></li>
-              <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/tree/main/docs/MER">Modelo entidade-relacionamento (arquivos)</a></li>
-            </ul>
+        <div class="grade grade-2 doc">
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Modelo entidade-relacionamento</h3><span>Clique para ampliar.</span></figcaption>
+            <a class="ampliar mer" href="assets/inicio/mer.png">
+              <img src="assets/inicio/mer.png" width="1400" height="1349" loading="lazy"
+                   alt="Modelo entidade-relacionamento do banco de dados do Rehabit, com clínicas, fisioterapeutas, pacientes, sessões, medições, agendamentos e goniômetros" />
+            </a>
+          </figure>
+          <div class="col-doc">
+            <div class="card">
+              <h3 class="card-titulo">Código e guias</h3>
+              <ul class="lista-links">
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit">Código no GitHub</a><span>todo o projeto é aberto, com licença MIT</span></li>
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/goniometro-esp32-GUIA.md">Guia de montagem do goniômetro</a><span>peças, ligações e gravação do firmware</span></li>
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/tree/main/docs/MER">Arquivos do MER</a><span>modelo do banco em brModelo, PNG e XML</span></li>
+              </ul>
+            </div>
+            <div class="card referencias">
+              <h3 class="card-titulo">Referências</h3>
+              <ul>
+                <li>ANDRADE, Júnia Amorim et al. Estudo comparativo entre os métodos de estimativa visual e goniometria para avaliação das amplitudes de movimento da articulação do ombro. <em>Acta Fisiátrica</em>, v. 10, n. 1, p. 12-16, 2003.</li>
+                <li>NORKIN, Cynthia C.; WHITE, D. Joyce. <em>Measurement of joint motion: a guide to goniometry</em>. F. A. Davis, 2016.</li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Equipe -->
-    <section class="secao secao-suave" id="equipe" aria-labelledby="equipe-titulo">
-      <div class="faixa">
-        <div class="cabeca">
-          <p class="sobretitulo">Equipe</p>
-          <h2 id="equipe-titulo">Quem fez o Rehabit</h2>
+      <!-- Equipe -->
+      <section class="secao" id="equipe" aria-labelledby="equipe-titulo">
+        <header class="titulo-secao">
+          <h2 id="equipe-titulo">Equipe</h2>
           <p>Trabalho de Conclusão de Curso do Ensino Médio com Habilitação Profissional de Técnico em Desenvolvimento de Sistemas da Etec Prof. Carmine Biagio Tundisi, em Atibaia (SP), 2026.</p>
+        </header>
+        <div class="card lista-equipe">
+          <h3 class="card-titulo">Integrantes</h3>
+          <ul>
+            <li><span class="avatar-iniciais" aria-hidden="true">JS</span><span class="nome">Jonatan Schaak</span><span class="papel">Aluno</span></li>
+            <li><span class="avatar-iniciais" aria-hidden="true">MG</span><span class="nome">Matheus Gonçalves da Silva</span><span class="papel">Aluno</span></li>
+            <li><span class="avatar-iniciais" aria-hidden="true">MJ</span><span class="nome">Matheus José Almeida Aparecido</span><span class="papel">Aluno</span></li>
+            <li><span class="avatar-iniciais" aria-hidden="true">NC</span><span class="nome">Nathan Carvalho da Cunha</span><span class="papel">Aluno</span></li>
+            <li><span class="avatar-iniciais" aria-hidden="true">SN</span><span class="nome">Steven Seigo Nakashima</span><span class="papel">Aluno</span></li>
+          </ul>
+          <h3 class="card-titulo orientacao">Orientação</h3>
+          <ul>
+            <li><span class="avatar-iniciais" aria-hidden="true">LL</span><span class="nome">Prof. Leonardo Victor Ferreira de Lima</span><span class="papel">Orientador</span></li>
+            <li><span class="avatar-iniciais" aria-hidden="true">SM</span><span class="nome">Prof. Sergio Montagner</span><span class="papel">Orientador</span></li>
+          </ul>
         </div>
-        <ul class="equipe">
-          <li><span class="inicial" aria-hidden="true">JS</span>Jonatan Schaak</li>
-          <li><span class="inicial" aria-hidden="true">MG</span>Matheus Gonçalves da Silva</li>
-          <li><span class="inicial" aria-hidden="true">MJ</span>Matheus José Almeida Aparecido</li>
-          <li><span class="inicial" aria-hidden="true">NC</span>Nathan Carvalho da Cunha</li>
-          <li><span class="inicial" aria-hidden="true">SN</span>Steven Seigo Nakashima</li>
-        </ul>
-        <p class="orientacao"><strong>Orientação:</strong> Prof. Leonardo Victor Ferreira de Lima e Prof. Sergio Montagner.</p>
-      </div>
-    </section>
+      </section>
 
-    <!-- Chamada final -->
-    <section class="chamada" aria-labelledby="chamada-titulo">
-      <div class="faixa">
-        <div class="chamada-caixa">
-          <h2 id="chamada-titulo">Conheça o Rehabit por dentro</h2>
-          <p>Entre na conta de demonstração ou cadastre uma clínica para experimentar o sistema.</p>
-          <div class="acoes">
-            <a class="btn btn-claro" href="Login/login.html?demo">Entrar na demonstração</a>
-            <a class="btn btn-vazado" href="Login/register.html">Cadastrar clínica</a>
-          </div>
-        </div>
-      </div>
-    </section>
+      <footer class="rodape">
+        <p>Rehabit · TCC da Etec Prof. Carmine Biagio Tundisi · Atibaia, 2026</p>
+        <nav aria-label="Links do rodapé">
+          <a href="mailto:tccrehabit@gmail.com">tccrehabit@gmail.com</a>
+          <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">GitHub</a>
+          <a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/LICENSE">Licença MIT</a>
+        </nav>
+      </footer>
+    </main>
 
-    <!-- Referências -->
-    <section class="referencias" aria-labelledby="ref-titulo">
-      <div class="faixa">
-        <h2 id="ref-titulo">Referências</h2>
-        <ul>
-          <li>ANDRADE, Júnia Amorim et al. Estudo comparativo entre os métodos de estimativa visual e goniometria para avaliação das amplitudes de movimento da articulação do ombro. <em>Acta Fisiátrica</em>, v. 10, n. 1, p. 12-16, 2003.</li>
-          <li>NORKIN, Cynthia C.; WHITE, D. Joyce. <em>Measurement of joint motion: a guide to goniometry</em>. F. A. Davis, 2016.</li>
-        </ul>
-      </div>
-    </section>
-  </main>
-
-  <footer class="rodape">
-    <div class="faixa rodape-linha">
-      <p>Rehabit · TCC da Etec Prof. Carmine Biagio Tundisi · Atibaia, 2026</p>
-      <nav aria-label="Links do rodapé">
-        <a href="mailto:tccrehabit@gmail.com">tccrehabit@gmail.com</a>
-        <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">GitHub</a>
-        <a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/LICENSE">Licença MIT</a>
-        <a href="Login/login.html">Entrar</a>
-      </nav>
-    </div>
-  </footer>
+    <!-- Menu inferior (celular), igual ao do sistema -->
+    <nav class="mobile-bottomnav" aria-label="Seções da página">
+      <a href="#inicio" class="active"><svg class="ico" aria-hidden="true"><use href="#i-inicio"/></svg><span>Início</span></a>
+      <a href="#projeto"><svg class="ico" aria-hidden="true"><use href="#i-projeto"/></svg><span>Projeto</span></a>
+      <a href="#funcionando"><svg class="ico" aria-hidden="true"><use href="#i-aovivo"/></svg><span>Ao vivo</span></a>
+      <a href="#telas"><svg class="ico" aria-hidden="true"><use href="#i-telas"/></svg><span>Telas</span></a>
+      <a href="#equipe"><svg class="ico" aria-hidden="true"><use href="#i-equipe"/></svg><span>Equipe</span></a>
+    </nav>
+  </div>
 
   <dialog class="ampliada" aria-label="Imagem ampliada">
     <form method="dialog"><button class="fechar" aria-label="Fechar">×</button></form>
