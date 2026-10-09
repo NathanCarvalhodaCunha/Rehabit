@@ -126,8 +126,18 @@ Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 
 ## 3. Reconfigurar depois (trocou de Wi-Fi ou de clínica)
 
-Segure o botão **BOOT** por 5 segundos com o aparelho ligado. Ele apaga a
-configuração — inclusive a tara — e volta ao portal.
+**Só trocou a rede ou a senha do Wi-Fi?** Desligue e ligue o aparelho: sem
+conseguir entrar na rede salva, ele abre o portal sozinho. Escolha a rede
+nova, digite a senha e deixe o código em branco — o pareamento e a tara
+continuam guardados.
+
+**Mudou de clínica?** Segure o botão **BOOT** por 5 segundos com o aparelho
+ligado. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
+ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
+porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
+Confira na tela Dispositivo da
+clínica nova que ele aparece como **Conectado**: se o código falhar, o
+aparelho continuaria com o pareamento antigo.
 
 ## 4. Se um aparelho sumir ou for roubado
 
@@ -209,7 +219,7 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Pisca sem parar, bem rápido, desde o boot | MPU6050 não foi encontrado — confira a fiação |
 | Apagado nos primeiros segundos após ligar | Normal: calibrando o giroscópio (deixe parado) e conectando ao Wi-Fi |
 | Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular (aparelho sem configuração, depois do BOOT 5 s, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
-| Acende e apaga bem devagar, uns 4 s de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera até 4 s e a luz só troca entre um envio e outro |
+| Acende e apaga bem devagar, uns 4 s ou mais de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera 4 s ou mais (conectar e ler têm 4 s cada) e a luz só troca entre um envio e outro |
 
 A luz só sabe do Wi-Fi e do pareamento: ela pisca curtinho mesmo que o
 servidor recuse o aparelho (revogado, token recusado). Se ela diz que está

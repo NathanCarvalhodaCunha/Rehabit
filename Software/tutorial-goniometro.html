@@ -160,7 +160,7 @@
       <section class="card tutorial-led-card" id="luz-do-aparelho" aria-labelledby="tituloLuzAparelho">
         <header class="tutorial-led-head">
           <h3 id="tituloLuzAparelho">O que a luz do aparelho está dizendo</h3>
-          <p>O goniômetro não tem tela: é a luz azul dele que conta o que está acontecendo. Observe por uns 10 segundos antes de concluir — quando está tudo certo, ela passa quase o tempo todo apagada e só dá uma piscadinha a cada 2 segundos. Outras luzinhas da placa ou do carregador mostram apenas energia e carga da bateria.</p>
+          <p>O goniômetro não tem tela: é a luz azul dele que conta o que está acontecendo. Observe por uns 15 segundos antes de concluir — quando está tudo certo, ela passa quase o tempo todo apagada e só dá uma piscadinha a cada 2 segundos. Outras luzinhas da placa ou do carregador mostram apenas energia e carga da bateria.</p>
           <p class="tutorial-led-legenda" aria-hidden="true">Cada barrinha mostra 6 segundos da luz: o azul é o tempo em que ela fica acesa.</p>
         </header>
 
@@ -198,8 +198,8 @@
                   <span class="tutorial-led-selo is-normal">Normal</span>
                 </div>
                 <span class="tutorial-led-ritmo" data-ritmo="fixo" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> gravando uma captura — alguém tocou em <strong>Iniciar captura</strong> na tela Dispositivo ou em <strong>Gravar movimento</strong> na tela Cadastrar sessão. Enquanto grava, a luz fica acesa mesmo que o Wi-Fi caia.</p>
-                <p><strong>O que fazer:</strong> peça ao paciente o movimento completo. A luz volta a piscar quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se ela continua acesa mas ninguém está gravando (o botão já voltou a dizer Iniciar captura), a conexão caiu no meio da gravação: toque em <strong>Reiniciar aparelho</strong> na tela Dispositivo.</p>
+                <p><strong>Significa:</strong> gravando uma captura — alguém tocou em <strong>Iniciar captura</strong> na tela Dispositivo ou em <strong>Gravar movimento</strong> ao registrar uma sessão do paciente. Enquanto grava, a luz fica acesa mesmo que o Wi-Fi caia.</p>
+                <p><strong>O que fazer:</strong> peça ao paciente o movimento completo. A luz volta a piscar quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se ela continua acesa mas ninguém está gravando (o botão já voltou a dizer Iniciar captura ou Gravar movimento), a conexão caiu no meio da gravação: toque em <strong>Reiniciar aparelho</strong> na tela Dispositivo. Se esse botão estiver desativado (a tela mostra Desconectado), desligue e ligue o aparelho pela chave, com ele parado.</p>
               </div>
             </li>
             <li class="tutorial-led-item">
@@ -223,7 +223,7 @@
                 </div>
                 <span class="tutorial-led-ritmo" data-ritmo="devagar" aria-hidden="true"></span>
                 <p><strong>Significa:</strong> o aparelho está sem Wi-Fi ou ainda não foi pareado com a clínica. Enquanto isso, nenhuma medida chega ao Rehabit.</p>
-                <p><strong>O que fazer:</strong> confira se o Wi-Fi da clínica está funcionando e se o aparelho está ao alcance do roteador — quando a rede volta, ele se reconecta sozinho. Se o Wi-Fi está bom e a luz continua assim, ou se a clínica trocou de Wi-Fi (rede ou senha), o aparelho precisa ser pareado de novo: <a href="#parear-de-novo">veja como</a>.</p>
+                <p><strong>O que fazer:</strong> confira se o Wi-Fi da clínica está funcionando e se o aparelho está ao alcance do roteador — quando a rede volta, ele se reconecta sozinho. Se o Wi-Fi está bom, desligue e ligue o aparelho. Se a clínica trocou a rede ou a senha do Wi-Fi, ao religar a luz fica apagada e a rede <strong>Rehabit-Goniometro</strong> aparece no celular: conecte nela, escolha a rede nova, digite a senha e <strong>deixe o código em branco</strong> — o pareamento e o zero continuam guardados. Só se, depois disso, a luz continuar piscando devagar é que o aparelho precisa ser pareado de novo: <a href="#parear-de-novo">veja como</a>.</p>
               </div>
             </li>
             <li class="tutorial-led-item">
@@ -234,7 +234,7 @@
                   <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
                 </div>
                 <span class="tutorial-led-ritmo" data-ritmo="sem-servidor" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> o aparelho está no Wi-Fi e pareado, mas não consegue falar com o Rehabit: a internet da clínica caiu ou o servidor do Rehabit está fora do ar. Cada envio espera até 4 segundos por uma resposta, e a luz só muda entre um envio e outro — por isso o ritmo fica lento e irregular. Nenhuma medida chega ao Rehabit.</p>
+                <p><strong>Significa:</strong> o aparelho está no Wi-Fi e pareado, mas não consegue falar com o Rehabit: a internet da clínica caiu ou o servidor do Rehabit está fora do ar. Cada envio espera 4 segundos ou mais por uma resposta, e a luz só muda entre um envio e outro — por isso o ritmo fica tão lento. Nenhuma medida chega ao Rehabit.</p>
                 <p><strong>O que fazer:</strong> teste a internet num celular ligado no mesmo Wi-Fi. Se a internet está boa, aguarde 2 a 3 minutos: quando o servidor volta, a luz volta sozinha a piscar curtinho. Não pareie de novo enquanto isso — sem o servidor, o pareamento também não funciona.</p>
               </div>
             </li>
@@ -249,7 +249,7 @@
                 <p><strong>Significa:</strong> ou o aparelho está esperando ser configurado pelo celular (o portal de configuração está aberto), ou está sem energia.</p>
                 <p><strong>O que fazer:</strong></p>
                 <ul class="tutorial-led-casos">
-                  <li>A rede Wi-Fi <strong>Rehabit-Goniometro</strong> aparece no celular? Então o portal está aberto — acontece com aparelho novo, depois de segurar o BOOT ou quando o Wi-Fi da clínica estava fora do ar na hora em que o aparelho foi ligado. Configure pelo celular (<a href="#parear-de-novo">passo a passo</a>) ou, se o Wi-Fi só estava fora do ar, desligue e ligue o aparelho depois que ele voltar.</li>
+                  <li>A rede Wi-Fi <strong>Rehabit-Goniometro</strong> aparece no celular? Então o portal está aberto — acontece com aparelho novo, depois de segurar o BOOT ou quando o Wi-Fi da clínica estava fora do ar na hora em que o aparelho foi ligado. Se o Wi-Fi só estava fora do ar, desligue e ligue o aparelho depois que ele voltar. Senão, configure pelo celular: escolha o Wi-Fi da clínica e digite a senha; o código de 6 dígitos só é preciso para aparelho novo ou para trocar de clínica (<a href="#parear-de-novo">passo a passo</a>).</li>
                   <li>Não aparece? Desligue e ligue o aparelho pela chave. Se continuar apagada, carregue a bateria.</li>
                   <li>A tela Dispositivo mostra <strong>Conectado</strong>? Então o aparelho funciona e só a luz está com defeito: avise quem montou o aparelho.</li>
                 </ul>
@@ -282,12 +282,12 @@
 
             <div class="tutorial-led-dica" id="parear-de-novo">
               <h4>Como parear de novo</h4>
-              <p>Para aparelho novo, troca de Wi-Fi ou de clínica. Tenha em mãos a senha do Wi-Fi da clínica.</p>
+              <p>Para aparelho novo ou para levar o aparelho a outra clínica — só trocar a rede ou a senha do Wi-Fi não exige isto (veja o item <em>Pisca devagar</em>). Tenha em mãos a senha do Wi-Fi e o acesso à conta da clínica.</p>
               <ol class="tutorial-led-passos">
                 <li>Entre com a conta da clínica, abra a tela Dispositivo e toque em <strong>Parear novo dispositivo</strong>. Aparece um código de 6 dígitos, que vale 10 minutos.</li>
-                <li>Com o aparelho ligado, segure o botão <strong>BOOT</strong> da placa por 5 segundos, até a luz parar de piscar e apagar. Isso apaga o Wi-Fi salvo, o pareamento e o zero (tara). Se a luz já estava apagada e a rede Rehabit-Goniometro já aparece no celular, pule este passo.</li>
+                <li>Com o aparelho ligado, segure o botão <strong>BOOT</strong> da placa por 5 segundos, até a luz parar de piscar e apagar. Isso apaga o Wi-Fi salvo, o pareamento e o zero (tara). Só pule este passo com aparelho novo, que nunca foi configurado (a luz já fica apagada e a rede Rehabit-Goniometro já aparece no celular).</li>
                 <li>No celular, conecte na rede <strong>Rehabit-Goniometro</strong> (senha <strong>rehabit123</strong>). Se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador. O aviso de “sem internet” é normal.</li>
-                <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Em instantes a luz volta a piscar curtinho a cada 2 segundos. Se ela piscar devagar, o código não foi aceito (venceu, já foi usado ou o servidor não respondeu a tempo): gere outro código e repita desde o passo 1.</li>
+                <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Confira na tela Dispositivo, na conta da clínica, se o selo mostra <strong>Conectado</strong> — é isso que garante que deu certo, não só a luz. Se a luz continuar apagada, a senha do Wi-Fi não foi aceita: conecte de novo na Rehabit-Goniometro e corrija. Se a luz piscar devagar, ou a tela não mostrar Conectado em cerca de 1 minuto, o código não foi aceito (digitado errado, vencido, já usado ou o servidor não respondeu a tempo): gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
                 <li>Antes de medir, faça de novo o <strong>Zerar (tara)</strong> com o braço do paciente pendurado.</li>
               </ol>
             </div>
