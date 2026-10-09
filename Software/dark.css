@@ -313,6 +313,8 @@ body.dark .notif-lista::-webkit-scrollbar-thumb { background: #26325C; border-co
 body.dark .cal-resumo { border-color: #1B2647; }
 body.dark .cal-resumo-linha strong { color: #fff; }
 body.dark .cal-dia.tem-realizada::after { background: #2BD17E; }
+/* Sem esta linha a regra acima venceria o ponto branco do dia selecionado (styles.css). */
+body.dark .cal-dia.is-selecionado.tem-realizada::after { background: #fff; }
 
 /* Tela de Desempenho (escuro) */
 body.dark .desempenho-quem h2 { color: #fff; }
@@ -455,3 +457,27 @@ body.dark .aviso-demo {
   background: rgba(47, 128, 255, .12);
   color: var(--ink);
 }
+
+/* ---------- Tutorial do goniômetro: luz do aparelho (tema escuro) ----------
+   A luz acesa é o mesmo azul nos dois temas; mudam a luz apagada, a caixinha
+   em volta dela e o trilho da barrinha de ritmo, que no escuro sumiriam. */
+body.dark .tutorial-led-card {
+  --led-apagado: #2A3563;
+  --led-caixa: #0A1330;
+  --led-trilho: #1B2647;
+}
+body.dark .tutorial-led-head h3,
+body.dark .tutorial-led-topo h4,
+body.dark .tutorial-led-texto strong,
+body.dark .tutorial-led-dica h4,
+body.dark .tutorial-led-dica strong { color: #fff; }
+/* Um tom acima do #2F80FF dos outros links: sobre o fundo azulado das dicas,
+   ele ficava abaixo do contraste mínimo para texto pequeno. */
+body.dark .tutorial-led-card a { color: #5B9BFF; }
+body.dark .tutorial-led-card a:hover { color: #8AB8FF; }
+body.dark .tutorial-led-item { border-color: #1B2647; }
+body.dark .tutorial-led-luz { border-color: #1B2647; }
+body.dark .tutorial-led-luz::before { box-shadow: inset 0 -2px 3px rgba(0,0,0,.35); }
+body.dark .tutorial-led-selo.is-normal { background: rgba(43,209,126,.16); color: #2BD17E; }
+body.dark .tutorial-led-selo.is-atencao { background: rgba(234,179,8,.18); color: #FBBF24; }
+body.dark .tutorial-led-dica { background: rgba(47,128,255,.08); border-color: #1F2A50; }

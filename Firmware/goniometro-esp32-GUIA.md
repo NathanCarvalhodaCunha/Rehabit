@@ -192,8 +192,8 @@ Angulo:  87.40 graus (sem filtro  87.40) | bateria sem medidor | RSSI -54 dBm
 ```
 
 **Importante:** deixe o aparelho parado durante a calibração do giroscópio
-(uns 2 segundos no boot). Se ele se mexer nessa hora, o zero fica torto e o
-ângulo escorrega devagar — nesse caso, basta reiniciar a placa.
+(uns 2 segundos no boot). Se ele se mexer nessa hora, o ângulo fica alguns
+graus torto — nesse caso, basta reiniciar a placa.
 
 Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 "Conectado" e o ângulo deve acompanhar o movimento do sensor.
@@ -207,6 +207,17 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Pisca muito rápido por 4 s | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
 | Pisca sem parar, bem rápido, desde o boot | MPU6050 não foi encontrado — confira a fiação |
+| Apagado nos primeiros segundos após ligar | Normal: calibrando o giroscópio (deixe parado) e conectando ao Wi-Fi |
+| Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular (aparelho sem configuração, depois do BOOT 5 s, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
+| Acende e apaga bem devagar, uns 4 s de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera até 4 s e a luz só troca entre um envio e outro |
+
+A luz só sabe do Wi-Fi e do pareamento: ela pisca curtinho mesmo que o
+servidor recuse o aparelho (revogado, token recusado). Se ela diz que está
+tudo certo e o site mostra "Desconectado", veja
+no Monitor Serial com qual status os envios falham (tabela de Problemas
+comuns, abaixo). A mesma tabela, em linguagem para a equipe da clínica, está
+no site: tela Dispositivo → Ver tutorial → "O que a luz do aparelho está
+dizendo".
 
 ## O que o site pode mandar para o aparelho
 
@@ -217,7 +228,7 @@ Dispositivo:
 | Botão no site | Comando | O que acontece |
 | --- | --- | --- |
 | Zerar (tara) | `TARAR` | O ângulo atual vira o novo zero. Fica guardado na memória do aparelho e sobrevive a desligar e ligar. |
-| Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para achar qual aparelho é qual, quando a clínica tem mais de um. |
+| Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para confirmar que o aparelho está recebendo os comandos do site. (A fila de comandos é da clínica: com mais de um aparelho ligado, quem recebe é o primeiro que enviar telemetria.) |
 | Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. |
 | Reiniciar aparelho | `REINICIAR` | Reinício remoto — inclusive refaz a calibração do giroscópio. |
 
@@ -238,7 +249,7 @@ rápido para ninguém.
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
-| O ângulo escorrega devagar com o aparelho parado | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
+| O ângulo fica alguns graus fora mesmo depois de zerar | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
 | O ângulo treme demais | Abaixe `PESO_GIRO` (de `0.98` para `0.95`): o filtro passa a confiar mais na gravidade e menos na rotação. |
 | O site mostra "Desconectado" com o aparelho ligado | O site considera offline quem passa 8 segundos sem mandar pacote. Veja no Monitor Serial se os envios estão falhando e com qual status. |
 

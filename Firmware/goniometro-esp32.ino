@@ -407,8 +407,8 @@ void aplicarTara() {
 //
 // Sem tela no aparelho, o LED é a única forma de saber o que está havendo
 // olhando para ele: piscando rápido = "sou eu" (comando Identificar),
-// aceso = gravando captura, pisca curto = tudo certo, pisca duplo = sem
-// Wi-Fi ou sem pareamento.
+// aceso = gravando captura, pisca curto = tudo certo, pisca meio a meio =
+// sem Wi-Fi ou sem pareamento.
 
 void atualizarLed() {
   unsigned long agora = millis();

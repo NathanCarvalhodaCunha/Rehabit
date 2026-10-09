@@ -1137,7 +1137,7 @@ button.form-avatar {
   .info-strip.mobile-only { display: none !important; }
 }
 
-.field-id { max-width: 200px; }
+.field-id { max-width: 230px; }  /* cabe o exemplo "Ex: COFFITO-3/123456-F" inteiro */
 .form-col-title { align-self: flex-start; margin: 0 !important; }
 @media (max-width: 767px) {
   .field-id { max-width: none; }
@@ -2895,4 +2895,194 @@ button.form-avatar {
   color: var(--ink);
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* ---------- Tutorial do goniômetro: o que a luz do aparelho está dizendo ----------
+   Cada luz imita o ritmo real do LED de status (atualizarLed() e setup() em
+   Firmware/goniometro-esp32.ino). O ::before é a luz apagada e o ::after, a
+   acesa por cima dela: a animação só liga e desliga o ::after, em degraus
+   (step-end), na mesma proporção aceso/apagado do firmware. Sem animação
+   (prefers-reduced-motion), cada luz fica parada — meio acesa quando pisca — e
+   uma barrinha desenha 6 segundos do ritmo no lugar do movimento. */
+.tutorial-led-card {
+  --led-aceso: #2F80FF;
+  --led-apagado: #C8D2E1;
+  --led-caixa: #F3F6FB;
+  --led-trilho: #E3E9F2;
+  margin-top: 24px;
+  padding: 24px 26px;
+  overflow-wrap: break-word;
+}
+.tutorial-led-head h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
+.tutorial-led-head p { margin: 0; max-width: 820px; color: var(--ink-muted); font-size: 14px; line-height: 1.55; }
+.tutorial-led-head .tutorial-led-legenda { margin-top: 8px; font-size: 13px; font-weight: 600; }
+
+.tutorial-led-card a {
+  color: var(--brand); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.tutorial-led-card a:hover { color: var(--brand-hover); }
+.tutorial-led-card a:focus-visible { outline: none; border-radius: 3px; box-shadow: 0 0 0 3px rgba(21,101,216,.3); }
+
+/* Lista de padrões à esquerda e as duas dicas à direita; abaixo de 1200px,
+   uma coisa embaixo da outra. */
+.tutorial-led-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; margin-top: 18px; }
+@media (min-width: 1200px) {
+  .tutorial-led-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+}
+
+.tutorial-led-lista { list-style: none; margin: 0; padding: 0; }
+.tutorial-led-item {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.tutorial-led-item:first-child { padding-top: 0; }
+.tutorial-led-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.tutorial-led-luz {
+  position: relative;
+  width: 56px; height: 56px; border-radius: 14px;
+  background: var(--led-caixa); border: 1px solid var(--hairline);
+}
+.tutorial-led-luz::before,
+.tutorial-led-luz::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+}
+.tutorial-led-luz::before { background: var(--led-apagado); box-shadow: inset 0 -2px 3px rgba(16,24,40,.14); }
+.tutorial-led-luz::after {
+  background: radial-gradient(circle at 38% 34%, #D6E6FF 0 18%, var(--led-aceso) 62%);
+  box-shadow: 0 0 10px 3px rgba(47,128,255,.55), 0 0 24px 8px rgba(47,128,255,.22);
+  opacity: .5;
+}
+.tutorial-led-luz[data-ritmo="fixo"]::after { opacity: 1; }
+.tutorial-led-luz[data-ritmo="ao-ligar"]::after,
+.tutorial-led-luz[data-ritmo="apagada"]::after { opacity: 0; }
+
+.tutorial-led-texto { min-width: 0; }
+/* Selo sempre embaixo do título: ao lado, ele ia para a direita nos títulos
+   curtos e quebrava linha nos longos, e a lista ficava desalinhada. */
+.tutorial-led-topo {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 6px; margin-bottom: 8px;
+}
+.tutorial-led-topo h4 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--ink-strong); }
+/* O selo diz em texto se é normal ou não: a cor só reforça. */
+.tutorial-led-selo {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  height: 22px; padding: 0 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 800; white-space: nowrap;
+}
+.tutorial-led-selo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tutorial-led-selo.is-normal { background: rgba(22,163,74,.12); color: #166534; }
+.tutorial-led-selo.is-atencao { background: rgba(234,179,8,.18); color: #92400E; }
+
+.tutorial-led-texto p,
+.tutorial-led-casos li { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+.tutorial-led-texto p + p { margin-top: 4px; }
+.tutorial-led-texto strong { color: var(--ink-strong); font-weight: 700; }
+.tutorial-led-casos { margin: 4px 0 0; padding-left: 18px; }
+.tutorial-led-casos li + li { margin-top: 4px; }
+
+/* Barrinha do ritmo: 100% da largura são 6 s, então 1 s = 16,667%. O piscar
+   curtinho (60 ms) ganha um pouco mais de largura só para ficar visível. */
+.tutorial-led-ritmo {
+  display: block; width: min(100%, 220px); height: 10px; margin: 2px 0 8px;
+  border-radius: 3px; background-color: var(--led-trilho); background-repeat: no-repeat;
+}
+.tutorial-led-ritmo[data-ritmo="curto"] {
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 1.2%, transparent 1.2% 33.333%);
+}
+.tutorial-led-ritmo[data-ritmo="ao-ligar"] {
+  background-image: linear-gradient(90deg, transparent 0 50%, var(--led-aceso) 50% 51.2%, transparent 51.2% 83.333%, var(--led-aceso) 83.333% 84.533%, transparent 84.533%);
+}
+.tutorial-led-ritmo[data-ritmo="fixo"] { background-color: var(--led-aceso); }
+/* Os 4 s do Identificar ocupam 2/3 da barra; dentro deles, 80 ms = 2%. */
+.tutorial-led-ritmo[data-ritmo="identificar"] {
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2%, transparent 2% 4%);
+  background-size: 66.667% 100%;
+}
+.tutorial-led-ritmo[data-ritmo="devagar"] {
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 8.333%, transparent 8.333% 16.667%);
+}
+.tutorial-led-ritmo[data-ritmo="sensor"] {
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2.5%, transparent 2.5% 5%);
+}
+/* Sem resposta do servidor: ~4 s acesa e ~4 s apagada; nos 6 s da barra, 4 acesos. */
+.tutorial-led-ritmo[data-ritmo="sem-servidor"] {
+  background-image: linear-gradient(90deg, var(--led-aceso) 0 66.667%, transparent 66.667%);
+}
+
+/* Com movimento liberado, a luz pisca de verdade e a barrinha sai de cena.
+   Tempos do firmware: 60/1940 ms (tudo certo), 500/500 ms (sem Wi-Fi ou sem
+   pareamento), 80/80 ms por 4 s (Identificar) e 150/150 ms (sem sensor). Sem
+   resposta do servidor, cada envio segura o loop() por até 4 s (TIMEOUT_HTTP_MS)
+   e a luz só troca entre um envio e outro: ~4 s acesa, ~4 s apagada. */
+@media (prefers-reduced-motion: no-preference) {
+  .tutorial-led-ritmo,
+  .tutorial-led-head .tutorial-led-legenda { display: none; }
+  .tutorial-led-luz[data-ritmo="curto"]::after { animation: tutorial-led-curto 2s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="ao-ligar"]::after { animation: tutorial-led-ao-ligar 6s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="identificar"]::after {
+    animation: tutorial-led-pisca 160ms step-end infinite, tutorial-led-janela 6.4s step-end infinite;
+  }
+  .tutorial-led-luz[data-ritmo="devagar"]::after { animation: tutorial-led-pisca 1s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="sensor"]::after { animation: tutorial-led-pisca 300ms step-end infinite; }
+  .tutorial-led-luz[data-ritmo="sem-servidor"]::after { animation: tutorial-led-pisca 8s step-end infinite; }
+}
+@keyframes tutorial-led-pisca {
+  0% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes tutorial-led-curto {
+  0% { opacity: 1; }
+  3%, 100% { opacity: 0; }
+}
+/* Apagada 3 s enquanto o aparelho se prepara, depois o piscar de tudo certo. */
+@keyframes tutorial-led-ao-ligar {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  51% { opacity: 0; }
+  83.333% { opacity: 1; }
+  84.333%, 100% { opacity: 0; }
+}
+/* Identificar: 4 s piscando (50 trocas de 80 ms) e 2,4 s parada antes de repetir. */
+@keyframes tutorial-led-janela {
+  0% { visibility: visible; }
+  62.5%, 100% { visibility: hidden; }
+}
+
+.tutorial-led-extras { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tutorial-led-dica {
+  padding: 16px 18px; border-radius: 12px;
+  border: 1px solid rgba(21,101,216,.18); background: rgba(21,101,216,.05);
+  scroll-margin-top: 16px;
+}
+.tutorial-led-dica h4 { margin: 0 0 6px; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--ink-strong); }
+.tutorial-led-dica p,
+.tutorial-led-dica li { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+.tutorial-led-dica strong { color: var(--ink-strong); font-weight: 700; }
+.tutorial-led-dica ul { margin: 8px 0 0; padding-left: 18px; }
+.tutorial-led-dica ul li + li { margin-top: 6px; }
+/* Número posicionado à parte (e não em grid), porque o texto do passo tem
+   <strong> no meio e viraria vários itens de grid. */
+.tutorial-led-passos { list-style: none; margin: 10px 0 0; padding: 0; counter-reset: passo; }
+.tutorial-led-passos li { position: relative; min-height: 24px; padding-left: 34px; }
+.tutorial-led-passos li + li { margin-top: 8px; }
+.tutorial-led-passos li::before {
+  counter-increment: passo; content: counter(passo);
+  position: absolute; left: 0; top: -1px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .tutorial-led-card { padding: 20px 16px; }
+  .tutorial-led-head h3 { font-size: 17px; }
+  .tutorial-led-item { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+  .tutorial-led-luz { width: 44px; height: 44px; border-radius: 12px; }
+  .tutorial-led-luz::before,
+  .tutorial-led-luz::after { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
+  .tutorial-led-dica { padding: 14px; }
 }
