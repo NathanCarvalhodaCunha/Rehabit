@@ -55,6 +55,12 @@
           "@type": "EducationalOrganization",
           "name": "Etec Prof. Carmine Biagio Tundisi",
           "address": { "@type": "PostalAddress", "addressLocality": "Atibaia", "addressRegion": "SP", "addressCountry": "BR" }
+        },
+        "sponsor": {
+          "@type": "Organization",
+          "name": "Topia Invest",
+          "url": "https://www.topiainvest.com.br",
+          "logo": "https://rehabit.com.br/assets/inicio/topia-invest.png"
         }
       }
     ]
@@ -100,6 +106,8 @@
       <symbol id="i-goniometro" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></symbol>
       <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
       <symbol id="i-equipe" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+      <symbol id="i-patrocinio" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
+      <symbol id="i-externo" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
       <symbol id="i-entrar" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
       <symbol id="i-lua" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
       <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
@@ -125,6 +133,7 @@
         <a href="#goniometro"><svg class="ico" aria-hidden="true"><use href="#i-goniometro"/></svg>Goniômetro</a>
         <a href="#documentacao"><svg class="ico" aria-hidden="true"><use href="#i-doc"/></svg>Documentação</a>
         <a href="#equipe"><svg class="ico" aria-hidden="true"><use href="#i-equipe"/></svg>Equipe</a>
+        <a href="#patrocinio"><svg class="ico" aria-hidden="true"><use href="#i-patrocinio"/></svg>Patrocínio</a>
       </nav>
       <div class="sidebar-rodape">
         <a class="btn-primary btn-largo" href="Login/login.html?demo">Entrar na demonstração</a>
@@ -194,6 +203,7 @@
         </div>
 
         <div class="page-grid">
+          <div class="col-principal">
           <figure class="card tela-destaque">
             <figcaption class="card-cabeca">
               <h2 class="card-titulo">Por dentro do sistema</h2>
@@ -257,6 +267,19 @@
             </svg>
             <a class="link" href="#funcionando">Ver o goniômetro funcionando</a>
           </article>
+
+          <!-- Faixa do patrocinador, logo abaixo do print (leva à seção Patrocínio). -->
+          <a class="card patrocinio-mini" href="#patrocinio">
+            <span class="topia-logo topia-logo-mini" aria-hidden="true">
+              <img src="assets/inicio/topia-invest-128.png" srcset="assets/inicio/topia-invest-128.png 128w, assets/inicio/topia-invest-200.png 200w"
+                   sizes="64px" width="499" height="202" alt="" loading="lazy" />
+            </span>
+            <span>
+              <span class="t">Projeto apoiado pela Topia Invest</span>
+              <span class="s">Conheça nosso patrocinador</span>
+            </span>
+          </a>
+          </div>
 
           <div class="col-side">
             <div class="card access-card">
@@ -637,9 +660,34 @@
         </div>
       </section>
 
+      <!-- Patrocínio -->
+      <section class="secao" id="patrocinio" aria-labelledby="patrocinio-titulo">
+        <header class="titulo-secao">
+          <h2 id="patrocinio-titulo">Patrocínio</h2>
+          <p>O desenvolvimento do Rehabit tem o apoio da Topia Invest.</p>
+        </header>
+        <div class="card patrocinador">
+          <!-- Logo branco da marca: fica sobre o azul-marinho da Topia nos dois temas. -->
+          <div class="topia-logo">
+            <img src="assets/inicio/topia-invest-260.png" srcset="assets/inicio/topia-invest-260.png 260w, assets/inicio/topia-invest.png 499w"
+                 sizes="180px" width="499" height="202" loading="lazy" alt="Topia Invest" />
+          </div>
+          <div class="patrocinador-texto">
+            <span class="badge-status patrocinio-selo">Patrocinador</span>
+            <h3 class="card-titulo">Topia Invest</h3>
+            <p>Plataforma onde se cadastram projetos de desenvolvimento sustentável, com metas de arrecadação, para atrair financiadores comprometidos com os Objetivos de Desenvolvimento Sustentável da ONU.</p>
+            <p>A Topia Invest apoiou financeiramente o desenvolvimento do Rehabit. Assim como o nosso projeto, ela nasceu de um trabalho de conclusão de curso de estudantes de Atibaia.</p>
+            <a class="btn-edit" href="https://www.topiainvest.com.br" target="_blank" rel="sponsored noopener">
+              Conhecer a Topia Invest<svg class="ico ico-externo" aria-hidden="true"><use href="#i-externo"/></svg><span class="sr-only"> (abre em nova aba)</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <footer class="rodape">
         <p>Rehabit · TCC da Etec Prof. Carmine Biagio Tundisi · Atibaia, 2026</p>
         <nav aria-label="Links do rodapé">
+          <a href="https://www.topiainvest.com.br" target="_blank" rel="sponsored noopener">Patrocínio: Topia Invest<span class="sr-only"> (abre em nova aba)</span></a>
           <a href="mailto:tccrehabit@gmail.com">tccrehabit@gmail.com</a>
           <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">GitHub</a>
           <a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/LICENSE">Licença MIT</a>
