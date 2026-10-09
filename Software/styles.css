@@ -3016,8 +3016,9 @@ button.form-avatar {
 /* Com movimento liberado, a luz pisca de verdade e a barrinha sai de cena.
    Tempos do firmware: 60/1940 ms (tudo certo), 500/500 ms (sem Wi-Fi ou sem
    pareamento), 80/80 ms por 4 s (Identificar) e 150/150 ms (sem sensor). Sem
-   resposta do servidor, cada envio segura o loop() por até 4 s (TIMEOUT_HTTP_MS)
-   e a luz só troca entre um envio e outro: ~4 s acesa, ~4 s apagada. */
+   resposta do servidor, cada envio segura o loop() por 4 s ou mais (dois
+   TIMEOUT_HTTP_MS, conectar e ler, mais o DNS) e a luz só troca entre um envio
+   e outro: no caso mais comum, ~4 s acesa e ~4 s apagada. */
 @media (prefers-reduced-motion: no-preference) {
   .tutorial-led-ritmo,
   .tutorial-led-head .tutorial-led-legenda { display: none; }
@@ -3076,6 +3077,9 @@ button.form-avatar {
   background: var(--brand); color: #fff; font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
 }
+/* Sublista dentro de um passo: marcador comum, sem número nem recuo de passo. */
+.tutorial-led-passos li li { min-height: 0; padding-left: 0; }
+.tutorial-led-passos li li::before { content: none; counter-increment: none; }
 
 @media (max-width: 767px) {
   .tutorial-led-card { padding: 20px 16px; }

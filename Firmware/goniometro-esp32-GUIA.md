@@ -114,7 +114,7 @@ goniômetro. Aparece um código de 6 dígitos com contagem regressiva: ele vale
    no navegador** — com o `http://` na frente, senão o navegador procura no
    Google em vez de abrir a página.
 4. Escolha a rede da clínica, digite a senha dela e o código de 6 dígitos.
-5. O aparelho grava tudo na memória e reinicia já conectado.
+5. O aparelho grava tudo na memória e já se conecta.
 
 > **"Rede sem internet" é normal.** O goniômetro não é um roteador — essa
 > rede existe só para configurá-lo. Se o celular insistir em voltar para os
@@ -135,9 +135,11 @@ continuam guardados.
 ligado. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
 ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
 porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
-Confira na tela Dispositivo da
-clínica nova que ele aparece como **Conectado**: se o código falhar, o
-aparelho continuaria com o pareamento antigo.
+Confira na lista **Goniômetros
+pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
+o código não pegou — e, se o portal tinha aberto sozinho, o aparelho segue com
+o pareamento antigo. Como ele já está no Wi-Fi, agora o BOOT funciona: segure
+5 segundos e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
 
 ## 4. Se um aparelho sumir ou for roubado
 
@@ -218,8 +220,8 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Aceso fixo | Gravando uma captura |
 | Pisca sem parar, bem rápido, desde o boot | MPU6050 não foi encontrado — confira a fiação |
 | Apagado nos primeiros segundos após ligar | Normal: calibrando o giroscópio (deixe parado) e conectando ao Wi-Fi |
-| Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular (aparelho sem configuração, depois do BOOT 5 s, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
-| Acende e apaga bem devagar, uns 4 s ou mais de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera 4 s ou mais (conectar e ler têm 4 s cada) e a luz só troca entre um envio e outro |
+| Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular, em até 1 minuto (aparelho sem configuração, depois do BOOT 5 s, rede ou senha do Wi-Fi trocada, aparelho vindo de outra clínica, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
+| Acende e apaga bem devagar, uns 4 s ou mais de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera 4 s ou mais (conectar e ler têm 4 s cada, e o DNS pode segurar uns 15 s) e a luz só troca entre um envio e outro |
 
 A luz só sabe do Wi-Fi e do pareamento: ela pisca curtinho mesmo que o
 servidor recuse o aparelho (revogado, token recusado). Se ela diz que está

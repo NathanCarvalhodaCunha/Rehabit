@@ -12,11 +12,13 @@
 //      internet" é esperado: essa rede serve só para configurar.)
 //   4. Escolha a rede da clínica, digite a senha dela e o código de 6
 //      dígitos que aparece na tela Dispositivo do Rehabit.
-//   5. O aparelho grava tudo na memória e reinicia já conectado.
+//   5. O aparelho grava tudo na memória e já se conecta.
 //
-// Para reconfigurar (trocou de Wi-Fi, mudou de clínica): segure o botão BOOT
-// por 5 segundos com o aparelho ligado. Ele apaga a configuração e volta ao
-// passo 2.
+// Trocou só a rede ou a senha do Wi-Fi: desligue e ligue — sem conseguir
+// entrar na rede salva, ele abre o portal sozinho; deixe o código em branco e
+// o pareamento e a tara ficam. Mudou de clínica: segure o botão BOOT por 5
+// segundos com o aparelho ligado e conectado. Ele apaga a configuração e
+// volta ao passo 2.
 //
 // O que este firmware faz depois de pareado:
 //   * lê o MPU6050 a 100 Hz e estima a gravidade com um filtro complementar
