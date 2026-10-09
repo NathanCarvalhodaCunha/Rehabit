@@ -114,7 +114,7 @@ goniômetro. Aparece um código de 6 dígitos com contagem regressiva: ele vale
    no navegador** — com o `http://` na frente, senão o navegador procura no
    Google em vez de abrir a página.
 4. Escolha a rede da clínica, digite a senha dela e o código de 6 dígitos.
-5. O aparelho grava tudo na memória e reinicia já conectado.
+5. O aparelho grava tudo na memória e já se conecta.
 
 > **"Rede sem internet" é normal.** O goniômetro não é um roteador — essa
 > rede existe só para configurá-lo. Se o celular insistir em voltar para os
@@ -126,8 +126,20 @@ Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 
 ## 3. Reconfigurar depois (trocou de Wi-Fi ou de clínica)
 
-Segure o botão **BOOT** por 5 segundos com o aparelho ligado. Ele apaga a
-configuração — inclusive a tara — e volta ao portal.
+**Só trocou a rede ou a senha do Wi-Fi?** Desligue e ligue o aparelho: sem
+conseguir entrar na rede salva, ele abre o portal sozinho. Escolha a rede
+nova, digite a senha e deixe o código em branco — o pareamento e a tara
+continuam guardados.
+
+**Mudou de clínica?** Segure o botão **BOOT** por 5 segundos com o aparelho
+ligado. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
+ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
+porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
+Confira na lista **Goniômetros
+pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
+o código não pegou — e, se o portal tinha aberto sozinho, o aparelho segue com
+o pareamento antigo. Como ele já está no Wi-Fi, agora o BOOT funciona: segure
+5 segundos e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
 
 ## 4. Se um aparelho sumir ou for roubado
 
@@ -192,8 +204,8 @@ Angulo:  87.40 graus (sem filtro  87.40) | bateria sem medidor | RSSI -54 dBm
 ```
 
 **Importante:** deixe o aparelho parado durante a calibração do giroscópio
-(uns 2 segundos no boot). Se ele se mexer nessa hora, o zero fica torto e o
-ângulo escorrega devagar — nesse caso, basta reiniciar a placa.
+(uns 2 segundos no boot). Se ele se mexer nessa hora, o ângulo fica alguns
+graus torto — nesse caso, basta reiniciar a placa.
 
 Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 "Conectado" e o ângulo deve acompanhar o movimento do sensor.
@@ -207,6 +219,17 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Pisca muito rápido por 4 s | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
 | Pisca sem parar, bem rápido, desde o boot | MPU6050 não foi encontrado — confira a fiação |
+| Apagado nos primeiros segundos após ligar | Normal: calibrando o giroscópio (deixe parado) e conectando ao Wi-Fi |
+| Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular, em até 1 minuto (aparelho sem configuração, depois do BOOT 5 s, rede ou senha do Wi-Fi trocada, aparelho vindo de outra clínica, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
+| Acende e apaga bem devagar, uns 4 s ou mais de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera 4 s ou mais (conectar e ler têm 4 s cada, e o DNS pode segurar uns 15 s) e a luz só troca entre um envio e outro |
+
+A luz só sabe do Wi-Fi e do pareamento: ela pisca curtinho mesmo que o
+servidor recuse o aparelho (revogado, token recusado). Se ela diz que está
+tudo certo e o site mostra "Desconectado", veja
+no Monitor Serial com qual status os envios falham (tabela de Problemas
+comuns, abaixo). A mesma tabela, em linguagem para a equipe da clínica, está
+no site: tela Dispositivo → Ver tutorial → "O que a luz do aparelho está
+dizendo".
 
 ## O que o site pode mandar para o aparelho
 
@@ -217,7 +240,7 @@ Dispositivo:
 | Botão no site | Comando | O que acontece |
 | --- | --- | --- |
 | Zerar (tara) | `TARAR` | O ângulo atual vira o novo zero. Fica guardado na memória do aparelho e sobrevive a desligar e ligar. |
-| Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para achar qual aparelho é qual, quando a clínica tem mais de um. |
+| Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para confirmar que o aparelho está recebendo os comandos do site. (A fila de comandos é da clínica: com mais de um aparelho ligado, quem recebe é o primeiro que enviar telemetria.) |
 | Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. |
 | Reiniciar aparelho | `REINICIAR` | Reinício remoto — inclusive refaz a calibração do giroscópio. |
 
@@ -238,7 +261,7 @@ rápido para ninguém.
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
-| O ângulo escorrega devagar com o aparelho parado | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
+| O ângulo fica alguns graus fora mesmo depois de zerar | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
 | O ângulo treme demais | Abaixe `PESO_GIRO` (de `0.98` para `0.95`): o filtro passa a confiar mais na gravidade e menos na rotação. |
 | O site mostra "Desconectado" com o aparelho ligado | O site considera offline quem passa 8 segundos sem mandar pacote. Veja no Monitor Serial se os envios estão falhando e com qual status. |
 

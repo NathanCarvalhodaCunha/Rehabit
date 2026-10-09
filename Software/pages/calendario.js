@@ -122,11 +122,18 @@ window.RehabitCalendario = (function () {
       "</div></div>" +
       '<div class="cal-semana">' + DIAS_SEMANA.map((d) => `<span>${d}</span>`).join("") + "</div>" +
       '<div class="cal-dias"></div>' +
-      '<p class="cal-legenda"><i></i> agendada <span class="sep">·</span> ' +
-      '<i class="realizada"></i> já realizada</p>';
+      // Cada peça da legenda diz a que categoria pertence (data-legenda),
+      // para definirLegenda() esconder a outra. Peças soltas, sem um <span>
+      // por item, mantêm o espaçamento do flex de .cal-legenda.
+      '<p class="cal-legenda">' +
+      '<i data-legenda="agendadas"></i><span data-legenda="agendadas">agendada</span>' +
+      '<span class="sep" data-legenda="ambas">·</span>' +
+      '<i class="realizada" data-legenda="realizadas"></i><span data-legenda="realizadas">já realizada</span>' +
+      "</p>";
 
     const tituloEl = container.querySelector(".cal-mes");
     const diasEl = container.querySelector(".cal-dias");
+    const legendaEl = container.querySelector(".cal-legenda");
 
     function desenhar() {
       tituloEl.textContent = `${MESES[mesAtual]} de ${anoAtual}`;
@@ -189,6 +196,16 @@ window.RehabitCalendario = (function () {
         diasComConsulta = new Set(agendamentos.map((a) => a.data));
         diasAlternativos = new Set((alternativos || []).map((a) => a.data));
         desenhar();
+      },
+      /**
+       * Deixa na legenda só a categoria que a tela está mostrando:
+       * "agendadas" (ponto azul) ou "realizadas" (ponto verde). Sem
+       * categoria, volta a exibir as duas.
+       */
+      definirLegenda(categoria) {
+        legendaEl.querySelectorAll("[data-legenda]").forEach((peca) => {
+          peca.hidden = Boolean(categoria) && peca.dataset.legenda !== categoria;
+        });
       },
       diaSelecionado() {
         return selecionado;

@@ -154,6 +154,152 @@
           </ol>
         </section>
       </div>
+
+      <!-- O que a luz (LED de status) do aparelho está dizendo. Cada padrão
+           sai de atualizarLed() e setup() em Firmware/goniometro-esp32.ino:
+           se o firmware mudar o ritmo, esta seção e o guia mudam juntos. -->
+      <section class="card tutorial-led-card" id="luz-do-aparelho" aria-labelledby="tituloLuzAparelho">
+        <header class="tutorial-led-head">
+          <h3 id="tituloLuzAparelho">O que a luz do aparelho está dizendo</h3>
+          <p>O goniômetro não tem tela: é a luz azul dele que conta o que está acontecendo. Observe por uns 15 segundos antes de concluir — quando está tudo certo, ela passa quase o tempo todo apagada e só dá uma piscadinha a cada 2 segundos. Outras luzinhas da placa ou do carregador mostram apenas energia e carga da bateria.</p>
+          <p class="tutorial-led-legenda" aria-hidden="true">Cada barrinha mostra 6 segundos da luz: o azul é o tempo em que ela fica acesa.</p>
+        </header>
+
+        <div class="tutorial-led-grid">
+          <ul class="tutorial-led-lista">
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="curto" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Pisca curtinho a cada 2 segundos</h4>
+                  <span class="tutorial-led-selo is-normal">Normal</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="curto" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> tudo certo. O aparelho está no Wi-Fi da clínica e pareado com o Rehabit.</p>
+                <p><strong>O que fazer:</strong> nada, pode medir. Se mesmo assim a tela Dispositivo mostrar <strong>Desconectado</strong>, veja <a href="#luz-ok-desconectado">a dica sobre isso</a>.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="ao-ligar" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Apagada nos primeiros segundos depois de ligar</h4>
+                  <span class="tutorial-led-selo is-normal">Normal</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="ao-ligar" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> o aparelho está se preparando: calibra o sensor de movimento (cerca de 2 segundos) e se conecta ao Wi-Fi. Também acontece depois de usar <strong>Reiniciar aparelho</strong>.</p>
+                <p><strong>O que fazer:</strong> deixe o aparelho parado, sem mexer, até a luz começar a piscar. Se ele se mexer nessa hora, a medida pode ficar alguns graus torta — aí é só desligar e ligar de novo, com ele parado.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="fixo" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Acesa sem piscar</h4>
+                  <span class="tutorial-led-selo is-normal">Normal</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="fixo" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> gravando uma captura — alguém tocou em <strong>Iniciar captura</strong> na tela Dispositivo ou em <strong>Gravar movimento</strong> ao registrar uma sessão do paciente. Enquanto grava, a luz fica acesa mesmo que o Wi-Fi caia.</p>
+                <p><strong>O que fazer:</strong> peça ao paciente o movimento completo. A luz volta a piscar quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se ela continua acesa mas ninguém está gravando (o botão já voltou a dizer Iniciar captura ou Gravar movimento), a conexão caiu no meio da gravação: toque em <strong>Reiniciar aparelho</strong> na tela Dispositivo, com o aparelho parado. Se esse botão estiver desativado (a tela mostra Desconectado ou Aguardando o aparelho), desligue e ligue o aparelho pela chave, também com ele parado.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="identificar" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Pisca muito rápido por 4 segundos e para</h4>
+                  <span class="tutorial-led-selo is-normal">Normal</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="identificar" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> alguém tocou em <strong>Identificar aparelho</strong> na tela Dispositivo. Serve para confirmar que o aparelho está recebendo os comandos do site.</p>
+                <p><strong>O que fazer:</strong> nada. Depois dos 4 segundos a luz volta ao ritmo de antes.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="devagar" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Pisca devagar: meio segundo acesa, meio apagada</h4>
+                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="devagar" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> o aparelho está sem Wi-Fi ou ainda não foi pareado com a clínica. Enquanto isso, nenhuma medida chega ao Rehabit.</p>
+                <p><strong>O que fazer:</strong> confira se o Wi-Fi da clínica está funcionando e se o aparelho está ao alcance do roteador — quando a rede volta, ele se reconecta sozinho. Se o Wi-Fi está bom, desligue e ligue o aparelho. Se a clínica trocou a rede ou a senha do Wi-Fi, ao religar a luz fica apagada e, em até 1 minuto, a rede <strong>Rehabit-Goniometro</strong> aparece no celular: conecte nela (senha <strong>rehabit123</strong>; se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador), escolha a rede nova, digite a senha e <strong>deixe o código em branco</strong> — o pareamento e o zero continuam guardados. Só se, depois disso, a luz continuar piscando devagar é que o aparelho precisa ser pareado de novo: <a href="#parear-de-novo">veja como</a>.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="sem-servidor" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Acende e apaga bem devagar: alguns segundos acesa, alguns apagada</h4>
+                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="sem-servidor" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> o aparelho está no Wi-Fi e pareado, mas não consegue falar com o Rehabit: a internet da clínica caiu ou o servidor do Rehabit está fora do ar. Cada envio fica esperando uma resposta — de 4 a 15 segundos, às vezes mais —, e a luz só muda entre um envio e outro: por isso o ritmo fica tão lento, e às vezes a luz parece parada por meio minuto. Nenhuma medida chega ao Rehabit.</p>
+                <p><strong>O que fazer:</strong> teste a internet num celular ligado no mesmo Wi-Fi. Se a internet está boa, aguarde 2 a 3 minutos: quando o servidor volta, a luz volta sozinha a piscar curtinho. Não pareie de novo enquanto isso — sem o servidor, o pareamento também não funciona.</p>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="apagada" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Apagada o tempo todo</h4>
+                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="apagada" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> ou o aparelho está esperando ser configurado pelo celular (o portal de configuração está aberto), ou está sem energia.</p>
+                <p><strong>O que fazer:</strong></p>
+                <ul class="tutorial-led-casos">
+                  <li>A rede Wi-Fi <strong>Rehabit-Goniometro</strong> aparece no celular? Então o portal está aberto — acontece com aparelho novo, depois de segurar o BOOT, quando a clínica trocou a rede ou a senha do Wi-Fi, quando o aparelho veio de outra clínica ou quando o Wi-Fi estava fora do ar na hora em que ele foi ligado. Se o Wi-Fi só estava fora do ar, desligue e ligue o aparelho depois que ele voltar. Senão, conecte nela (senha <strong>rehabit123</strong>; se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador), escolha o Wi-Fi da clínica e digite a senha; o código de 6 dígitos só é preciso para aparelho novo ou vindo de outra clínica — e aí siga o <a href="#parear-de-novo">passo a passo</a>, que mostra como conferir se ele pegou.</li>
+                  <li>Não aparece depois de 1 minuto? Desligue e ligue o aparelho pela chave e espere mais 1 minuto. Se continuar apagada e a rede não aparecer, carregue a bateria.</li>
+                  <li>A tela Dispositivo mostra <strong>Conectado</strong>? Então o aparelho funciona e só a luz está com defeito: avise quem montou o aparelho.</li>
+                </ul>
+              </div>
+            </li>
+            <li class="tutorial-led-item">
+              <span class="tutorial-led-luz" data-ritmo="sensor" aria-hidden="true"></span>
+              <div class="tutorial-led-texto">
+                <div class="tutorial-led-topo">
+                  <h4>Pisca rápido sem parar, desde que é ligado</h4>
+                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
+                </div>
+                <span class="tutorial-led-ritmo" data-ritmo="sensor" aria-hidden="true"></span>
+                <p><strong>Significa:</strong> o aparelho não encontrou o sensor de movimento e não consegue medir.</p>
+                <p><strong>O que fazer:</strong> desligue e ligue de novo. Se continuar assim, é um problema de montagem (algum fio do sensor solto ou mal ligado): avise quem montou o aparelho. Segurar o BOOT não resolve.</p>
+              </div>
+            </li>
+          </ul>
+
+          <div class="tutorial-led-extras">
+            <div class="tutorial-led-dica" id="luz-ok-desconectado">
+              <h4>A luz pisca curtinho (tudo certo), mas a tela Dispositivo mostra Desconectado ou Aguardando o aparelho?</h4>
+              <p>A luz só sabe se o aparelho está no Wi-Fi e se tem um pareamento guardado — ela não sabe se o Rehabit aceitou esse pareamento. Então:</p>
+              <ul>
+                <li><strong>Confira a conta:</strong> a tela precisa estar aberta na mesma clínica em que o aparelho foi pareado.</li>
+                <li><strong>O site está lento ou não carrega?</strong> O servidor do Rehabit pode estar reiniciando: aguarde 2 a 3 minutos antes de mexer no aparelho.</li>
+                <li><strong>Continua assim?</strong> O aparelho pode ter sido revogado (na lista Goniômetros pareados, da conta da clínica, ele aparece como Revogado) ou ter o pareamento recusado. <a href="#parear-de-novo">Pareie de novo</a>.</li>
+              </ul>
+            </div>
+
+            <div class="tutorial-led-dica" id="parear-de-novo">
+              <h4>Como parear de novo</h4>
+              <p>Para aparelho novo ou para levar o aparelho a outra clínica — só trocar a rede ou a senha do Wi-Fi não exige isto (veja o item <em>Pisca devagar</em>). Tenha em mãos a senha do Wi-Fi e o acesso à conta da clínica.</p>
+              <ol class="tutorial-led-passos">
+                <li>Entre com a conta da clínica, abra a tela Dispositivo e toque em <strong>Parear novo dispositivo</strong>. Aparece um código de 6 dígitos, que vale 10 minutos.</li>
+                <li>Se a luz está piscando, segure o botão <strong>BOOT</strong> da placa por 5 segundos, até ela apagar. Isso apaga o Wi-Fi salvo, o pareamento e o zero (tara). Se a luz já está apagada e a rede Rehabit-Goniometro já aparece no celular (aparelho novo, ou trazido de outra clínica), o BOOT não funciona nesse estado: vá direto ao passo 3 — o passo 4 confere se deu certo.</li>
+                <li>No celular, conecte na rede <strong>Rehabit-Goniometro</strong> (senha <strong>rehabit123</strong>). Se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador. O aviso de “sem internet” é normal.</li>
+                <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Espere cerca de 1 minuto e confira na tela Dispositivo, na conta da clínica, se o aparelho novo aparece como <strong>Online</strong> na lista Goniômetros pareados (feche a janela do código para ver a lista) — é isso que garante que deu certo, não só a luz.
+                  <ul>
+                    <li>A luz continua apagada? A senha do Wi-Fi não foi aceita e o portal segue aberto: conecte de novo na Rehabit-Goniometro e corrija.</li>
+                    <li>A luz voltou a piscar, mas o aparelho não aparece como Online? O código não foi aceito (digitado errado, vencido, já usado ou o servidor não respondeu a tempo). Como agora ele está no Wi-Fi, o BOOT funciona: gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
+                  </ul>
+                </li>
+                <li>Antes de medir, faça de novo o <strong>Zerar (tara)</strong> com o braço do paciente pendurado.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Mobile bottom nav -->

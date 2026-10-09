@@ -163,6 +163,21 @@
       </li>`;
   }
 
+  /**
+   * O calendário acompanha a aba: só pontos azuis (e legenda "agendada") em
+   * Agendadas, só verdes (e "já realizada") em Realizadas — misturar as duas
+   * fazia o histórico aparecer na aba de próximos e vice-versa.
+   */
+  function marcarCalendario() {
+    if (!calendario) return;
+    const daAba = filtradaPorPaciente(listas[abaAtual] || []);
+    calendario.marcarDias(
+      abaAtual === "agendadas" ? daAba : [],
+      abaAtual === "realizadas" ? daAba : []
+    );
+    calendario.definirLegenda(abaAtual);
+  }
+
   function renderizar() {
     const diaSelecionado = calendario ? calendario.diaSelecionado() : null;
     const lista = visiveis();
@@ -180,10 +195,7 @@
       contador.textContent = diaSelecionado ? `${base} em ${formatarDataCurta(diaSelecionado)}` : base;
     }
 
-    if (calendario) {
-      // Ponto azul para o que está marcado, verde para o que já aconteceu.
-      calendario.marcarDias(filtradaPorPaciente(listas.agendadas), filtradaPorPaciente(listas.realizadas));
-    }
+    marcarCalendario();
 
     if (botaoRelatorio) botaoRelatorio.disabled = !listas.realizadas.length;
 
@@ -253,6 +265,8 @@
       }
       renderizar();
     });
+    // Legenda certa desde já, antes (ou mesmo sem) a resposta da API.
+    marcarCalendario();
   }
 
   const botaoExportar = document.querySelector('[data-action="exportar-ics"]');
