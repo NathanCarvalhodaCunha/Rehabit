@@ -78,6 +78,21 @@
       formatarData(diaMaisCheio[0]).slice(0, 5) + " · " + diaMaisCheio[1] + "</strong></div>";
   }
 
+  /**
+   * O ponto do dia e a legenda acompanham a aba: azul para agendadas, verde
+   * para realizadas. Enquanto a aba ainda carrega, fica sem pontos — e não
+   * com os da aba anterior.
+   */
+  function marcarCalendario() {
+    if (!calendario) return;
+    const filtradas = filtradasPorProfissional(cache[abaAtual] || []);
+    calendario.marcarDias(
+      abaAtual === "agendadas" ? filtradas : [],
+      abaAtual === "realizadas" ? filtradas : []
+    );
+    calendario.definirLegenda(abaAtual);
+  }
+
   function renderizar() {
     const consultas = cache[abaAtual] || [];
     const diaSelecionado = calendario ? calendario.diaSelecionado() : null;
@@ -92,14 +107,7 @@
       contador.textContent = diaSelecionado ? `${base} em ${formatarData(diaSelecionado)}` : base;
     }
 
-    if (calendario) {
-      // O ponto do dia acompanha a aba: azul para agendadas, verde para realizadas.
-      const filtradas = filtradasPorProfissional(consultas);
-      calendario.marcarDias(
-        abaAtual === "agendadas" ? filtradas : [],
-        abaAtual === "realizadas" ? filtradas : []
-      );
-    }
+    marcarCalendario();
     atualizarResumo();
 
     if (!visiveis.length) {
@@ -144,6 +152,7 @@
     }
 
     lista.innerHTML = '<li style="padding:18px;color:var(--ink-muted);">Carregando...</li>';
+    marcarCalendario();
     const caminho =
       aba === "agendadas"
         ? `/agendamentos?idClinica=${sessao.id}`
