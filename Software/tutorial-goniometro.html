@@ -358,7 +358,7 @@
                 </div>
                 <div>
                   <dt>O que fazer</dt>
-                  <dd>Peça o movimento completo; a luz volta ao normal quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se a conexão cair no meio, a gravação é encerrada sozinha — o servidor fecha em 8 segundos e o aparelho apaga a luz fixa assim que volta a falar com ele, ou em 10 segundos se não voltar — e a luz passa a mostrar o problema. O que foi medido até ali não se perde.</dd>
+                  <dd>Peça o movimento completo; a luz volta ao normal quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se a conexão cair no meio, a gravação é encerrada sozinha — o servidor fecha entre 8 e 10 segundos sem notícias do aparelho, e o aparelho apaga a luz fixa assim que volta a falar com ele, ou em 10 segundos se não voltar — e a luz passa a mostrar o problema. Os números medidos até ali continuam na tela Dispositivo; no registro de sessão, digite a amplitude ou grave de novo para levar a curva.</dd>
                 </div>
               </dl>
             </li>
@@ -374,7 +374,7 @@
               <dl class="tutorial-led-desc">
                 <div>
                   <dt>O que significa</dt>
-                  <dd>Alguém tocou em <strong>Identificar aparelho</strong> na tela Dispositivo. Confirma que o aparelho recebe os comandos do site — com mais de um ligado, mostra qual deles.</dd>
+                  <dd>Alguém tocou em <strong>Identificar aparelho</strong> na tela Dispositivo. Confirma que o aparelho recebe os comandos do site. Com mais de um aparelho ligado na mesma clínica, o comando vai para um deles, sem escolha — e a tela mistura as medidas dos dois: deixe ligado só o que vai medir.</dd>
                 </div>
                 <div>
                   <dt>O que fazer</dt>
@@ -454,7 +454,7 @@
               <dl class="tutorial-led-desc">
                 <div>
                   <dt>O que significa</dt>
-                  <dd>Está no Wi-Fi e pareado, mas há mais de 12 segundos o Rehabit não recebe as medidas: a internet da clínica caiu, ou o servidor do Rehabit está fora do ar ou ainda acordando — sem uso, ele “dorme” e pode levar até 1 minuto para responder.</dd>
+                  <dd>Está no Wi-Fi e pareado, mas há mais de 10 segundos o Rehabit não recebe as medidas: a internet da clínica caiu, ou o servidor do Rehabit está fora do ar ou ainda acordando — sem uso, ele “dorme” e pode levar até 1 minuto para responder.</dd>
                 </div>
                 <div>
                   <dt>O que fazer</dt>
@@ -478,7 +478,7 @@
                 </div>
                 <div>
                   <dt>O que fazer</dt>
-                  <dd>Desligue e ligue de novo. Se continuar assim, é problema de montagem (algum fio do sensor solto ou mal ligado): avise quem montou o aparelho. Segurar o BOOT não resolve.</dd>
+                  <dd>Desligue e ligue de novo. Se continuar assim, é problema de montagem (algum fio do sensor solto ou mal ligado): avise quem montou o aparelho. Segurar o BOOT não resolve. Se um fio soltar com o aparelho já ligado, a luz não percebe: o ângulo na tela trava ou pula. Nesse caso, desligue e ligue — se a luz passar a piscar rápido sem parar, o sensor soltou.</dd>
                 </div>
               </dl>
             </li>
@@ -513,7 +513,7 @@
               </span>
               <h4>A luz dá a piscada curtinha (tudo certo), mas a tela Dispositivo mostra Desconectado ou Aguardando o aparelho?</h4>
             </div>
-            <p>Olhe a luz por uns 15 segundos antes de concluir: a tela percebe uma queda em 8 segundos, e a luz, em 12. Se a piscada curtinha continuar, o aparelho está entregando as medidas — ela só se mantém enquanto o Rehabit aceita os dados dele. O que falta é a tela mostrar:</p>
+            <p>Olhe a luz por uns 15 segundos antes de concluir: a tela percebe uma queda em 8 segundos, e a luz, em 10. Se a piscada curtinha continuar, o aparelho está entregando as medidas — ela só se mantém enquanto o Rehabit aceita os dados dele. O que falta é a tela mostrar:</p>
             <ul>
               <li><strong>Atualize a tela:</strong> toque em <strong>Atualizar agora</strong> ou recarregue a página — a ligação da tela com o servidor pode ter caído.</li>
               <li><strong>Confira a conta:</strong> a tela precisa estar aberta na clínica em que o aparelho foi pareado. Na conta da clínica, a lista <strong>Goniômetros pareados</strong> deve mostrá-lo como <strong>Online</strong>.</li>
@@ -534,14 +534,14 @@
               <li>Abra o portal de configuração:
                 <ul>
                   <li><strong>A luz está respirando?</strong> O portal já está aberto: vá direto ao passo 3. Nesse estado o BOOT não funciona — nem é preciso.</li>
-                  <li><strong>Pisca de outro jeito?</strong> Segure o botão <strong>BOOT</strong> da placa até a luz ficar fraca e parada — uns 5 segundos, ou um pouco mais se a internet estiver fora do ar — e solte, com o aparelho parado. Ele apagou o Wi-Fi salvo, o pareamento e o zero (tara), reiniciou e logo começa a respirar. Se ele acabou de ser ligado, espere 1 minuto antes: enquanto procura o Wi-Fi, ele ainda não lê o botão.</li>
+                  <li><strong>Pisca de outro jeito?</strong> Segure o botão <strong>BOOT</strong> da placa até a luz ficar fraca e parada e solte, com o aparelho parado. Costuma levar uns 5 segundos; com a internet fora do ar pode levar até meio minuto — continue segurando até a luz mudar. Ele apagou o Wi-Fi salvo, o pareamento e o zero (tara), reiniciou e logo começa a respirar. Se ele acabou de ser ligado, espere 1 minuto antes: enquanto procura o Wi-Fi, ele ainda não lê o botão.</li>
                 </ul>
               </li>
               <li>No celular, conecte na rede <strong>Rehabit-Goniometro</strong> (senha <strong>rehabit123</strong>). Se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador. O aviso de “sem internet” é normal.</li>
               <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Espere cerca de 1 minuto e confira, na conta da clínica, se o aparelho aparece como <strong>Online</strong> na lista Goniômetros pareados (feche a janela do código para ver a lista) — é isso que garante que deu certo, não só a luz.
                 <ul>
                   <li><strong>Continua respirando?</strong> A senha do Wi-Fi não foi aceita e o portal segue aberto: conecte de novo na Rehabit-Goniometro e corrija.</li>
-                  <li><strong>Pisca devagar, ou não aparece como Online?</strong> O código não foi aceito (digitado errado, vencido ou já usado). Como agora ele está no Wi-Fi, o BOOT funciona: gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
+                  <li><strong>Pisca devagar, ou não aparece como Online?</strong> O código não foi aceito (digitado errado, vencido, já usado ou o servidor não respondeu a tempo — se o próprio site não carrega, espere ele voltar antes de tentar de novo). Como agora ele está no Wi-Fi, o BOOT funciona: gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
                 </ul>
               </li>
               <li>Antes de medir, faça de novo o <strong>Zerar (tara)</strong> com o braço do paciente pendurado.</li>

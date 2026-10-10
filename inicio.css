@@ -301,6 +301,9 @@ cite { font-style: normal; white-space: nowrap; }
 /* Entre 700 e 1099 px a grade de 3 vira 2 colunas: o último cartão, sozinho,
    ocupa a linha toda em vez de deixar meia linha vazia. */
 @media (min-width: 700px) and (max-width: 1099px) { .grade-3 > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
+/* Objetivo e Metodologia: com a barra lateral (768 px em diante) e menos de
+   900 px de tela, duas colunas deixariam ~180 px de texto em cada cartão. */
+@media (min-width: 768px) and (max-width: 899px) { #projeto .grade-2 { grid-template-columns: minmax(0, 1fr); } }
 @media (min-width: 1280px) { .grade-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .abaixo { margin-top: 16px; }
 

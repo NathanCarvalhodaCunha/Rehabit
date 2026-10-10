@@ -825,6 +825,12 @@ button { font-family: inherit; cursor: pointer; }
 .sessions-table th, .sessions-table td { padding: 14px 20px; text-align: left; font-size: 14.5px; }
 .sessions-table th { color: var(--ink-muted); font-weight: 600; }
 .sessions-table td { color: var(--ink-strong); font-weight: 600; border-top: 1px solid var(--hairline); }
+/* No histórico do paciente, a última coluna (amplitude + "Ver curva") não
+   quebra: com a tabela ao lado do cartão (586 px em 1280), o cabeçalho ia
+   para duas linhas e o botão descia para baixo do número em quase todas as
+   linhas. Quem cede espaço é a coluna da data, onde a observação quebra. */
+.bottom-grid .sessions-table th:last-child,
+.bottom-grid .sessions-table td:last-child { white-space: nowrap; }
 
 /* Ao lado da tabela, o cartão acompanha a rolagem: o botão continua à mão
    enquanto se lê um histórico longo. Abaixo de 1280px ele vira uma faixa
@@ -1804,11 +1810,16 @@ button.form-avatar {
 }
 @media (min-width: 768px) and (max-width: 1439px) {
   .tutorial-grid { grid-template-columns: minmax(0, 1fr); }
-  .tutorial-valer .tutorial-pontos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 }
+/* A partir de 960 px: "Para a medida valer" em duas colunas (abaixo disso
+   cada uma teria menos de 200 px de texto) e, no cartão da ilustração, o
+   desenho ao lado da legenda. A última linha (1fr) fica com a sobra da altura
+   do palco, para a escala não boiar no meio entre a legenda e o fim. */
 @media (min-width: 960px) and (max-width: 1439px) {
+  .tutorial-valer .tutorial-pontos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
   .tutorial-illustration-card {
     display: grid; gap: 20px 28px; align-items: start;
+    grid-template-rows: auto auto 1fr;
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
     grid-template-areas: "topo topo" "palco legenda" "palco escala";
   }
