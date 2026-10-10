@@ -156,11 +156,26 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="card add-card">
-          <h3>Adicionar dados manualmente</h3>
-          <p>Registre os dados de uma sessão</p>
-          <button class="btn-primary" data-action="add-session" type="button">Cadastrar sessão</button>
-        </div>
+        <!-- Cartão na altura do próprio conteúdo, ao lado da tabela (ou
+             embaixo dela, em tela estreita): esticado até a altura do
+             histórico, virava uma caixa vazia com três linhas no meio. -->
+        <aside class="card add-card" aria-labelledby="tituloAddCard">
+          <span class="add-card-icone" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+          </span>
+          <div class="add-card-texto">
+            <h3 id="tituloAddCard">Adicionar dados manualmente</h3>
+            <p>Registre a sessão de hoje digitando duração, amplitude, dor relatada e prontuário — por exemplo, quando a medida foi feita com o goniômetro manual. Data e hora entram sozinhas.</p>
+          </div>
+          <p class="add-card-dica">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            <span>Com o goniômetro digital ligado, use <strong>Gravar movimento</strong> no mesmo formulário: a amplitude entra sozinha, junto com a curva do movimento.</span>
+          </p>
+          <button class="btn-primary" data-action="add-session" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Cadastrar sessão
+          </button>
+        </aside>
       </section>
     </main>
 

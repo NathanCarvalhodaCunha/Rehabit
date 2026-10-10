@@ -809,17 +809,72 @@ button { font-family: inherit; cursor: pointer; }
 
 .section-title { margin: 28px 0 12px; font-size: 20px; font-weight: 800; color: var(--ink-strong); }
 
-.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+/* Histórico do paciente: a tabela fica com a maior parte da largura e o
+   cartão de cadastro com a altura do próprio conteúdo. Em 1fr/1fr o cartão
+   esticava até a altura da tabela — com dez sessões, uma caixa de 600 px
+   com três linhas no meio. Lado a lado só a partir de 1280 px: abaixo disso
+   a coluna de 320 px apertava a tabela e quebrava o cabeçalho e o "Ver
+   curva" em duas linhas. */
+.bottom-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (min-width: 1280px) {
+  .bottom-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+}
 .sessions-table { padding: 0; overflow: hidden; }
 .sessions-table table { width: 100%; border-collapse: collapse; }
 .sessions-table thead { background: #F3F4F6; }
 .sessions-table th, .sessions-table td { padding: 14px 20px; text-align: left; font-size: 14.5px; }
 .sessions-table th { color: var(--ink-muted); font-weight: 600; }
 .sessions-table td { color: var(--ink-strong); font-weight: 600; border-top: 1px solid var(--hairline); }
+/* No histórico do paciente, a última coluna (amplitude + "Ver curva") não
+   quebra: com a tabela ao lado do cartão (586 px em 1280), o cabeçalho ia
+   para duas linhas e o botão descia para baixo do número em quase todas as
+   linhas. Quem cede espaço é a coluna da data, onde a observação quebra. */
+.bottom-grid .sessions-table th:last-child,
+.bottom-grid .sessions-table td:last-child { white-space: nowrap; }
 
-.add-card { padding: 24px; display: flex; flex-direction: column; justify-content: center; }
-.add-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
-.add-card p { margin: 0 0 16px; color: var(--ink-muted); font-weight: 600; font-size: 14px; }
+/* Ao lado da tabela, o cartão acompanha a rolagem: o botão continua à mão
+   enquanto se lê um histórico longo. Abaixo de 1280px ele vira uma faixa
+   embaixo da tabela: texto e botão lado a lado, a dica do goniômetro na
+   largura toda logo abaixo. Abaixo de 900px o botão desce para baixo do
+   texto, que senão ficaria espremido numa coluna de 200 px. */
+.add-card {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+  padding: 24px;
+  position: sticky; top: 24px;
+}
+.add-card-icone {
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border-radius: 12px; background: rgba(21,101,216,.1); color: var(--brand);
+}
+.add-card-icone svg { width: 22px; height: 22px; }
+.add-card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
+.add-card p { margin: 0; color: var(--ink-muted); font-weight: 500; font-size: 14px; line-height: 1.55; }
+.add-card .add-card-dica {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 10px;
+  background: rgba(21,101,216,.06); color: var(--ink); font-size: 13.5px;
+}
+.add-card-dica svg { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--brand); }
+.add-card-dica strong { color: var(--ink-strong); font-weight: 700; }
+.add-card .btn-primary { width: 100%; gap: 8px; }
+.add-card .btn-primary svg { width: 18px; height: 18px; }
+@media (max-width: 1279px) {
+  .add-card {
+    position: static; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px 18px; align-items: center;
+    grid-template-areas: "icone texto botao" ". dica dica";
+  }
+  .add-card-icone { grid-area: icone; align-self: start; }
+  .add-card-texto { grid-area: texto; }
+  .add-card .add-card-dica { grid-area: dica; }
+  .add-card .btn-primary { grid-area: botao; width: auto; align-self: center; }
+}
+@media (max-width: 899px) {
+  .add-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "icone texto" ". dica" ". botao";
+  }
+  .add-card .btn-primary { justify-self: start; }
+}
 .btn-primary {
   align-self: flex-start;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1599,54 +1654,184 @@ button.form-avatar {
 }
 .tutorial-next:hover { background: var(--brand-hover); }
 
-/* ---------- Tutorial do goniômetro ---------- */
-.tutorial-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; align-items: start; }
-.tutorial-illustration-card {
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  padding: 28px 20px;
+/* ---------- Tutorial do goniômetro ----------
+   Cores da ilustração num lugar só: o tema escuro (dark.css) troca só as
+   variáveis. Os marcadores da legenda usam as mesmas classes do desenho,
+   então a cor de cada parte é a mesma na figura e no texto que fala dela. */
+.tutorial-grid {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 24px; align-items: start;
+  --gonio-pele: #F7C9A3;
+  --gonio-pele-sombra: #EDB088;
+  --gonio-cabelo: #8B5434;
+  --gonio-olho: #2D1B12;
+  --gonio-bochecha: #FF8C8C;
+  --gonio-camiseta: #FF7A66;
+  --gonio-camiseta-escura: #E85A47;
+  --gonio-calca: #2F4A9E;
+  --gonio-aparelho: var(--brand);
+  --gonio-aparelho-base: #0B47A3;
+  --gonio-escala: var(--brand);
+  --gonio-numero: var(--brand);
+  --gonio-referencia: #E85A47;
+  --gonio-cunha: rgba(21,101,216,.16);
+  --gonio-chao: rgba(21,101,216,.12);
+  --gonio-palco: linear-gradient(180deg, #F5F9FF 0%, #E8F1FF 100%);
+  --gonio-marca: #F0F6FF;
+  --gonio-pilula: #FFFFFF;
+  --gonio-pilula-borda: rgba(21,101,216,.16);
 }
-.tutorial-illustration-card svg { width: 100%; max-width: 300px; height: auto; }
-.tutorial-angle-readout { font-size: 14.5px; font-weight: 700; color: var(--ink-strong); }
-.tutorial-angle-readout .num { color: var(--brand); font-size: 24px; }
-.tutorial-caption { margin: 0; color: var(--ink-muted); font-size: 13.5px; text-align: center; max-width: 280px; }
+.tutorial-grid h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); letter-spacing: -.01em; }
+.tutorial-illustration-card { display: flex; flex-direction: column; gap: 20px; padding: 24px; }
+.tutorial-abertura-topo p { margin: 0; color: var(--ink); font-size: 14.5px; line-height: 1.55; }
+.tutorial-abertura-topo strong { color: var(--ink-strong); }
 
-.tutorial-steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.tutorial-palco {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 20px 16px 18px; border-radius: 14px;
+  background: var(--gonio-palco);
+}
+.tutorial-ilustracao { display: block; width: 100%; max-width: 290px; height: auto; }
+/* Cabe numa linha em cartão largo; em cartão estreito o número desce para
+   baixo do texto em vez de quebrar a frase no meio. */
+.tutorial-angle-readout {
+  display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin: 0;
+  padding: 7px 14px; border-radius: 22px;
+  background: var(--gonio-pilula); border: 1px solid var(--gonio-pilula-borda);
+  font-size: 13.5px; font-weight: 700; color: var(--ink-strong); text-align: center; text-wrap: balance;
+}
+/* Largura fixa para o número: sem ela a pílula encolhe e cresce a cada
+   quadro da animação (de "0°" para "90°"). */
+.tutorial-angle-readout .num {
+  display: inline-block; min-width: 2.7em; padding: 2px 10px; border-radius: 999px;
+  background: var(--gonio-aparelho); color: #fff; font-size: 18px; font-weight: 800;
+  font-variant-numeric: tabular-nums; text-align: center;
+}
+
+.tutorial-legenda, .tutorial-pontos { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.tutorial-legenda li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; }
+.tutorial-legenda-marca { display: block; width: 40px; height: 40px; border-radius: 10px; background: var(--gonio-marca); }
+.tutorial-illustration-card h4, .tutorial-valer h4 { margin: 0 0 3px; font-size: 14.5px; font-weight: 700; color: var(--ink-strong); }
+.tutorial-legenda p, .tutorial-pontos p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.55; }
+.tutorial-legenda p strong, .tutorial-pontos p strong { color: var(--ink-strong); }
+
+/* Quatro marcos de 0° a 180° — a animação mostra só até 90°, mas o número
+   continua subindo com o braço acima do ombro. Sem linha ligando os pontos:
+   igualmente espaçados, eles sugeririam uma régua em que de 45° a 90° mede o
+   mesmo que de 90° a 180°. */
+.tutorial-escala h4 { margin-bottom: 12px; }
+.tutorial-escala-lista {
+  position: relative; list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.tutorial-escala-lista li {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 20px 4px 0; text-align: center;
+}
+.tutorial-escala-lista li::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: 12px; height: 12px; margin-left: -6px;
+  border-radius: 50%; background: var(--gonio-escala); box-shadow: 0 0 0 3px var(--gonio-pilula);
+}
+.tutorial-escala-lista li:first-child::before { background: var(--gonio-referencia); }
+.tutorial-escala-lista strong { font-size: 16px; font-weight: 800; color: var(--gonio-numero); font-variant-numeric: tabular-nums; }
+.tutorial-escala-lista span { font-size: 12.5px; line-height: 1.35; color: var(--ink); }
+
+/* Os dois limites da medida fecham o passo a passo, num quadro à parte
+   para não parecerem um sexto passo. */
+.tutorial-valer { margin-top: 20px; padding: 16px 18px 18px; border-radius: 12px; background: var(--gonio-marca); }
+.tutorial-valer h4 { margin-bottom: 12px; }
+.tutorial-pontos li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start; }
+.tutorial-pontos-icone {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(21,101,216,.1); color: var(--gonio-escala);
+}
+.tutorial-pontos li:first-child .tutorial-pontos-icone { background: rgba(232,90,71,.12); color: var(--gonio-referencia); }
+.tutorial-pontos-icone svg { width: 17px; height: 17px; }
+
+.tutorial-passos-card { padding: 24px; }
+.tutorial-steps { list-style: none; padding: 0; margin: 6px 0 0; counter-reset: step; }
 .tutorial-steps li {
   display: grid; grid-template-columns: 32px 1fr; gap: 14px;
-  padding: 14px 4px; border-bottom: 1px solid var(--hairline);
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
 }
-.tutorial-steps li:last-child { border-bottom: none; }
+.tutorial-steps li:last-child { border-bottom: none; padding-bottom: 0; }
 .tutorial-steps li::before {
   counter-increment: step; content: counter(step);
   width: 32px; height: 32px; border-radius: 50%;
   background: var(--brand); color: #fff; font-weight: 800; font-size: 14px;
   display: flex; align-items: center; justify-content: center;
 }
-.tutorial-steps h4 { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--ink-strong); }
-.tutorial-steps p { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+.tutorial-steps h4 { margin: 4px 0 4px; font-size: 15px; font-weight: 700; color: var(--ink-strong); }
+.tutorial-steps p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.6; }
+.tutorial-steps p strong { color: var(--ink-strong); }
 
-.gonio-body { fill: none; stroke: var(--ink-muted); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
-.gonio-head { fill: var(--ink-muted); }
-/* Braço e mão na cor do tronco: o único elemento colorido do boneco passa a
-   ser o aparelho no pulso, que é o que o tutorial está apresentando. */
-.gonio-limb-line { stroke: var(--ink-muted); }
-.gonio-hand { fill: var(--ink-muted); }
-.gonio-scale-arc { fill: none; stroke: var(--ink-muted); stroke-width: 2; opacity: .55; }
-.gonio-tick { stroke: var(--ink-muted); stroke-width: 1.5; opacity: .55; }
-/* O braço passa por cima da escala; o contorno na cor do cartão mantém
-   os números legíveis mesmo debaixo dele. */
+/* Personagem da ilustração */
+.gonio-pele { fill: var(--gonio-pele); }
+.gonio-pele-sombra { fill: var(--gonio-pele-sombra); }
+.gonio-cabelo { fill: var(--gonio-cabelo); }
+.gonio-mecha { fill: none; stroke: var(--gonio-cabelo); stroke-width: 3.5; stroke-linecap: round; }
+.gonio-olho { fill: var(--gonio-olho); }
+.gonio-brilho { fill: #fff; }
+.gonio-bochecha { fill: var(--gonio-bochecha); opacity: .5; }
+.gonio-boca { fill: none; stroke: var(--gonio-olho); stroke-width: 2.4; stroke-linecap: round; }
+.gonio-camiseta { fill: var(--gonio-camiseta); }
+.gonio-camiseta-barra { fill: var(--gonio-camiseta-escura); }
+.gonio-gola { fill: none; stroke: var(--gonio-camiseta-escura); stroke-width: 3; stroke-linecap: round; }
+.gonio-calca { fill: var(--gonio-calca); }
+.gonio-tenis { fill: var(--gonio-camiseta); }
+.gonio-sola { fill: #fff; }
+.gonio-chao { fill: var(--gonio-chao); }
+.gonio-aparelho { fill: var(--gonio-aparelho); }
+.gonio-aparelho-base { fill: var(--gonio-aparelho-base); }
+.gonio-led-brilho { fill: #7CC8FF; opacity: .55; }
+.gonio-led { fill: #E6F5FF; }
+
+/* Medida: cunha, escala e referência do tronco */
+.gonio-wedge { fill: var(--gonio-cunha); }
+.gonio-scale-arc { fill: none; stroke: var(--gonio-escala); stroke-width: 2; opacity: .55; }
+.gonio-tick { stroke: var(--gonio-escala); stroke-width: 1.5; opacity: .45; stroke-linecap: round; }
+.gonio-tick.is-major { stroke-width: 2.2; opacity: .85; }
 .gonio-tick-label {
-  fill: var(--ink-muted); font-size: 9px; font-weight: 700;
-  text-anchor: middle; dominant-baseline: middle;
-  paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round;
+  fill: var(--gonio-numero); font-size: 12px; font-weight: 800;
+  text-anchor: middle; dominant-baseline: central;
 }
-.gonio-wedge { fill: var(--brand); opacity: .22; }
-.gonio-device { fill: var(--brand); opacity: .85; }
-.gonio-arm-fixed { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 5; }
-.gonio-hinge { fill: var(--brand); stroke: #fff; stroke-width: 2; }
+.gonio-referencia { fill: none; stroke: var(--gonio-referencia); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 6 5; }
+.gonio-hinge { fill: var(--gonio-aparelho); stroke: #fff; stroke-width: 2; }
+
+/* Abaixo de 1440 px, duas colunas deixavam o passo a passo bem mais alto que
+   a ilustração (400 px a mais com colunas de ~370 px, ainda 150 a 230 px nos
+   notebooks de 1280 e 1366). Aqui os cartões ficam um embaixo do outro e,
+   havendo largura (a partir de 960 px), o da ilustração põe o desenho ao lado
+   da legenda; abaixo disso a legenda espremida numa coluna de 170 px
+   quebrava uma palavra por linha. Acima de 1440 px as colunas esticam até a
+   mesma altura e o palco do desenho absorve a diferença. */
+@media (min-width: 1440px) {
+  .tutorial-grid { align-items: stretch; }
+  .tutorial-illustration-card .tutorial-palco { flex: 1; justify-content: center; }
+}
+@media (min-width: 768px) and (max-width: 1439px) {
+  .tutorial-grid { grid-template-columns: minmax(0, 1fr); }
+}
+/* A partir de 960 px: "Para a medida valer" em duas colunas (abaixo disso
+   cada uma teria menos de 200 px de texto) e, no cartão da ilustração, o
+   desenho ao lado da legenda. A última linha (1fr) fica com a sobra da altura
+   do palco, para a escala não boiar no meio entre a legenda e o fim. */
+@media (min-width: 960px) and (max-width: 1439px) {
+  .tutorial-valer .tutorial-pontos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .tutorial-illustration-card {
+    display: grid; gap: 20px 28px; align-items: start;
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    grid-template-areas: "topo topo" "palco legenda" "palco escala";
+  }
+  .tutorial-abertura-topo { grid-area: topo; }
+  .tutorial-palco { grid-area: palco; }
+  .tutorial-legenda { grid-area: legenda; }
+  .tutorial-escala { grid-area: escala; }
+}
 
 @media (max-width: 767px) {
-  .tutorial-grid { grid-template-columns: 1fr; }
+  .tutorial-grid { grid-template-columns: minmax(0, 1fr); }
+  .tutorial-illustration-card, .tutorial-passos-card { padding: 20px 18px; }
 }
 
 /* ---------- Toastify — corrige mensagem cortada/sobreposta ----------
@@ -2898,24 +3083,40 @@ button.form-avatar {
 }
 
 /* ---------- Tutorial do goniômetro: o que a luz do aparelho está dizendo ----------
-   Cada luz imita o ritmo real do LED de status (atualizarLed() e setup() em
-   Firmware/goniometro-esp32.ino). O ::before é a luz apagada e o ::after, a
-   acesa por cima dela: a animação só liga e desliga o ::after, em degraus
-   (step-end), na mesma proporção aceso/apagado do firmware. Sem animação
-   (prefers-reduced-motion), cada luz fica parada — meio acesa quando pisca — e
-   uma barrinha desenha 6 segundos do ritmo no lugar do movimento. */
+   Cada luz imita um modo do LED de status (modoDaLuz() e brilhoDoModo() em
+   Firmware/goniometro-esp32.ino), com os mesmos tempos. O ::before é a luz
+   apagada e o ::after, a acesa por cima dela: a animação só mexe na
+   opacidade do ::after. A opacidade parte do brilho do firmware na escala do
+   olho (0 a 255), e não do duty do PWM, elevado a 0,6: um LED aceso tem muito
+   mais contraste com o apagado do que a tela consegue mostrar, e com a conta
+   direta a luz fraca da calibração (38 de 255, opacidade .149) ficava igual à
+   apagada. Com o expoente ela fica em .319 — fraca, mas acesa —, e o aceso e
+   o apagado dos piscas continuam 1 e 0. Sem animação (prefers-reduced-motion),
+   cada luz fica parada e uma barrinha desenha 6 segundos do ritmo no lugar do
+   movimento. */
 .tutorial-led-card {
   --led-aceso: #2F80FF;
   --led-apagado: #C8D2E1;
-  --led-caixa: #F3F6FB;
+  --led-aro: #FFFFFF;
+  --led-sombra: rgba(16,24,40,.14);
+  --led-caixa: linear-gradient(180deg, #F5F9FF 0%, #E8F1FF 100%);
+  --led-caixa-borda: rgba(21,101,216,.14);
   --led-trilho: #E3E9F2;
+  --led-marca: #F0F6FF;
+  --led-cartao: #FFFFFF;
+  --led-icone: var(--brand);
+  --led-icone-fundo: rgba(21,101,216,.1);
+  --led-ok-fundo: rgba(22,163,74,.12);
+  --led-ok-texto: #166534;
+  --led-atencao-fundo: rgba(234,179,8,.18);
+  --led-atencao-texto: #92400E;
   margin-top: 24px;
-  padding: 24px 26px;
+  padding: 28px;
   overflow-wrap: break-word;
 }
-.tutorial-led-head h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); }
-.tutorial-led-head p { margin: 0; max-width: 820px; color: var(--ink-muted); font-size: 14px; line-height: 1.55; }
-.tutorial-led-head .tutorial-led-legenda { margin-top: 8px; font-size: 13px; font-weight: 600; }
+.tutorial-led-head h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); letter-spacing: -.01em; }
+.tutorial-led-head > p { margin: 0; max-width: 820px; color: var(--ink); font-size: 14.5px; line-height: 1.55; }
+.tutorial-led-head .tutorial-led-legenda { margin-top: 14px; color: var(--ink-muted); font-size: 13px; font-weight: 600; }
 
 .tutorial-led-card a {
   color: var(--brand); font-weight: 600;
@@ -2924,155 +3125,282 @@ button.form-avatar {
 .tutorial-led-card a:hover { color: var(--brand-hover); }
 .tutorial-led-card a:focus-visible { outline: none; border-radius: 3px; box-shadow: 0 0 0 3px rgba(21,101,216,.3); }
 
-/* Lista de padrões à esquerda e as duas dicas à direita; abaixo de 1200px,
-   uma coisa embaixo da outra. */
-.tutorial-led-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; margin-top: 18px; }
+/* Como observar: três lembretes curtos antes da lista, lado a lado quando
+   cabem (cada um com ~200 px de texto, no mínimo). */
+.tutorial-led-observe { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
 @media (min-width: 1200px) {
-  .tutorial-led-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .tutorial-led-observe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+.tutorial-led-observe li {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start;
+  padding: 14px 16px; border-radius: 12px; background: var(--led-marca);
+}
+.tutorial-led-observe-icone,
+.tutorial-led-dica-icone {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--led-icone-fundo); color: var(--led-icone);
+}
+.tutorial-led-observe-icone svg { width: 17px; height: 17px; }
+.tutorial-led-observe p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.5; }
+.tutorial-led-observe strong { display: block; margin-bottom: 2px; color: var(--ink-strong); }
 
-.tutorial-led-lista { list-style: none; margin: 0; padding: 0; }
-.tutorial-led-item {
-  display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px;
-  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+/* Grupos: o que é normal primeiro, o que pede uma ação depois. O ícone e o
+   subtítulo dizem em texto de que lado cada luz está; a cor só reforça. */
+.tutorial-led-grupo { margin-top: 32px; }
+.tutorial-led-grupo-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.tutorial-led-grupo-icone {
+  flex: none; display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 50%;
 }
-.tutorial-led-item:first-child { padding-top: 0; }
-.tutorial-led-item:last-child { border-bottom: none; padding-bottom: 0; }
+.tutorial-led-grupo-icone svg { width: 18px; height: 18px; }
+.tutorial-led-grupo-icone.is-normal { background: var(--led-ok-fundo); color: var(--led-ok-texto); }
+.tutorial-led-grupo-icone.is-atencao { background: var(--led-atencao-fundo); color: var(--led-atencao-texto); }
+.tutorial-led-grupo-topo h4 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
+.tutorial-led-grupo-topo p { margin: 2px 0 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.45; }
+
+/* Cartões em duas colunas a partir de 960 px (abaixo disso o cartão ficaria
+   com menos de 300 px de texto). Os cartões de uma mesma linha esticam até a
+   mesma altura; o "Respirando", com três casos, ocupa a linha inteira. */
+.tutorial-led-lista {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+}
+@media (min-width: 960px) {
+  .tutorial-led-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tutorial-led-item.is-largo { grid-column: 1 / -1; }
+  .tutorial-led-item.is-largo .tutorial-led-desc { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 28px; }
+  /* Mesma largura da barrinha dos cartões de meia linha (meia lista menos o
+     vão e o padding), para 6 s terem o mesmo tamanho em todos. */
+  .tutorial-led-item.is-largo .tutorial-led-ritmo { width: calc(50% - 27px); }
+  /* Cabeça, barrinha e descrição em linhas compartilhadas com o cartão
+     vizinho: um título que quebra linha não desce a barrinha e o divisor só
+     de um lado. A barrinha só aparece sem animação, daí as duas contagens. */
+  @supports (grid-template-rows: subgrid) {
+    .tutorial-led-lista > .tutorial-led-item { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 14px; align-content: start; }
+  }
+}
+@media (min-width: 960px) and (prefers-reduced-motion: reduce) {
+  @supports (grid-template-rows: subgrid) {
+    .tutorial-led-lista > .tutorial-led-item { grid-row: span 3; }
+  }
+}
+.tutorial-led-item {
+  display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  padding: 18px; border-radius: 14px;
+  border: 1px solid var(--hairline); background: var(--led-cartao);
+  scroll-margin-top: 16px;
+}
+.tutorial-led-cabeca { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 14px; align-items: center; }
 
 .tutorial-led-luz {
-  position: relative;
-  width: 56px; height: 56px; border-radius: 14px;
-  background: var(--led-caixa); border: 1px solid var(--hairline);
+  position: relative; width: 60px; height: 60px; border-radius: 16px;
+  background: var(--led-caixa); border: 1px solid var(--led-caixa-borda);
 }
 .tutorial-led-luz::before,
 .tutorial-led-luz::after {
   content: ""; position: absolute; top: 50%; left: 50%;
-  width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
 }
-.tutorial-led-luz::before { background: var(--led-apagado); box-shadow: inset 0 -2px 3px rgba(16,24,40,.14); }
+/* O aro em volta é a base do LED: sem ele, a luz apagada parecia um furo. */
+.tutorial-led-luz::before {
+  background: var(--led-apagado);
+  box-shadow: 0 0 0 var(--led-aro-largura, 4px) var(--led-aro), inset 0 -2px 3px var(--led-sombra);
+}
 .tutorial-led-luz::after {
   background: radial-gradient(circle at 38% 34%, #D6E6FF 0 18%, var(--led-aceso) 62%);
-  box-shadow: 0 0 10px 3px rgba(47,128,255,.55), 0 0 24px 8px rgba(47,128,255,.22);
-  opacity: .5;
+  box-shadow: 0 0 10px 3px rgba(47,128,255,.55), 0 0 26px 9px rgba(47,128,255,.24);
 }
-.tutorial-led-luz[data-ritmo="fixo"]::after { opacity: 1; }
-.tutorial-led-luz[data-ritmo="ao-ligar"]::after,
+/* Parada (sem animação), a luz que pisca aparece acesa — meio acesa, ela se
+   confundiria com a fraca da calibração — e a que respira, no meio do ciclo. */
+.tutorial-led-luz[data-ritmo="portal"]::after { opacity: .5; }
+/* BRILHO_CALIBRANDO: (38 / 255) ^ 0,6. */
+.tutorial-led-luz[data-ritmo="calibrando"]::after { opacity: .319; }
 .tutorial-led-luz[data-ritmo="apagada"]::after { opacity: 0; }
 
-.tutorial-led-texto { min-width: 0; }
-/* Selo sempre embaixo do título: ao lado, ele ia para a direita nos títulos
-   curtos e quebrava linha nos longos, e a lista ficava desalinhada. */
-.tutorial-led-topo {
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: 6px; margin-bottom: 8px;
-}
-.tutorial-led-topo h4 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--ink-strong); }
-/* O selo diz em texto se é normal ou não: a cor só reforça. */
+.tutorial-led-titulo { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.tutorial-led-titulo h5 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--ink-strong); }
+/* O selo diz em texto o que a luz quer dizer; a cor só reforça o grupo.
+   Quebra linha em vez de vazar no celular ("Sem Wi-Fi ou sem pareamento"):
+   por isso o raio de 11 px, que numa linha é pílula e em duas vira cartão, e
+   a bolinha presa à primeira linha. */
 .tutorial-led-selo {
-  display: inline-flex; align-items: center; gap: 6px; flex: none;
-  height: 22px; padding: 0 9px; border-radius: 999px;
-  font-size: 11.5px; font-weight: 800; white-space: nowrap;
+  display: inline-flex; align-items: flex-start; gap: 6px; max-width: 100%;
+  padding: 3px 10px; border-radius: 11px;
+  font-size: 11.5px; font-weight: 800; line-height: 1.35;
 }
-.tutorial-led-selo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.tutorial-led-selo.is-normal { background: rgba(22,163,74,.12); color: #166534; }
-.tutorial-led-selo.is-atencao { background: rgba(234,179,8,.18); color: #92400E; }
+.tutorial-led-selo::before {
+  content: ""; flex: none; width: 6px; height: 6px; margin-top: 5px;
+  border-radius: 50%; background: currentColor;
+}
+.tutorial-led-selo.is-normal { background: var(--led-ok-fundo); color: var(--led-ok-texto); }
+.tutorial-led-selo.is-atencao { background: var(--led-atencao-fundo); color: var(--led-atencao-texto); }
 
-.tutorial-led-texto p,
-.tutorial-led-casos li { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
-.tutorial-led-texto p + p { margin-top: 4px; }
-.tutorial-led-texto strong { color: var(--ink-strong); font-weight: 700; }
-.tutorial-led-casos { margin: 4px 0 0; padding-left: 18px; }
-.tutorial-led-casos li + li { margin-top: 4px; }
+.tutorial-led-desc {
+  margin: 0; display: grid; gap: 12px; align-content: start;
+  padding-top: 14px; border-top: 1px solid var(--hairline);
+}
+.tutorial-led-desc dt {
+  margin: 0 0 3px; color: var(--ink-muted);
+  font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.tutorial-led-desc dd { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.55; }
+.tutorial-led-desc strong { color: var(--ink-strong); font-weight: 700; }
+.tutorial-led-casos { margin: 0; padding-left: 18px; }
+.tutorial-led-casos li + li { margin-top: 6px; }
 
-/* Barrinha do ritmo: 100% da largura são 6 s, então 1 s = 16,667%. O piscar
-   curtinho (60 ms) ganha um pouco mais de largura só para ficar visível. */
+/* Barrinha do ritmo: 100% da largura são 6 s, então 1 s = 16,667%. A
+   piscada de 60 ms ganha no mínimo 3 px, senão some em tela estreita. */
 .tutorial-led-ritmo {
-  display: block; width: min(100%, 220px); height: 10px; margin: 2px 0 8px;
-  border-radius: 3px; background-color: var(--led-trilho); background-repeat: no-repeat;
+  display: block; width: 100%; height: 10px;
+  border-radius: 4px; background-color: var(--led-trilho); background-repeat: no-repeat;
 }
-.tutorial-led-ritmo[data-ritmo="curto"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 1.2%, transparent 1.2% 33.333%);
+.tutorial-led-ritmo[data-ritmo="tudo-certo"] {
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 max(1%, 3px), transparent 0 33.3333%);
 }
-.tutorial-led-ritmo[data-ritmo="ao-ligar"] {
-  background-image: linear-gradient(90deg, transparent 0 50%, var(--led-aceso) 50% 51.2%, transparent 51.2% 83.333%, var(--led-aceso) 83.333% 84.533%, transparent 84.533%);
+.tutorial-led-ritmo[data-ritmo="calibrando"] {
+  background-image: linear-gradient(rgba(47,128,255,.319), rgba(47,128,255,.319));
 }
-.tutorial-led-ritmo[data-ritmo="fixo"] { background-color: var(--led-aceso); }
-/* Os 4 s do Identificar ocupam 2/3 da barra; dentro deles, 80 ms = 2%. */
+.tutorial-led-ritmo[data-ritmo="gravando"] { background-color: var(--led-aceso); }
+/* Os 4 s do Identificar ocupam 2/3 da barra (dentro deles, 80 ms = 2%); aos
+   4 s a luz volta ao padrão de antes, aqui o de tudo certo, que já começa
+   com a piscada curtinha. */
 .tutorial-led-ritmo[data-ritmo="identificar"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2%, transparent 2% 4%);
-  background-size: 66.667% 100%;
+  background-image:
+    repeating-linear-gradient(90deg, var(--led-aceso) 0 2%, transparent 0 4%),
+    linear-gradient(90deg, transparent 0 66.6667%, var(--led-aceso) 0 calc(66.6667% + max(1%, 3px)), transparent 0);
+  background-size: 66.6667% 100%, 100% 100%;
+}
+/* Respirando: dois ciclos de 3 s, com o brilho de 250 em 250 ms. O azul é
+   o --led-aceso com a mesma opacidade da luz animada como transparência. */
+.tutorial-led-ritmo[data-ritmo="portal"] {
+  background-image: repeating-linear-gradient(90deg,
+    rgba(47,128,255,.143) 0%, rgba(47,128,255,.254) 4.1667%, rgba(47,128,255,.464) 8.3333%,
+    rgba(47,128,255,.677) 12.5%, rgba(47,128,255,.849) 16.6667%, rgba(47,128,255,.962) 20.8333%,
+    rgba(47,128,255,1) 25%, rgba(47,128,255,.962) 29.1667%, rgba(47,128,255,.849) 33.3333%,
+    rgba(47,128,255,.677) 37.5%, rgba(47,128,255,.464) 41.6667%, rgba(47,128,255,.254) 45.8333%,
+    rgba(47,128,255,.143) 50%);
 }
 .tutorial-led-ritmo[data-ritmo="devagar"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 8.333%, transparent 8.333% 16.667%);
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 8.3333%, transparent 0 16.6667%);
+}
+/* 100 aceso, 150 apagado, 100 aceso e 1650 apagado, três vezes. */
+.tutorial-led-ritmo[data-ritmo="sem-servidor"] {
+  background-image: repeating-linear-gradient(90deg,
+    var(--led-aceso) 0 1.6667%, transparent 0 4.1667%,
+    var(--led-aceso) 0 5.8333%, transparent 0 33.3333%);
 }
 .tutorial-led-ritmo[data-ritmo="sensor"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2.5%, transparent 2.5% 5%);
-}
-/* Sem resposta do servidor: ~4 s acesa e ~4 s apagada; nos 6 s da barra, 4 acesos. */
-.tutorial-led-ritmo[data-ritmo="sem-servidor"] {
-  background-image: linear-gradient(90deg, var(--led-aceso) 0 66.667%, transparent 66.667%);
+  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2.5%, transparent 0 5%);
 }
 
 /* Com movimento liberado, a luz pisca de verdade e a barrinha sai de cena.
-   Tempos do firmware: 60/1940 ms (tudo certo), 500/500 ms (sem Wi-Fi ou sem
-   pareamento), 80/80 ms por 4 s (Identificar) e 150/150 ms (sem sensor). Sem
-   resposta do servidor, cada envio segura o loop() por 4 s ou mais (dois
-   TIMEOUT_HTTP_MS, conectar e ler, mais o DNS) e a luz só troca entre um envio
-   e outro: no caso mais comum, ~4 s acesa e ~4 s apagada. */
+   Tempos de brilhoDoModo(): 60 aceso / 1940 apagado (tudo certo), 80 / 80 por
+   4 s (Identificar), cosseno de 3 s entre o brilho 10 e o 255 (portal),
+   500 / 500 (sem Wi-Fi ou sem pareamento), piscada dupla 100-150-100-1650
+   (servidor calado) e 150 / 150 (sem sensor). Todo padrão começa aceso, como
+   no firmware, que recomeça o ritmo a cada troca de modo. */
 @media (prefers-reduced-motion: no-preference) {
   .tutorial-led-ritmo,
   .tutorial-led-head .tutorial-led-legenda { display: none; }
-  .tutorial-led-luz[data-ritmo="curto"]::after { animation: tutorial-led-curto 2s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="ao-ligar"]::after { animation: tutorial-led-ao-ligar 6s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="identificar"]::after {
-    animation: tutorial-led-pisca 160ms step-end infinite, tutorial-led-janela 6.4s step-end infinite;
-  }
+  .tutorial-led-luz[data-ritmo="tudo-certo"]::after { animation: tutorial-led-tudo-certo 2s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="identificar"]::after { animation: tutorial-led-identificar 6s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="portal"]::after { animation: tutorial-led-respirar 3s linear infinite; }
   .tutorial-led-luz[data-ritmo="devagar"]::after { animation: tutorial-led-pisca 1s step-end infinite; }
+  .tutorial-led-luz[data-ritmo="sem-servidor"]::after { animation: tutorial-led-dupla 2s step-end infinite; }
   .tutorial-led-luz[data-ritmo="sensor"]::after { animation: tutorial-led-pisca 300ms step-end infinite; }
-  .tutorial-led-luz[data-ritmo="sem-servidor"]::after { animation: tutorial-led-pisca 8s step-end infinite; }
 }
 @keyframes tutorial-led-pisca {
   0% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
-@keyframes tutorial-led-curto {
+@keyframes tutorial-led-tudo-certo {
   0% { opacity: 1; }
   3%, 100% { opacity: 0; }
 }
-/* Apagada 3 s enquanto o aparelho se prepara, depois o piscar de tudo certo. */
-@keyframes tutorial-led-ao-ligar {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  51% { opacity: 0; }
-  83.333% { opacity: 1; }
-  84.333%, 100% { opacity: 0; }
+@keyframes tutorial-led-dupla {
+  0%, 12.5% { opacity: 1; }
+  5%, 17.5%, 100% { opacity: 0; }
 }
-/* Identificar: 4 s piscando (50 trocas de 80 ms) e 2,4 s parada antes de repetir. */
-@keyframes tutorial-led-janela {
-  0% { visibility: visible; }
-  62.5%, 100% { visibility: hidden; }
+/* Identificar num ciclo de 6 s: 25 piscadas de 80 ms em 4 s e a volta ao
+   tudo certo (60 ms aceso aos 4 s). Cada passo de 80 ms vale 1,3333%, com as
+   casas cortadas, e não arredondadas, e os valores redondos um décimo de
+   milésimo abaixo (19,9999%, e não 20%): assim cada troca cai um pouco antes
+   do milissegundo exato. O navegador guarda a porcentagem em precisão
+   simples, e o 20% virava 1200,00002 ms — o quadro de 1200 ms ainda saía
+   aceso. Uma animação só, e não uma de 160 ms dentro de uma janela de 6 s,
+   para o ciclo seguinte também começar aceso. */
+@keyframes tutorial-led-identificar {
+  0%, 2.6666%, 5.3333%, 7.9999%, 10.6666%, 13.3333%, 15.9999%, 18.6666%,
+  21.3333%, 23.9999%, 26.6666%, 29.3333%, 31.9999%, 34.6666%, 37.3333%,
+  39.9999%, 42.6666%, 45.3333%, 47.9999%, 50.6666%, 53.3333%, 55.9999%,
+  58.6666%, 61.3333%, 63.9999%, 66.6666% { opacity: 1; }
+  1.3333%, 3.9999%, 6.6666%, 9.3333%, 11.9999%, 14.6666%, 17.3333%, 19.9999%,
+  22.6666%, 25.3333%, 27.9999%, 30.6666%, 33.3333%, 35.9999%, 38.6666%,
+  41.3333%, 43.9999%, 46.6666%, 49.3333%, 51.9999%, 54.6666%, 57.3333%,
+  59.9999%, 62.6666%, 65.3333%, 67.6666%, 100% { opacity: 0; }
+}
+/* Respirando: o cosseno do firmware sobe do brilho 10 ao 255 em 1,5 s e
+   desce igual. Um ponto a cada 100 ms, já com o expoente 0,6, ligado em linha
+   reta ao seguinte: o erro fica abaixo de 0,011 de opacidade. */
+@keyframes tutorial-led-respirar {
+  0%, 100% { opacity: .143; }
+  3.3333%, 96.6667% { opacity: .168; }
+  6.6667%, 93.3333% { opacity: .224; }
+  10%, 90% { opacity: .293; }
+  13.3333%, 86.6667% { opacity: .381; }
+  16.6667%, 83.3333% { opacity: .464; }
+  20%, 80% { opacity: .553; }
+  23.3333%, 76.6667% { opacity: .636; }
+  26.6667%, 73.3333% { opacity: .713; }
+  30%, 70% { opacity: .784; }
+  33.3333%, 66.6667% { opacity: .849; }
+  36.6667%, 63.3333% { opacity: .9; }
+  40%, 60% { opacity: .945; }
+  43.3333%, 56.6667% { opacity: .974; }
+  46.6667%, 53.3333% { opacity: .993; }
+  50% { opacity: 1; }
 }
 
-.tutorial-led-extras { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* As duas dicas fecham a seção, uma embaixo da outra e na largura toda. Lado
+   a lado, o passo a passo tinha quase o dobro da altura da outra dica, e
+   sobrava meia caixa vazia; aqui as listas é que se dividem em duas colunas,
+   que o navegador equilibra sozinho, sem partir um item no meio. */
+.tutorial-led-extras { display: grid; gap: 16px; margin-top: 32px; }
+@media (min-width: 960px) {
+  .tutorial-led-dica > ul,
+  .tutorial-led-passos { columns: 2; column-gap: 36px; }
+  .tutorial-led-dica > ul > li,
+  .tutorial-led-passos > li { break-inside: avoid; }
+}
 .tutorial-led-dica {
-  padding: 16px 18px; border-radius: 12px;
+  min-width: 0; padding: 20px; border-radius: 14px;
   border: 1px solid rgba(21,101,216,.18); background: rgba(21,101,216,.05);
   scroll-margin-top: 16px;
 }
-.tutorial-led-dica h4 { margin: 0 0 6px; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--ink-strong); }
+.tutorial-led-dica-topo {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start;
+  margin-bottom: 10px;
+}
+.tutorial-led-dica-icone { width: 36px; height: 36px; }
+.tutorial-led-dica-icone svg { width: 18px; height: 18px; }
+/* Título preso ao alto do ícone (em três linhas, no celular, ele ficava no
+   meio do texto); o padding centraliza a primeira linha com o ícone. */
+.tutorial-led-dica h4 { margin: 0; padding-top: 7px; font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--ink-strong); }
 .tutorial-led-dica p,
-.tutorial-led-dica li { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+.tutorial-led-dica li { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.55; }
 .tutorial-led-dica strong { color: var(--ink-strong); font-weight: 700; }
 .tutorial-led-dica ul { margin: 8px 0 0; padding-left: 18px; }
 .tutorial-led-dica ul li + li { margin-top: 6px; }
 /* Número posicionado à parte (e não em grid), porque o texto do passo tem
    <strong> no meio e viraria vários itens de grid. */
-.tutorial-led-passos { list-style: none; margin: 10px 0 0; padding: 0; counter-reset: passo; }
+.tutorial-led-passos { list-style: none; margin: 12px 0 0; padding: 0; counter-reset: passo; }
 .tutorial-led-passos li { position: relative; min-height: 24px; padding-left: 34px; }
-.tutorial-led-passos li + li { margin-top: 8px; }
+.tutorial-led-passos li + li { margin-top: 10px; }
 .tutorial-led-passos li::before {
   counter-increment: passo; content: counter(passo);
-  position: absolute; left: 0; top: -1px;
+  /* top 0, e não -1px: em duas colunas, o pixel acima do passo caía no pé
+     da coluna anterior e aparecia lá como um risco solto. */
+  position: absolute; left: 0; top: 0;
   width: 24px; height: 24px; border-radius: 50%;
   background: var(--brand); color: #fff; font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
@@ -3084,9 +3412,12 @@ button.form-avatar {
 @media (max-width: 767px) {
   .tutorial-led-card { padding: 20px 16px; }
   .tutorial-led-head h3 { font-size: 17px; }
-  .tutorial-led-item { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
-  .tutorial-led-luz { width: 44px; height: 44px; border-radius: 12px; }
+  .tutorial-led-observe li { padding: 12px 14px; }
+  .tutorial-led-grupo { margin-top: 28px; }
+  .tutorial-led-item { padding: 16px 14px; }
+  .tutorial-led-cabeca { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
+  .tutorial-led-luz { --led-aro-largura: 3px; width: 48px; height: 48px; border-radius: 13px; }
   .tutorial-led-luz::before,
-  .tutorial-led-luz::after { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
-  .tutorial-led-dica { padding: 14px; }
+  .tutorial-led-luz::after { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+  .tutorial-led-dica { padding: 16px 14px; }
 }

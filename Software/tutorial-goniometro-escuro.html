@@ -60,243 +60,493 @@
       </header>
 
       <div class="tutorial-grid">
-        <section class="card tutorial-illustration-card">
-          <svg viewBox="0 0 320 320" role="img" aria-label="Animação de um boneco esquemático com o goniômetro preso no pulso, levantando o braço pelo lado até formar 90° entre o braço e o tronco">
-            <!-- Boneco visto de frente, em pé. O goniômetro vai no pulso, mas
-                 o pivô da medida é o ombro: o que se lê é a abertura entre o
-                 braço e o tronco, de 0° (braço junto ao corpo) até 90°
-                 (braço na horizontal, na altura do ombro). -->
-            <g class="gonio-body">
-              <line x1="128" y1="64" x2="128" y2="192" />
-              <line x1="104" y1="82" x2="152" y2="82" />
-              <line x1="108" y1="192" x2="148" y2="192" />
-              <line x1="108" y1="192" x2="98" y2="280" />
-              <line x1="148" y1="192" x2="158" y2="280" />
-              <line x1="104" y1="82" x2="92" y2="176" />
-            </g>
-            <circle class="gonio-head" cx="128" cy="44" r="20" />
-            <circle class="gonio-head" cx="92" cy="184" r="9" />
+        <section class="card tutorial-illustration-card" aria-labelledby="tituloAbertura">
+          <header class="tutorial-abertura-topo">
+            <h3 id="tituloAbertura">O que o goniômetro mede</h3>
+            <p>A abertura entre o braço e o tronco quando o braço sobe pelo lado do corpo — na fisioterapia, a <strong>abdução do ombro</strong>.</p>
+          </header>
 
-            <g transform="translate(152,82)">
-              <!-- Setor pintado entre o tronco e o braço: é a abertura medida.
-                   O caminho é redesenhado a cada quadro pela animação. -->
-              <path class="gonio-wedge" d="M 0 0 L 0 56 Z" />
+          <div class="tutorial-palco">
+            <svg class="tutorial-ilustracao" viewBox="84 14 238 274" role="img" aria-label="Animação de uma pessoa em pé, de frente, com o goniômetro preso no pulso. Ela levanta o braço pelo lado do corpo, com o cotovelo esticado, de 0° (braço junto ao corpo) até 90° (braço na horizontal, na altura do ombro). A área pintada entre o tronco e o braço é a abertura medida.">
+              <!-- Pessoa vista de frente, em pé. O goniômetro vai no pulso, mas
+                   o pivô da medida é o ombro: o que se lê é a abertura entre o
+                   braço e o tronco, de 0° (braço junto ao corpo) até 90°
+                   (braço na horizontal, na altura do ombro). -->
+              <ellipse class="gonio-chao" cx="140" cy="282" rx="48" ry="5.5" />
 
-              <!-- Escala cobrindo o trajeto do movimento: 0° (braço junto ao
-                   corpo) até 90° (braço na horizontal). -->
-              <path class="gonio-scale-arc" d="M 0 56 A 56 56 0 0 0 56 0" />
+              <path class="gonio-calca" d="M 112 183 H 168 L 168 262 Q 168 266 164 266 H 146 Q 142 266 142 262 L 140 212 L 138 262 Q 138 266 134 266 H 116 Q 112 266 112 262 Z" />
+              <path class="gonio-tenis" d="M 105 278 C 105 268 112 263 122 263 H 136 Q 139 263 139 266 V 278 Q 139 281 136 281 H 108 Q 105 281 105 278 Z" />
+              <path class="gonio-tenis" d="M 175 278 C 175 268 168 263 158 263 H 144 Q 141 263 141 266 V 278 Q 141 281 144 281 H 172 Q 175 281 175 278 Z" />
+              <path class="gonio-sola" d="M 105 276 H 139 V 278 Q 139 281 136 281 H 108 Q 105 281 105 278 Z" />
+              <path class="gonio-sola" d="M 175 276 H 141 V 278 Q 141 281 144 281 H 172 Q 175 281 175 278 Z" />
 
-              <line class="gonio-tick" x1="0" y1="50" x2="0" y2="62" />
-              <line class="gonio-tick" x1="12.9" y1="48.3" x2="16.1" y2="59.9" />
-              <line class="gonio-tick" x1="25.0" y1="43.3" x2="31.0" y2="53.7" />
-              <line class="gonio-tick" x1="35.4" y1="35.4" x2="43.8" y2="43.8" />
-              <line class="gonio-tick" x1="43.3" y1="25.0" x2="53.7" y2="31.0" />
-              <line class="gonio-tick" x1="48.3" y1="12.9" x2="59.9" y2="16.1" />
-              <line class="gonio-tick" x1="50" y1="0" x2="62" y2="0" />
+              <rect class="gonio-pele-sombra" x="133" y="82" width="14" height="28" rx="4" />
+              <path class="gonio-camiseta" d="M 110 106 H 170 Q 178 106 179 116 L 171 191 H 109 L 101 116 Q 102 106 110 106 Z" />
+              <path class="gonio-pele-sombra" d="M 130 106 Q 140 117 150 106 Z" />
+              <path class="gonio-gola" d="M 128.5 106 Q 140 120 151.5 106" />
 
-              <!-- Referência fixa: a direção do tronco, onde a medida vale 0°. -->
-              <line class="gonio-arm-fixed" x1="0" y1="0" x2="0" y2="70" />
-
-              <g class="arm-rotate">
-                <line class="gonio-limb-line" x1="0" y1="0" x2="0" y2="46" stroke-width="13" stroke-linecap="round" />
-                <line class="gonio-limb-line" x1="0" y1="46" x2="0" y2="88" stroke-width="11" stroke-linecap="round" />
-                <circle class="gonio-hand" cx="0" cy="99" r="12" />
-                <rect class="gonio-device" x="-14" y="74" width="28" height="24" rx="7" />
+              <!-- Braço que fica parado, junto ao corpo. -->
+              <g transform="translate(105 116)">
+                <rect class="gonio-pele" x="-7.5" y="24" width="15" height="72" rx="7.5" />
+                <circle class="gonio-pele" cx="0" cy="99" r="9.5" />
+                <path class="gonio-camiseta" d="M -12.5 0 A 12.5 12.5 0 0 1 12.5 0 V 30 Q 12.5 34 8.5 34 H -8.5 Q -12.5 34 -12.5 30 Z" />
+                <path class="gonio-camiseta-barra" d="M -12.5 28 H 12.5 V 30 Q 12.5 34 8.5 34 H -8.5 Q -12.5 34 -12.5 30 Z" />
               </g>
 
-              <circle class="gonio-hinge" cx="0" cy="0" r="7" />
+              <circle class="gonio-pele-sombra" cx="111.5" cy="64" r="5.5" />
+              <circle class="gonio-pele-sombra" cx="168.5" cy="64" r="5.5" />
+              <circle class="gonio-pele" cx="140" cy="60" r="29" />
+              <path class="gonio-cabelo" d="M 110.5 63 C 108 40 122 28 141 28 C 160 28 173 40 169.5 63 C 167 54 163 48 157 45 C 149 51 134 52 122 48 C 117 52 113 57 110.5 63 Z" />
+              <path class="gonio-mecha" d="M 140 29 C 138 21 145 17 151 20" />
+              <ellipse class="gonio-olho" cx="130" cy="63" rx="3.2" ry="3.9" />
+              <ellipse class="gonio-olho" cx="150" cy="63" rx="3.2" ry="3.9" />
+              <circle class="gonio-brilho" cx="131.1" cy="61.6" r="1.1" />
+              <circle class="gonio-brilho" cx="151.1" cy="61.6" r="1.1" />
+              <ellipse class="gonio-bochecha" cx="123" cy="71" rx="5" ry="3.2" />
+              <ellipse class="gonio-bochecha" cx="157" cy="71" rx="5" ry="3.2" />
+              <path class="gonio-boca" d="M 134 72.5 Q 140 78.5 146 72.5" />
 
-              <!-- Os números vêm depois do braço para continuarem legíveis
-                   quando ele passa por cima da escala. -->
-              <text class="gonio-tick-label" x="0" y="68">0</text>
-              <text class="gonio-tick-label" x="34.0" y="58.9">30</text>
-              <text class="gonio-tick-label" x="58.9" y="34.0">60</text>
-              <text class="gonio-tick-label" x="68" y="0">90</text>
-            </g>
-          </svg>
-          <p class="tutorial-angle-readout">Abertura entre o braço e o tronco: <span class="num"><span class="angle-value">0</span>°</span></p>
-          <p class="tutorial-caption">O tronco (cinza) fica ereto e serve de referência para o 0°. O braço, com o goniômetro preso no pulso, sobe pelo lado até a horizontal — onde a abertura entre o braço e o tronco é de 90°.</p>
-        </section>
+              <!-- Tudo daqui para baixo é medido a partir do ombro (o pivô). -->
+              <g transform="translate(175 116)">
+                <!-- Setor pintado entre o tronco e o braço: é a abertura medida.
+                     O caminho é redesenhado a cada quadro pela animação. -->
+                <path class="gonio-wedge" d="M 0 0 L 0 118 Z" />
 
-        <section class="card">
-          <h3>Passo a passo</h3>
-          <ol class="tutorial-steps">
-            <li>
-              <div>
-                <h4>Prenda o goniômetro no pulso</h4>
-                <p>Fixe o dispositivo no pulso do paciente, com a cinta firme mas sem apertar, deixando o cotovelo livre para se estender.</p>
-              </div>
-            </li>
-            <li>
-              <div>
-                <h4>Posicione o paciente em pé</h4>
-                <p>Peça ao paciente para ficar em pé, de frente para você, com o tronco ereto e parado — é o tronco que serve de referência para o ângulo.</p>
-              </div>
-            </li>
-            <li>
-              <div>
-                <h4>Comece com o braço junto ao corpo</h4>
-                <p>Com o braço parado nessa posição, toque em <strong>Zerar (tara)</strong> na tela Dispositivo: é esse toque que faz o aparelho adotar a pose como 0° — sem ele, a leitura não parte do lugar certo.</p>
-              </div>
-            </li>
-            <li>
-              <div>
-                <h4>Peça para levantar o braço até 90°</h4>
-                <p>O paciente sobe o braço pelo lado, com o cotovelo estendido, até formar 90° com o tronco (braço na horizontal, na altura do ombro). O ângulo aparece automaticamente na tela do Dispositivo.</p>
-              </div>
-            </li>
-            <li>
-              <div>
-                <h4>Capture o movimento e registre a sessão</h4>
-                <p>Toque em <strong>Iniciar captura</strong> e peça o movimento completo: o aparelho guarda o menor e o maior ângulo, e a amplitude é a diferença entre os dois. Anote o valor na sessão do paciente para acompanhar a evolução.</p>
-              </div>
-            </li>
-          </ol>
-        </section>
-      </div>
+                <!-- Escala cobrindo o trajeto do movimento: 0° (braço junto ao
+                     corpo) até 90° (braço na horizontal). Fica além da mão,
+                     então o braço aponta para ela como o ponteiro de um
+                     transferidor e nunca cobre os números. -->
+                <path class="gonio-scale-arc" d="M 0 118 A 118 118 0 0 0 118 0" />
+                <line class="gonio-tick is-major" x1="0" y1="108" x2="0" y2="118" />
+                <line class="gonio-tick" x1="19.45" y1="110.3" x2="20.49" y2="116.21" />
+                <line class="gonio-tick" x1="38.31" y1="105.25" x2="40.36" y2="110.88" />
+                <line class="gonio-tick is-major" x1="54" y1="93.53" x2="59" y2="102.19" />
+                <line class="gonio-tick" x1="71.99" y1="85.8" x2="75.85" y2="90.39" />
+                <line class="gonio-tick" x1="85.8" y1="71.99" x2="90.39" y2="75.85" />
+                <line class="gonio-tick is-major" x1="93.53" y1="54" x2="102.19" y2="59" />
+                <line class="gonio-tick" x1="105.25" y1="38.31" x2="110.88" y2="40.36" />
+                <line class="gonio-tick" x1="110.3" y1="19.45" x2="116.21" y2="20.49" />
+                <line class="gonio-tick is-major" x1="108" y1="0" x2="118" y2="0" />
 
-      <!-- O que a luz (LED de status) do aparelho está dizendo. Cada padrão
-           sai de atualizarLed() e setup() em Firmware/goniometro-esp32.ino:
-           se o firmware mudar o ritmo, esta seção e o guia mudam juntos. -->
-      <section class="card tutorial-led-card" id="luz-do-aparelho" aria-labelledby="tituloLuzAparelho">
-        <header class="tutorial-led-head">
-          <h3 id="tituloLuzAparelho">O que a luz do aparelho está dizendo</h3>
-          <p>O goniômetro não tem tela: é a luz azul dele que conta o que está acontecendo. Observe por uns 15 segundos antes de concluir — quando está tudo certo, ela passa quase o tempo todo apagada e só dá uma piscadinha a cada 2 segundos. Outras luzinhas da placa ou do carregador mostram apenas energia e carga da bateria.</p>
-          <p class="tutorial-led-legenda" aria-hidden="true">Cada barrinha mostra 6 segundos da luz: o azul é o tempo em que ela fica acesa.</p>
-        </header>
+                <!-- Referência fixa: a linha do tronco ereto, onde a medida vale 0°. -->
+                <line class="gonio-referencia" x1="0" y1="0" x2="0" y2="118" />
 
-        <div class="tutorial-led-grid">
-          <ul class="tutorial-led-lista">
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="curto" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Pisca curtinho a cada 2 segundos</h4>
-                  <span class="tutorial-led-selo is-normal">Normal</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="curto" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> tudo certo. O aparelho está no Wi-Fi da clínica e pareado com o Rehabit.</p>
-                <p><strong>O que fazer:</strong> nada, pode medir. Se mesmo assim a tela Dispositivo mostrar <strong>Desconectado</strong>, veja <a href="#luz-ok-desconectado">a dica sobre isso</a>.</p>
+                <!-- Braço que sobe, com o cotovelo esticado: manga, braço e mão
+                     giram juntos em torno do ombro, e o aparelho vai no pulso. -->
+                <g class="arm-rotate">
+                  <rect class="gonio-pele" x="-7.5" y="24" width="15" height="72" rx="7.5" />
+                  <circle class="gonio-pele" cx="0" cy="99" r="9.5" />
+                  <rect class="gonio-aparelho-base" x="-12.5" y="71" width="25" height="20" rx="6" />
+                  <rect class="gonio-aparelho" x="-12.5" y="68" width="25" height="20" rx="6" />
+                  <circle class="gonio-led-brilho" cx="0" cy="78" r="5.5" />
+                  <circle class="gonio-led" cx="0" cy="78" r="2.6" />
+                  <path class="gonio-camiseta" d="M -12.5 0 A 12.5 12.5 0 0 1 12.5 0 V 30 Q 12.5 34 8.5 34 H -8.5 Q -12.5 34 -12.5 30 Z" />
+                  <path class="gonio-camiseta-barra" d="M -12.5 28 H 12.5 V 30 Q 12.5 34 8.5 34 H -8.5 Q -12.5 34 -12.5 30 Z" />
+                </g>
+
+                <circle class="gonio-hinge" cx="0" cy="0" r="5" />
+
+                <text class="gonio-tick-label" x="0" y="131">0</text>
+                <text class="gonio-tick-label" x="65.5" y="113.45">30</text>
+                <text class="gonio-tick-label" x="113.45" y="65.5">60</text>
+                <text class="gonio-tick-label" x="131" y="0">90</text>
+              </g>
+            </svg>
+            <p class="tutorial-angle-readout">Abertura entre o braço e o tronco <span class="num"><span class="angle-value">0</span>°</span></p>
+          </div>
+
+          <!-- Cada marcador repete as cores do desenho, para ligar o texto à
+               parte da figura de que ele fala. -->
+          <ul class="tutorial-legenda">
+            <li>
+              <svg class="tutorial-legenda-marca" viewBox="0 0 40 40" aria-hidden="true">
+                <line class="gonio-referencia" x1="20" y1="7" x2="20" y2="33" />
+              </svg>
+              <div>
+                <h4>Tronco ereto: a referência do 0°</h4>
+                <p>Com o paciente reto e o braço pendurado ao lado do tronco, o <strong>Zerar (tara)</strong> faz essa pose valer 0°. Toda medida parte dela.</p>
               </div>
             </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="ao-ligar" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Apagada nos primeiros segundos depois de ligar</h4>
-                  <span class="tutorial-led-selo is-normal">Normal</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="ao-ligar" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> o aparelho está se preparando: calibra o sensor de movimento (cerca de 2 segundos) e se conecta ao Wi-Fi. Também acontece depois de usar <strong>Reiniciar aparelho</strong>.</p>
-                <p><strong>O que fazer:</strong> deixe o aparelho parado, sem mexer, até a luz começar a piscar. Se ele se mexer nessa hora, a medida pode ficar alguns graus torta — aí é só desligar e ligar de novo, com ele parado.</p>
+            <li>
+              <svg class="tutorial-legenda-marca" viewBox="0 0 40 40" aria-hidden="true">
+                <rect class="gonio-aparelho-base" x="7.5" y="13" width="25" height="18" rx="6" />
+                <rect class="gonio-aparelho" x="7.5" y="10" width="25" height="18" rx="6" />
+                <circle class="gonio-led-brilho" cx="20" cy="19" r="5.5" />
+                <circle class="gonio-led" cx="20" cy="19" r="2.6" />
+              </svg>
+              <div>
+                <h4>Goniômetro no pulso, cotovelo esticado</h4>
+                <p>Com o cotovelo reto, braço e antebraço sobem como uma peça só — por isso o aparelho no pulso acompanha exatamente o movimento do braço.</p>
               </div>
             </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="fixo" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Acesa sem piscar</h4>
-                  <span class="tutorial-led-selo is-normal">Normal</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="fixo" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> gravando uma captura — alguém tocou em <strong>Iniciar captura</strong> na tela Dispositivo ou em <strong>Gravar movimento</strong> ao registrar uma sessão do paciente. Enquanto grava, a luz fica acesa mesmo que o Wi-Fi caia.</p>
-                <p><strong>O que fazer:</strong> peça ao paciente o movimento completo. A luz volta a piscar quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se ela continua acesa mas ninguém está gravando (o botão já voltou a dizer Iniciar captura ou Gravar movimento), a conexão caiu no meio da gravação: toque em <strong>Reiniciar aparelho</strong> na tela Dispositivo, com o aparelho parado. Se esse botão estiver desativado (a tela mostra Desconectado ou Aguardando o aparelho), desligue e ligue o aparelho pela chave, também com ele parado.</p>
-              </div>
-            </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="identificar" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Pisca muito rápido por 4 segundos e para</h4>
-                  <span class="tutorial-led-selo is-normal">Normal</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="identificar" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> alguém tocou em <strong>Identificar aparelho</strong> na tela Dispositivo. Serve para confirmar que o aparelho está recebendo os comandos do site.</p>
-                <p><strong>O que fazer:</strong> nada. Depois dos 4 segundos a luz volta ao ritmo de antes.</p>
-              </div>
-            </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="devagar" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Pisca devagar: meio segundo acesa, meio apagada</h4>
-                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="devagar" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> o aparelho está sem Wi-Fi ou ainda não foi pareado com a clínica. Enquanto isso, nenhuma medida chega ao Rehabit.</p>
-                <p><strong>O que fazer:</strong> confira se o Wi-Fi da clínica está funcionando e se o aparelho está ao alcance do roteador — quando a rede volta, ele se reconecta sozinho. Se o Wi-Fi está bom, desligue e ligue o aparelho. Se a clínica trocou a rede ou a senha do Wi-Fi, ao religar a luz fica apagada e, em até 1 minuto, a rede <strong>Rehabit-Goniometro</strong> aparece no celular: conecte nela (senha <strong>rehabit123</strong>; se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador), escolha a rede nova, digite a senha e <strong>deixe o código em branco</strong> — o pareamento e o zero continuam guardados. Só se, depois disso, a luz continuar piscando devagar é que o aparelho precisa ser pareado de novo: <a href="#parear-de-novo">veja como</a>.</p>
-              </div>
-            </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="sem-servidor" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Acende e apaga bem devagar: alguns segundos acesa, alguns apagada</h4>
-                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="sem-servidor" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> o aparelho está no Wi-Fi e pareado, mas não consegue falar com o Rehabit: a internet da clínica caiu ou o servidor do Rehabit está fora do ar. Cada envio fica esperando uma resposta — de 4 a 15 segundos, às vezes mais —, e a luz só muda entre um envio e outro: por isso o ritmo fica tão lento, e às vezes a luz parece parada por meio minuto. Nenhuma medida chega ao Rehabit.</p>
-                <p><strong>O que fazer:</strong> teste a internet num celular ligado no mesmo Wi-Fi. Se a internet está boa, aguarde 2 a 3 minutos: quando o servidor volta, a luz volta sozinha a piscar curtinho. Não pareie de novo enquanto isso — sem o servidor, o pareamento também não funciona.</p>
-              </div>
-            </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="apagada" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Apagada o tempo todo</h4>
-                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="apagada" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> ou o aparelho está esperando ser configurado pelo celular (o portal de configuração está aberto), ou está sem energia.</p>
-                <p><strong>O que fazer:</strong></p>
-                <ul class="tutorial-led-casos">
-                  <li>A rede Wi-Fi <strong>Rehabit-Goniometro</strong> aparece no celular? Então o portal está aberto — acontece com aparelho novo, depois de segurar o BOOT, quando a clínica trocou a rede ou a senha do Wi-Fi, quando o aparelho veio de outra clínica ou quando o Wi-Fi estava fora do ar na hora em que ele foi ligado. Se o Wi-Fi só estava fora do ar, desligue e ligue o aparelho depois que ele voltar. Senão, conecte nela (senha <strong>rehabit123</strong>; se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador), escolha o Wi-Fi da clínica e digite a senha; o código de 6 dígitos só é preciso para aparelho novo ou vindo de outra clínica — e aí siga o <a href="#parear-de-novo">passo a passo</a>, que mostra como conferir se ele pegou.</li>
-                  <li>Não aparece depois de 1 minuto? Desligue e ligue o aparelho pela chave e espere mais 1 minuto. Se continuar apagada e a rede não aparecer, carregue a bateria.</li>
-                  <li>A tela Dispositivo mostra <strong>Conectado</strong>? Então o aparelho funciona e só a luz está com defeito: avise quem montou o aparelho.</li>
-                </ul>
-              </div>
-            </li>
-            <li class="tutorial-led-item">
-              <span class="tutorial-led-luz" data-ritmo="sensor" aria-hidden="true"></span>
-              <div class="tutorial-led-texto">
-                <div class="tutorial-led-topo">
-                  <h4>Pisca rápido sem parar, desde que é ligado</h4>
-                  <span class="tutorial-led-selo is-atencao">Precisa de atenção</span>
-                </div>
-                <span class="tutorial-led-ritmo" data-ritmo="sensor" aria-hidden="true"></span>
-                <p><strong>Significa:</strong> o aparelho não encontrou o sensor de movimento e não consegue medir.</p>
-                <p><strong>O que fazer:</strong> desligue e ligue de novo. Se continuar assim, é um problema de montagem (algum fio do sensor solto ou mal ligado): avise quem montou o aparelho. Segurar o BOOT não resolve.</p>
+            <li>
+              <svg class="tutorial-legenda-marca" viewBox="0 0 40 40" aria-hidden="true">
+                <path class="gonio-wedge" d="M 9 9 L 9 33 A 24 24 0 0 0 33 9 Z" />
+                <path class="gonio-scale-arc" d="M 9 33 A 24 24 0 0 0 33 9" />
+                <circle class="gonio-hinge" cx="9" cy="9" r="3.5" />
+              </svg>
+              <div>
+                <h4>A abertura medida</h4>
+                <p>O ângulo pintado entre o tronco e o braço. É esse número que aparece ao vivo na tela Dispositivo enquanto o paciente se move.</p>
               </div>
             </li>
           </ul>
 
-          <div class="tutorial-led-extras">
-            <div class="tutorial-led-dica" id="luz-ok-desconectado">
-              <h4>A luz pisca curtinho (tudo certo), mas a tela Dispositivo mostra Desconectado ou Aguardando o aparelho?</h4>
-              <p>A luz só sabe se o aparelho está no Wi-Fi e se tem um pareamento guardado — ela não sabe se o Rehabit aceitou esse pareamento. Então:</p>
-              <ul>
-                <li><strong>Confira a conta:</strong> a tela precisa estar aberta na mesma clínica em que o aparelho foi pareado.</li>
-                <li><strong>O site está lento ou não carrega?</strong> O servidor do Rehabit pode estar reiniciando: aguarde 2 a 3 minutos antes de mexer no aparelho.</li>
-                <li><strong>Continua assim?</strong> O aparelho pode ter sido revogado (na lista Goniômetros pareados, da conta da clínica, ele aparece como Revogado) ou ter o pareamento recusado. <a href="#parear-de-novo">Pareie de novo</a>.</li>
-              </ul>
-            </div>
+          <div class="tutorial-escala">
+            <h4>Como ler o número</h4>
+            <ol class="tutorial-escala-lista">
+              <li><strong>0°</strong><span>junto ao corpo</span></li>
+              <li><strong>45°</strong><span>a meio caminho</span></li>
+              <li><strong>90°</strong><span>na horizontal</span></li>
+              <li><strong>~180°</strong><span>acima da cabeça</span></li>
+            </ol>
+          </div>
+        </section>
 
-            <div class="tutorial-led-dica" id="parear-de-novo">
-              <h4>Como parear de novo</h4>
-              <p>Para aparelho novo ou para levar o aparelho a outra clínica — só trocar a rede ou a senha do Wi-Fi não exige isto (veja o item <em>Pisca devagar</em>). Tenha em mãos a senha do Wi-Fi e o acesso à conta da clínica.</p>
-              <ol class="tutorial-led-passos">
-                <li>Entre com a conta da clínica, abra a tela Dispositivo e toque em <strong>Parear novo dispositivo</strong>. Aparece um código de 6 dígitos, que vale 10 minutos.</li>
-                <li>Se a luz está piscando, segure o botão <strong>BOOT</strong> da placa por 5 segundos, até ela apagar. Isso apaga o Wi-Fi salvo, o pareamento e o zero (tara). Se a luz já está apagada e a rede Rehabit-Goniometro já aparece no celular (aparelho novo, ou trazido de outra clínica), o BOOT não funciona nesse estado: vá direto ao passo 3 — o passo 4 confere se deu certo.</li>
-                <li>No celular, conecte na rede <strong>Rehabit-Goniometro</strong> (senha <strong>rehabit123</strong>). Se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador. O aviso de “sem internet” é normal.</li>
-                <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Espere cerca de 1 minuto e confira na tela Dispositivo, na conta da clínica, se o aparelho novo aparece como <strong>Online</strong> na lista Goniômetros pareados (feche a janela do código para ver a lista) — é isso que garante que deu certo, não só a luz.
-                  <ul>
-                    <li>A luz continua apagada? A senha do Wi-Fi não foi aceita e o portal segue aberto: conecte de novo na Rehabit-Goniometro e corrija.</li>
-                    <li>A luz voltou a piscar, mas o aparelho não aparece como Online? O código não foi aceito (digitado errado, vencido, já usado ou o servidor não respondeu a tempo). Como agora ele está no Wi-Fi, o BOOT funciona: gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
-                  </ul>
-                </li>
-                <li>Antes de medir, faça de novo o <strong>Zerar (tara)</strong> com o braço do paciente pendurado.</li>
-              </ol>
+        <section class="card tutorial-passos-card" aria-labelledby="tituloPassoAPasso">
+          <h3 id="tituloPassoAPasso">Passo a passo</h3>
+          <ol class="tutorial-steps">
+            <li>
+              <div>
+                <h4>Prenda o goniômetro no pulso</h4>
+                <p>Use a cinta firme, sem apertar, no pulso do braço que vai ser medido. Não importa para que lado o aparelho fica virado: o zero vem da pose do paciente, não da posição da placa. Só não deixe que ele escorregue depois de zerar.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Deixe o paciente ereto, de frente para você</h4>
+                <p>Em pé ou sentado, com o tronco reto e parado. É isso que faz o número valer: a medida é feita em relação à gravidade, então uma inclinação do corpo entra na conta.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Zere com o braço pendurado ao lado do tronco</h4>
+                <p>Com o braço relaxado e parado, toque em <strong>Zerar (tara)</strong> na tela Dispositivo: essa pose passa a valer 0°. Sem a tara, o número não parte do lugar certo. O zero fica guardado no aparelho, mesmo desligado — refaça ao trocar de paciente ou ao prender o aparelho de novo.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Peça para levantar o braço pelo lado</h4>
+                <p>Com o cotovelo esticado, o paciente sobe o braço pelo lado do corpo até a horizontal, na altura do ombro, onde a abertura é de 90°. O número acompanha ao vivo na tela Dispositivo.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h4>Grave o movimento e registre na sessão</h4>
+                <p>Toque em <strong>Iniciar captura</strong> e peça o movimento completo, subindo e descendo. A captura guarda o menor e o maior ângulo, e a amplitude é a diferença entre os dois. Ao registrar a sessão do paciente, <strong>Gravar movimento</strong> faz o mesmo e já preenche a amplitude, junto com a curva do movimento.</p>
+              </div>
+            </li>
+          </ol>
+
+          <!-- Os dois limites da medida, de Firmware/goniometro-esp32-GUIA.md
+               ("O que essa medida é (e o que não é)"): a conta é o ângulo
+               entre a gravidade de agora e a da hora da tara. -->
+          <div class="tutorial-valer">
+            <h4>Para a medida valer</h4>
+            <ul class="tutorial-pontos">
+              <li>
+                <span class="tutorial-pontos-icone" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="4"/><polyline points="7 9 12 4 17 9"/></svg>
+                </span>
+                <p><strong>Tronco reto do começo ao fim.</strong> O aparelho mede em relação à gravidade, não ao tronco. Se o paciente inclinar o corpo 15° para levantar mais o braço, o número sai 15° maior do que o ombro abriu de verdade.</p>
+              </li>
+              <li>
+                <span class="tutorial-pontos-icone" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </span>
+                <p><strong>O número é sempre positivo.</strong> Ele diz o quanto o braço abriu, não para que lado: 10° para a frente ou 10° para trás aparecem do mesmo jeito, como 10°.</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- O que a luz (LED de status) do aparelho está dizendo. Cada padrão é
+           um modo de modoDaLuz() e brilhoDoModo() em Firmware/goniometro-esp32.ino
+           (bloco "LED de status"), com os mesmos tempos: se o firmware mudar o
+           ritmo, esta seção, o CSS .tutorial-led-* e o guia mudam juntos. -->
+      <section class="card tutorial-led-card" id="luz-do-aparelho" aria-labelledby="tituloLuzAparelho">
+        <header class="tutorial-led-head">
+          <h3 id="tituloLuzAparelho">O que a luz do aparelho está dizendo</h3>
+          <p>O goniômetro não tem tela: é a luzinha azul dele que conta o que está acontecendo. Cada situação tem um jeito próprio de piscar — encontre abaixo o que você está vendo. Outras luzinhas da placa ou do carregador mostram só a energia e a carga da bateria.</p>
+          <ul class="tutorial-led-observe">
+            <li>
+              <span class="tutorial-led-observe-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+              </span>
+              <p><strong>Observe por uns 15 segundos.</strong> Quando está tudo certo, a luz fica quase sempre apagada: é só uma piscadinha a cada 2 segundos.</p>
+            </li>
+            <li>
+              <span class="tutorial-led-observe-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
+              </span>
+              <p><strong>O ritmo não depende da internet.</strong> A luz pisca sempre no mesmo compasso: se o jeito de piscar mudou, foi a situação do aparelho que mudou.</p>
+            </li>
+            <li>
+              <span class="tutorial-led-observe-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 2 8 12 13 22 8 12 3"/><polyline points="2 16 12 21 22 16"/><polyline points="2 12 12 17 22 12"/></svg>
+              </span>
+              <p><strong>Uma coisa de cada vez.</strong> Se duas coisas acontecem juntas, a luz mostra só a mais importante — o Identificar, por exemplo, passa na frente de qualquer outra.</p>
+            </li>
+          </ul>
+          <p class="tutorial-led-legenda" aria-hidden="true">Cada barrinha mostra 6 segundos da luz: o azul é o tempo em que ela fica acesa, e quanto mais forte o azul, mais forte a luz.</p>
+        </header>
+
+        <div class="tutorial-led-grupo">
+          <div class="tutorial-led-grupo-topo">
+            <span class="tutorial-led-grupo-icone is-normal" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div>
+              <h4>Tudo certo ou em uso</h4>
+              <p>Nada a resolver: é o aparelho trabalhando.</p>
             </div>
+          </div>
+          <ul class="tutorial-led-lista">
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="tudo-certo" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Uma piscada curtinha a cada 2 segundos</h5>
+                  <span class="tutorial-led-selo is-normal">Tudo certo</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="tudo-certo" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>O aparelho está no Wi-Fi da clínica, pareado, e o Rehabit está recebendo as medidas dele.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Nada — pode medir. Se mesmo assim a tela Dispositivo mostrar <strong>Desconectado</strong>, veja <a href="#luz-ok-desconectado">a dica no fim desta seção</a>.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="calibrando" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Fraca e parada, logo depois de ligar</h5>
+                  <span class="tutorial-led-selo is-normal">Calibrando o sensor</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="calibrando" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>Nos primeiros 2 a 3 segundos depois de ligar (ou de tocar em <strong>Reiniciar aparelho</strong>), ele calibra o sensor de movimento.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Deixe o aparelho parado até a luz mudar. Se ele se mexer nessa hora, a medida pode sair alguns graus torta: desligue e ligue de novo, com ele parado.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="gravando" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Acesa forte, sem piscar</h5>
+                  <span class="tutorial-led-selo is-normal">Gravando</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="gravando" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>Alguém tocou em <strong>Iniciar captura</strong> na tela Dispositivo ou em <strong>Gravar movimento</strong> ao registrar uma sessão.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Peça o movimento completo; a luz volta ao normal quando você toca em <strong>Parar captura</strong> ou <strong>Parar gravação</strong>. Se a conexão cair no meio, a gravação é encerrada sozinha — o servidor fecha entre 8 e 10 segundos sem notícias do aparelho, e o aparelho apaga a luz fixa assim que volta a falar com ele, ou em 10 segundos se não voltar — e a luz passa a mostrar o problema. Os números medidos até ali continuam na tela Dispositivo; no registro de sessão, digite a amplitude ou grave de novo para levar a curva.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="identificar" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Pisca muito rápido por 4 segundos e para</h5>
+                  <span class="tutorial-led-selo is-normal">Identificando</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="identificar" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>Alguém tocou em <strong>Identificar aparelho</strong> na tela Dispositivo. Confirma que o aparelho recebe os comandos do site. Com mais de um aparelho ligado na mesma clínica, o comando vai para um deles, sem escolha — e a tela mistura as medidas dos dois: deixe ligado só o que vai medir.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Nada. Esse aviso passa na frente de qualquer outro, até da gravação, e depois dos 4 segundos a luz volta ao jeito de antes.</dd>
+                </div>
+              </dl>
+            </li>
+          </ul>
+        </div>
+
+        <div class="tutorial-led-grupo">
+          <div class="tutorial-led-grupo-topo">
+            <span class="tutorial-led-grupo-icone is-atencao" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            <div>
+              <h4>Precisa de atenção</h4>
+              <p>As medidas não estão chegando ao Rehabit, ou o aparelho espera alguma coisa de você.</p>
+            </div>
+          </div>
+          <ul class="tutorial-led-lista">
+            <li class="tutorial-led-item is-largo" id="luz-respirando">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="portal" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>“Respirando”: acende e apaga devagar, bem suave, a cada 3 segundos</h5>
+                  <span class="tutorial-led-selo is-atencao">Esperando configuração</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="portal" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>O aparelho abriu o portal de configuração: criou a rede Wi-Fi <strong>Rehabit-Goniometro</strong> e espera alguém configurá-lo pelo celular. Acontece com aparelho novo, depois de segurar o botão BOOT e quando, ao ligar, ele não encontra o Wi-Fi que tem guardado. Enquanto respira, nada é medido nem enviado — e o portal não fecha sozinho.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>
+                    <ul class="tutorial-led-casos">
+                      <li><strong>O Wi-Fi da clínica estava fora do ar?</strong> Quando ele voltar, desligue e ligue o aparelho.</li>
+                      <li><strong>Trocaram a rede ou a senha do Wi-Fi?</strong> No celular, conecte na rede Rehabit-Goniometro (senha <strong>rehabit123</strong>; se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador), escolha a rede da clínica, digite a senha e <strong>deixe o código em branco</strong>: o pareamento e o zero continuam guardados.</li>
+                      <li><strong>Aparelho novo ou vindo de outra clínica?</strong> Ele precisa do código de 6 dígitos: siga o <a href="#parear-de-novo">Como parear de novo</a>.</li>
+                    </ul>
+                  </dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="devagar" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Pisca devagar: meio segundo acesa, meio apagada</h5>
+                  <span class="tutorial-led-selo is-atencao">Sem Wi-Fi ou sem pareamento</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="devagar" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>Ou está sem Wi-Fi (procurando a rede, ou a conexão caiu), ou sem pareamento (nunca foi pareado, o código não foi aceito, ou o Rehabit recusou o pareamento — por exemplo, porque a clínica revogou o aparelho). Nenhuma medida chega ao Rehabit. Logo depois de ligar é normal por alguns segundos, enquanto ele entra no Wi-Fi.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Confira se o Wi-Fi da clínica funciona e se o aparelho está perto do roteador: quando a rede volta, ele se reconecta sozinho. Continua? Desligue, ligue e espere 1 minuto. Se a luz passar a <a href="#luz-respirando">respirar</a>, era o Wi-Fi. Se seguir piscando devagar, o Wi-Fi está bom e falta o pareamento: <a href="#parear-de-novo">pareie de novo</a>.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="sem-servidor" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Piscada dupla a cada 2 segundos</h5>
+                  <span class="tutorial-led-selo is-atencao">Servidor não responde</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="sem-servidor" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>Está no Wi-Fi e pareado, mas há mais de 10 segundos o Rehabit não recebe as medidas: a internet da clínica caiu, ou o servidor do Rehabit está fora do ar ou ainda acordando — sem uso, ele “dorme” e pode levar até 1 minuto para responder.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Teste a internet num celular ligado no mesmo Wi-Fi. Se ela está boa, aguarde 2 a 3 minutos: quando o servidor responde, a luz volta sozinha à piscada curtinha. Não pareie de novo enquanto isso — sem o servidor, o pareamento também não funciona.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="sensor" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Pisca rápido sem parar, desde que é ligado</h5>
+                  <span class="tutorial-led-selo is-atencao">Sensor não encontrado</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="sensor" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>O aparelho não encontrou o sensor de movimento e não consegue medir.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Desligue e ligue de novo. Se continuar assim, é problema de montagem (algum fio do sensor solto ou mal ligado): avise quem montou o aparelho. Segurar o BOOT não resolve. Se um fio soltar com o aparelho já ligado, a luz não percebe: o ângulo na tela trava ou pula. Nesse caso, desligue e ligue — se a luz passar a piscar rápido sem parar, o sensor soltou.</dd>
+                </div>
+              </dl>
+            </li>
+            <li class="tutorial-led-item">
+              <div class="tutorial-led-cabeca">
+                <span class="tutorial-led-luz" data-ritmo="apagada" aria-hidden="true"></span>
+                <div class="tutorial-led-titulo">
+                  <h5>Apagada o tempo todo</h5>
+                  <span class="tutorial-led-selo is-atencao">Sem energia</span>
+                </div>
+              </div>
+              <span class="tutorial-led-ritmo" data-ritmo="apagada" aria-hidden="true"></span>
+              <dl class="tutorial-led-desc">
+                <div>
+                  <dt>O que significa</dt>
+                  <dd>O aparelho está desligado ou sem bateria. Ligado, a luz nunca passa mais de 2 segundos apagada — nem esperando configuração.</dd>
+                </div>
+                <div>
+                  <dt>O que fazer</dt>
+                  <dd>Confira a chave liga/desliga e carregue a bateria. Se a tela Dispositivo mostra <strong>Conectado</strong> com a luz apagada, só a luz está com defeito: avise quem montou o aparelho.</dd>
+                </div>
+              </dl>
+            </li>
+          </ul>
+        </div>
+
+        <div class="tutorial-led-extras">
+          <div class="tutorial-led-dica" id="luz-ok-desconectado">
+            <div class="tutorial-led-dica-topo">
+              <span class="tutorial-led-dica-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </span>
+              <h4>A luz dá a piscada curtinha (tudo certo), mas a tela Dispositivo mostra Desconectado ou Aguardando o aparelho?</h4>
+            </div>
+            <p>Olhe a luz por uns 15 segundos antes de concluir: a tela percebe uma queda em 8 segundos, e a luz, em 10. Se a piscada curtinha continuar, o aparelho está entregando as medidas — ela só se mantém enquanto o Rehabit aceita os dados dele. O que falta é a tela mostrar:</p>
+            <ul>
+              <li><strong>Atualize a tela:</strong> toque em <strong>Atualizar agora</strong> ou recarregue a página — a ligação da tela com o servidor pode ter caído.</li>
+              <li><strong>Confira a conta:</strong> a tela precisa estar aberta na clínica em que o aparelho foi pareado. Na conta da clínica, a lista <strong>Goniômetros pareados</strong> deve mostrá-lo como <strong>Online</strong>.</li>
+              <li><strong>Não aparece como Online?</strong> Ele está mandando as medidas para outra clínica — acontece quando veio de outra clínica e o código novo não foi aceito. <a href="#parear-de-novo">Pareie de novo</a>: como ele está no Wi-Fi, o BOOT funciona.</li>
+            </ul>
+          </div>
+
+          <div class="tutorial-led-dica" id="parear-de-novo">
+            <div class="tutorial-led-dica-topo">
+              <span class="tutorial-led-dica-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+              </span>
+              <h4>Como parear de novo</h4>
+            </div>
+            <p>Para aparelho novo, vindo de outra clínica, ou que segue <em>piscando devagar</em> com o Wi-Fi funcionando. Só trocar a rede ou a senha do Wi-Fi não exige isto (veja <a href="#luz-respirando">Respirando</a>). Tenha em mãos a senha do Wi-Fi e o acesso à conta da clínica.</p>
+            <ol class="tutorial-led-passos">
+              <li>Entre com a conta da clínica, abra a tela Dispositivo e toque em <strong>Parear novo dispositivo</strong>. Aparece um código de 6 dígitos, que vale 10 minutos.</li>
+              <li>Abra o portal de configuração:
+                <ul>
+                  <li><strong>A luz está respirando?</strong> O portal já está aberto: vá direto ao passo 3. Nesse estado o BOOT não funciona — nem é preciso.</li>
+                  <li><strong>Pisca de outro jeito?</strong> Segure o botão <strong>BOOT</strong> da placa até a luz ficar fraca e parada e solte, com o aparelho parado. Costuma levar uns 5 segundos; com a internet fora do ar pode levar até meio minuto — continue segurando até a luz mudar. Ele apagou o Wi-Fi salvo, o pareamento e o zero (tara), reiniciou e logo começa a respirar. Se ele acabou de ser ligado, espere 1 minuto antes: enquanto procura o Wi-Fi, ele ainda não lê o botão.</li>
+                </ul>
+              </li>
+              <li>No celular, conecte na rede <strong>Rehabit-Goniometro</strong> (senha <strong>rehabit123</strong>). Se a página não abrir sozinha, digite <strong>http://192.168.4.1</strong> no navegador. O aviso de “sem internet” é normal.</li>
+              <li>Escolha o Wi-Fi da clínica, digite a senha dele e o código de 6 dígitos, e salve. Espere cerca de 1 minuto e confira, na conta da clínica, se o aparelho aparece como <strong>Online</strong> na lista Goniômetros pareados (feche a janela do código para ver a lista) — é isso que garante que deu certo, não só a luz.
+                <ul>
+                  <li><strong>Continua respirando?</strong> A senha do Wi-Fi não foi aceita e o portal segue aberto: conecte de novo na Rehabit-Goniometro e corrija.</li>
+                  <li><strong>Pisca devagar, ou não aparece como Online?</strong> O código não foi aceito (digitado errado, vencido, já usado ou o servidor não respondeu a tempo — se o próprio site não carrega, espere ele voltar antes de tentar de novo). Como agora ele está no Wi-Fi, o BOOT funciona: gere outro código e repita desde o passo 1, sem pular o BOOT.</li>
+                </ul>
+              </li>
+              <li>Antes de medir, faça de novo o <strong>Zerar (tara)</strong> com o braço do paciente pendurado.</li>
+            </ol>
           </div>
         </div>
       </section>
