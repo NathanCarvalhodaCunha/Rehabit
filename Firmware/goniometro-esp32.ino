@@ -119,12 +119,14 @@ const unsigned long INTERVALO_INICIAL_MS = 2000;
 
 // Sem nenhuma telemetria aceita por este tempo, a luz avisa que o servidor
 // não responde. Parado, o aparelho manda um pacote a cada 2 s: dá folga para
-// alguns envios perdidos antes de acusar.
-const unsigned long SERVIDOR_CALADO_MS = 12000;
+// alguns envios perdidos antes de acusar. É o mesmo limite da captura (abaixo):
+// com valores diferentes, uma captura abandonada passava uns segundos em
+// "tudo certo" entre deixar de dizer "gravando" e acusar o servidor.
+const unsigned long SERVIDOR_CALADO_MS = 10000;
 // Uma captura sem contato por este tempo é encerrada pelo próprio aparelho.
-// O servidor fecha a dele com 8 s de silêncio, mas não tem como mandar o
-// PARAR_CAPTURA para quem está fora do ar — sem isto, a luz ficaria dizendo
-// "gravando" para sempre.
+// O servidor fecha a dele entre 8 e 10 s de silêncio (timeout de 8 s, conferido
+// a cada 2 s), mas não tem como mandar o PARAR_CAPTURA para quem está fora do
+// ar — sem isto, a luz ficaria dizendo "gravando" para sempre.
 const unsigned long CAPTURA_SEM_CONTATO_MS = 10000;
 
 // ------------------------------------------------------------------
@@ -159,6 +161,10 @@ unsigned long proximoEnvio = 0;
 unsigned long intervaloEnvioMs = INTERVALO_INICIAL_MS;
 unsigned long ultimoAvisoPareamento = 0;
 unsigned long botaoPressionadoDesde = 0;
+// A captura foi largada pelo limite de 10 s sem resposta? Se o servidor
+// voltar dizendo que ela continua aberta (as respostas se perderam, mas os
+// pacotes chegaram), o aparelho volta a gravar. Só a loopTask usa.
+bool capturaLargadaPorSilencio = false;
 
 /* Tudo o que a luz de status consulta. Ela roda em outra tarefa (veja "LED
    de status"), então só lê variáveis simples de até 32 bits — cada escrita
@@ -563,8 +569,9 @@ uint32_t dutyDoBrilho(uint8_t brilho) {
 uint8_t modoDaLuz(bool identificando, bool comWifi, uint32_t semEnvioOkMs, uint32_t silencioMs) {
   if (sensorAusente) return LUZ_SEM_SENSOR;
   if (identificando) return LUZ_IDENTIFICANDO;
-  // Com 10 s sem contato a captura já acabou no servidor: a luz para de dizer
-  // "gravando" na hora, mesmo que o loop ainda esteja preso num envio.
+  // Com 10 s sem contato a captura provavelmente já acabou no servidor: a luz
+  // para de dizer "gravando" na hora, mesmo que o loop ainda esteja preso
+  // num envio.
   if (capturando && semEnvioOkMs <= CAPTURA_SEM_CONTATO_MS) return LUZ_GRAVANDO;
   if (portalAberto) return LUZ_PORTAL;
   if (calibrando) return LUZ_CALIBRANDO;
@@ -801,12 +808,36 @@ void tratarComando(const String &comando) {
     pedidosIdentificacao = pedidosIdentificacao + 1;
   } else if (comando == "INICIAR_CAPTURA") {
     capturando = true;
+    capturaLargadaPorSilencio = false;
   } else if (comando == "PARAR_CAPTURA") {
     capturando = false;
+    capturaLargadaPorSilencio = false;
   } else if (comando == "REINICIAR") {
     Serial.println("Reiniciando a pedido do servidor...");
     delay(200);
     ESP.restart();
+  }
+}
+
+/**
+ * Acerta a captura pelo que o servidor diz (1 aberta, 0 fechada, -1 servidor
+ * antigo, sem o campo). Fechada lá e aberta aqui: a conexão caiu no meio da
+ * gravação e o PARAR_CAPTURA não teve como chegar. Aberta lá e largada aqui
+ * pelo limite de 10 s: as respostas se perderam, mas os pacotes chegaram, e a
+ * gravação continua. Fora esse caso, uma captura aberta lá não acende a luz
+ * aqui — com dois aparelhos na mesma clínica, ela pode ser do outro.
+ */
+void acertarCapturaComServidor(int capturandoNoServidor) {
+  if (capturandoNoServidor == 0) {
+    capturaLargadaPorSilencio = false;
+    if (capturando) {
+      capturando = false;
+      Serial.println("Captura encerrada: o servidor ja tinha fechado a gravacao.");
+    }
+  } else if (capturandoNoServidor == 1 && capturaLargadaPorSilencio) {
+    capturaLargadaPorSilencio = false;
+    capturando = true;
+    Serial.println("Captura retomada: o servidor continuava gravando.");
   }
 }
 
@@ -844,13 +875,6 @@ void enviarTelemetria() {
     silencioDesde = agoraOk;
     pareamentoRecusado = false;
     String resposta = http.getString();
-    // Captura que o servidor já fechou (a conexão caiu no meio dela e o
-    // PARAR_CAPTURA não teve como chegar): encerra aqui também. Servidor
-    // antigo, sem o campo, cai no limite de 10 s do loop.
-    if (capturando && extrairBooleano(resposta, "capturando") == 0) {
-      capturando = false;
-      Serial.println("Captura encerrada: o servidor ja tinha fechado a gravacao.");
-    }
     // O servidor manda o ritmo: rápido enquanto alguém olha ou grava, lento
     // quando ninguém está usando (é a bateria do aparelho em jogo).
     long intervalo = extrairNumero(resposta, "intervaloMs", (long)intervaloEnvioMs);
@@ -858,6 +882,9 @@ void enviarTelemetria() {
       intervaloEnvioMs = (unsigned long)intervalo;
     }
     tratarComando(extrairTexto(resposta, "comando"));
+    // Depois do comando: um PARAR_CAPTURA normal já chega com o campo em
+    // false e não deve passar por "captura que o servidor fechou".
+    acertarCapturaComServidor(extrairBooleano(resposta, "capturando"));
   } else if (status == 401) {
     pareamentoRecusado = true;
     Serial.println("Token recusado. Reconfigure segurando o botao BOOT por 5s.");
@@ -959,12 +986,13 @@ void loop() {
   unsigned long agora = millis();
 
   // Captura presa: a conexão caiu no meio da gravação e o PARAR_CAPTURA não
-  // tem como chegar. O servidor já fechou a captura aos 8 s; o aparelho
+  // tem como chegar. O servidor fecha a dele entre 8 e 10 s; o aparelho
   // desiste aos 10, e a luz deixa de dizer "gravando". (Se a conexão voltar
   // antes disso, a primeira resposta já traz "capturando":false e encerra.)
   if (capturando && agora - ultimoOk > CAPTURA_SEM_CONTATO_MS) {
     capturando = false;
-    Serial.println("Captura encerrada: 10 s sem resposta do servidor (la ela ja fechou aos 8 s).");
+    capturaLargadaPorSilencio = true;
+    Serial.println("Captura encerrada: 10 s sem resposta do servidor (que fecha a dele entre 8 e 10 s).");
   }
 
   // Eco no Monitor Serial, útil para conferir a montagem sem abrir o site.

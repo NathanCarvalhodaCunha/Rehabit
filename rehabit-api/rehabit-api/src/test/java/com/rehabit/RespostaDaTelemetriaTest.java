@@ -3,6 +3,7 @@ package com.rehabit;
 import com.rehabit.model.Clinica;
 import com.rehabit.model.Dispositivo;
 import com.rehabit.repository.DispositivoRepository;
+import com.rehabit.service.GoniometroService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RespostaDaTelemetriaTest extends TesteDeIntegracao {
 
     @Autowired DispositivoRepository dispositivos;
+    @Autowired GoniometroService goniometroService;
 
     @Test
     void aRespostaAcompanhaOEstadoDaCaptura() throws Exception {
@@ -54,6 +56,36 @@ class RespostaDaTelemetriaTest extends TesteDeIntegracao {
         enviarTelemetria(aparelho)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.comando").value("PARAR_CAPTURA"))
+                .andExpect(jsonPath("$.capturando").value(false));
+    }
+
+    /**
+     * O caso que motivou o campo: o aparelho some no meio da gravação, o vigia
+     * do servidor fecha a captura depois de 8 s sem pacote e não tem como
+     * mandar o PARAR_CAPTURA. Quando o aparelho volta, a primeira resposta já
+     * diz que não há captura aberta.
+     */
+    @Test
+    void capturaFechadaPeloVigiaChegaComoFalseQuandoOAparelhoVolta() throws Exception {
+        Clinica clinica = novaClinica();
+        String aparelho = tokenDeAparelho(clinica);
+
+        enviarTelemetria(aparelho).andExpect(status().isOk());
+        mvc.perform(post("/api/goniometro/captura/iniciar")
+                        .header("Authorization", tokenDe(clinica))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idClinica\":" + clinica.getId() + "}"))
+                .andExpect(status().isOk());
+        enviarTelemetria(aparelho).andExpect(jsonPath("$.capturando").value(true));
+
+        // Passa do limite de 8 s sem pacote e roda o vigia na hora, sem
+        // esperar o agendamento (se ele já tiver rodado, esta chamada não faz nada).
+        Thread.sleep(8_500);
+        goniometroService.vigiarConexoes();
+
+        enviarTelemetria(aparelho)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comando").value("NENHUM"))
                 .andExpect(jsonPath("$.capturando").value(false));
     }
 

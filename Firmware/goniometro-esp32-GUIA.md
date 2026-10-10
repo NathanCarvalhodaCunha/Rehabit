@@ -101,8 +101,8 @@ pose que você marca com o botão Zerar (veja a Parte 3).
 
 ## 1. Pegar o código na tela do Rehabit
 
-Entre como **clínica**, abra a tela **Dispositivo** e clique em conectar um
-goniômetro. Aparece um código de 6 dígitos com contagem regressiva: ele vale
+Entre como **clínica**, abra a tela **Dispositivo** e clique em **Parear novo
+dispositivo**. Aparece um código de 6 dígitos com contagem regressiva: ele vale
 10 minutos, serve uma vez só, e pedir outro invalida o anterior.
 
 ## 2. Configurar o goniômetro
@@ -133,8 +133,9 @@ nova, digite a senha e deixe o código em branco — o pareamento e a tara
 continuam guardados.
 
 **Mudou de clínica?** Com o aparelho ligado, segure o botão **BOOT** até a
-luz ficar fraca e parada — uns 5 segundos, ou um pouco mais se o servidor não
-estiver respondendo — e solte. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
+luz ficar fraca e parada e solte. Costuma levar uns 5 segundos; com a internet
+fora do ar pode levar até meio minuto, porque o botão só é lido entre um envio
+e outro. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
 ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
 porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
 Confira na lista **Goniômetros
@@ -195,9 +196,9 @@ Serial), velocidade **115200**. Você deve ver, em ordem:
 ```
 Rehabit — goniometro digital, firmware 2.3
 MPU6050 encontrado.
-Sem tara guardada: usando a posicao do boot como zero provisorio.
 Calibrando o giroscopio — mantenha o aparelho PARADO...
 Giroscopio calibrado (bias X=...)
+Sem tara guardada: usando a posicao do boot como zero provisorio.
 Numero de serie: A1B2-C3D4
 Sem token: use o portal para parear.      (ou: Token encontrado na memoria.)
 Wi-Fi conectado, IP: 192.168.1.55
@@ -218,7 +219,7 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | LED | Significado |
 | --- | --- |
 | Piscada curtinha a cada 2 s | Tudo certo: Wi-Fi ligado, aparelho pareado e o servidor recebendo os dados |
-| Piscada dupla a cada 2 s | Wi-Fi e pareamento ok, mas o servidor não aceita nenhum envio há mais de 12 s: internet fora, servidor fora do ar ou ainda acordando (o servidor gratuito hiberna quando ninguém usa) |
+| Piscada dupla a cada 2 s | Wi-Fi e pareamento ok, mas o servidor não aceita nenhum envio há mais de 10 s: internet fora, servidor fora do ar ou ainda acordando (o servidor gratuito hiberna quando ninguém usa) |
 | Pisca devagar: meio segundo aceso, meio apagado | Sem Wi-Fi (ainda conectando, ou a conexão caiu) **ou** sem pareamento (nunca pareado, token recusado ou aparelho revogado) — veja abaixo como saber qual dos dois |
 | Pisca muito rápido por 4 s (uns 6 por segundo) | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
@@ -255,7 +256,7 @@ Dispositivo:
 | --- | --- | --- |
 | Zerar (tara) | `TARAR` | O ângulo atual vira o novo zero. Fica guardado na memória do aparelho e sobrevive a desligar e ligar. |
 | Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para confirmar que o aparelho está recebendo os comandos do site. (A fila de comandos é da clínica: com mais de um aparelho ligado, quem recebe é o primeiro que enviar telemetria.) |
-| Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. Se a conexão cair no meio, o servidor fecha a captura aos 8 s; o aparelho encerra a dele na primeira resposta depois que a conexão volta (campo `capturando`) ou, se ela não voltar, depois de 10 s sem resposta. |
+| Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. Se a conexão cair no meio, o servidor fecha a captura entre 8 e 10 s sem pacote; o aparelho encerra a dele na primeira resposta depois que a conexão volta (campo `capturando`) ou, se ela não voltar, depois de 10 s sem resposta. |
 | Reiniciar aparelho | `REINICIAR` | Reinício remoto — inclusive refaz a calibração do giroscópio. |
 
 Na mesma resposta vem o **intervalo de amostragem**: 10 leituras por segundo
@@ -272,7 +273,7 @@ rápido para ninguém.
 | `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
 | `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
 | `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. |
-| Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 12 s, a luz faz a piscada dupla até ele responder. |
+| Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 10 s, a luz faz a piscada dupla até ele responder. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
 | O ângulo fica alguns graus fora mesmo depois de zerar | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
@@ -314,7 +315,7 @@ de escrever na clínica de outro.
 
 ```json
 { "angulo": 87.4, "anguloBruto": 87.4, "bateria": 82, "rssi": -54,
-  "numeroSerie": "A1B2-C3D4", "firmware": "2.1",
+  "numeroSerie": "A1B2-C3D4", "firmware": "2.3",
   "ip": "192.168.1.55", "calibrado": true }
 ```
 
