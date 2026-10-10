@@ -1,5 +1,5 @@
 // Rehabit — goniômetro digital (ESP32 + MPU6050)
-// Firmware 2.1
+// Firmware 2.3
 //
 // NÃO É PRECISO EDITAR NADA AQUI. Wi-Fi e pareamento são configurados pelo
 // celular, na primeira vez que o aparelho liga:
@@ -31,6 +31,10 @@
 //     parar captura, reiniciar;
 //   * acelera para 10 amostras por segundo quando alguém está com a tela
 //     aberta ou gravando, e desacelera quando ninguém está olhando.
+//
+// A luz de status tem ritmo próprio: roda numa tarefa à parte, então não
+// trava nem muda de ritmo quando a rede demora. O que cada padrão quer dizer
+// está no bloco "LED de status", mais abaixo, e no guia.
 //
 // ================== LIGAÇÕES ==================
 //   MPU6050 VCC  -> 3V3
@@ -87,7 +91,7 @@
 // em outro endereço.
 const char *BASE_URL = "https://rehabit-api-4tex.onrender.com/api";
 
-const char *VERSAO_FIRMWARE = "2.2";
+const char *VERSAO_FIRMWARE = "2.3";
 
 const char *AP_NOME = "Rehabit-Goniometro";
 const char *AP_SENHA = "rehabit123";
@@ -112,6 +116,16 @@ const float PESO_GIRO = 0.98f;
 const unsigned long PERIODO_AMOSTRA_US = 10000;  // 100 Hz de leitura do sensor
 const unsigned long TIMEOUT_HTTP_MS = 4000;
 const unsigned long INTERVALO_INICIAL_MS = 2000;
+
+// Sem nenhuma telemetria aceita por este tempo, a luz avisa que o servidor
+// não responde. Parado, o aparelho manda um pacote a cada 2 s: dá folga para
+// alguns envios perdidos antes de acusar.
+const unsigned long SERVIDOR_CALADO_MS = 12000;
+// Uma captura sem contato por este tempo é encerrada pelo próprio aparelho.
+// O servidor fecha a dele com 8 s de silêncio, mas não tem como mandar o
+// PARAR_CAPTURA para quem está fora do ar — sem isto, a luz ficaria dizendo
+// "gravando" para sempre.
+const unsigned long CAPTURA_SEM_CONTATO_MS = 10000;
 
 // ------------------------------------------------------------------
 // Estado
@@ -139,16 +153,32 @@ bool referenciaDefinida = false;
 
 float biasGiroX = 0.0f, biasGiroY = 0.0f, biasGiroZ = 0.0f;
 bool calibrado = false;
-bool capturando = false;
 
 unsigned long ultimaAmostraUs = 0;
 unsigned long proximoEnvio = 0;
 unsigned long intervaloEnvioMs = INTERVALO_INICIAL_MS;
 unsigned long ultimoAvisoPareamento = 0;
 unsigned long botaoPressionadoDesde = 0;
-unsigned long fimIdentificacao = 0;
-unsigned long ultimoPiscaLed = 0;
-bool ledAceso = false;
+
+/* Tudo o que a luz de status consulta. Ela roda em outra tarefa (veja "LED
+   de status"), então só lê variáveis simples de até 32 bits — cada escrita
+   chega inteira, coisa que uma String, ponteiro mais tamanho, não garante. O
+   volatile obriga a reler da memória a cada consulta, em vez de reaproveitar
+   um valor velho guardado num registrador. */
+volatile bool sensorAusente = false;
+volatile bool calibrando = true;            // do ligar até o fim da calibração
+volatile bool portalAberto = false;
+volatile bool wifiConectado = false;
+volatile bool temToken = false;
+volatile bool pareamentoRecusado = false;   // a API respondeu 401 ou 403
+volatile bool capturando = false;
+volatile uint8_t pedidosIdentificacao = 0;  // cada IDENTIFICAR soma um
+volatile uint32_t ultimoEnvioOk = 0;        // millis() da última telemetria aceita (200)
+// De quando conta o "servidor calado": o último 200 ou a última (re)conexão
+// ao Wi-Fi, o que vier depois. Fica separado de ultimoEnvioOk porque a
+// reconexão dá tolerância ao servidor, mas não pode esticar uma captura sem
+// contato — aquela conta é só com respostas de verdade.
+volatile uint32_t silencioDesde = 0;
 
 WiFiClient &clienteParaUrl(const char *url) {
   return String(url).startsWith("https://") ? (WiFiClient &)clienteSeguro : clienteInseguro;
@@ -243,6 +273,18 @@ long extrairNumero(const String &json, const char *chave, long padrao) {
   return json.substring(inicio, fim).toInt();
 }
 
+/** 1 para true, 0 para false e -1 se a chave não veio (servidor antigo). */
+int extrairBooleano(const String &json, const char *chave) {
+  String alvo = String("\"") + chave + "\":";
+  int inicio = json.indexOf(alvo);
+  if (inicio < 0) return -1;
+  inicio += alvo.length();
+  while (inicio < (int)json.length() && json.charAt(inicio) == ' ') inicio++;
+  if (json.startsWith("true", inicio)) return 1;
+  if (json.startsWith("false", inicio)) return 0;
+  return -1;
+}
+
 // ------------------------------------------------------------------
 // Identidade e hardware
 // ------------------------------------------------------------------
@@ -295,6 +337,7 @@ void calibrarGiroscopio() {
   biasGiroY = somaY / amostras;
   biasGiroZ = somaZ / amostras;
   calibrado = true;
+  calibrando = false;  // a luz deixa de pedir "não mexa"
   Serial.printf("Giroscopio calibrado (bias X=%.4f Y=%.4f Z=%.4f rad/s)\n",
                 biasGiroX, biasGiroY, biasGiroZ);
 }
@@ -408,34 +451,228 @@ void aplicarTara() {
 // ------------------------------------------------------------------
 //
 // Sem tela no aparelho, o LED é a única forma de saber o que está havendo
-// olhando para ele: piscando rápido = "sou eu" (comando Identificar),
-// aceso = gravando captura, pisca curto = tudo certo, pisca meio a meio =
-// sem Wi-Fi ou sem pareamento.
+// olhando para ele. Do mais forte para o mais fraco — valendo duas coisas ao
+// mesmo tempo, aparece a de cima:
+//
+//   sensor não encontrado ..... pisca rápido sem parar (150 aceso / 150 apagado)
+//   identificar ............... pisca muito rápido por 4 s (80 / 80)
+//   gravando captura .......... acesa fixa
+//   portal de configuração .... "respirando": acende e apaga suave, ciclo de 3 s
+//   calibrando, logo ao ligar . fraca e parada: não mexa no aparelho
+//   sem Wi-Fi ................. pisca devagar (500 / 500)
+//   sem pareamento ............ pisca devagar (500 / 500), igual ao de cima
+//   servidor não responde ..... piscada dupla a cada 2 s
+//   tudo certo ................ piscada curtinha a cada 2 s (60 ms)
+//
+// A luz roda numa tarefa própria do FreeRTOS, e não no loop(): o loop fica
+// parado segundos num envio sem resposta (até 4 s para conectar e 4 s para
+// ler, e o DNS pode segurar uns 15 s), no portal do WiFiManager e na
+// calibração. Presa a ele, a luz mudava de ritmo conforme a rede — e era
+// justamente a rede que ela precisava mostrar. A tarefa acorda a cada 10 ms,
+// lê o estado, escreve no LED e volta a dormir; é a única que mexe no pino.
 
-void atualizarLed() {
-  unsigned long agora = millis();
+// Modos da luz, na ordem de prioridade. Constantes uint8_t, e não um enum: a
+// Arduino IDE gera sozinha os protótipos das funções e os põe lá em cima,
+// antes de um tipo declarado aqui embaixo, e uma função que recebesse o enum
+// não compilaria (veja "Erros de compilação conhecidos" no guia).
+const uint8_t LUZ_SEM_SENSOR = 0;
+const uint8_t LUZ_IDENTIFICANDO = 1;
+const uint8_t LUZ_GRAVANDO = 2;
+const uint8_t LUZ_PORTAL = 3;
+const uint8_t LUZ_CALIBRANDO = 4;
+const uint8_t LUZ_SEM_WIFI = 5;
+const uint8_t LUZ_SEM_PAREAMENTO = 6;
+const uint8_t LUZ_SEM_SERVIDOR = 7;
+const uint8_t LUZ_TUDO_CERTO = 8;
 
-  if (agora < fimIdentificacao) {
-    if (agora - ultimoPiscaLed > 80) {
-      ledAceso = !ledAceso;
-      digitalWrite(PINO_LED, ledAceso);
-      ultimoPiscaLed = agora;
+const uint32_t PERIODO_LUZ_MS = 10;
+const uint32_t DURACAO_IDENTIFICACAO_MS = 4000;
+const uint32_t CICLO_RESPIRAR_MS = 3000;
+
+// PWM de 12 bits a 5 kHz: rápido demais para o olho perceber o liga-desliga,
+// e com degraus finos o bastante para o "respirando" não andar aos saltos
+// perto do apagado, onde o olho mais nota diferença.
+const uint32_t LUZ_PWM_HZ = 5000;
+const uint8_t LUZ_PWM_BITS = 12;
+const uint32_t LUZ_DUTY_MAXIMO = 4095;  // (1 << 12) - 1
+
+// Brilhos na escala do olho, de 0 a 255 (veja dutyDoBrilho).
+const uint8_t BRILHO_TOTAL = 255;
+const uint8_t BRILHO_CALIBRANDO = 38;       // ~15%: acesa, mas claramente fraca
+const uint8_t BRILHO_RESPIRAR_MINIMO = 10;  // fundo do "respirando": quase apagada
+
+/** Acesa nos primeiros `acesoMs` de cada ciclo de `cicloMs`, apagada no resto. */
+uint8_t piscar(uint32_t tempoMs, uint32_t acesoMs, uint32_t cicloMs) {
+  return tempoMs % cicloMs < acesoMs ? BRILHO_TOTAL : 0;
+}
+
+/**
+ * Brilho de um modo num dado instante, de 0 a 255 na escala do olho.
+ *
+ * Só depende dos argumentos, para dar para conferir a linha do tempo de cada
+ * padrão no computador. O padrão conta a partir de quando o modo começou:
+ * toda troca já abre com a luz acesa, sem esperar o fim de um ciclo antigo.
+ */
+uint8_t brilhoDoModo(uint8_t modo, uint32_t agoraMs, uint32_t inicioModoMs) {
+  uint32_t t = agoraMs - inicioModoMs;
+  switch (modo) {
+    case LUZ_SEM_SENSOR:
+      return piscar(t, 150, 300);
+    case LUZ_IDENTIFICANDO:
+      return piscar(t, 80, 160);
+    case LUZ_GRAVANDO:
+      return BRILHO_TOTAL;
+    case LUZ_PORTAL: {
+      // Cosseno: sai do fundo, sobe devagar, demora no alto e desce do mesmo
+      // jeito — sem os cantos de uma rampa reta, que parecem um tranco.
+      float onda = 0.5f - 0.5f * cosf(6.2831853f * (t % CICLO_RESPIRAR_MS) / CICLO_RESPIRAR_MS);
+      return (uint8_t)(BRILHO_RESPIRAR_MINIMO + (BRILHO_TOTAL - BRILHO_RESPIRAR_MINIMO) * onda + 0.5f);
     }
-    return;
+    case LUZ_CALIBRANDO:
+      return BRILHO_CALIBRANDO;
+    case LUZ_SEM_WIFI:
+    case LUZ_SEM_PAREAMENTO:
+      return piscar(t, 500, 1000);
+    case LUZ_SEM_SERVIDOR: {
+      uint32_t fase = t % 2000;  // 100 aceso, 150 apagado, 100 aceso, 1650 apagado
+      return (fase < 100 || (fase >= 250 && fase < 350)) ? BRILHO_TOTAL : 0;
+    }
+    default:  // LUZ_TUDO_CERTO
+      return piscar(t, 60, 2000);
   }
+}
 
-  if (capturando) {
-    digitalWrite(PINO_LED, HIGH);
-    return;
-  }
+/**
+ * Converte o brilho da escala do olho para o duty do PWM.
+ *
+ * O olho não é linear: com metade do duty o LED já parece quase no máximo, e
+ * as diferenças que a gente enxerga estão todas perto do apagado. Elevar ao
+ * quadrado (uma correção de gama 2) compensa — sem isso, o "respirando"
+ * pareceria aceso o ciclo quase inteiro, e a luz fraca da calibração
+ * pareceria média.
+ */
+uint32_t dutyDoBrilho(uint8_t brilho) {
+  return ((uint32_t)brilho * brilho * LUZ_DUTY_MAXIMO + 255 * 255 / 2) / (255 * 255);
+}
 
-  bool saudavel = WiFi.status() == WL_CONNECTED && tokenDispositivo.length() > 0;
-  unsigned long limite = ledAceso ? (saudavel ? 60 : 500) : (saudavel ? 1940 : 500);
-  if (agora - ultimoPiscaLed > limite) {
-    ledAceso = !ledAceso;
-    digitalWrite(PINO_LED, ledAceso);
-    ultimoPiscaLed = agora;
+/**
+ * Qual padrão mostrar agora: o primeiro que valer, de cima para baixo.
+ * semEnvioOkMs conta desde a última resposta 200; silencioMs, desde ela ou
+ * desde a última reconexão ao Wi-Fi (veja silencioDesde).
+ */
+uint8_t modoDaLuz(bool identificando, bool comWifi, uint32_t semEnvioOkMs, uint32_t silencioMs) {
+  if (sensorAusente) return LUZ_SEM_SENSOR;
+  if (identificando) return LUZ_IDENTIFICANDO;
+  // Com 10 s sem contato a captura já acabou no servidor: a luz para de dizer
+  // "gravando" na hora, mesmo que o loop ainda esteja preso num envio.
+  if (capturando && semEnvioOkMs <= CAPTURA_SEM_CONTATO_MS) return LUZ_GRAVANDO;
+  if (portalAberto) return LUZ_PORTAL;
+  if (calibrando) return LUZ_CALIBRANDO;
+  if (!comWifi) return LUZ_SEM_WIFI;
+  if (!temToken || pareamentoRecusado) return LUZ_SEM_PAREAMENTO;
+  if (silencioMs > SERVIDOR_CALADO_MS) return LUZ_SEM_SERVIDOR;
+  return LUZ_TUDO_CERTO;
+}
+
+void tarefaDaLuz(void *) {
+  // O LEDC mudou no core 3.x: o canal sumiu e o pino virou o identificador.
+  // A versão do core já vem no Arduino.h.
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(PINO_LED, LUZ_PWM_HZ, LUZ_PWM_BITS);
+#else
+  const uint8_t canal = 0;
+  ledcSetup(canal, LUZ_PWM_HZ, LUZ_PWM_BITS);
+  ledcAttachPin(PINO_LED, canal);
+#endif
+
+  uint8_t modoAtual = 0xFF;  // nenhum: o primeiro modo marca o próprio início
+  uint32_t inicioModo = 0;
+  uint32_t dutyAtual = 0xFFFFFFFF;
+  // Os 4 s do Identificar são contados aqui: o loop só avisa que chegou um
+  // pedido. Assim um envio demorado não encurta nem estica a piscada.
+  uint8_t pedidosVistos = pedidosIdentificacao;
+  uint32_t inicioIdentificacao = 0;
+  bool identificando = false;
+
+  for (;;) {
+    // A ordem das leituras importa. O evento de Wi-Fi, que pode interromper
+    // esta tarefa, acerta silencioDesde ANTES de marcar wifiConectado; lendo
+    // na ordem contrária, a luz nunca junta um "conectado" novo com uma hora
+    // velha. E o relógio vem por último, para "agora" nunca ficar antes das
+    // marcas de tempo — a conta daria negativa, um número enorme.
+    bool comWifi = wifiConectado;
+    uint32_t ultimoOk = ultimoEnvioOk;
+    uint32_t silencio = silencioDesde;
+    uint32_t agora = millis();
+
+    uint8_t pedidos = pedidosIdentificacao;
+    if (pedidos != pedidosVistos) {
+      pedidosVistos = pedidos;
+      inicioIdentificacao = agora;
+      identificando = true;
+      modoAtual = 0xFF;  // pedido novo recomeça a piscada do zero
+    }
+    if (identificando && agora - inicioIdentificacao >= DURACAO_IDENTIFICACAO_MS) {
+      identificando = false;
+    }
+
+    uint8_t modo = modoDaLuz(identificando, comWifi, agora - ultimoOk, agora - silencio);
+    if (modo != modoAtual) {
+      modoAtual = modo;
+      inicioModo = agora;
+    }
+
+    uint32_t duty = dutyDoBrilho(brilhoDoModo(modo, agora, inicioModo));
+    if (duty != dutyAtual) {
+      dutyAtual = duty;
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+      ledcWrite(PINO_LED, duty);
+#else
+      ledcWrite(canal, duty);
+#endif
+    }
+    vTaskDelay(pdMS_TO_TICKS(PERIODO_LUZ_MS));
   }
+}
+
+/**
+ * Põe a luz para rodar. Chamada logo no começo do setup(), para ela já ter
+ * ritmo próprio durante a checagem do sensor, a calibração e o portal.
+ *
+ * Núcleo: o mesmo do loop() (o 1, no ESP32). O núcleo 0 é do Wi-Fi, cujas
+ * tarefas têm prioridade bem maior e atrasariam a luz justo no tráfego; aqui
+ * ela só disputa com o loop. Prioridade 2, um degrau acima do loop (1): ela
+ * interrompe até o handshake TLS, conta pesada feita dentro do loop, e não
+ * atrapalha ninguém porque passa quase todo o tempo dormindo. Pilha de 3 KB:
+ * as contas usam pouco; a folga é para o log de erro do LEDC, que formata
+ * texto.
+ */
+void iniciarTarefaDaLuz() {
+  if (xTaskCreateUniversal(tarefaDaLuz, "luz", 3072, NULL, 2, NULL, ARDUINO_RUNNING_CORE) != pdPASS) {
+    Serial.println("Nao consegui criar a tarefa da luz: o aparelho funciona, mas sem LED.");
+  }
+}
+
+/**
+ * Mantém wifiConectado em dia a partir dos eventos do Wi-Fi.
+ *
+ * A luz não chama WiFi.status() por conta própria: no core 2.x a troca de
+ * status é feita em dois passos (apaga o valor antigo, depois grava o novo),
+ * e quem lê de outra tarefa bem no meio vê "desconectado" por um instante.
+ * Dentro do evento o status já está completo — o core atualiza antes de
+ * chamar quem se inscreveu, nos dois cores.
+ */
+void acompanharWifi() {
+  WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
+    bool conectado = WiFi.status() == WL_CONNECTED;
+    if (conectado && !wifiConectado) {
+      // Acabou de (re)conectar: a contagem de "servidor calado" recomeça
+      // daqui, senão a luz culparia o servidor pelo tempo sem Wi-Fi. A da
+      // captura (ultimoEnvioOk) não: reconectar não é falar com o servidor.
+      silencioDesde = millis();
+    }
+    wifiConectado = conectado;
+  });
 }
 
 // ------------------------------------------------------------------
@@ -473,6 +710,8 @@ bool parear(const String &codigo) {
 
   tokenDispositivo = token;
   salvarToken(token);
+  temToken = true;
+  pareamentoRecusado = false;
   Serial.printf("Pareado com a clinica \"%s\". Token guardado.\n",
                 extrairTexto(resposta, "nomeClinica").c_str());
   return true;
@@ -489,6 +728,10 @@ void conectarOuAbrirPortal() {
       "pattern=\"[0-9]{6}\" inputmode=\"numeric\"");
   wm.addParameter(&campoCodigo);
 
+  // Daqui até a configuração terminar, o setup() fica parado dentro do
+  // autoConnect — a luz respira sozinha enquanto isso.
+  wm.setAPCallback([](WiFiManager *) { portalAberto = true; });
+
   Serial.printf("Se nao conectar, abra o Wi-Fi \"%s\" (senha %s) no celular.\n",
                 AP_NOME, AP_SENHA);
   // O portal quase nunca abre sozinho (o Windows praticamente nunca detecta
@@ -503,6 +746,7 @@ void conectarOuAbrirPortal() {
     delay(2000);
     ESP.restart();
   }
+  portalAberto = false;
 
   WiFi.setSleep(false);  // o modem dormindo atrasa os POSTs e engasga o tempo real
   Serial.print("Wi-Fi conectado, IP: ");
@@ -515,6 +759,10 @@ void conectarOuAbrirPortal() {
     // pode estar movendo o aparelho para outra clínica.
     parear(codigo);
   }
+
+  // A tolerância de "servidor calado" conta daqui, quando a telemetria
+  // começa de fato: o pareamento acima pode ter levado alguns segundos.
+  silencioDesde = millis();
 }
 
 /** Segurar BOOT por 5s apaga a configuração e reinicia no portal. */
@@ -548,7 +796,9 @@ void tratarComando(const String &comando) {
   if (comando == "TARAR") {
     aplicarTara();
   } else if (comando == "IDENTIFICAR") {
-    fimIdentificacao = millis() + 4000;
+    // Só avisa a luz, que cronometra os 4 s ela mesma. (Sem ++: no C++20 do
+    // core 3.x, ++ numa volatile gera aviso.)
+    pedidosIdentificacao = pedidosIdentificacao + 1;
   } else if (comando == "INICIAR_CAPTURA") {
     capturando = true;
   } else if (comando == "PARAR_CAPTURA") {
@@ -589,7 +839,18 @@ void enviarTelemetria() {
   int status = http.POST(corpo);
 
   if (status == 200) {
+    uint32_t agoraOk = millis();
+    ultimoEnvioOk = agoraOk;
+    silencioDesde = agoraOk;
+    pareamentoRecusado = false;
     String resposta = http.getString();
+    // Captura que o servidor já fechou (a conexão caiu no meio dela e o
+    // PARAR_CAPTURA não teve como chegar): encerra aqui também. Servidor
+    // antigo, sem o campo, cai no limite de 10 s do loop.
+    if (capturando && extrairBooleano(resposta, "capturando") == 0) {
+      capturando = false;
+      Serial.println("Captura encerrada: o servidor ja tinha fechado a gravacao.");
+    }
     // O servidor manda o ritmo: rápido enquanto alguém olha ou grava, lento
     // quando ninguém está usando (é a bateria do aparelho em jogo).
     long intervalo = extrairNumero(resposta, "intervaloMs", (long)intervaloEnvioMs);
@@ -598,8 +859,10 @@ void enviarTelemetria() {
     }
     tratarComando(extrairTexto(resposta, "comando"));
   } else if (status == 401) {
+    pareamentoRecusado = true;
     Serial.println("Token recusado. Reconfigure segurando o botao BOOT por 5s.");
   } else if (status == 403) {
+    pareamentoRecusado = true;
     Serial.println("Este aparelho foi revogado pela clinica. Pareie de novo.");
   } else {
     Serial.printf("Envio falhou, status=%d\n", status);
@@ -613,12 +876,13 @@ void enviarTelemetria() {
 
 void setup() {
   Serial.begin(115200);
+  // A luz antes de tudo: daqui em diante ela tem ritmo próprio, e nem o
+  // sensor faltando, nem a calibração, nem o portal a deixam apagada.
+  iniciarTarefaDaLuz();
   delay(500);
   Serial.printf("\nRehabit — goniometro digital, firmware %s\n", VERSAO_FIRMWARE);
 
   pinMode(PINO_BOTAO_RESET, INPUT_PULLUP);
-  pinMode(PINO_LED, OUTPUT);
-  digitalWrite(PINO_LED, LOW);
   if (PINO_BATERIA >= 0) {
     analogSetPinAttenuation(PINO_BATERIA, ADC_11db);  // faixa até ~3,1 V no pino
   }
@@ -629,9 +893,11 @@ void setup() {
 
   if (!mpu.begin()) {
     Serial.println("MPU6050 nao encontrado! Confira a fiacao (SDA=21, SCL=22, VCC=3V3, GND).");
+    // Erro de hardware, não adianta seguir. A tarefa da luz pisca rápido sem
+    // parar; aqui só se espera.
+    sensorAusente = true;
     while (true) {
-      digitalWrite(PINO_LED, !digitalRead(PINO_LED));
-      delay(150);  // pisca sem parar: erro de hardware, não adianta seguir
+      delay(1000);
     }
   }
   mpu.setAccelerometerRange(MPU6050_RANGE_4_G);
@@ -672,21 +938,34 @@ void setup() {
   Serial.printf("Numero de serie: %s\n", numeroSerie.c_str());
 
   tokenDispositivo = carregarToken();
-  if (tokenDispositivo.length() > 0) {
+  temToken = tokenDispositivo.length() > 0;
+  if (temToken) {
     Serial.println("Token encontrado na memoria.");
   } else {
     Serial.println("Sem token: use o portal para parear.");
   }
 
+  acompanharWifi();
   conectarOuAbrirPortal();
 }
 
 void loop() {
   atualizarAngulo();
   verificarBotaoDeReset();
-  atualizarLed();
 
+  // A hora do último envio aceito vem antes do relógio, como na tarefa da
+  // luz, para "agora" nunca ficar antes dela.
+  uint32_t ultimoOk = ultimoEnvioOk;
   unsigned long agora = millis();
+
+  // Captura presa: a conexão caiu no meio da gravação e o PARAR_CAPTURA não
+  // tem como chegar. O servidor já fechou a captura aos 8 s; o aparelho
+  // desiste aos 10, e a luz deixa de dizer "gravando". (Se a conexão voltar
+  // antes disso, a primeira resposta já traz "capturando":false e encerra.)
+  if (capturando && agora - ultimoOk > CAPTURA_SEM_CONTATO_MS) {
+    capturando = false;
+    Serial.println("Captura encerrada: 10 s sem resposta do servidor (la ela ja fechou aos 8 s).");
+  }
 
   // Eco no Monitor Serial, útil para conferir a montagem sem abrir o site.
   static unsigned long ultimoEco = 0;

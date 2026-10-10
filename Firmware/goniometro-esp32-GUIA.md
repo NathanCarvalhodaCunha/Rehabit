@@ -108,7 +108,8 @@ goniômetro. Aparece um código de 6 dígitos com contagem regressiva: ele vale
 ## 2. Configurar o goniômetro
 
 1. Ligue o aparelho. Sem configuração, ele cria um Wi-Fi chamado
-   **Rehabit-Goniometro** (senha `rehabit123`).
+   **Rehabit-Goniometro** (senha `rehabit123`) — dá para saber que esse
+   Wi-Fi está no ar pela luz, que fica "respirando": acende e apaga suave.
 2. Conecte o celular nesse Wi-Fi.
 3. O portal costuma abrir sozinho. **Se não abrir, digite `http://192.168.4.1`
    no navegador** — com o `http://` na frente, senão o navegador procura no
@@ -131,15 +132,16 @@ conseguir entrar na rede salva, ele abre o portal sozinho. Escolha a rede
 nova, digite a senha e deixe o código em branco — o pareamento e a tara
 continuam guardados.
 
-**Mudou de clínica?** Segure o botão **BOOT** por 5 segundos com o aparelho
-ligado. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
+**Mudou de clínica?** Com o aparelho ligado, segure o botão **BOOT** até a
+luz ficar fraca e parada — uns 5 segundos, ou um pouco mais se o servidor não
+estiver respondendo — e solte. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
 ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
 porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
 Confira na lista **Goniômetros
 pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
 o código não pegou — e, se o portal tinha aberto sozinho, o aparelho segue com
 o pareamento antigo. Como ele já está no Wi-Fi, agora o BOOT funciona: segure
-5 segundos e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
+até a luz ficar fraca e parada e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
 
 ## 4. Se um aparelho sumir ou for roubado
 
@@ -191,7 +193,7 @@ Com o cabo USB ligado, abra o **Monitor Serial** (Ferramentas → Monitor
 Serial), velocidade **115200**. Você deve ver, em ordem:
 
 ```
-Rehabit — goniometro digital, firmware 2.2
+Rehabit — goniometro digital, firmware 2.3
 MPU6050 encontrado.
 Sem tara guardada: usando a posicao do boot como zero provisorio.
 Calibrando o giroscopio — mantenha o aparelho PARADO...
@@ -204,8 +206,9 @@ Angulo:  87.40 graus (sem filtro  87.40) | bateria sem medidor | RSSI -54 dBm
 ```
 
 **Importante:** deixe o aparelho parado durante a calibração do giroscópio
-(uns 2 segundos no boot). Se ele se mexer nessa hora, o ângulo fica alguns
-graus torto — nesse caso, basta reiniciar a placa.
+(uns 2 segundos no boot, enquanto a luz está fraca e parada). Se ele se mexer
+nessa hora, o ângulo fica alguns graus torto — nesse caso, basta reiniciar a
+placa.
 
 Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 "Conectado" e o ângulo deve acompanhar o movimento do sensor.
@@ -214,22 +217,33 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 
 | LED | Significado |
 | --- | --- |
-| Pisca curtinho a cada 2 s | Tudo certo: Wi-Fi ligado e aparelho pareado |
-| Pisca devagar, meio a meio | Sem Wi-Fi ou sem pareamento |
-| Pisca muito rápido por 4 s | Alguém clicou em "Identificar aparelho" no site |
+| Piscada curtinha a cada 2 s | Tudo certo: Wi-Fi ligado, aparelho pareado e o servidor recebendo os dados |
+| Piscada dupla a cada 2 s | Wi-Fi e pareamento ok, mas o servidor não aceita nenhum envio há mais de 12 s: internet fora, servidor fora do ar ou ainda acordando (o servidor gratuito hiberna quando ninguém usa) |
+| Pisca devagar: meio segundo aceso, meio apagado | Sem Wi-Fi (ainda conectando, ou a conexão caiu) **ou** sem pareamento (nunca pareado, token recusado ou aparelho revogado) — veja abaixo como saber qual dos dois |
+| Pisca muito rápido por 4 s (uns 6 por segundo) | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
-| Pisca sem parar, bem rápido, desde o boot | MPU6050 não foi encontrado — confira a fiação |
-| Apagado nos primeiros segundos após ligar | Normal: calibrando o giroscópio (deixe parado) e conectando ao Wi-Fi |
-| Apagado o tempo todo | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" aparece no celular, em até 1 minuto (aparelho sem configuração, depois do BOOT 5 s, rede ou senha do Wi-Fi trocada, aparelho vindo de outra clínica, ou a rede salva não estava no ar quando ele ligou). Ou sem energia: bateria descarregada ou chave desligada |
-| Acende e apaga bem devagar, uns 4 s ou mais de cada | Wi-Fi e pareamento ok, mas sem resposta do servidor (internet fora ou servidor fora do ar): cada envio espera 4 s ou mais (conectar e ler têm 4 s cada, e o DNS pode segurar uns 15 s) e a luz só troca entre um envio e outro |
+| "Respirando": acende e apaga suave, num ciclo de 3 s | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" está no ar para o celular (aparelho sem configuração, depois do BOOT 5 s, rede ou senha do Wi-Fi trocada, aparelho vindo de outra clínica, ou a rede salva não estava no ar quando ele ligou) |
+| Fraca e parada logo depois de ligar (uns 2,5 s) | Calibrando o giroscópio: deixe o aparelho parado |
+| Pisca rápido sem parar desde o boot (uns 3 por segundo) | MPU6050 não foi encontrado — confira a fiação |
+| Apagado | Sem energia: bateria descarregada ou chave desligada |
 
-A luz só sabe do Wi-Fi e do pareamento: ela pisca curtinho mesmo que o
-servidor recuse o aparelho (revogado, token recusado). Se ela diz que está
-tudo certo e o site mostra "Desconectado", veja
-no Monitor Serial com qual status os envios falham (tabela de Problemas
-comuns, abaixo). A mesma tabela, em linguagem para a equipe da clínica, está
-no site: tela Dispositivo → Ver tutorial → "O que a luz do aparelho está
-dizendo".
+A luz tem ritmo próprio: roda numa tarefa à parte do resto do firmware, então
+nem um envio sem resposta, nem o portal, nem a calibração mudam o compasso
+dela — se o padrão mudou, foi o estado do aparelho que mudou. Valendo duas
+coisas ao mesmo tempo, aparece a mais importante, nesta ordem: sensor não
+encontrado, Identificar, gravando, portal, calibrando, sem Wi-Fi, sem
+pareamento, servidor sem responder.
+
+**Sem Wi-Fi ou sem pareamento?** Os dois piscam igual. Desligue, ligue e
+espere um minuto. Se ele não encontrar a rede salva, abre o portal e a luz
+passa a respirar: era o Wi-Fi (confira o roteador, ou escolha a rede de novo
+no portal). Se a luz continuar piscando devagar, ele entrou no Wi-Fi e o
+problema é o pareamento: segure o BOOT por 5 segundos e pareie de novo. Com o
+cabo USB, o Monitor Serial diz direto qual dos dois é (tabela de Problemas
+comuns, abaixo).
+
+A mesma tabela, em linguagem para a equipe da clínica, está no site: tela
+Dispositivo → Ver tutorial → "O que a luz do aparelho está dizendo".
 
 ## O que o site pode mandar para o aparelho
 
@@ -241,7 +255,7 @@ Dispositivo:
 | --- | --- | --- |
 | Zerar (tara) | `TARAR` | O ângulo atual vira o novo zero. Fica guardado na memória do aparelho e sobrevive a desligar e ligar. |
 | Identificar aparelho | `IDENTIFICAR` | O LED pisca por 4 s — serve para confirmar que o aparelho está recebendo os comandos do site. (A fila de comandos é da clínica: com mais de um aparelho ligado, quem recebe é o primeiro que enviar telemetria.) |
-| Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. |
+| Iniciar/Parar captura | `INICIAR_CAPTURA` / `PARAR_CAPTURA` | Liga o LED fixo e faz o aparelho amostrar a 10 Hz enquanto grava. Se a conexão cair no meio, o servidor fecha a captura aos 8 s; o aparelho encerra a dele na primeira resposta depois que a conexão volta (campo `capturando`) ou, se ela não voltar, depois de 10 s sem resposta. |
 | Reiniciar aparelho | `REINICIAR` | Reinício remoto — inclusive refaz a calibração do giroscópio. |
 
 Na mesma resposta vem o **intervalo de amostragem**: 10 leituras por segundo
@@ -258,7 +272,7 @@ rápido para ninguém.
 | `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
 | `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
 | `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. |
-| Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. |
+| Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 12 s, a luz faz a piscada dupla até ele responder. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
 | O ângulo fica alguns graus fora mesmo depois de zerar | O giroscópio foi calibrado em movimento. Reinicie a placa parada. |
@@ -280,9 +294,9 @@ função que recebesse um `struct` próprio gerava um protótipo citando um tipo
 que ainda não existia ali.
 
 A versão atual não tem mais esse problema: as funções recebem só tipos
-nativos — é por isso que `anguloPelaGravidade()` recebe dois `float` em vez de
-um `sensors_event_t`. Se você editar o código e voltar a passar um tipo
-próprio como parâmetro, o erro reaparece.
+nativos — é por isso que os modos da luz de status são constantes `uint8_t`,
+e não um `enum`. Se você editar o código e voltar a passar um tipo próprio
+como parâmetro, o erro reaparece.
 
 ---
 
@@ -307,12 +321,14 @@ de escrever na clínica de outro.
 A resposta é o canal de volta:
 
 ```json
-{ "comando": "TARAR", "intervaloMs": 400, "emUso": true }
+{ "comando": "TARAR", "intervaloMs": 400, "emUso": true, "capturando": false }
 ```
 
 `comando` vem como `"NENHUM"` quando não há nada pendente. `intervaloMs` é o
 ritmo que o servidor pede a partir de agora. `emUso` diz se tem alguém com a
-tela aberta.
+tela aberta. `capturando` diz se há captura aberta no servidor: é por ele que
+o aparelho fica sabendo que uma gravação foi fechada enquanto estava sem
+conexão (o `PARAR_CAPTURA` não tem como chegar nesse caso).
 
 O endpoint antigo `POST /api/goniometro/leitura` (só o ângulo) continua
 existindo para não quebrar firmware gravado antes desta versão, mas ele não

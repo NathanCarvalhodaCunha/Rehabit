@@ -199,7 +199,7 @@ public class GoniometroService {
 
         String comando = estado.comandos.poll();
         return new GoniometroComandoRespostaDTO(comando != null ? comando : "NENHUM",
-                intervaloSugerido(idClinica, estado), interessados(idClinica, estado));
+                intervaloSugerido(idClinica, estado), interessados(idClinica, estado), estado.capturando);
     }
 
     private void registrarAmostra(EstadoVivo estado, Instant agora, BigDecimal angulo) {
