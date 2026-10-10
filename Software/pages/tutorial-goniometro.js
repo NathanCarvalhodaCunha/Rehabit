@@ -11,7 +11,9 @@
   // nasce apontando para baixo, então levantar 1° é girar -1° na tela.
   const ABERTURA_INICIAL = 0;
   const ABERTURA_FINAL = 90;
-  const RAIO_CUNHA = 56;
+  // Mesmo raio da escala no SVG (o arco "M 0 118 A 118 118..."): a cunha
+  // pinta até a régua, e a mão (que vai até ~109) nunca passa dela.
+  const RAIO_CUNHA = 118;
   const DURACAO_MS = 2200;
   const PAUSA_MS = 700;
 

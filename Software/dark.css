@@ -142,6 +142,10 @@ body.dark .sessions-table th { color: var(--ink-muted); border-color: #1B2647; }
 body.dark .sessions-table td { color: #fff; border-color: #1B2647; }
 body.dark .add-card h3 { color: #fff; }
 body.dark .add-card p { color: var(--ink-muted); }
+body.dark .add-card-icone { background: rgba(47,128,255,.16); color: #5B9BFF; }
+body.dark .add-card .add-card-dica { background: rgba(47,128,255,.08); color: var(--ink); }
+body.dark .add-card-dica svg { color: #5B9BFF; }
+body.dark .add-card-dica strong { color: #fff; }
 body.dark .tab { background: transparent; border-color: #1F2A50; }
 body.dark .tab.active { background: rgba(47,128,255,.12); border-color: #2F80FF; color: #2F80FF; }
 body.dark .sessions-table thead { background: #0E1733; }
@@ -257,10 +261,23 @@ body.dark .tutorial-tooltip p { color: var(--ink-muted); }
 body.dark .tutorial-skip { color: var(--ink-muted); }
 body.dark .tutorial-skip:hover { color: #fff; }
 
-/* Ilustração do tutorial do goniômetro: o contorno dos números e o miolo do
-   pivô acompanham o fundo do cartão escuro, não o branco do tema claro. */
-body.dark .gonio-tick-label { stroke: #101A38; }
-body.dark .gonio-hinge { stroke: #101A38; }
+/* Ilustração do tutorial do goniômetro: o personagem é o mesmo; só clareiam
+   o que ficaria apagado no fundo azul-marinho (calça, escala, números e a
+   linha do tronco) e o palco, que passa a ser um azul translúcido. */
+body.dark .tutorial-grid {
+  --gonio-calca: #4A66C8;
+  --gonio-escala: #4D8EF0;
+  --gonio-numero: #7AAFFF;
+  --gonio-referencia: #FF8C7A;
+  --gonio-cunha: rgba(77,142,240,.24);
+  --gonio-chao: rgba(77,142,240,.2);
+  --gonio-palco: linear-gradient(180deg, rgba(47,128,255,.06) 0%, rgba(47,128,255,.13) 100%);
+  --gonio-marca: rgba(47,128,255,.1);
+  --gonio-pilula: #101A38;
+  --gonio-pilula-borda: #1F2A50;
+}
+body.dark .tutorial-pontos-icone { background: rgba(47,128,255,.16); }
+body.dark .tutorial-pontos li:first-child .tutorial-pontos-icone { background: rgba(255,140,122,.14); }
 
 /* Painel de indicadores e calendário no tema escuro */
 body.dark .cal-nav button { background: #101A38; border-color: #1B2647; color: #fff; }
@@ -459,25 +476,28 @@ body.dark .aviso-demo {
 }
 
 /* ---------- Tutorial do goniômetro: luz do aparelho (tema escuro) ----------
-   A luz acesa é o mesmo azul nos dois temas; mudam a luz apagada, a caixinha
-   em volta dela e o trilho da barrinha de ritmo, que no escuro sumiriam. */
+   A luz acesa é o mesmo azul nos dois temas; mudam a luz apagada, o aro e a
+   caixinha em volta dela, os cartões e o trilho da barrinha de ritmo, que no
+   escuro sumiriam. Os títulos já ficam brancos pelo --ink-strong do tema. */
 body.dark .tutorial-led-card {
   --led-apagado: #2A3563;
-  --led-caixa: #0A1330;
+  --led-aro: #1B2647;
+  --led-sombra: rgba(0,0,0,.35);
+  --led-caixa: linear-gradient(180deg, rgba(47,128,255,.06) 0%, rgba(47,128,255,.13) 100%);
+  --led-caixa-borda: #1F2A50;
   --led-trilho: #1B2647;
+  --led-marca: rgba(47,128,255,.1);
+  --led-cartao: #0B1430;
+  --led-icone: #7AAFFF;
+  --led-icone-fundo: rgba(47,128,255,.16);
+  --led-ok-fundo: rgba(43,209,126,.16);
+  --led-ok-texto: #2BD17E;
+  --led-atencao-fundo: rgba(234,179,8,.18);
+  --led-atencao-texto: #FBBF24;
 }
-body.dark .tutorial-led-head h3,
-body.dark .tutorial-led-topo h4,
-body.dark .tutorial-led-texto strong,
-body.dark .tutorial-led-dica h4,
-body.dark .tutorial-led-dica strong { color: #fff; }
 /* Um tom acima do #2F80FF dos outros links: sobre o fundo azulado das dicas,
    ele ficava abaixo do contraste mínimo para texto pequeno. */
 body.dark .tutorial-led-card a { color: #5B9BFF; }
 body.dark .tutorial-led-card a:hover { color: #8AB8FF; }
 body.dark .tutorial-led-item { border-color: #1B2647; }
-body.dark .tutorial-led-luz { border-color: #1B2647; }
-body.dark .tutorial-led-luz::before { box-shadow: inset 0 -2px 3px rgba(0,0,0,.35); }
-body.dark .tutorial-led-selo.is-normal { background: rgba(43,209,126,.16); color: #2BD17E; }
-body.dark .tutorial-led-selo.is-atencao { background: rgba(234,179,8,.18); color: #FBBF24; }
 body.dark .tutorial-led-dica { background: rgba(47,128,255,.08); border-color: #1F2A50; }
