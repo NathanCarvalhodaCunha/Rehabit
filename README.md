@@ -81,6 +81,54 @@ java -DREHABIT_DEMO=true -jar target/rehabit-api-1.0.0.jar
 No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
 (e, se quiser outra senha, `REHABIT_DEMO_SENHA`), depois *Manual Deploy*.
 
+### Conta da apresentação
+
+Para a banca do TCC (27/10/2026) há uma segunda clínica, que funciona como
+uma conta comum: a **Clínica Alvorada Fisioterapia**, de Atibaia, com quatro
+fisioterapeutas e catorze pacientes. Os pacientes têm anamnese, metas, meses de
+sessões, faltas, uma consulta remarcada, altas e um inativo, e a agenda cobre
+as próximas três semanas, com boa parte deles marcada às terças, de manhã e à
+tarde. Ela é montada pelo mesmo gerador da demonstração
+([`GeradorDeClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/GeradorDeClinica.java)),
+mas tem três diferenças:
+
+- **aceita alterações**: dá para editar, cadastrar, excluir e registrar sessão
+  com o goniômetro, e nenhuma tela fala em demonstração;
+- **a senha não está no repositório**: ela vem de `REHABIT_APRESENTACAO_SENHA`,
+  que não tem valor padrão e precisa passar na política de senha (mínimo de 8
+  caracteres e fora da lista das senhas comuns). Sem ela, a API sobe
+  normalmente, mas não cria a conta e avisa no log;
+- **os e-mails existem**: são apelidos do `tccrehabit@gmail.com`. O Gmail
+  entrega na mesma caixa tudo o que tem `+algo` antes do `@`, então o e-mail
+  de recuperação de senha de qualquer uma das contas chega à equipe.
+
+| Conta | E-mail |
+|---|---|
+| Clínica | `tccrehabit+clinica@gmail.com` |
+| Mariana Costa Bertolini (ortopedia) | `tccrehabit+mariana@gmail.com` |
+| Lucas Henrique Prado (esportiva) | `tccrehabit+lucas@gmail.com` |
+| Patrícia Yamamoto Reis (neurofuncional) | `tccrehabit+patricia@gmail.com` |
+| Renato Aguiar Fonseca (gerontologia) | `tccrehabit+renato@gmail.com` |
+
+No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
+`REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
+mostra `Clínica Alvorada Fisioterapia criada`. Assim como a demonstração, a
+criação é idempotente e nunca apaga o que a equipe mudou.
+
+As datas contam a partir do dia em que a conta é criada: o histórico termina na
+véspera e a agenda começa no dia seguinte. Se a conta for criada bem antes da
+apresentação, os dias que passarem até lá ficam sem sessão, como se ninguém
+tivesse sido atendido. Para chegar à banca com tudo em dia, recrie a conta em
+26/10: entre como a clínica, vá em *Configurações → Excluir conta* e faça um
+*Manual Deploy*. A conta volta com o histórico até 25/10 e a agenda a partir
+de 27/10. A exclusão leva junto o goniômetro pareado, então pareie de novo em
+*Dispositivo* depois de recriar.
+
+Os pacientes são fictícios, porque dado de saúde de pessoas reais não pode ir
+para um repositório público. Os telefones também são inventados. Para mostrar o
+lembrete no WhatsApp ao vivo, troque o telefone de um paciente pelo de alguém
+da equipe antes de começar.
+
 ## Onde o site está publicado
 
 O site fica em **https://rehabit.com.br**, publicado pela

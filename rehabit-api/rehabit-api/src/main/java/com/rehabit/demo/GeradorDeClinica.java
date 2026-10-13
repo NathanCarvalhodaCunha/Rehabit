@@ -1,0 +1,383 @@
+package com.rehabit.demo;
+
+import com.rehabit.config.RelogioConfig;
+import com.rehabit.model.Agendamento;
+import com.rehabit.model.Clinica;
+import com.rehabit.model.Configuracao;
+import com.rehabit.model.Fisioterapeuta;
+import com.rehabit.model.Medicao;
+import com.rehabit.model.Notificacao;
+import com.rehabit.model.Paciente;
+import com.rehabit.model.Sessao;
+import com.rehabit.repository.AgendamentoRepository;
+import com.rehabit.repository.ClinicaRepository;
+import com.rehabit.repository.ConfiguracaoRepository;
+import com.rehabit.repository.FisioterapeutaRepository;
+import com.rehabit.repository.MedicaoRepository;
+import com.rehabit.repository.NotificacaoRepository;
+import com.rehabit.repository.PacienteRepository;
+import com.rehabit.repository.SessaoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Monta uma clínica inteira a partir de um {@link Roteiro}: a equipe, os
+ * pacientes com anamnese e metas, meses de sessões com a evolução da
+ * amplitude e da dor, faltas, uma consulta remarcada, a agenda das próximas
+ * semanas e o sino da clínica. É o que a conta de demonstração e a conta da
+ * apresentação têm em comum — muda só quem é a clínica, quem atende e quem é
+ * atendido.
+ *
+ * Todas as datas são relativas ao dia em que roda: o histórico termina ontem
+ * e a agenda começa amanhã.
+ *
+ * Nasce aqui, e não pelas rotas da API, porque a API só registra uma sessão
+ * no momento em que ela acontece, e uma clínica de exemplo precisa de histórico.
+ */
+@Component
+public class GeradorDeClinica {
+
+    private static final Logger log = LoggerFactory.getLogger(GeradorDeClinica.class);
+
+    /** Expediente da clínica: todo horário da agenda cabe nele. */
+    private static final LocalTime ABERTURA = LocalTime.of(7, 0);
+    private static final LocalTime FECHAMENTO = LocalTime.of(19, 0);
+    private static final int DURACAO_PADRAO = 50;
+
+    public record DadosDaClinica(String nome, String email, String cnpj, String telefone, String endereco,
+                                 String subtitulo, String descricao, String localidade) {
+    }
+
+    public record Profissional(String nome, String email, String coffito, String especialidade,
+                               String telefone, String descricao) {
+    }
+
+    /**
+     * Um paciente e o desenho do seu tratamento. "profissional" é a posição
+     * de quem atende na lista de profissionais do roteiro. A amplitude vai de
+     * ampInicial a ampFinal ao longo das sessões (ganho rápido no começo,
+     * platô no fim), e a dor cai de dorInicial a dorFinal. "semanasParado"
+     * afasta a última sessão de hoje — é o paciente de alta ou que parou.
+     */
+    public record PacienteFicticio(int profissional, String nome, String cpf, String sexo, LocalDate nascimento,
+                                   String telefone, String email, String situacao, String queixa,
+                                   String historico, String medicamentos, String contraindicacoes,
+                                   String status, Set<DayOfWeek> dias, LocalTime horario, int sessoes,
+                                   int semanasParado, double ampInicial, double ampFinal, double meta,
+                                   int dorInicial, int dorFinal, int duracao) {
+    }
+
+    /**
+     * A clínica inteira. A segunda consulta do primeiro paciente sai
+     * remarcada, então ele deve estar em tratamento. "semanasDeAgenda" é até
+     * onde a agenda vai a partir de amanhã.
+     */
+    public record Roteiro(DadosDaClinica clinica, List<Profissional> profissionais,
+                          List<PacienteFicticio> pacientes, int semanasDeAgenda) {
+    }
+
+    /** Prontuário por fase do tratamento: começo, meio e reta final. */
+    private static final List<List<String>> PRONTUARIO = List.of(
+            List.of("Mobilização passiva e liberação miofascial. Paciente relata menos rigidez ao acordar.",
+                    "Exercícios ativo-assistidos. Boa tolerância, sem edema após a sessão.",
+                    "Crioterapia ao final. Dor mais localizada que na semana anterior."),
+            List.of("Fortalecimento isométrico e alongamento. Ganho de amplitude perceptível.",
+                    "Exercícios ativos com faixa elástica leve. Paciente mais confiante no movimento.",
+                    "Progressão de carga no fortalecimento. Dor apenas no fim do arco de movimento.",
+                    "Treino proprioceptivo e de controle motor. Execução mais estável.",
+                    "Paciente relata piora após esforço no trabalho; sessão adaptada com menos carga."),
+            List.of("Treino funcional das atividades do dia a dia. Sem dor durante os exercícios.",
+                    "Reavaliação com o goniômetro: evolução dentro do esperado para a meta.",
+                    "Programa domiciliar revisado; paciente executa os exercícios sem ajuda."));
+
+    private static final List<String> OBSERVACOES_AGENDA = List.of(
+            "Sessão de rotina", "Reavaliação com o goniômetro", "Fortalecimento",
+            "Trazer os exames de imagem", "Sessão de rotina", "Treino funcional");
+
+    private final ClinicaRepository clinicas;
+    private final FisioterapeutaRepository fisioterapeutas;
+    private final PacienteRepository pacientes;
+    private final SessaoRepository sessoes;
+    private final MedicaoRepository medicoes;
+    private final AgendamentoRepository agendamentos;
+    private final ConfiguracaoRepository configuracoes;
+    private final NotificacaoRepository notificacoes;
+    private final PasswordEncoder passwordEncoder;
+    private final Clock relogio;
+
+    public GeradorDeClinica(ClinicaRepository clinicas, FisioterapeutaRepository fisioterapeutas,
+                            PacienteRepository pacientes, SessaoRepository sessoes,
+                            MedicaoRepository medicoes, AgendamentoRepository agendamentos,
+                            ConfiguracaoRepository configuracoes, NotificacaoRepository notificacoes,
+                            PasswordEncoder passwordEncoder, Clock relogio) {
+        this.clinicas = clinicas;
+        this.fisioterapeutas = fisioterapeutas;
+        this.pacientes = pacientes;
+        this.sessoes = sessoes;
+        this.medicoes = medicoes;
+        this.agendamentos = agendamentos;
+        this.configuracoes = configuracoes;
+        this.notificacoes = notificacoes;
+        this.passwordEncoder = passwordEncoder;
+        this.relogio = relogio;
+    }
+
+    /**
+     * Cria a clínica inteira numa transação só: se algo falha no meio, nada
+     * fica pela metade — e a próxima subida tenta de novo. Todas as contas do
+     * roteiro (clínica e profissionais) entram com a mesma senha.
+     *
+     * @return true se criou; false se a clínica já existia.
+     */
+    @Transactional
+    public boolean criarSeNaoExistir(Roteiro roteiro, String senha) {
+        DadosDaClinica dados = roteiro.clinica();
+        if (clinicas.existsByEmail(dados.email())) {
+            log.info("{} já existe ({}); nada a fazer.", dados.nome(), dados.email());
+            return false;
+        }
+        LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)).withNano(0);
+        String senhaCifrada = passwordEncoder.encode(senha);
+
+        Clinica clinica = criarClinica(dados, senhaCifrada);
+        List<Fisioterapeuta> equipe = new ArrayList<>();
+        for (Profissional p : roteiro.profissionais()) {
+            equipe.add(criarProfissional(p, clinica, dados.localidade(), senhaCifrada));
+        }
+
+        List<Sessao> recentes = new ArrayList<>();
+        List<PacienteFicticio> roteiroPacientes = roteiro.pacientes();
+        for (int i = 0; i < roteiroPacientes.size(); i++) {
+            PacienteFicticio ficticio = roteiroPacientes.get(i);
+            Fisioterapeuta responsavel = equipe.get(ficticio.profissional());
+            // Um em cada quatro pacientes em tratamento faltou a uma consulta
+            // há umas três semanas: aquele dia fica sem sessão, com a falta na agenda.
+            LocalDate falta = "Ativo".equals(ficticio.status()) && i % 4 == 1
+                    ? diaDeAtendimentoAte(ficticio, agora.toLocalDate().minusWeeks(3))
+                    : null;
+            List<LocalDate> datas = datasDasSessoes(ficticio, agora.toLocalDate(), falta);
+            Paciente paciente = criarPaciente(ficticio, responsavel, datas.get(0));
+            recentes.addAll(criarSessoes(ficticio, paciente, datas));
+            criarAgenda(ficticio, paciente, i, agora.toLocalDate(), falta, roteiro.semanasDeAgenda());
+        }
+        criarNotificacoes(clinica, recentes);
+
+        log.info("{} criada: {} ({} profissionais, {} pacientes).", dados.nome(), dados.email(),
+                roteiro.profissionais().size(), roteiroPacientes.size());
+        return true;
+    }
+
+    private Clinica criarClinica(DadosDaClinica dados, String senhaCifrada) {
+        Clinica c = new Clinica();
+        c.setNome(dados.nome());
+        c.setEmail(dados.email());
+        c.setSenha(senhaCifrada);
+        c.setCnpj(dados.cnpj());
+        c.setTelefone(dados.telefone());
+        c.setEndereco(dados.endereco());
+        c.setSubtitulo(dados.subtitulo());
+        c.setDescricao(dados.descricao());
+        c.setTutorialVisto(true);
+        Clinica salva = clinicas.save(c);
+
+        Configuracao horario = new Configuracao();
+        horario.setTipoUsuario("CLINICA");
+        horario.setIdUsuario(salva.getId());
+        horario.setHoraAbertura(ABERTURA);
+        horario.setHoraFechamento(FECHAMENTO);
+        horario.setDuracaoPadraoMin(DURACAO_PADRAO);
+        horario.setAvisarConflito(true);
+        configuracoes.save(horario);
+        return salva;
+    }
+
+    private Fisioterapeuta criarProfissional(Profissional p, Clinica clinica, String localidade,
+                                             String senhaCifrada) {
+        Fisioterapeuta f = new Fisioterapeuta();
+        f.setNome(p.nome());
+        f.setEmail(p.email());
+        f.setSenha(senhaCifrada);
+        f.setCoffito(p.coffito());
+        f.setEspecialidade(p.especialidade());
+        f.setTelefone(p.telefone());
+        f.setDescricao(p.descricao());
+        f.setLocalidade(localidade);
+        f.setIdClinica(clinica.getId());
+        f.setTutorialVisto(true);
+        return fisioterapeutas.save(f);
+    }
+
+    private Paciente criarPaciente(PacienteFicticio ficticio, Fisioterapeuta responsavel, LocalDate primeiraSessao) {
+        Paciente p = new Paciente();
+        p.setNome(ficticio.nome());
+        p.setCpf(ficticio.cpf());
+        p.setTelefone(ficticio.telefone());
+        p.setEmail(ficticio.email());
+        p.setSexo(ficticio.sexo());
+        p.setDataNascimento(ficticio.nascimento());
+        // A avaliação que abriu o tratamento foi a primeira sessão.
+        p.setDataInicioTratamento(primeiraSessao);
+        p.setSituacao(ficticio.situacao());
+        p.setStatus(ficticio.status());
+        p.setQueixaPrincipal(ficticio.queixa());
+        p.setHistoricoClinico(ficticio.historico());
+        p.setMedicamentos(ficticio.medicamentos());
+        p.setContraindicacoes(ficticio.contraindicacoes());
+        p.setMetaAmplitude(BigDecimal.valueOf(ficticio.meta()).setScale(2, RoundingMode.HALF_UP));
+        p.setMetaData(primeiraSessao.plusWeeks(ficticio.sessoes() / ficticio.dias().size() + 4L));
+        p.setIdClinica(responsavel.getIdClinica());
+        p.setIdFisioterapeuta(responsavel.getId());
+        return pacientes.save(p);
+    }
+
+    /**
+     * Os dias de atendimento, do mais antigo ao mais recente: voltando a
+     * partir de ontem (ou de algumas semanas atrás, para quem parou), pega os
+     * dias da semana em que o paciente é atendido até completar as sessões.
+     * O dia da falta, quando há, fica de fora.
+     */
+    private static List<LocalDate> datasDasSessoes(PacienteFicticio ficticio, LocalDate hoje, LocalDate falta) {
+        List<LocalDate> datas = new ArrayList<>();
+        LocalDate dia = hoje.minusDays(1).minusWeeks(ficticio.semanasParado());
+        while (datas.size() < ficticio.sessoes()) {
+            if (ficticio.dias().contains(dia.getDayOfWeek()) && !dia.equals(falta)) datas.add(dia);
+            dia = dia.minusDays(1);
+        }
+        Collections.reverse(datas);
+        return datas;
+    }
+
+    /** O dia de atendimento do paciente mais próximo de "limite", sem passar dele. */
+    private static LocalDate diaDeAtendimentoAte(PacienteFicticio ficticio, LocalDate limite) {
+        LocalDate dia = limite;
+        while (!ficticio.dias().contains(dia.getDayOfWeek())) dia = dia.minusDays(1);
+        return dia;
+    }
+
+    private List<Sessao> criarSessoes(PacienteFicticio ficticio, Paciente paciente, List<LocalDate> datas) {
+        List<Sessao> criadas = new ArrayList<>();
+        int n = datas.size();
+        for (int k = 0; k < n; k++) {
+            double t = n == 1 ? 1 : (double) k / (n - 1);
+            // Ganho rápido no começo e platô no fim, com a oscilação normal de
+            // um dia para o outro — nenhuma evolução real é uma reta.
+            double progresso = 1 - Math.pow(1 - t, 1.6);
+            double amplitude = ficticio.ampInicial() + (ficticio.ampFinal() - ficticio.ampInicial()) * progresso
+                    + (k == 0 || k == n - 1 ? 0 : Math.sin(k * 1.7) * 1.8);
+            int dor = (int) Math.round(ficticio.dorInicial() + (ficticio.dorFinal() - ficticio.dorInicial()) * t
+                    + (k % 5 == 3 ? 1 : 0));
+            int duracao = ficticio.duracao() + (k % 3 == 1 ? 5 : k % 3 == 2 ? -5 : 0);
+            // A sessão é registrada ao terminar: horário marcado + duração,
+            // com a variação de alguns minutos de um dia para o outro.
+            LocalTime registro = ficticio.horario().plusMinutes(duracao - 6 + (k * 7) % 9);
+
+            Sessao s = new Sessao();
+            s.setIdPaciente(paciente.getId());
+            s.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
+            s.setDataSessao(datas.get(k));
+            s.setHoraSessao(registro);
+            s.setDuracao(duracao);
+            s.setDor(Math.max(0, Math.min(10, dor)));
+            s.setObservacoes(prontuario(k, t));
+            Sessao salva = sessoes.save(s);
+
+            Medicao m = new Medicao();
+            m.setIdSessao(salva.getId());
+            m.setAmplitudeMedia(BigDecimal.valueOf(amplitude).setScale(1, RoundingMode.HALF_UP));
+            m.setDataMedicao(datas.get(k));
+            m.setHoraMedicao(registro);
+            medicoes.save(m);
+            criadas.add(salva);
+        }
+        return criadas;
+    }
+
+    private static String prontuario(int k, double t) {
+        if (k == 0) {
+            return "Avaliação inicial. Amplitude limitada pela dor; orientados exercícios domiciliares.";
+        }
+        // Uma sessão em cada quatro fica sem anotação, como na vida real.
+        if (k % 4 == 2) return null;
+        List<String> fase = PRONTUARIO.get(t < 0.35 ? 0 : t < 0.75 ? 1 : 2);
+        return fase.get(k % fase.size());
+    }
+
+    /**
+     * Agenda de quem está em tratamento: as próximas semanas nos dias e
+     * horários de sempre, a falta de quem faltou e uma consulta remarcada,
+     * para a tela mostrar todos os estados. Cada paciente de um profissional
+     * tem horário próprio, então nada colide.
+     */
+    private void criarAgenda(PacienteFicticio ficticio, Paciente paciente, int indice, LocalDate hoje,
+                             LocalDate falta, int semanas) {
+        if (!"Ativo".equals(ficticio.status())) return;
+
+        if (falta != null) {
+            Agendamento a = novoAgendamento(paciente, falta, ficticio.horario(), "Não compareceu nem avisou");
+            a.setStatus("FALTOU");
+            agendamentos.save(a);
+        }
+
+        int n = 0;
+        for (LocalDate dia = hoje.plusDays(1); !dia.isAfter(hoje.plusWeeks(semanas)); dia = dia.plusDays(1)) {
+            if (!ficticio.dias().contains(dia.getDayOfWeek())) continue;
+            Agendamento a = novoAgendamento(paciente, dia, ficticio.horario(),
+                    OBSERVACOES_AGENDA.get((indice + n) % OBSERVACOES_AGENDA.size()));
+            // A segunda consulta do primeiro paciente foi remarcada: o dia original fica guardado.
+            if (indice == 0 && n == 1) {
+                a.setDataOriginal(dia.minusDays(1));
+                a.setHoraOriginal(ficticio.horario());
+                a.setStatus("REMARCADA");
+                a.setObservacao("Remarcada a pedido do paciente");
+            }
+            agendamentos.save(a);
+            n++;
+        }
+    }
+
+    private static Agendamento novoAgendamento(Paciente paciente, LocalDate dia, LocalTime hora, String obs) {
+        Agendamento a = new Agendamento();
+        a.setIdPaciente(paciente.getId());
+        a.setIdFisioterapeuta(paciente.getIdFisioterapeuta());
+        a.setDataAgendamento(dia);
+        a.setHoraAgendamento(hora);
+        a.setObservacao(obs);
+        a.setStatus("AGENDADA");
+        return a;
+    }
+
+    /** O sino da clínica com as últimas sessões; só as três mais novas não lidas. */
+    private void criarNotificacoes(Clinica clinica, List<Sessao> sessoesCriadas) {
+        List<Sessao> maisNovas = new ArrayList<>(sessoesCriadas.stream()
+                .sorted((a, b) -> LocalDateTime.of(b.getDataSessao(), b.getHoraSessao())
+                        .compareTo(LocalDateTime.of(a.getDataSessao(), a.getHoraSessao())))
+                .limit(8)
+                .toList());
+        for (int i = 0; i < maisNovas.size(); i++) {
+            Sessao s = maisNovas.get(i);
+            String nome = pacientes.findById(s.getIdPaciente()).map(Paciente::getNome).orElse("paciente");
+            Notificacao n = new Notificacao();
+            n.setIdClinica(clinica.getId());
+            n.setTipo("NOVA_SESSAO");
+            n.setMensagem("Nova sessão registrada para " + nome);
+            n.setLida(i >= 3);
+            n.setCriadaEm(LocalDateTime.of(s.getDataSessao(), s.getHoraSessao()));
+            notificacoes.save(n);
+        }
+    }
+}
