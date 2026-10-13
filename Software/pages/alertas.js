@@ -6,12 +6,6 @@
   const sessao = getSessao();
   if (!sessao) return;
 
-  function escapar(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   const ICONES = {
     ATENCAO:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
@@ -35,11 +29,11 @@
       cartao.querySelector("[data-alertas-lista]").innerHTML = alertas
         .map(
           (a) => `
-        <li class="alerta-item ${a.nivel === "BOM" ? "is-bom" : "is-atencao"}" data-id-paciente="${a.idPaciente}">
+        <li class="alerta-item ${a.nivel === "BOM" ? "is-bom" : "is-atencao"}" data-id-paciente="${escaparHtml(a.idPaciente)}">
           <span class="alerta-icone">${ICONES[a.nivel] || ICONES.ATENCAO}</span>
           <span class="alerta-texto">
-            <strong>${escapar(a.titulo)}</strong>
-            <span>${escapar(a.descricao)}</span>
+            <strong>${escaparHtml(a.titulo)}</strong>
+            <span>${escaparHtml(a.descricao)}</span>
           </span>
         </li>`
         )

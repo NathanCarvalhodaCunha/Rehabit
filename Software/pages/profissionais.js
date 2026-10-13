@@ -14,12 +14,6 @@
 
   let todos = [];
 
-  function escaparHtml(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto == null ? "" : String(texto);
-    return div.innerHTML;
-  }
-
   function buscaAtual() {
     const preenchido = camposBusca.find((c) => c.value.trim() !== "");
     return preenchido ? preenchido.value : "";
@@ -61,20 +55,19 @@
     }
 
     listaEl.innerHTML = lista
-      .map((f) => {
-        const foto = urlFoto(f.foto);
-        const estiloAvatar = foto
-          ? ` style="background-image:url('${foto}');background-size:cover;background-position:center;"`
-          : "";
-        return `
-          <li class="fisio-item" data-id="${f.id}" style="cursor:pointer;">
-            <div class="avatar-sm"${estiloAvatar} aria-hidden="true"></div>
+      .map(
+        (f) => `
+          <li class="fisio-item" data-id="${escaparHtml(f.id)}" style="cursor:pointer;">
+            <div class="avatar-sm" aria-hidden="true"></div>
             <div class="fisio-name">${escaparHtml(f.nome)}</div>
             <div class="fisio-spec">${escaparHtml(f.especialidade || "Fisioterapeuta")}</div>
-            <div class="fisio-count"><span class="num">${f.pacientesAtivos}</span><span class="lbl mobile-only"> pacientes ativos</span></div>
-          </li>`;
-      })
+            <div class="fisio-count"><span class="num">${escaparHtml(f.pacientesAtivos)}</span><span class="lbl mobile-only"> pacientes ativos</span></div>
+          </li>`
+      )
       .join("");
+    // O nome já era escapado, mas a foto ia crua para um style="" e fechava o
+    // atributo; agora ela entra pelo CSSOM (SEC-02).
+    listaEl.querySelectorAll(".avatar-sm").forEach((el, i) => aplicarFoto(el, lista[i].foto));
 
     if (typeof RehabitAnim !== "undefined") RehabitAnim.staggerList(listaEl);
   }

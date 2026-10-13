@@ -50,7 +50,7 @@
         <p>Atualize suas informações</p>
       </header>
 
-      <form class="edit-grid" onsubmit="event.preventDefault();" novalidate>
+      <form class="edit-grid" data-envio-por-script novalidate>
         <input type="file" id="pfoto" accept="image/*" hidden />
         <section class="card edit-avatar-card">
           <div class="avatar-lg" aria-hidden="true" data-avatar-picker style="cursor:pointer;"></div>
@@ -88,16 +88,16 @@
             <div class="two-col">
               <div class="field">
                 <label for="i-sub">Subtítulo</label>
-                <input id="i-sub" type="text" value="" />
+                <input id="i-sub" maxlength="150" type="text" value="" />
               </div>
               <div class="field">
                 <label for="i-loc">Localidade</label>
-                <input id="i-loc" type="text" value="" />
+                <input id="i-loc" maxlength="200" type="text" value="" />
               </div>
             </div>
             <div class="field">
               <label for="i-desc">Descrição</label>
-              <textarea id="i-desc" rows="4"></textarea>
+              <textarea id="i-desc" maxlength="5000" rows="4"></textarea>
             </div>
           </div>
           <hr class="edit-sep" />
@@ -110,7 +110,7 @@
               </div>
               <div class="field">
                 <label for="i-senha-nova">Nova senha</label>
-                <input id="i-senha-nova" type="password" autocomplete="new-password" />
+                <input id="i-senha-nova" type="password" autocomplete="new-password" minlength="8" />
               </div>
             </div>
           </div>
@@ -133,13 +133,13 @@
       </a>
     </nav>
   </div>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.css" integrity="sha384-TO4IUm4upNqQuSHA3xAk5ixibmqyKUAvTD3UIJdx9KctftYoctvBVGeH6nzXTOO2" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.js" integrity="sha384-VwoO4KYHycI5E2Vzjf4m+IY3C8JKnLhRzzVeR7n4Qdx+Qkq0YUC3aiJ6vY0XVlVT" crossorigin="anonymous"></script>
   <script src="./toast.js"></script>
   <script src="./password-toggle.js"></script>
   <script src="./loader.js"></script>
   <script src="./script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="./animations.js"></script>
   <script src="./notificacoes.js"></script>
   <script src="./busca.js"></script>

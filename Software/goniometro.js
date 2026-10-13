@@ -88,18 +88,33 @@
     });
   }
 
+  /* O EventSource não manda cabeçalho, e o token de sessão na URL ficava
+     gravado em log de proxy e no histórico. Cada conexão pede antes um
+     ingresso à API (com o token no cabeçalho, como as outras chamadas): ele
+     só abre o stream desta clínica, uma vez, no próximo minuto. */
   function abrirSse(id) {
     var s = sessao();
     if (!s || typeof EventSource === "undefined") {
       iniciarPolling(id);
       return;
     }
+    fecharSse();
 
-    fonte = new EventSource(
-      API_BASE_URL + "/goniometro/stream?idClinica=" + id + "&token=" + encodeURIComponent(s.token)
-    );
+    buscarSilencioso("/goniometro/stream/ingresso?idClinica=" + id, { method: "POST" })
+      .then(function (resposta) {
+        if (!ativo) return;
+        fonte = new EventSource(
+          API_BASE_URL + "/goniometro/stream?idClinica=" + id + "&ingresso=" + encodeURIComponent(resposta.ingresso)
+        );
+        ligarEventos(fonte, id);
+      })
+      .catch(function () {
+        if (ativo) falhou(id);
+      });
+  }
 
-    fonte.addEventListener("estado", function (evento) {
+  function ligarEventos(origem, id) {
+    origem.addEventListener("estado", function (evento) {
       falhasSeguidas = 0;
       try {
         avisar(JSON.parse(evento.data));
@@ -108,27 +123,31 @@
       }
     });
 
-    fonte.addEventListener("open", function () {
+    origem.addEventListener("open", function () {
       falhasSeguidas = 0;
     });
 
-    fonte.addEventListener("error", function () {
-      if (!ativo) return;
-      // O EventSource reconecta sozinho, mas se ele estiver batendo na trave
-      // (readyState CLOSED) é sinal de que esse transporte não vai vingar
-      // aqui — melhor trocar por polling do que ficar tentando em silêncio.
-      falhasSeguidas++;
-      if (fonte && fonte.readyState === EventSource.CLOSED) {
-        fecharSse();
-        if (falhasSeguidas >= FALHAS_ATE_DESISTIR_DO_SSE) {
-          iniciarPolling(id);
-        } else {
-          timerReconexao = setTimeout(function () {
-            if (ativo) abrirSse(id);
-          }, ESPERA_RECONEXAO_MS);
-        }
-      }
+    origem.addEventListener("error", function () {
+      if (!ativo || origem !== fonte) return;
+      // A reconexão automática do EventSource repetiria a mesma URL, com o
+      // ingresso já gasto. Fecha e abre de novo com um ingresso novo.
+      fecharSse();
+      falhou(id);
     });
+  }
+
+  /* Duas quedas seguidas sem nenhum evento no meio: o SSE não vinga aqui
+     (proxy que corta streaming, por exemplo) e o polling assume. Uma conexão
+     que funcionou e caiu (rede, fim do tempo do servidor) só reabre. */
+  function falhou(id) {
+    falhasSeguidas++;
+    if (falhasSeguidas >= FALHAS_ATE_DESISTIR_DO_SSE) {
+      iniciarPolling(id);
+    } else {
+      timerReconexao = setTimeout(function () {
+        if (ativo) abrirSse(id);
+      }, ESPERA_RECONEXAO_MS);
+    }
   }
 
   function fecharSse() {

@@ -117,6 +117,9 @@
     if (typeof Toastify === "function" && temCssDoToastify()) {
       Toastify({
         text: mensagem,
+        // Texto puro, nunca HTML: a mensagem costuma vir da API. É o padrão
+        // da versão fixada no HTML, mas fica explícito para não depender dele.
+        escapeMarkup: true,
         duration: DURACAO_MS,
         close: true,
         gravity: "top",

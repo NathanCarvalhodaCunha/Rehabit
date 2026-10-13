@@ -48,12 +48,6 @@ window.RehabitCurva = (function () {
     }
   }
 
-  function escapar(valor) {
-    var div = document.createElement("div");
-    div.textContent = valor == null ? "" : String(valor);
-    return div.innerHTML;
-  }
-
   function grau(valor) {
     return Number(valor).toFixed(1).replace(".", ",") + "°";
   }
@@ -67,7 +61,7 @@ window.RehabitCurva = (function () {
     var duracao = pontos.length ? pontos[pontos.length - 1][0] / 1000 : 0;
 
     corpo.innerHTML =
-      '<div class="curva-topo"><h3>Curva do movimento</h3><span>' + escapar(rotulo) + "</span></div>" +
+      '<div class="curva-topo"><h3>Curva do movimento</h3><span>' + escaparHtml(rotulo) + "</span></div>" +
       '<div class="curva-indicadores">' +
       "<div><strong>" + grau(minimo) + "</strong><span>Mínimo</span></div>" +
       "<div><strong>" + grau(maximo) + "</strong><span>Máximo</span></div>" +
@@ -154,7 +148,7 @@ window.RehabitCurva = (function () {
         desenhar(pontos, rotulo);
       })
       .catch(function (err) {
-        corpo.innerHTML = '<p class="resumo-vazio">' + escapar(err.message) + "</p>";
+        corpo.innerHTML = '<p class="resumo-vazio">' + escaparHtml(err.message) + "</p>";
       });
   }
 

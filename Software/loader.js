@@ -31,6 +31,15 @@
       : "assets/rehabit-icon.png";
   }
 
+  // O texto entra como texto, nunca como HTML: quem chama show() pode um dia
+  // passar algo vindo da API.
+  function writeText(label, text) {
+    var dots = document.createElement("span");
+    dots.className = "rh-dots";
+    label.textContent = text;
+    label.appendChild(dots);
+  }
+
   function build(text) {
     var overlay = document.createElement("div");
     overlay.className = "rh-loader" + (isDark() ? " rh-loader--dark" : "");
@@ -40,14 +49,12 @@
     overlay.innerHTML =
       '<div class="rh-loader__box">' +
       '<div class="rh-loader__ring">' +
-      '<img class="rh-loader__icon" src="' +
-      iconPath() +
-      '" alt="">' +
+      '<img class="rh-loader__icon" alt="">' +
       "</div>" +
-      '<p class="rh-loader__text">' +
-      (text || "Carregando") +
-      '<span class="rh-dots"></span></p>' +
+      '<p class="rh-loader__text"></p>' +
       "</div>";
+    overlay.querySelector(".rh-loader__icon").src = iconPath();
+    writeText(overlay.querySelector(".rh-loader__text"), text || "Carregando");
     document.body.appendChild(overlay);
     return overlay;
   }
@@ -57,9 +64,7 @@
     if (!overlay) overlay = build(text);
     else if (text) {
       var label = overlay.querySelector(".rh-loader__text");
-      if (label) {
-        label.innerHTML = text + '<span class="rh-dots"></span>';
-      }
+      if (label) writeText(label, text);
     }
     return overlay;
   }

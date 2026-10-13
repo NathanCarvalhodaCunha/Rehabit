@@ -62,7 +62,6 @@
      tiver pacientes, eles — e a agenda de hoje em diante — precisam ir para
      outro profissional da clínica antes. */
   async function abrirExclusao() {
-    const escapar = RehabitConfirmarExclusao.escapar;
     const nome = header.querySelector("h1").textContent.trim() || "este profissional";
 
     let seusPacientes;
@@ -81,7 +80,7 @@
     const total = seusPacientes.length;
     const pacientesTexto = total === 1 ? "1 paciente" : `${total} pacientes`;
     const efeito =
-      `<p class="dialogo-texto"><strong>${escapar(nome)}</strong> perde o acesso ao Rehabit e sai das listas. ` +
+      `<p class="dialogo-texto"><strong>${escaparHtml(nome)}</strong> perde o acesso ao Rehabit e sai das listas. ` +
       "As sessões que já atendeu continuam no histórico, identificadas como conta excluída.</p>";
 
     if (total === 0) {
@@ -98,7 +97,7 @@
       RehabitConfirmarExclusao.abrir({
         titulo: `Excluir ${nome}`,
         corpo:
-          `<p class="dialogo-texto"><strong>${escapar(nome)}</strong> tem ${pacientesTexto} e não há outro ` +
+          `<p class="dialogo-texto"><strong>${escaparHtml(nome)}</strong> tem ${pacientesTexto} e não há outro ` +
           "profissional na clínica para recebê-los.</p>" +
           '<p class="dialogo-texto">Cadastre outro profissional primeiro; depois volte aqui para excluir.</p>',
         rotuloConfirmar: null,
@@ -106,15 +105,17 @@
       return;
     }
 
+    // O escape antigo deste diálogo não tratava aspas, e o id ia para dentro
+    // de value="...": o escaparHtml cobre o contexto de atributo.
     const opcoes = colegas
-      .map((f) => `<option value="${escapar(f.id)}">${escapar(f.nome)}</option>`)
+      .map((f) => `<option value="${escaparHtml(f.id)}">${escaparHtml(f.nome)}</option>`)
       .join("");
     RehabitConfirmarExclusao.abrir({
       titulo: `Excluir ${nome}`,
       corpo:
         efeito +
         '<div class="field">' +
-        `<label for="dlg-destino">${escapar(nome)} tem ${pacientesTexto}. Para quem eles vão?</label>` +
+        `<label for="dlg-destino">${escaparHtml(nome)} tem ${pacientesTexto}. Para quem eles vão?</label>` +
         `<select id="dlg-destino" required><option value="">Escolha um profissional</option>${opcoes}</select>` +
         "</div>" +
         '<p class="field-hint">Os pacientes seguem com todo o histórico de sessões, e a agenda de hoje em diante passa junto.</p>',
@@ -172,13 +173,7 @@
       if (rows[1]) definirTextoAposSvg(rows[1], f.telefone || "Não informado");
       if (rows[2]) definirTextoAposSvg(rows[2], f.localidade || "Não informado");
 
-      const foto = urlFoto(f.foto);
-      if (foto) {
-        const avatarEl = header.querySelector(".avatar");
-        avatarEl.style.backgroundImage = `url("${foto}")`;
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-      }
+      aplicarFoto(header.querySelector(".avatar"), f.foto);
 
       const descEl = document.querySelector(".description-card p");
       if (descEl) descEl.textContent = f.descricao || "Sem descrição cadastrada.";

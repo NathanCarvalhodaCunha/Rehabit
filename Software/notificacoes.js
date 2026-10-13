@@ -5,12 +5,6 @@
 (function () {
   "use strict";
 
-  function escaparHtml(texto) {
-    var div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function tempoRelativo(isoDateTime) {
     var diffMs = Date.now() - new Date(isoDateTime).getTime();
     var minutos = Math.round(diffMs / 60000);

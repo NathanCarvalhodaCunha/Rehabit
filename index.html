@@ -70,9 +70,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- A fonte entra sem travar a página: até ela chegar, o texto aparece na
        fonte do sistema (antes, o CSS do Google Fonts segurava a primeira
-       pintura por ~0,8 s no 4G). -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+       pintura por ~0,8 s no 4G). Quem liga a folha é o script abaixo: folha
+       criada por script não trava a pintura, e um onload="" aqui seria script
+       inline, que a CSP do vercel.json bloqueia. -->
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
+  <!-- Único script inline do site: precisa rodar antes da primeira pintura.
+       A CSP do vercel.json o libera pelo hash sha256 do conteúdo — mudou
+       qualquer caractere aqui dentro, recalcule o hash lá (o teste em
+       tests/seguranca-front acusa a diferença). -->
   <script>
     // Tema antes da primeira pintura, para a página não piscar clara: a
     // escolha salva no botão de tema ou, sem ela, o tema do aparelho.
@@ -83,6 +88,11 @@
         tema = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
       }
       document.documentElement.setAttribute("data-tema", tema);
+
+      var fonte = document.createElement("link");
+      fonte.rel = "stylesheet";
+      fonte.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
+      document.head.appendChild(fonte);
     })();
   </script>
   <link rel="stylesheet" href="inicio.css" />

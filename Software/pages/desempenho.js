@@ -19,12 +19,6 @@
   let dados = null;
   let ordenacao = "ganho";
 
-  function escaparHtml(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function cores() {
     const escuro = document.body.classList.contains("dark");
     return {
@@ -62,9 +56,9 @@
       .map(
         (c) => `
       <div class="card kpi-card">
-        <p class="kpi-rotulo">${c.rotulo}</p>
-        <p class="kpi-valor">${c.valor}</p>
-        <p class="kpi-detalhe">${c.detalhe}</p>
+        <p class="kpi-rotulo">${escaparHtml(c.rotulo)}</p>
+        <p class="kpi-valor">${escaparHtml(c.valor)}</p>
+        <p class="kpi-detalhe">${escaparHtml(c.detalhe)}</p>
       </div>`
       )
       .join("");
@@ -189,12 +183,12 @@
       .map((p) => {
         const classeGanho = p.ganho == null ? "" : p.ganho >= 0 ? "pos" : "neg";
         return `
-        <tr data-id="${p.idPaciente}" style="cursor:pointer;">
+        <tr data-id="${escaparHtml(p.idPaciente)}" style="cursor:pointer;">
           <td>${escaparHtml(p.nome)}${selos[p.status] || ""}</td>
-          <td>${p.sessoes}</td>
-          <td>${p.amplitudeInicial != null ? p.amplitudeInicial + "°" : "—"}</td>
-          <td>${p.amplitudeAtual != null ? p.amplitudeAtual + "°" : "—"}</td>
-          <td class="${classeGanho}"><strong>${formatarGanho(p.ganho)}</strong></td>
+          <td>${escaparHtml(p.sessoes)}</td>
+          <td>${p.amplitudeInicial != null ? escaparHtml(p.amplitudeInicial) + "°" : "—"}</td>
+          <td>${p.amplitudeAtual != null ? escaparHtml(p.amplitudeAtual) + "°" : "—"}</td>
+          <td class="${classeGanho}"><strong>${escaparHtml(formatarGanho(p.ganho))}</strong></td>
         </tr>`;
       })
       .join("");
@@ -206,15 +200,9 @@
     raiz.querySelector("[data-nome-profissional]").textContent = d.nomeFisioterapeuta;
     raiz.querySelector("[data-especialidade]").textContent = d.especialidade || "Fisioterapeuta";
 
-    const avatar = raiz.querySelector("[data-avatar]");
-    if (avatar) {
-      const foto = urlFoto(d.foto);
-      // Limpa sempre antes: sem isso, trocar para um profissional sem foto
-      // deixava na tela a imagem do anterior.
-      avatar.style.backgroundImage = foto ? `url("${foto}")` : "";
-      avatar.style.backgroundSize = foto ? "cover" : "";
-      avatar.style.backgroundPosition = foto ? "center" : "";
-    }
+    // aplicarFoto limpa o fundo quando não há foto: trocar para um
+    // profissional sem foto não pode deixar na tela a imagem do anterior.
+    aplicarFoto(raiz.querySelector("[data-avatar]"), d.foto);
 
     preencherIndicadores(d);
     desenharGraficoSessoes(d);
@@ -269,13 +257,13 @@
       corpo.innerHTML = linhas
         .map(
           (d) => `
-        <tr data-id-fisio="${d.idFisioterapeuta}" style="cursor:pointer;">
+        <tr data-id-fisio="${escaparHtml(d.idFisioterapeuta)}" style="cursor:pointer;">
           <td>${escaparHtml(d.nomeFisioterapeuta)}</td>
-          <td>${d.totalPacientes}</td>
-          <td>${d.totalSessoes}</td>
-          <td>${d.pacientesAlta}</td>
+          <td>${escaparHtml(d.totalPacientes)}</td>
+          <td>${escaparHtml(d.totalSessoes)}</td>
+          <td>${escaparHtml(d.pacientesAlta)}</td>
           <td class="${d.ganhoMedioGraus == null ? "" : d.ganhoMedioGraus >= 0 ? "pos" : "neg"}">
-            <strong>${formatarGanho(d.ganhoMedioGraus)}</strong>
+            <strong>${escaparHtml(formatarGanho(d.ganhoMedioGraus))}</strong>
           </td>
         </tr>`
         )
@@ -290,9 +278,8 @@
           raiz.querySelector("[data-nome-profissional]").textContent = "Nenhum profissional cadastrado";
           return;
         }
-        seletorProfissional.innerHTML = profissionais
-          .map((p) => `<option value="${p.id}">${escaparHtml(p.nome)}</option>`)
-          .join("");
+        // <option> pelo DOM: id e nome nunca passam por HTML.
+        seletorProfissional.replaceChildren(...profissionais.map((p) => new Option(p.nome ?? "", p.id)));
         const escolhido = idAtual && profissionais.some((p) => String(p.id) === String(idAtual))
           ? idAtual
           : profissionais[0].id;

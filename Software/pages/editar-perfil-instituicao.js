@@ -21,13 +21,9 @@
       document.getElementById("i-loc").value = clinica.endereco || "";
       document.getElementById("i-desc").value = clinica.descricao || "";
 
-      const foto = urlFoto(clinica.foto);
-      if (foto) {
-        const avatarEl = document.querySelector(".edit-avatar-card .avatar-lg");
-        avatarEl.style.backgroundImage = `url("${foto}")`;
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-      }
+      // Só pinta com foto válida: sem ela, não apaga a prévia de um arquivo
+      // que a pessoa tenha escolhido enquanto a tela carregava.
+      if (urlFoto(clinica.foto)) aplicarFoto(document.querySelector(".edit-avatar-card .avatar-lg"), clinica.foto);
     })
     .catch((err) => RehabitToast.erro(err.message));
 
@@ -37,9 +33,9 @@
 
     const senhaAtual = document.getElementById("i-senha-atual").value;
     const novaSenha = document.getElementById("i-senha-nova").value;
-    if (novaSenha && novaSenha.length < 6) {
-      RehabitCampos.marcar(document.getElementById("i-senha-nova"), "Use ao menos 6 caracteres.");
-      RehabitToast.erro("A nova senha deve ter ao menos 6 caracteres.");
+    if (novaSenha && novaSenha.length < 8) {
+      RehabitCampos.marcar(document.getElementById("i-senha-nova"), "Use ao menos 8 caracteres.");
+      RehabitToast.erro("A nova senha deve ter ao menos 8 caracteres.");
       return;
     }
     if (novaSenha && !senhaAtual) {
@@ -63,6 +59,8 @@
         formData.append("arquivo", arquivoFotoProfissional);
         const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
+          // O envio de fotos exige login, como qualquer outra rota da API.
+          headers: cabecalhosAutenticados(),
           body: formData,
         });
         const uploadDados = await uploadResponse.json().catch(() => ({}));
@@ -95,6 +93,16 @@
         }))
       );
 
+      // Com senha nova, a API encerra todas as sessões desta conta, esta
+      // inclusive: em vez de cair no login pelo próximo 401, avisa antes.
+      if (novaSenha) {
+        RehabitToast.sucesso("Perfil e senha atualizados. Entre de novo com a nova senha.");
+        localStorage.removeItem("rehabit_usuario");
+        setTimeout(() => {
+          window.location.href = paginaLogin();
+        }, 1800);
+        return;
+      }
       RehabitToast.sucesso("Perfil atualizado com sucesso.");
       setTimeout(() => {
         window.location.href = paginaTema("perfil-instituicao");

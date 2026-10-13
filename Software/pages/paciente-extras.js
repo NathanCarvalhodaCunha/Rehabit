@@ -13,12 +13,6 @@
   const idPaciente = new URLSearchParams(window.location.search).get("id");
   if (!idPaciente) return;
 
-  function escapar(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function formatarData(dataIso) {
     if (!dataIso) return "";
     const [ano, mes, dia] = dataIso.split("-");
@@ -135,9 +129,9 @@
       <li class="timeline-item is-${e.tipo}">
         <span class="timeline-marca"></span>
         <div class="timeline-corpo">
-          <span class="timeline-data">${formatarData(e.data)}</span>
-          <strong>${escapar(e.titulo)}</strong>
-          ${e.detalhe ? `<span>${escapar(e.detalhe)}</span>` : ""}
+          <span class="timeline-data">${escaparHtml(formatarData(e.data))}</span>
+          <strong>${escaparHtml(e.titulo)}</strong>
+          ${e.detalhe ? `<span>${escaparHtml(e.detalhe)}</span>` : ""}
         </div>
       </li>`
       )

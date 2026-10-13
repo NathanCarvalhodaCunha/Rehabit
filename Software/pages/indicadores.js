@@ -25,9 +25,9 @@
         .map(
           (c) => `
         <div class="card kpi-card">
-          <p class="kpi-rotulo">${c.rotulo}</p>
-          <p class="kpi-valor">${c.valor}</p>
-          <p class="kpi-detalhe${classeDoDetalhe(c.detalhe)}">${c.detalhe || ""}</p>
+          <p class="kpi-rotulo">${escaparHtml(c.rotulo)}</p>
+          <p class="kpi-valor">${escaparHtml(c.valor)}</p>
+          <p class="kpi-detalhe${classeDoDetalhe(c.detalhe)}">${escaparHtml(c.detalhe || "")}</p>
         </div>`
         )
         .join("");

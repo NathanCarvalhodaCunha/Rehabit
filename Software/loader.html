@@ -143,13 +143,10 @@
       </div>
 
       <div class="btns">
-        <button onclick="RehabitLoader.show('Carregando dados')">
+        <button type="button" data-demo="tela-cheia">
           Mostrar em tela cheia
         </button>
-        <button
-          class="ghost"
-          onclick="RehabitLoader.during(new Promise(r=>setTimeout(r,2500)),'Salvando')"
-        >
+        <button type="button" class="ghost" data-demo="requisicao">
           Simular requisição (2,5s)
         </button>
       </div>
@@ -178,5 +175,6 @@ RehabitLoader.during(fetch('/api/x'), 'Buscando');
     </div>
 
     <script src="loader.js" defer></script>
+    <script src="loader-demo.js" defer></script>
   </body>
 </html>

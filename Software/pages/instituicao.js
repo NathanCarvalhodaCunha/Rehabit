@@ -14,14 +14,7 @@
   document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
     el.textContent = sessao.nome;
   });
-  const fotoSessao = urlFoto(sessao.foto);
-  if (fotoSessao) {
-    document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
-      el.style.backgroundImage = `url("${fotoSessao}")`;
-      el.style.backgroundSize = "cover";
-      el.style.backgroundPosition = "center";
-    });
-  }
+  document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => aplicarFoto(el, sessao.foto));
 
   listaEl.addEventListener("click", (e) => {
     const item = e.target.closest(".fisio-item[data-id]");
@@ -46,10 +39,10 @@
           .map(
             (a) => `
           <li class="agenda-item">
-            <div class="agenda-when">${formatarDataCurta(a.data)}<br/><span class="hora">${a.hora.slice(0, 5)}</span></div>
+            <div class="agenda-when">${escaparHtml(formatarDataCurta(a.data))}<br/><span class="hora">${escaparHtml(a.hora.slice(0, 5))}</span></div>
             <div>
-              <div class="agenda-patient">${a.nomePaciente || "Paciente"}</div>
-              <div class="agenda-obs">${a.nomeFisioterapeuta || ""}</div>
+              <div class="agenda-patient">${escaparHtml(a.nomePaciente || "Paciente")}</div>
+              <div class="agenda-obs">${escaparHtml(a.nomeFisioterapeuta || "")}</div>
             </div>
           </li>`
           )
@@ -84,20 +77,19 @@
       return;
     }
     listaEl.innerHTML = fisioterapeutas
-      .map((f) => {
-        const foto = urlFoto(f.foto);
-        const estiloAvatar = foto
-          ? ` style="background-image:url('${foto}');background-size:cover;background-position:center;"`
-          : "";
-        return `
-          <li class="fisio-item" data-id="${f.id}" style="cursor:pointer;">
-            <div class="avatar-sm"${estiloAvatar} aria-hidden="true"></div>
-            <div class="fisio-name">${f.nome}</div>
-            <div class="fisio-spec">${f.especialidade || "Fisioterapeuta"}</div>
-            <div class="fisio-count"><span class="num">${f.pacientesAtivos}</span><span class="lbl mobile-only"> pacientes ativos</span></div>
-          </li>`;
-      })
+      .map(
+        (f) => `
+          <li class="fisio-item" data-id="${escaparHtml(f.id)}" style="cursor:pointer;">
+            <div class="avatar-sm" aria-hidden="true"></div>
+            <div class="fisio-name">${escaparHtml(f.nome)}</div>
+            <div class="fisio-spec">${escaparHtml(f.especialidade || "Fisioterapeuta")}</div>
+            <div class="fisio-count"><span class="num">${escaparHtml(f.pacientesAtivos)}</span><span class="lbl mobile-only"> pacientes ativos</span></div>
+          </li>`
+      )
       .join("");
+    // A foto entra depois, pelo CSSOM: colada no style="" do template, uma foto
+    // com aspas fechava o atributo e injetava HTML na Home da clínica.
+    listaEl.querySelectorAll(".avatar-sm").forEach((el, i) => aplicarFoto(el, fisioterapeutas[i].foto));
     RehabitAnim.staggerList(listaEl);
   }
 
@@ -152,6 +144,6 @@
       aplicarFiltroEOrdenacao();
     })
     .catch((err) => {
-      listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${err.message}</li>`;
+      listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${escaparHtml(err.message)}</li>`;
     });
 })();

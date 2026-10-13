@@ -257,8 +257,8 @@ if (redefinirSenhaForm) {
         return;
       }
     }
-    if (novaSenha.length < 6) {
-      RehabitToast.erro('A nova senha deve ter ao menos 6 caracteres.');
+    if (novaSenha.length < 8) {
+      RehabitToast.erro('A nova senha deve ter ao menos 8 caracteres.');
       return;
     }
     if (novaSenha !== confirmarSenha) {

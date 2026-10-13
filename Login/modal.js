@@ -114,7 +114,10 @@
     var f = fileInput.files && fileInput.files[0];
     if (!f) return;
     arquivoSelecionado = f;
-    avatarBtn.innerHTML = '<img alt="Foto de perfil" src="' + URL.createObjectURL(f) + '" />';
+    var previa = document.createElement('img');
+    previa.alt = 'Foto de perfil';
+    previa.src = URL.createObjectURL(f);
+    avatarBtn.replaceChildren(previa);
   });
 
   // Tanto "Cadastrar" quanto "Pular" concluem o cadastro: os campos deste
@@ -151,8 +154,8 @@
       RehabitToast.erro('Preencha nome, e-mail e senha.');
       return null;
     }
-    if (senha.length < 6) {
-      RehabitToast.erro('A senha deve ter ao menos 6 caracteres.');
+    if (senha.length < 8) {
+      RehabitToast.erro('A senha deve ter ao menos 8 caracteres.');
       return null;
     }
     if (senha !== confirm) {
@@ -349,9 +352,12 @@
     var foto = null;
     if (arquivoSelecionado) {
       try {
+        // A conta ainda não existe, então não há token: a rota da foto do
+        // cadastro aceita o envio pelo e-mail que acabou de ser confirmado.
         var formData = new FormData();
         formData.append('arquivo', arquivoSelecionado);
-        var uploadRes = await fetch(base() + '/uploads', { method: 'POST', body: formData });
+        formData.append('email', dados.email);
+        var uploadRes = await fetch(base() + '/auth/cadastro/foto', { method: 'POST', body: formData });
         var uploadData = await uploadRes.json().catch(function () { return {}; });
         if (!uploadRes.ok) {
           RehabitToast.erro(uploadData.mensagem || 'Não foi possível enviar a foto de perfil.');
@@ -461,6 +467,16 @@
         }
       }
       open('instituicao');
+    });
+  }
+
+  // Páginas de pré-visualização do pop-up (popup-informacoes*.html) dizem no
+  // <body data-abrir-modal="..."> qual versão abrir. Era um <script> inline,
+  // que a CSP do site bloqueia.
+  var tipoInicial = document.body.getAttribute('data-abrir-modal');
+  if (tipoInicial) {
+    window.addEventListener('load', function () {
+      open(tipoInicial);
     });
   }
 })();

@@ -24,12 +24,6 @@
     return `${dia}/${mes}/${ano}`;
   }
 
-  function escaparHtml(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function filtradasPorProfissional(consultas) {
     const profissional = filtroProfissional ? filtroProfissional.value : "";
     return profissional ? consultas.filter((c) => c.nomeFisioterapeuta === profissional) : consultas;
@@ -40,9 +34,10 @@
     const nomes = [...new Set(consultas.map((c) => c.nomeFisioterapeuta).filter(Boolean))].sort((a, b) =>
       a.localeCompare(b, "pt-BR")
     );
-    filtroProfissional.innerHTML =
-      '<option value="">Todos os profissionais</option>' +
-      nomes.map((n) => `<option value="${escaparHtml(n)}">${escaparHtml(n)}</option>`).join("");
+    // <option> montado pelo DOM, e não por template: o escape antigo não
+    // tratava aspas, e um nome com `" onanimationstart="...` ganhava atributos
+    // e executava sozinho quando a clínica abria esta tela.
+    filtroProfissional.replaceChildren(new Option("Todos os profissionais", ""), ...nomes.map((n) => new Option(n, n)));
     filtroProfissional.dataset.pronto = "1";
   }
 
@@ -75,7 +70,7 @@
       '<div class="cal-resumo-linha"><span>Pacientes atendidos</span><strong>' + pacientes.size + "</strong></div>" +
       '<div class="cal-resumo-linha"><span>Profissionais envolvidos</span><strong>' + profissionais.size + "</strong></div>" +
       '<div class="cal-resumo-linha"><span>Dia mais cheio</span><strong>' +
-      formatarData(diaMaisCheio[0]).slice(0, 5) + " · " + diaMaisCheio[1] + "</strong></div>";
+      escaparHtml(formatarData(diaMaisCheio[0]).slice(0, 5)) + " · " + diaMaisCheio[1] + "</strong></div>";
   }
 
   /**
@@ -126,11 +121,11 @@
         (c) => `
       <li class="consulta-item">
         <div class="consulta-quando">
-          <strong>${formatarData(c.data)}</strong>
-          <span>${(c.hora || "").slice(0, 5)}</span>
+          <strong>${escaparHtml(formatarData(c.data))}</strong>
+          <span>${escaparHtml((c.hora || "").slice(0, 5))}</span>
         </div>
         <div class="consulta-info">
-          <button type="button" class="consulta-paciente link-paciente" data-id-paciente="${c.idPaciente}">
+          <button type="button" class="consulta-paciente link-paciente" data-id-paciente="${escaparHtml(c.idPaciente)}">
             ${escaparHtml(c.nomePaciente || "Paciente")}
           </button>
           <div class="consulta-profissional">${escaparHtml(c.nomeFisioterapeuta || "-")}</div>

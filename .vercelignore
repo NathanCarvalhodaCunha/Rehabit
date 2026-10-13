@@ -8,3 +8,7 @@
 /.github
 /Rehabit.sql
 /iniciar-rehabit.bat
+/tests
+# Documentação do repositório (variáveis de produção, arquitetura): é para
+# quem mantém o projeto, não para o visitante do site.
+/README.md

@@ -16,12 +16,6 @@ window.RehabitPacienteResumo = (function () {
   // precisa de nova viagem à API.
   var cache = {};
 
-  function escapar(valor) {
-    var div = document.createElement("div");
-    div.textContent = valor == null ? "" : String(valor);
-    return div.innerHTML;
-  }
-
   function formatarData(dataIso) {
     if (!dataIso) return null;
     var partes = String(dataIso).slice(0, 10).split("-");
@@ -60,8 +54,8 @@ window.RehabitPacienteResumo = (function () {
   function linhaDado(rotulo, valor) {
     if (!valor) return "";
     return (
-      '<div class="resumo-dado"><span class="k">' + escapar(rotulo) + "</span>" +
-      '<span class="v">' + escapar(valor) + "</span></div>"
+      '<div class="resumo-dado"><span class="k">' + escaparHtml(rotulo) + "</span>" +
+      '<span class="v">' + escaparHtml(valor) + "</span></div>"
     );
   }
 
@@ -71,11 +65,6 @@ window.RehabitPacienteResumo = (function () {
   };
 
   function desenhar(paciente, sessoes) {
-    var foto = typeof urlFoto === "function" ? urlFoto(paciente.foto) : null;
-    var estiloAvatar = foto
-      ? ' style="background-image:url(\'' + foto + "');background-size:cover;background-position:center;\""
-      : "";
-
     var ultima = sessoes && sessoes.length ? sessoes[0] : null;
     var comMedicao = (sessoes || []).filter(function (s) {
       return s.amplitudeMedia != null;
@@ -87,7 +76,7 @@ window.RehabitPacienteResumo = (function () {
       '<div><strong>' + (sessoes ? sessoes.length : 0) + "</strong><span>Sessões</span></div>" +
       '<div><strong>' + (amplitudeAtual != null ? amplitudeAtual + "°" : "—") + "</strong><span>Amplitude</span></div>" +
       '<div><strong>' +
-      (ultima && ultima.dor != null ? ultima.dor + "/10" : "—") +
+      (ultima && ultima.dor != null ? escaparHtml(ultima.dor) + "/10" : "—") +
       "</strong><span>Dor relatada</span></div>" +
       "</div>";
 
@@ -107,23 +96,22 @@ window.RehabitPacienteResumo = (function () {
       );
 
     var queixa = paciente.queixaPrincipal
-      ? '<div class="resumo-bloco"><h4>Queixa principal</h4><p>' + escapar(paciente.queixaPrincipal) + "</p></div>"
+      ? '<div class="resumo-bloco"><h4>Queixa principal</h4><p>' + escaparHtml(paciente.queixaPrincipal) + "</p></div>"
       : "";
     var contra = paciente.contraindicacoes
       ? '<div class="resumo-bloco alerta"><h4>Contraindicações</h4><p>' +
-        escapar(paciente.contraindicacoes) +
+        escaparHtml(paciente.contraindicacoes) +
         "</p></div>"
       : "";
 
-    var destinoFicha =
-      (typeof paginaTema === "function" ? paginaTema("paciente") : "./paciente.html") + "?id=" + paciente.id;
+    var destinoFicha = paginaTema("paciente") + "?id=" + encodeURIComponent(paciente.id);
 
     corpo.innerHTML =
       '<header class="resumo-topo">' +
-      '<div class="avatar-lg"' + estiloAvatar + " aria-hidden=\"true\"></div>" +
+      '<div class="avatar-lg" aria-hidden="true"></div>' +
       "<div>" +
-      "<h3>" + escapar(paciente.nome) + (SELOS_TRATAMENTO[paciente.status] || "") + "</h3>" +
-      '<p class="resumo-situacao">' + escapar(paciente.situacao || "Sem situação registrada") + "</p>" +
+      "<h3>" + escaparHtml(paciente.nome) + (SELOS_TRATAMENTO[paciente.status] || "") + "</h3>" +
+      '<p class="resumo-situacao">' + escaparHtml(paciente.situacao || "Sem situação registrada") + "</p>" +
       "</div>" +
       "</header>" +
       indicadores +
@@ -131,8 +119,10 @@ window.RehabitPacienteResumo = (function () {
       queixa +
       contra +
       '<div class="resumo-acoes">' +
-      '<a class="btn-primary" href="' + destinoFicha + '">Abrir prontuário completo</a>' +
+      '<a class="btn-primary" href="' + escaparHtml(destinoFicha) + '">Abrir prontuário completo</a>' +
       "</div>";
+    // A foto entra pelo CSSOM: colada no style="" ela fechava o atributo.
+    aplicarFoto(corpo.querySelector(".avatar-lg"), paciente.foto);
   }
 
   function abrir(idPaciente) {
@@ -163,7 +153,7 @@ window.RehabitPacienteResumo = (function () {
       })
       .catch(function (err) {
         if (idAberto === idPedido) {
-          corpo.innerHTML = '<p class="resumo-carregando">' + escapar(err.message) + "</p>";
+          corpo.innerHTML = '<p class="resumo-carregando">' + escaparHtml(err.message) + "</p>";
         }
       });
   }

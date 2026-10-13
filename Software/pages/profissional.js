@@ -37,10 +37,10 @@
             const hora = a.hora.slice(0, 5);
             return `
           <li class="agenda-item">
-            <div class="agenda-when">${dia}/${mes}/${ano}<br/><span class="hora">${hora}</span></div>
+            <div class="agenda-when">${escaparHtml(`${dia}/${mes}/${ano}`)}<br/><span class="hora">${escaparHtml(hora)}</span></div>
             <div>
-              <div class="agenda-patient">${a.nomePaciente || "Paciente"}</div>
-              ${a.observacao ? `<div class="agenda-obs">${a.observacao}</div>` : ""}
+              <div class="agenda-patient">${escaparHtml(a.nomePaciente || "Paciente")}</div>
+              ${a.observacao ? `<div class="agenda-obs">${escaparHtml(a.observacao)}</div>` : ""}
             </div>
             <span></span>
           </li>`;
@@ -75,14 +75,7 @@
         document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
           el.textContent = f.nome;
         });
-        const foto = urlFoto(f.foto);
-        if (foto) {
-          document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
-            el.style.backgroundImage = `url("${foto}")`;
-            el.style.backgroundSize = "cover";
-            el.style.backgroundPosition = "center";
-          });
-        }
+        document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => aplicarFoto(el, f.foto));
       })
       .catch(() => {
         document.querySelectorAll(".pro-greeting h1").forEach((el) => {
@@ -99,14 +92,7 @@
     document.querySelectorAll(".inst-user-meta .name").forEach((el) => {
       el.textContent = sessao.nome;
     });
-    const fotoSessao = urlFoto(sessao.foto);
-    if (fotoSessao) {
-      document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => {
-        el.style.backgroundImage = `url("${fotoSessao}")`;
-        el.style.backgroundSize = "cover";
-        el.style.backgroundPosition = "center";
-      });
-    }
+    document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => aplicarFoto(el, sessao.foto));
   }
 
   listaEl.addEventListener("click", (e) => {
@@ -160,11 +146,7 @@
         const badge = info
           ? `<span class="badge ${info.classe}">${info.texto}</span>`
           : `<span class="badge estavel">Sem sessões</span>`;
-        const ultimaSessao = p.ultimaSessao || "-";
-        const fotoPaciente = urlFoto(p.foto);
-        const estiloAvatar = fotoPaciente
-          ? ` style="background-image:url('${fotoPaciente}');background-size:cover;background-position:center;"`
-          : "";
+        const ultimaSessao = escaparHtml(p.ultimaSessao || "-");
         // Alta e Inativo saem do fluxo normal, então ganham um selo próprio
         // ao lado do nome; "Ativo" é o caso comum e não precisa de marca.
         const selosTratamento = {
@@ -173,15 +155,17 @@
         };
         const seloTratamento = selosTratamento[p.status] || "";
         return `
-          <li class="pat-item" data-id="${p.id}" style="cursor:pointer;">
-            <div class="avatar-sm" aria-hidden="true"${estiloAvatar}></div>
-            <div class="pat-name">${p.nome}${seloTratamento}</div>
+          <li class="pat-item" data-id="${escaparHtml(p.id)}" style="cursor:pointer;">
+            <div class="avatar-sm" aria-hidden="true"></div>
+            <div class="pat-name">${escaparHtml(p.nome)}${seloTratamento}</div>
             <div class="pat-meta-m mobile-only">Última sessão<br/>${ultimaSessao}</div>
             <div class="pat-date desktop-only">${ultimaSessao}</div>
             <div class="pat-status">${badge}</div>
           </li>`;
       })
       .join("");
+    // A foto entra pelo CSSOM, nunca colada num style="" do template (SEC-02).
+    listaEl.querySelectorAll(".avatar-sm").forEach((el, i) => aplicarFoto(el, pacientes[i].foto));
     RehabitAnim.staggerList(listaEl);
   }
 
@@ -251,6 +235,6 @@
       aplicarFiltroEOrdenacao();
     })
     .catch((err) => {
-      listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${err.message}</li>`;
+      listaEl.innerHTML = `<li style="padding:16px;color:var(--ink-muted);">${escaparHtml(err.message)}</li>`;
     });
 })();

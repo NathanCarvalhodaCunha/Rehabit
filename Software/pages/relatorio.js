@@ -10,7 +10,11 @@
 window.RehabitRelatorio = (function () {
   "use strict";
 
+  // Versão fixa e hash do arquivo (o mesmo do pacote no npm): se a CDN
+  // entregar outra coisa, o navegador recusa o script em vez de rodá-lo com
+  // acesso à sessão. Trocar a versão exige trocar o hash junto.
   var URL_JSPDF = "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+  var INTEGRIDADE_JSPDF = "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/";
 
   // A4 em milímetros.
   var LARGURA = 210;
@@ -38,6 +42,8 @@ window.RehabitRelatorio = (function () {
     promessaBiblioteca = new Promise(function (resolver, rejeitar) {
       var script = document.createElement("script");
       script.src = URL_JSPDF;
+      script.integrity = INTEGRIDADE_JSPDF;
+      script.crossOrigin = "anonymous";
       script.onload = function () {
         if (window.jspdf && window.jspdf.jsPDF) resolver(window.jspdf.jsPDF);
         else rejeitar(new Error("Não foi possível preparar o gerador de PDF."));

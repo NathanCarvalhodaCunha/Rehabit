@@ -27,13 +27,7 @@
       if (rows[1]) definirTextoAposSvg(rows[1], clinica.telefone || "Não informado");
       if (rows[2]) definirTextoAposSvg(rows[2], clinica.endereco || "Não informado");
 
-      const foto = urlFoto(clinica.foto);
-      if (foto) {
-        const avatarEl = header.querySelector(".avatar");
-        avatarEl.style.backgroundImage = `url("${foto}")`;
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-      }
+      aplicarFoto(header.querySelector(".avatar"), clinica.foto);
 
       const descEl = document.querySelector(".description-card p");
       if (descEl) descEl.textContent = clinica.descricao || "Sem descrição cadastrada.";

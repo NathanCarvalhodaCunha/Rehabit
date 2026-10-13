@@ -6,6 +6,11 @@ const API_BASE_URL =
     : "https://rehabit-api-4tex.onrender.com/api";
 window.API_BASE_URL = API_BASE_URL;
 
+// A sessão (com o token) fica no localStorage, ao alcance de qualquer script
+// da página: um XSS lê o token. Levar o token para um cookie HttpOnly exigiria
+// redesenhar a autenticação (front e API estão em domínios diferentes), então
+// esse risco fica — contido pelo escape de tudo o que vira HTML e pela CSP do
+// vercel.json, que não deixa script inline nem de origem desconhecida rodar.
 function getSessao() {
   try {
     return JSON.parse(localStorage.getItem("rehabit_usuario"));
@@ -126,10 +131,52 @@ async function apiDelete(caminho) {
   }
 }
 
+// Escape único para todo dado (da API, do localStorage, da URL) que entra em
+// HTML montado por template string. Cobre & < > " ': as aspas são o que importa
+// dentro de atributo. O escape antigo de cada tela (textContent -> innerHTML)
+// deixava passar ", e um nome como `x" onanimationstart="...` ganhava
+// atributos no <option> e executava sozinho na tela da clínica.
+const ESCAPES_HTML = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+
+function escaparHtml(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, (c) => ESCAPES_HTML[c]);
+}
+
+const ORIGEM_API = new URL(API_BASE_URL).origin;
+
+// A foto é texto que o próprio usuário grava no perfil, e aparece na tela de
+// outras pessoas (a clínica vê a foto de cada profissional). Só passa endereço
+// http(s) ou caminho /uploads/ da API; o resto (javascript:, data:, aspas para
+// fugir do url(...), "/uploads/../") vira "sem foto". O que sai daqui não tem
+// aspas, parênteses, barra invertida nem espaço soltos, então não escapa de
+// url("...") nem de atributo.
 function urlFoto(caminhoFoto) {
-  if (!caminhoFoto) return null;
-  if (caminhoFoto.startsWith("http")) return caminhoFoto;
-  return API_BASE_URL.replace(/\/api$/, "") + caminhoFoto;
+  if (typeof caminhoFoto !== "string" || !caminhoFoto) return null;
+  let url;
+  try {
+    if (caminhoFoto.startsWith("/uploads/")) {
+      url = new URL(caminhoFoto, ORIGEM_API);
+      if (url.origin !== ORIGEM_API || !url.pathname.startsWith("/uploads/")) return null;
+    } else {
+      url = new URL(caminhoFoto);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    }
+  } catch (err) {
+    return null;
+  }
+  return url.href.replace(/["'()\\\s]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"));
+}
+
+// Pinta a foto como fundo do elemento pelo CSSOM, nunca por style="..." num
+// template: era colando a foto no atributo que ela fechava as aspas e injetava
+// HTML. Sem foto válida o fundo é limpo, para não ficar a do perfil anterior.
+function aplicarFoto(el, caminhoFoto) {
+  if (!el) return false;
+  const url = urlFoto(caminhoFoto);
+  el.style.backgroundImage = url ? `url("${url}")` : "";
+  el.style.backgroundSize = url ? "cover" : "";
+  el.style.backgroundPosition = url ? "center" : "";
+  return !!url;
 }
 
 // Protege as páginas internas: sem sessão, volta para o login.
@@ -286,13 +333,16 @@ window.addEventListener("pageshow", (e) => {
 (function aplicarAvatarSessao() {
   const sessao = getSessao();
   if (!sessao || !sessao.foto) return;
-  const url = urlFoto(sessao.foto);
-  document.querySelectorAll(".inst-avatar, .mobile-avatar, .avatar").forEach((el) => {
-    el.style.backgroundImage = `url("${url}")`;
-    el.style.backgroundSize = "cover";
-    el.style.backgroundPosition = "center";
-  });
+  document.querySelectorAll(".inst-avatar, .mobile-avatar, .avatar").forEach((el) => aplicarFoto(el, sessao.foto));
 })();
+
+// Os formulários de edição só são enviados pelo script da própria tela (fetch
+// para a API). Se esse script sair cedo (sem ?id na URL, por exemplo), um
+// Enter não pode recarregar a página com os campos na URL. Antes isso era um
+// onsubmit="" no HTML, que a CSP bloqueia.
+document.querySelectorAll("form[data-envio-por-script]").forEach((form) => {
+  form.addEventListener("submit", (e) => e.preventDefault());
+});
 
 // Cadastrar Profissional — escolha da foto de perfil (mostra prévia
 // e guarda o arquivo para enviar junto com o cadastro).
@@ -406,9 +456,9 @@ if (cadastrarProfissionalForm) {
 
     // Pela regra do navegador, o minlength só confere valor editado pela
     // pessoa; um valor posto por script passaria. Esta checagem cobre o resto.
-    if (senha.length < 6) {
-      RehabitCampos.marcar(document.getElementById("psenha"), "Use ao menos 6 caracteres.");
-      RehabitToast.erro("A senha deve ter ao menos 6 caracteres.");
+    if (senha.length < 8) {
+      RehabitCampos.marcar(document.getElementById("psenha"), "Use ao menos 8 caracteres.");
+      RehabitToast.erro("A senha deve ter ao menos 8 caracteres.");
       return;
     }
 
@@ -425,6 +475,8 @@ if (cadastrarProfissionalForm) {
         formData.append("arquivo", arquivoFotoProfissional);
         const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
+          // O envio de fotos exige login, como qualquer outra rota da API.
+          headers: cabecalhosAutenticados(),
           body: formData,
         });
         const uploadDados = await uploadResponse.json().catch(() => ({}));
