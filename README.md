@@ -174,7 +174,9 @@ Outros pontos:
 - **HSTS** vai sem `includeSubDomains`: não dá para garantir daqui que todo
   subdomínio do domínio do site tem HTTPS. Confirmado isso, pode acrescentar.
 - **Testes de segurança.** `mvn test` na API e os de `tests/` no site (veja
-  `tests/README.md`).
+  `tests/README.md`). O relatório da auditoria de outubro de 2026 — o que foi
+  encontrado, como foi corrigido e o que ainda depende de configuração — está
+  em `docs/seguranca/auditoria-2026-10.md`.
 - **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
   cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
   o da Vercel.
