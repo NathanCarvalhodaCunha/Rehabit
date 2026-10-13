@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -124,6 +125,25 @@ class LimitesDeTentativasTest extends TesteDeIntegracao {
 
         RELOGIO.avancar(Duration.ofMinutes(1));
         parear("10.5.1.1", "000999").andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void caminhoCodificadoNaoFogeDoLimite() throws Exception {
+        // O Spring decodifica "%6F" em "o" antes de rotear: é o mesmo login.
+        String ip = "10.7.0.1";
+        for (int i = 0; i < 20; i++) {
+            mvc.perform(post(URI.create("/api/auth/l%6Fgin"))
+                            .header("X-Forwarded-For", ip)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"cod-" + i + "@teste.rehabit\",\"senha\":\"palpite\"}"))
+                    .andExpect(status().isUnauthorized());
+        }
+        login(ip, "outra@teste.rehabit", "palpite").andExpect(status().isTooManyRequests());
+        mvc.perform(post(URI.create("/api/auth/l%6Fgin"))
+                        .header("X-Forwarded-For", ip)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"mais@teste.rehabit\",\"senha\":\"palpite\"}"))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

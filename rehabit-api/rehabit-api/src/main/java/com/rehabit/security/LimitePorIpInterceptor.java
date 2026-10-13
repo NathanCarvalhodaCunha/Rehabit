@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.List;
 
@@ -25,8 +26,18 @@ public class LimitePorIpInterceptor implements HandlerInterceptor {
      * errado (o código de pareamento incorreto), e não a cada tentativa.
      */
     private record Rota(String metodo, String caminho, boolean soFalhas, List<Limite> limites) {
+        /**
+         * Compara com a rota que o Spring de fato escolheu, e não com a URL
+         * crua: o Spring decodifica o caminho antes de rotear, então
+         * "/api/auth/l%6Fgin" chegava ao login sem nunca bater em
+         * "/api/auth/login" aqui — e o limite por IP não contava nada. HEAD
+         * vale como GET pelo mesmo motivo: o Spring o entrega ao método GET.
+         */
         boolean atende(HttpServletRequest request) {
-            return metodo.equals(request.getMethod()) && caminho.equals(request.getRequestURI());
+            Object rotaEscolhida = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+            String caminhoPedido = rotaEscolhida != null ? rotaEscolhida.toString() : request.getRequestURI();
+            String metodoPedido = "HEAD".equals(request.getMethod()) ? "GET" : request.getMethod();
+            return metodo.equals(metodoPedido) && caminho.equals(caminhoPedido);
         }
     }
 

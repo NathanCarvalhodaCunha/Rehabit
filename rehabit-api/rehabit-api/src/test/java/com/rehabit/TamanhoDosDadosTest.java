@@ -81,6 +81,22 @@ class TamanhoDosDadosTest extends TesteDeIntegracao {
     }
 
     @Test
+    void remarcarTambemConfereAObservacao() throws Exception {
+        Fisioterapeuta profissional = novoProfissional(novaClinica());
+        Paciente paciente = novoPaciente(profissional);
+        var agendamento = novoAgendamento(paciente, profissional, LocalDate.now().plusDays(2), java.time.LocalTime.of(10, 0));
+
+        mvc.perform(put("/api/agendamentos/{id}/remarcar", agendamento.getId())
+                        .header("Authorization", tokenDe(profissional))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of(
+                                "data", LocalDate.now().plusDays(3).toString(), "hora", "11:00",
+                                "observacao", "x".repeat(256)))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem", containsString("255 caracteres")));
+    }
+
+    @Test
     void corpoAcimaDoTetoNemELido() throws Exception {
         Fisioterapeuta profissional = novoProfissional(novaClinica());
         Paciente paciente = novoPaciente(profissional);

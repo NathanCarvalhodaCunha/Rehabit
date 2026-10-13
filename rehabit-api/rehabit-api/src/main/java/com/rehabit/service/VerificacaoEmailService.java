@@ -88,8 +88,15 @@ public class VerificacaoEmailService {
         // Conta antes do "já cadastrado", para o limite não dizer quem tem conta.
         limites.consumir(Limite.EMAIL_POR_DESTINATARIO, email);
 
+        // Com conta, a resposta é a mesma de um e-mail novo e quem fica sabendo
+        // é só o dono da caixa de entrada, por um aviso no lugar do código. O
+        // 409 "já cadastrado" de antes dizia a qualquer um quem é cliente.
         if (clinicaRepository.existsByEmail(email) || fisioterapeutaRepository.existsByEmail(email)) {
-            throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
+            emailService.enviar(email,
+                    "Você já tem conta no Rehabit",
+                    TemplatesEmail.contaJaExistenteHtml(),
+                    TemplatesEmail.contaJaExistenteTexto());
+            return respostaDeEnvio(email);
         }
 
         LocalDateTime agora = LocalDateTime.now();
@@ -118,6 +125,10 @@ public class VerificacaoEmailService {
                 TemplatesEmail.verificacaoCadastroHtml(codigo, expiracaoMinutos),
                 TemplatesEmail.verificacaoCadastroTexto(codigo, expiracaoMinutos));
 
+        return respostaDeEnvio(email);
+    }
+
+    private VerificacaoEnviadaDTO respostaDeEnvio(String email) {
         return new VerificacaoEnviadaDTO(EmailService.mascarar(email), expiracaoMinutos,
                 "Enviamos um código de 6 dígitos para " + EmailService.mascarar(email) + ".");
     }
