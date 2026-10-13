@@ -42,6 +42,9 @@ public class LimiteDoCorpo extends OncePerRequestFilter {
         }
         long declarado = request.getContentLengthLong();
         if (declarado > LIMITE_BYTES) {
+            // Recusa antes do controller: sem este cabeçalho o site não lê a
+            // mensagem (veja JwtAuthenticationFilter.escreverErro).
+            response.setHeader("Access-Control-Allow-Origin", "*");
             response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

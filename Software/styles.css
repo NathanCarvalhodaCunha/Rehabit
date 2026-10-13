@@ -453,12 +453,75 @@ button { font-family: inherit; cursor: pointer; }
   margin: 0 0 20px; font-size: 16px; font-weight: 700; color: var(--ink-strong);
 }
 
+/* O goniômetro desenhado da tela Dispositivo (antes, um quadrado cinza
+   reservado no layout). A luz usa os ritmos do tutorial (tutorial-led-*),
+   que seguem os do firmware; quem escolhe o ritmo é desenharAparelho(), em
+   pages/dispositivo.js. */
 .device-image {
   width: 190px; height: 190px;
-  background: #D9D9D9;
-  border-radius: 4px;
   margin: 12px auto 18px;
+  --aparelho-fundo: #EEF4FF;
+  --aparelho-pulseira: #C9D4E5;
+  --aparelho-furo: #AAB7CC;
+  --aparelho-corpo: var(--brand);
+  --aparelho-base: #0B47A3;
+  --aparelho-led-apagado: #0D3A84;
+  --aparelho-onda: var(--brand);
+  --aparelho-onda-sem-contato: #AAB7CC;
 }
+.aparelho { display: block; width: 100%; height: 100%; overflow: visible; }
+.aparelho-fundo { fill: var(--aparelho-fundo); }
+.aparelho-pulseira { fill: var(--aparelho-pulseira); }
+.aparelho-furo { fill: var(--aparelho-furo); }
+.aparelho-base { fill: var(--aparelho-base); }
+.aparelho-corpo { fill: var(--aparelho-corpo); }
+.aparelho-detalhe { fill: var(--aparelho-base); }
+.aparelho-led-base { fill: var(--aparelho-led-apagado); stroke: rgba(255,255,255,.35); stroke-width: 2; }
+.aparelho-led-brilho { fill: #7CC8FF; opacity: .55; }
+.aparelho-led { fill: #E6F5FF; }
+.aparelho-marca { fill: rgba(255,255,255,.82); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-anchor: middle; }
+/* Luz: apagada sem contato, acesa recebendo leituras ou gravando, fraca
+   calibrando (BRILHO_CALIBRANDO do firmware: (38 / 255) ^ 0,6). Parada (sem
+   animação), a que pisca aparece acesa, como no tutorial. */
+.aparelho-luz { opacity: 0; transition: opacity .2s; }
+.aparelho[data-ritmo="tudo-certo"] .aparelho-luz,
+.aparelho[data-ritmo="gravando"] .aparelho-luz,
+.aparelho[data-ritmo="identificar"] .aparelho-luz { opacity: 1; }
+.aparelho[data-ritmo="calibrando"] .aparelho-luz { opacity: .319; }
+/* Ondas do Wi-Fi: azuis com leituras chegando, cinza quando o aparelho
+   sumiu, e nenhuma enquanto nenhum aparelho falou com a clínica. */
+.aparelho-onda { fill: none; stroke: var(--aparelho-onda); stroke-width: 5; stroke-linecap: round; }
+.aparelho-onda-ponto { fill: var(--aparelho-onda); stroke: none; }
+.aparelho-ondas { opacity: 0; transition: opacity .3s; }
+.aparelho[data-estado="ligado"] .aparelho-ondas,
+.aparelho[data-estado="sem-contato"] .aparelho-ondas { opacity: 1; }
+.aparelho[data-estado="sem-contato"] .aparelho-onda { stroke: var(--aparelho-onda-sem-contato); }
+.aparelho[data-estado="sem-contato"] .aparelho-onda-ponto { fill: var(--aparelho-onda-sem-contato); }
+/* Esperando o aparelho: um anel que se abre devagar em volta dele. */
+.aparelho-procura { fill: none; stroke: var(--aparelho-onda); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .aparelho[data-ritmo="tudo-certo"] .aparelho-luz { animation: tutorial-led-tudo-certo 2s step-end infinite; }
+  .aparelho[data-ritmo="identificar"] .aparelho-luz { animation: tutorial-led-identificar 6s step-end infinite; }
+  .aparelho[data-estado="ligado"] .aparelho-onda { animation: aparelho-onda 2s ease-in-out infinite; }
+  .aparelho[data-estado="ligado"] .aparelho-onda:nth-child(2) { animation-delay: .2s; }
+  .aparelho[data-estado="ligado"] .aparelho-onda:nth-child(3) { animation-delay: .4s; }
+  .aparelho:not([data-estado="ligado"]) .aparelho-procura { animation: aparelho-procura 2.6s ease-out infinite; }
+}
+@keyframes aparelho-onda {
+  0%, 100% { opacity: .35; }
+  50% { opacity: 1; }
+}
+@keyframes aparelho-procura {
+  0% { opacity: .45; transform: scale(.82); }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+/* Demonstração pública: aviso de que o aparelho é simulado. */
+.live-nota-demo {
+  margin: 12px 0 0; padding: 10px 14px; border-radius: 10px;
+  background: rgba(21,101,216,.06); border: 1px solid rgba(21,101,216,.16);
+  color: var(--ink); font-size: 13.5px; line-height: 1.5;
+}
+.live-nota-demo strong { color: var(--ink-strong); }
 .device-name { text-align: center; margin: 0; font-weight: 700; color: var(--ink-strong); font-size: 16px; }
 .device-name.center { text-align: center; }
 .device-sub { text-align: center; margin: 4px 0 18px; color: var(--ink-muted); font-weight: 600; font-size: 14.5px; }
@@ -2669,6 +2732,12 @@ button.form-avatar {
 .dispositivo-vazio {
   list-style: none; padding: 18px 4px;
   font-size: 13.5px; font-weight: 600; color: var(--ink-muted);
+}
+/* Demonstração pública: por que o pareamento fica desligado ali. */
+.dispositivos-nota {
+  margin: 12px 0 0; padding: 12px 14px; border-radius: 10px;
+  background: #F9FAFB; border: 1px solid var(--hairline);
+  font-size: 13.5px; line-height: 1.5; color: var(--ink);
 }
 
 .dispositivo-selo {

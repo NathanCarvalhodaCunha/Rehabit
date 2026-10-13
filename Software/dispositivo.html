@@ -124,7 +124,35 @@
         <div class="device-grid">
           <div class="device-col">
             <h3>Status da conexão</h3>
-            <div class="device-image" aria-hidden="true"></div>
+            <div class="device-image" aria-hidden="true">
+              <!-- O goniômetro desenhado, com a luz de status no ritmo do que a
+                   tela sabe dele (dispositivo.js, desenharAparelho): piscada
+                   curtinha recebendo leituras, acesa gravando, fraca
+                   calibrando e apagada sem contato. Os ritmos são os do
+                   tutorial (tutorial-led-*), que seguem o firmware. -->
+              <svg class="aparelho" data-aparelho data-ritmo="apagada" data-estado="aguardando" viewBox="0 0 190 190">
+                <circle class="aparelho-fundo" cx="95" cy="95" r="86" />
+                <circle class="aparelho-procura" cx="95" cy="118" r="58" />
+                <g class="aparelho-ondas">
+                  <path class="aparelho-onda" d="M 76.6 51.6 A 26 26 0 0 1 113.4 51.6" />
+                  <path class="aparelho-onda" d="M 84.4 59.4 A 15 15 0 0 1 105.6 59.4" />
+                  <circle class="aparelho-onda aparelho-onda-ponto" cx="95" cy="67" r="3.4" />
+                </g>
+                <rect class="aparelho-pulseira" x="22" y="106" width="146" height="30" rx="15" />
+                <circle class="aparelho-furo" cx="38" cy="121" r="2.4" />
+                <circle class="aparelho-furo" cx="48" cy="121" r="2.4" />
+                <circle class="aparelho-furo" cx="152" cy="121" r="2.4" />
+                <rect class="aparelho-base" x="52" y="90" width="86" height="66" rx="17" />
+                <rect class="aparelho-corpo" x="52" y="84" width="86" height="66" rx="17" />
+                <rect class="aparelho-detalhe" x="136" y="101" width="6" height="16" rx="2" />
+                <circle class="aparelho-led-base" cx="95" cy="107" r="8.5" />
+                <g class="aparelho-luz">
+                  <circle class="aparelho-led-brilho" cx="95" cy="107" r="17" />
+                  <circle class="aparelho-led" cx="95" cy="107" r="6.5" />
+                </g>
+                <text class="aparelho-marca" x="95" y="137">Rehabit</text>
+              </svg>
+            </div>
             <p class="device-name" data-device-name>Verificando…</p>
             <p class="device-sub" data-device-sub>Rehabit Goniômetro</p>
             <div class="device-botoes">

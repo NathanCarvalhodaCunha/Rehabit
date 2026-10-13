@@ -229,7 +229,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         escreverErro(response, HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Faça login novamente.");
     }
 
+    /**
+     * A recusa sai daqui, antes de chegar a qualquer controller, então o
+     * cabeçalho de CORS do @CrossOrigin não vem junto. Sem ele, o navegador
+     * esconde a resposta do site: a sessão vencida (401) não levava ao login
+     * e o aviso da conta de demonstração (403) virava "Não foi possível falar
+     * com o servidor". Origem "*", como nos controllers: a credencial vai no
+     * cabeçalho Authorization, nunca em cookie.
+     */
     private void escreverErro(HttpServletResponse response, HttpStatus status, String mensagem) throws IOException {
+        response.setHeader("Access-Control-Allow-Origin", "*");
         response.setStatus(status.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

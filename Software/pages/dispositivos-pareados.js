@@ -1,19 +1,54 @@
 /* Rehabit — goniômetros pareados: lista, pareamento por código e revogação.
-   Só a clínica pareia aparelhos, então a seção nem aparece para o profissional. */
+   A clínica e os profissionais dela pareiam (quem está com o aparelho na mão
+   costuma ser o fisioterapeuta); revogar fica com a clínica. Na demonstração
+   pública não se pareia nada: o aparelho dela é simulado (goniometro.js). */
 (function dispositivosPareados() {
   const cartao = document.querySelector("[data-dispositivos]");
   const overlay = document.querySelector("[data-pareamento]");
   if (!cartao || !overlay) return;
 
   const sessao = getSessao();
-  if (!sessao || sessao.tipo !== "CLINICA") return;
+  if (!sessao || (sessao.tipo !== "CLINICA" && sessao.tipo !== "FISIOTERAPEUTA")) return;
+  const ehClinica = sessao.tipo === "CLINICA";
 
   cartao.hidden = false;
 
   const lista = cartao.querySelector("[data-dispositivos-lista]");
+  const botaoParear = cartao.querySelector('[data-acao="parear"]');
   const campoCodigo = overlay.querySelector("[data-codigo]");
   const campoValidade = overlay.querySelector("[data-validade]");
   let contador = null;
+
+  /* A senha da demonstração pública está no site: com um aparelho de verdade
+     pareado ali, qualquer visitante mandaria Zerar ou Reiniciar para ele. A
+     API recusa o pareamento (a conta é só de leitura); a tela mostra o
+     aparelho simulado e explica, em vez de um botão que só daria erro. */
+  if (typeof ehContaDeDemonstracao === "function" && ehContaDeDemonstracao(sessao)) {
+    botaoParear.hidden = true;
+    lista.innerHTML = `
+      <li class="dispositivo-item">
+        <div class="dispositivo-info">
+          <strong>Goniômetro simulado<span class="dispositivo-selo online">Simulação</span></strong>
+          <span>gerado no navegador, só nesta demonstração</span>
+        </div>
+      </li>`;
+    const nota = document.createElement("p");
+    nota.className = "dispositivos-nota";
+    nota.textContent =
+      "Na demonstração pública o pareamento fica desligado: a senha dela está no site, e qualquer visitante " +
+      "poderia mandar comandos a um aparelho de verdade. Para parear o seu goniômetro, entre com a conta da " +
+      "sua clínica ou de um profissional dela.";
+    cartao.appendChild(nota);
+    return;
+  }
+
+  /* A sessão do profissional não traz a clínica: o RehabitGoniometro resolve
+     isso na API uma vez e guarda. */
+  let idClinica = ehClinica ? sessao.id : null;
+  function clinica() {
+    if (idClinica != null) return Promise.resolve(idClinica);
+    return RehabitGoniometro.idClinica().then((id) => (idClinica = id));
+  }
 
   function tempoRelativo(iso) {
     if (!iso) return "nunca enviou leitura";
@@ -31,7 +66,8 @@
   }
 
   function carregar() {
-    apiGet(`/dispositivos?idClinica=${sessao.id}`)
+    clinica()
+      .then((id) => apiGet(`/dispositivos?idClinica=${id}`))
       .then((dispositivos) => {
         if (!dispositivos.length) {
           lista.innerHTML =
@@ -53,7 +89,7 @@
                 <span>${tempoRelativo(d.ultimoContato)}</span>
               </div>
               ${
-                d.ativo
+                d.ativo && ehClinica
                   ? `<button type="button" class="btn-danger btn-pequeno" data-revogar="${escaparHtml(d.id)}">Revogar</button>`
                   : ""
               }
@@ -63,6 +99,13 @@
         if (typeof RehabitAnim !== "undefined") RehabitAnim.staggerList(lista);
       })
       .catch((err) => {
+        // A API de antes deste pareamento pelo profissional (enquanto o
+        // Render não publica a nova) só deixa a clínica: some com a seção,
+        // como era, em vez de mostrar uma recusa.
+        if (!ehClinica && err.status === 403) {
+          cartao.hidden = true;
+          return;
+        }
         lista.innerHTML = `<li class="dispositivo-vazio">${escaparHtml(err.message)}</li>`;
       });
   }
@@ -99,7 +142,8 @@
   function gerarCodigo() {
     campoCodigo.textContent = "······";
     campoValidade.textContent = "Gerando...";
-    apiPost(`/dispositivos/pareamento?idClinica=${sessao.id}`, {})
+    clinica()
+      .then((id) => apiPost(`/dispositivos/pareamento?idClinica=${id}`, {}))
       .then((dados) => {
         // Espaço no meio para facilitar a leitura em voz alta.
         campoCodigo.textContent = dados.codigo.slice(0, 3) + " " + dados.codigo.slice(3);

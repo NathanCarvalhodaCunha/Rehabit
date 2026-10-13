@@ -19,6 +19,15 @@ function getSessao() {
   }
 }
 
+/* A conta de demonstração pública (Clínica Movimento, entrada pela página
+   inicial): todos os e-mails dela são do domínio reservado .example. A API
+   recusa qualquer alteração dela; aqui serve para as telas avisarem e para o
+   goniômetro dela ser simulado (veja goniometro.js). */
+function ehContaDeDemonstracao(sessao) {
+  const s = sessao === undefined ? getSessao() : sessao;
+  return !!(s && /@movimento\.example$/i.test(s.email || ""));
+}
+
 // Resolve o nome de um arquivo interno para a variante do tema atual
 // (claro/escuro), para que a navegação nunca derrube um usuário do
 // tema escuro de volta para uma tela clara.
@@ -59,7 +68,9 @@ async function tratarResposta(resposta, mensagemPadrao) {
     throw new Error("Sessão expirada.");
   }
   if (!resposta.ok) {
-    throw new Error(dados.mensagem || mensagemPadrao);
+    const erro = new Error(dados.mensagem || mensagemPadrao);
+    erro.status = resposta.status;
+    throw erro;
   }
   return dados;
 }
@@ -564,8 +575,7 @@ if (cadastrarProfissionalForm) {
 // recusa qualquer alteração dela (JwtAuthenticationFilter). O aviso fica no
 // topo de toda tela para ninguém estranhar quando um "Salvar" não salva.
 (function avisoDeDemonstracao() {
-  const sessao = getSessao();
-  if (!sessao || !/@movimento\.example$/i.test(sessao.email || "")) return;
+  if (!ehContaDeDemonstracao()) return;
   const main = document.querySelector(".main");
   if (!main) return;
   const aviso = document.createElement("p");
