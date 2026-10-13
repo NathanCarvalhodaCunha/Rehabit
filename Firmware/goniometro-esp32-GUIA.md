@@ -106,9 +106,11 @@ pose que você marca com o botão Zerar (veja a Parte 3).
 
 ## 1. Pegar o código na tela do Rehabit
 
-Entre como **clínica**, abra a tela **Dispositivo** e clique em **Parear novo
-dispositivo**. Aparece um código de 6 dígitos com contagem regressiva: ele vale
-10 minutos, serve uma vez só, e pedir outro invalida o anterior.
+Entre como **clínica** ou como um **profissional** dela, abra a tela
+**Dispositivo** e clique em **Parear novo dispositivo**. Aparece um código de 6
+dígitos com contagem regressiva: ele vale 10 minutos, serve uma vez só, e pedir
+outro invalida o anterior. (Na demonstração pública o pareamento fica
+desligado: a senha dela está no site, e o goniômetro de lá é simulado.)
 
 ## 2. Configurar o goniômetro
 
@@ -163,8 +165,8 @@ fraca e parada e refaça com um código novo. Depois, refaça o **Zerar (tara)**
 
 ## 4. Se um aparelho sumir ou for roubado
 
-Na tela Dispositivo, clique em **Revogar**. O token daquele aparelho para de
-valer na hora, sem mexer na senha de ninguém.
+Na tela Dispositivo, entrando com a conta da clínica, clique em **Revogar**. O
+token daquele aparelho para de valer na hora, sem mexer na senha de ninguém.
 
 Revogue sempre, mesmo que o aparelho apareça depois, e **troque a senha do
 Wi-Fi da clínica**. O token (que vale um ano) e a senha do Wi-Fi ficam

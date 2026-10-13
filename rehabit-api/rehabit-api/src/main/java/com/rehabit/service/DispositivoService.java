@@ -8,9 +8,11 @@ import com.rehabit.exception.AuthException;
 import com.rehabit.model.Clinica;
 import com.rehabit.model.CodigoPareamento;
 import com.rehabit.model.Dispositivo;
+import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.CodigoPareamentoRepository;
 import com.rehabit.repository.DispositivoRepository;
+import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.security.JwtService;
 import com.rehabit.security.PosseChecker;
 import org.springframework.http.HttpStatus;
@@ -41,23 +43,31 @@ public class DispositivoService {
     private final DispositivoRepository dispositivoRepository;
     private final CodigoPareamentoRepository codigoRepository;
     private final ClinicaRepository clinicaRepository;
+    private final FisioterapeutaRepository fisioterapeutaRepository;
     private final JwtService jwtService;
     private final SecureRandom aleatorio = new SecureRandom();
 
     public DispositivoService(DispositivoRepository dispositivoRepository,
                                CodigoPareamentoRepository codigoRepository,
                                ClinicaRepository clinicaRepository,
+                               FisioterapeutaRepository fisioterapeutaRepository,
                                JwtService jwtService) {
         this.dispositivoRepository = dispositivoRepository;
         this.codigoRepository = codigoRepository;
         this.clinicaRepository = clinicaRepository;
+        this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.jwtService = jwtService;
     }
 
-    /** Gera o código que a clínica mostra na tela para digitar no aparelho. */
+    /**
+     * Gera o código que a tela mostra para digitar no aparelho. A clínica ou
+     * um profissional dela: quem está com o goniômetro na mão costuma ser o
+     * fisioterapeuta, e o aparelho só ganha o direito de mandar leituras
+     * para a clínica — nada de ler paciente ou agenda.
+     */
     @Transactional
     public CodigoPareamentoDTO gerarCodigo(Integer idClinica, Integer usuarioId, String usuarioTipo) {
-        PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
+        exigirClinicaOuProfissionalDela(idClinica, usuarioId, usuarioTipo);
 
         LocalDateTime agora = LocalDateTime.now();
         limparExpirados(agora);
@@ -118,7 +128,7 @@ public class DispositivoService {
     }
 
     public List<DispositivoDTO> listar(Integer idClinica, Integer usuarioId, String usuarioTipo) {
-        PosseChecker.exigirClinicaDona(idClinica, usuarioId, usuarioTipo);
+        exigirClinicaOuProfissionalDela(idClinica, usuarioId, usuarioTipo);
         return dispositivoRepository.findByIdClinicaOrderByCriadoEmDesc(idClinica).stream()
                 .map(d -> new DispositivoDTO(d.getId(), d.getNome(), d.isAtivo(),
                         d.getCriadoEm(), d.getUltimoContato()))
@@ -129,6 +139,8 @@ public class DispositivoService {
     public void revogar(Integer idDispositivo, Integer usuarioId, String usuarioTipo) {
         Dispositivo dispositivo = dispositivoRepository.findById(idDispositivo)
                 .orElseThrow(() -> new AuthException("Dispositivo não encontrado.", HttpStatus.NOT_FOUND));
+        // Revogar continua só com a clínica: é ela quem responde pelos
+        // aparelhos, e um profissional não tira o de outro do ar.
         PosseChecker.exigirClinicaDona(dispositivo.getIdClinica(), usuarioId, usuarioTipo);
 
         // Desativa em vez de apagar: o histórico de qual aparelho mandou o quê
@@ -155,6 +167,20 @@ public class DispositivoService {
             dispositivoRepository.save(dispositivo);
         }
         return dispositivo.getIdClinica();
+    }
+
+    private void exigirClinicaOuProfissionalDela(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        if ("CLINICA".equals(usuarioTipo) && idClinica.equals(usuarioId)) {
+            return;
+        }
+        if ("FISIOTERAPEUTA".equals(usuarioTipo)) {
+            Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(usuarioId).orElse(null);
+            if (fisioterapeuta != null && !fisioterapeuta.isExcluido()
+                    && idClinica.equals(fisioterapeuta.getIdClinica())) {
+                return;
+            }
+        }
+        throw new AuthException("Você não tem acesso a este recurso.", HttpStatus.FORBIDDEN);
     }
 
     private String nomeOuPadrao(String informado, Integer idClinica) {

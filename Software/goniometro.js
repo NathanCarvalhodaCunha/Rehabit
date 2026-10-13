@@ -9,6 +9,7 @@
      RehabitGoniometro.comando("TARAR")
      RehabitGoniometro.iniciarCaptura() / pararCaptura()
      RehabitGoniometro.idClinica()            -> Promise com o id da clínica da sessão
+     RehabitGoniometro.simulado()             -> true na demonstração pública (aparelho simulado)
 
    Transporte: SSE (EventSource) como caminho principal — o servidor empurra
    cada leitura assim que ela chega do ESP32. Se o SSE não subir ou cair
@@ -220,13 +221,215 @@
     usandoPolling = false;
   }
 
+  /* --------------------------------------------------------------------
+     Goniômetro simulado da demonstração pública.
+
+     A senha da Clínica Movimento está na página inicial, então ela não
+     pareia aparelho nenhum: com um goniômetro de verdade ali, qualquer
+     visitante mandaria Zerar ou Reiniciar para ele. Para a tela não ficar
+     parada à espera de um aparelho que nunca vem, o aparelho é simulado aqui
+     mesmo, no navegador, no formato de estado que a API manda e no ritmo que
+     ela pede ao aparelho real (2,5 leituras por segundo com a tela aberta,
+     10 durante a captura). Os botões agem sobre a simulação, sem chamar a
+     API — que recusaria: a conta é só de leitura.
+     -------------------------------------------------------------------- */
+  var Simulado = (function () {
+    var PASSO_NORMAL_MS = 400;
+    var PASSO_CAPTURA_MS = 100;
+    var JANELA_MS = 60000;
+    var CICLO_S = 7; // um movimento: descansa, sobe, segura no alto e desce
+    var REPOUSO = 4; // o braço pendurado não fica em 0 cravado
+
+    var relogio = null;
+    var inicio = 0;
+    var historico = [];
+    var tara = 0;
+    var brutoAtual = REPOUSO;
+    var ultimoContato = null;
+    var captura = null;
+    var desligadoAte = 0;
+    var calibrandoAte = 0;
+    var bateria = 87;
+    var ultimoAviso = 0;
+
+    function suave(x) {
+      return x * x * (3 - 2 * x);
+    }
+
+    function arredondar(v) {
+      return Math.round(v * 10) / 10;
+    }
+
+    // Abdução do ombro: do braço pendurado a ~140°, com o alvo variando um
+    // pouco a cada repetição, como num paciente de verdade.
+    function anguloBruto(segundos) {
+      var ciclo = Math.floor(segundos / CICLO_S);
+      var fase = (segundos % CICLO_S) / CICLO_S;
+      var alvo = 136 + 12 * Math.sin(ciclo * 1.7);
+      var a = 0;
+      if (fase >= 0.18 && fase < 0.5) a = suave((fase - 0.18) / 0.32);
+      else if (fase >= 0.5 && fase < 0.62) a = 1;
+      else if (fase >= 0.62 && fase < 0.92) a = 1 - suave((fase - 0.62) / 0.3);
+      var ruido = Math.sin(segundos * 23) * 0.5 + Math.sin(segundos * 7.3) * 0.35;
+      return REPOUSO + a * (alvo - REPOUSO) + ruido;
+    }
+
+    function amostrar(t) {
+      if (t < desligadoAte) return; // reiniciando: nenhum pacote
+      // Calibrando, o aparelho fica parado (é o que o firmware pede) e o
+      // movimento recomeça do braço pendurado quando a calibração acaba.
+      brutoAtual = t < calibrandoAte ? REPOUSO : anguloBruto((t - inicio) / 1000);
+      var angulo = arredondar(Math.min(180, Math.abs(brutoAtual - tara)));
+      ultimoContato = t;
+      historico.push({ t: t, angulo: angulo });
+      if (captura && captura.ativa) {
+        captura.amostras++;
+        captura.soma += angulo;
+        captura.minimo = captura.minimo == null ? angulo : Math.min(captura.minimo, angulo);
+        captura.maximo = captura.maximo == null ? angulo : Math.max(captura.maximo, angulo);
+      }
+      bateria = Math.max(20, bateria - 0.0005);
+    }
+
+    function retratoDaCaptura(agora) {
+      if (!captura) return null;
+      return {
+        ativa: captura.ativa,
+        iniciadaEm: captura.iniciadaEm,
+        duracaoSegundos: Math.floor(((captura.ativa ? agora : captura.fim) - captura.iniciadaEm) / 1000),
+        amostras: captura.amostras,
+        minimo: captura.minimo,
+        maximo: captura.maximo,
+        amplitude: captura.minimo == null ? null : arredondar(captura.maximo - captura.minimo),
+        media: captura.amostras ? arredondar(captura.soma / captura.amostras) : null,
+      };
+    }
+
+    function retrato() {
+      var agora = Date.now();
+      var ligado = agora >= desligadoAte;
+      var ultimo = historico.length ? historico[historico.length - 1] : null;
+      return {
+        simulado: true,
+        conectado: ligado,
+        angulo: ligado && ultimo ? ultimo.angulo : null,
+        anguloBruto: ligado ? arredondar(brutoAtual) : null,
+        bateria: Math.round(bateria),
+        rssi: -51 - Math.round(3 + 3 * Math.sin(agora / 9000)),
+        numeroSerie: "SIMULADO",
+        firmware: "2.4",
+        ip: "192.168.0.42",
+        calibrado: agora >= calibrandoAte,
+        ultimoContato: ultimoContato,
+        segundosDesdeContato: ultimoContato == null ? null : Math.max(0, Math.round((agora - ultimoContato) / 1000)),
+        captura: retratoDaCaptura(agora),
+        historico: historico.slice(),
+      };
+    }
+
+    // Tique de 100 ms: amostra no ritmo do momento e completa o que faltou
+    // (aba escondida, o navegador segura os timers), para o gráfico não ter
+    // buraco. Avisa a tela quando há leitura nova, ou a cada segundo.
+    function tique() {
+      var agora = Date.now();
+      var passo = captura && captura.ativa ? PASSO_CAPTURA_MS : PASSO_NORMAL_MS;
+      var t = historico.length ? historico[historico.length - 1].t + passo : agora;
+      t = Math.max(t, agora - JANELA_MS, desligadoAte);
+      var novas = false;
+      for (; t <= agora; t += passo) {
+        amostrar(t);
+        novas = true;
+      }
+      while (historico.length && historico[0].t < agora - JANELA_MS) historico.shift();
+      if (novas || agora - ultimoAviso >= 1000) {
+        ultimoAviso = agora;
+        avisar(retrato());
+      }
+    }
+
+    function ligar() {
+      if (relogio) return;
+      if (!inicio) {
+        // Começa no meio de uma sessão, com 20 s de leituras no gráfico.
+        inicio = Date.now() - 20000 - 2500;
+        for (var t = Date.now() - 20000; t <= Date.now(); t += PASSO_NORMAL_MS) amostrar(t);
+      }
+      tique();
+      relogio = setInterval(tique, 100);
+    }
+
+    function desligar() {
+      if (relogio) clearInterval(relogio);
+      relogio = null;
+    }
+
+    function exigirLigado() {
+      if (Date.now() < desligadoAte) {
+        throw new Error("O goniômetro não está conectado. Ligue o aparelho e tente de novo.");
+      }
+    }
+
+    function responder(fazer) {
+      return new Promise(function (resolver) {
+        fazer();
+        var estado = retrato();
+        avisar(estado);
+        resolver(estado);
+      });
+    }
+
+    return {
+      ligar: ligar,
+      desligar: desligar,
+      atualizar: function () {
+        return responder(function () {});
+      },
+      comando: function (nome) {
+        return responder(function () {
+          exigirLigado();
+          if (nome === "TARAR") {
+            tara = brutoAtual;
+          } else if (nome === "REINICIAR") {
+            // Como o aparelho: some por uns segundos, calibra parado e volta
+            // com a tara guardada. Uma captura aberta morre junto.
+            var agora = Date.now();
+            captura = null;
+            desligadoAte = agora + 4000;
+            calibrandoAte = desligadoAte + 2500;
+            inicio = calibrandoAte;
+          }
+          // IDENTIFICAR só pisca a luz, e quem desenha a luz é a tela.
+        });
+      },
+      captura: function (acao) {
+        return responder(function () {
+          var agora = Date.now();
+          if (acao === "iniciar") {
+            exigirLigado();
+            captura = { ativa: true, iniciadaEm: agora, fim: null, amostras: 0, soma: 0, minimo: null, maximo: null };
+          } else if (captura && captura.ativa) {
+            captura.ativa = false;
+            captura.fim = agora;
+          }
+        });
+      },
+    };
+  })();
+
+  var modoSimulado = false;
+
   function conectar(aoAtualizar) {
     if (typeof aoAtualizar === "function") {
       ouvintes.push(aoAtualizar);
       if (ultimoEstado) aoAtualizar(ultimoEstado);
     }
-    if (ativo) return idClinica();
+    if (ativo) return modoSimulado ? Promise.resolve(null) : idClinica();
     ativo = true;
+    if (typeof ehContaDeDemonstracao === "function" && ehContaDeDemonstracao()) {
+      modoSimulado = true;
+      Simulado.ligar();
+      return Promise.resolve(null);
+    }
     return idClinica().then(function (id) {
       abrirSse(id);
       return id;
@@ -237,6 +440,7 @@
     ativo = false;
     ouvintes = [];
     geracao++;
+    Simulado.desligar();
     fecharSse();
     pararPolling();
     if (timerReconexao) {
@@ -249,6 +453,7 @@
      ao vivo já traz tudo sozinho, mas quando ele cai (ou o profissional
      simplesmente quer confirmar) uma busca direta responde na hora. */
   function atualizar() {
+    if (modoSimulado) return Simulado.atualizar();
     return idClinica()
       .then(function (id) {
         return buscarSilencioso("/goniometro/estado?idClinica=" + id);
@@ -260,6 +465,7 @@
   }
 
   function comando(nome) {
+    if (modoSimulado) return Simulado.comando(nome);
     return idClinica().then(function (id) {
       return buscarSilencioso("/goniometro/comando", {
         method: "POST",
@@ -273,6 +479,7 @@
   }
 
   function captura(acao) {
+    if (modoSimulado) return Simulado.captura(acao);
     return idClinica().then(function (id) {
       return buscarSilencioso("/goniometro/captura/" + acao, {
         method: "POST",
@@ -289,7 +496,8 @@
   // quando o profissional volta, economizando bateria do aparelho (o servidor
   // manda o ESP32 desacelerar quando ninguém está ouvindo).
   document.addEventListener("visibilitychange", function () {
-    if (!ativo) return;
+    // A simulação completa sozinha o tempo em que a aba ficou escondida.
+    if (!ativo || modoSimulado) return;
     if (document.hidden) {
       geracao++;
       fecharSse();
@@ -323,6 +531,10 @@
     },
     usandoPolling: function () {
       return usandoPolling;
+    },
+    // Conta de demonstração pública: o aparelho é o simulado acima.
+    simulado: function () {
+      return modoSimulado;
     },
   };
 })();

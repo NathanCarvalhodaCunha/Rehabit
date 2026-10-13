@@ -70,7 +70,14 @@ body.dark .mobile-topbar button { color: var(--ink-muted); }
 body.dark .mobile-title { color: #fff; }
 body.dark .device-col + .device-col { border-color: #1B2647; }
 body.dark .device-col h3 { color: #fff; }
-body.dark .device-image { background: #1B2450; }
+body.dark .device-image {
+  --aparelho-fundo: rgba(47,128,255,.10);
+  --aparelho-pulseira: #2A3563;
+  --aparelho-furo: #1B2647;
+  --aparelho-onda: #4D8EF0;
+  --aparelho-onda-sem-contato: #3A4675;
+}
+body.dark .live-nota-demo { background: rgba(47,128,255,.08); border-color: rgba(47,128,255,.22); }
 body.dark .device-name { color: #fff; }
 body.dark .device-sub { color: var(--ink-muted); }
 body.dark .info-row { border-color: #1B2647; }
@@ -395,6 +402,7 @@ body.dark .dispositivo-info strong { color: #fff; }
 body.dark .dispositivo-selo.online { background: rgba(43,209,126,.16); color: #2BD17E; }
 body.dark .dispositivo-selo.offline { background: rgba(152,162,188,.16); color: var(--ink-muted); }
 body.dark .dispositivo-selo.revogado { background: rgba(255,142,142,.16); color: #FF8E8E; }
+body.dark .dispositivos-nota { background: #0B1430; border-color: #1B2647; color: var(--ink); }
 body.dark .pareamento-overlay { background: rgba(0,0,0,.65); }
 body.dark .pareamento-caixa { background: #101A38; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
 body.dark .pareamento-caixa h3 { color: #fff; }
