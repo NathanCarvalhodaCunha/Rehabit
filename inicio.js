@@ -3,10 +3,12 @@
 // fica parada no primeiro quadro.
 
 // ---- Tema claro / escuro ------------------------------------------------
-// O script do <head> já pôs data-tema no <html> antes da primeira pintura.
-// Aqui ficam o botão de tema e o que o CSS sozinho não troca: as imagens com
-// versão escura, a cor da barra do navegador e os links do login (o sistema
-// tem páginas -escuro separadas, então quem está no escuro entra nelas).
+// O script do <head> já pôs data-tema no <html> antes da primeira pintura:
+// o claro, a não ser que a pessoa tenha escolhido o escuro no botão (o tema
+// do aparelho não conta). Aqui ficam o botão de tema e o que o CSS sozinho
+// não troca: as imagens com versão escura, a cor da barra do navegador e os
+// links do login (o sistema tem páginas -escuro separadas, então quem está
+// no escuro entra nelas).
 const CHAVE_TEMA = "rehabit_tema";
 const raizDoc = document.documentElement;
 
@@ -18,9 +20,9 @@ function aplicarTema(tema) {
   const escuro = tema === "escuro";
   raizDoc.setAttribute("data-tema", tema);
 
-  // As fontes escuras das imagens nascem com media="(prefers-color-scheme:
-  // dark)" (vale sem JavaScript); data-tema-escuro guarda a condição sem o
-  // tema, que passa a valer quando o tema escolhido é o escuro.
+  // As fontes escuras das imagens nascem desligadas (media="not all"), como
+  // o tema padrão, o que vale também sem JavaScript; data-tema-escuro guarda
+  // a condição que passa a valer quando o tema escolhido é o escuro.
   document.querySelectorAll("source[data-tema-escuro]").forEach(function (fonte) {
     const media = escuro ? fonte.getAttribute("data-tema-escuro") : "not all";
     if (fonte.getAttribute("media") !== media) fonte.setAttribute("media", media);
@@ -50,15 +52,6 @@ function aplicarTema(tema) {
   });
 }
 
-function temaSalvo() {
-  try {
-    const tema = localStorage.getItem(CHAVE_TEMA);
-    return tema === "claro" || tema === "escuro" ? tema : null;
-  } catch (e) {
-    return null;
-  }
-}
-
 aplicarTema(temaAtual());
 
 document.querySelectorAll("[data-tema-botao]").forEach(function (botao) {
@@ -68,13 +61,6 @@ document.querySelectorAll("[data-tema-botao]").forEach(function (botao) {
     aplicarTema(novo);
   });
 });
-
-// Sem escolha salva, a página acompanha o aparelho se ele trocar de tema.
-if (window.matchMedia) {
-  const midiaEscura = matchMedia("(prefers-color-scheme: dark)");
-  const aoMudar = function (e) { if (!temaSalvo()) aplicarTema(e.matches ? "escuro" : "claro"); };
-  if (midiaEscura.addEventListener) midiaEscura.addEventListener("change", aoMudar);
-}
 
 // ---- Menu: destaca a seção que está na tela ------------------------------
 // Como a barra lateral do sistema marca a página atual, aqui o item da seção
