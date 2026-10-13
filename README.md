@@ -553,4 +553,4 @@ pago, que não hiberna.
 
 ## Licença
 
-Distribuído sob a licença MIT — veja [LICENSE](LICENSE).
+Distribuído sob a licença MIT, em nome da Equipe Rehabit — veja [LICENSE](LICENSE).
