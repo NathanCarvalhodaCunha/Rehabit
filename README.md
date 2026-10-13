@@ -73,6 +73,15 @@ nada acontece —, então a variável pode ficar ligada. Os e-mails usam o domí
 reservado `.example`, e os telefones são fictícios: para testar o lembrete no
 WhatsApp de verdade, use uma conta comum.
 
+**O goniômetro da demonstração é simulado.** Como a senha é pública, a conta
+não pareia aparelho nenhum: com um goniômetro de verdade ali, qualquer
+visitante mandaria Zerar ou Reiniciar para ele. Para a tela Dispositivo e o
+registro de sessão não ficarem parados, o `Software/goniometro.js` simula o
+aparelho no navegador (um movimento de abdução do ombro, no formato e no ritmo
+do aparelho real), e os botões Zerar, Identificar, captura e Reiniciar agem
+sobre a simulação. As telas avisam que é uma simulação. Para mostrar o aparelho
+de verdade, use a conta da apresentação (abaixo) ou uma conta comum.
+
 ```bash
 # local
 java -DREHABIT_DEMO=true -jar target/rehabit-api-1.0.0.jar
@@ -93,7 +102,10 @@ tarde. Ela é montada pelo mesmo gerador da demonstração
 mas tem três diferenças:
 
 - **aceita alterações**: dá para editar, cadastrar, excluir e registrar sessão
-  com o goniômetro, e nenhuma tela fala em demonstração;
+  com o goniômetro, e nenhuma tela fala em demonstração. O goniômetro é o de
+  verdade: entrando como a clínica ou como um dos profissionais, *Dispositivo →
+  Parear novo dispositivo* mostra o código para digitar no portal do aparelho
+  (revogar fica só com a clínica);
 - **a senha não está no repositório**: ela vem de `REHABIT_APRESENTACAO_SENHA`,
   que não tem valor padrão e precisa passar na política de senha (mínimo de 8
   caracteres e fora da lista das senhas comuns). Sem ela, a API sobe

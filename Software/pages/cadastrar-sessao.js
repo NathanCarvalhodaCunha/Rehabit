@@ -78,7 +78,8 @@
         dica.textContent = "Peça o movimento completo e clique em Parar para trazer a amplitude.";
       } else if (estado.conectado) {
         selo.dataset.conn = "conectado";
-        seloTexto.textContent = "Conectado";
+        // Na demonstração pública o aparelho é simulado (goniometro.js).
+        seloTexto.textContent = estado.simulado ? "Simulação" : "Conectado";
         dica.textContent = "Use o ângulo atual ou grave o movimento para calcular a amplitude.";
       } else {
         selo.dataset.conn = estado.ultimoContato ? "desconectado" : "aguardando";

@@ -42,6 +42,12 @@
   const botaoIdentificar = cartaoVivo.querySelector('[data-action="identificar"]');
   const botaoReiniciar = document.querySelector('[data-action="reiniciar"]');
   const botoesAtualizar = document.querySelectorAll('[data-action="atualizar"]');
+  const aparelho = document.querySelector("[data-aparelho]");
+  /* Identificar faz o LED do aparelho piscar rápido por 4 s. O desenho pisca
+     a partir do clique: o comando chega ao aparelho na resposta do próximo
+     envio dele, menos de meio segundo depois com a tela aberta. */
+  let identificarAte = 0;
+  let avisoDeSimulacao = null;
 
   let ultimoEstado = null;
   let capturando = false;
@@ -161,7 +167,7 @@
     }
     if (estado.conectado) {
       selo.dataset.conn = "conectado";
-      seloTexto.textContent = "Conectado";
+      seloTexto.textContent = estado.simulado ? "Simulação" : "Conectado";
       return;
     }
     selo.dataset.conn = estado.ultimoContato ? "desconectado" : "aguardando";
@@ -235,6 +241,10 @@
     });
 
     document.querySelectorAll("[data-device-name]").forEach((el) => {
+      if (estado.simulado) {
+        el.textContent = estado.conectado ? "Goniômetro simulado" : "Goniômetro simulado reiniciando";
+        return;
+      }
       el.textContent = estado.conectado
         ? "Dispositivo conectado"
         : estado.ultimoContato
@@ -244,6 +254,39 @@
     document.querySelectorAll("[data-device-sub]").forEach((el) => {
       el.textContent = estado.numeroSerie ? `Rehabit Goniômetro · ${estado.numeroSerie}` : "Rehabit Goniômetro";
     });
+  }
+
+  /* A luz do desenho no ritmo que o aparelho deve estar mostrando, pelo que a
+     tela sabe dele: recebendo leituras, a piscada curtinha; gravando, acesa;
+     calibrando, fraca; sem contato, apagada (dali não dá para saber se ele
+     está sem Wi-Fi, sem bateria ou desligado). */
+  function desenharAparelho(estado) {
+    if (!aparelho) return;
+    let ritmo = "apagada";
+    if (estado.conectado) {
+      if (Date.now() < identificarAte) ritmo = "identificar";
+      else if (estado.captura && estado.captura.ativa) ritmo = "gravando";
+      else if (estado.calibrado === false) ritmo = "calibrando";
+      else ritmo = "tudo-certo";
+    }
+    // Trocar o atributo recomeça a animação: só troca quando o ritmo muda,
+    // senão a piscada reiniciaria a cada leitura.
+    if (aparelho.dataset.ritmo !== ritmo) aparelho.dataset.ritmo = ritmo;
+    const situacao = estado.conectado ? "ligado" : estado.ultimoContato ? "sem-contato" : "aguardando";
+    if (aparelho.dataset.estado !== situacao) aparelho.dataset.estado = situacao;
+  }
+
+  /* Na demonstração pública o aparelho é simulado (goniometro.js): a tela
+     diz isso com todas as letras, uma vez. */
+  function desenharAvisoDeSimulacao(estado) {
+    if (!estado.simulado || avisoDeSimulacao) return;
+    avisoDeSimulacao = document.createElement("p");
+    avisoDeSimulacao.className = "live-nota-demo";
+    avisoDeSimulacao.innerHTML =
+      "<strong>Goniômetro simulado.</strong> Nesta demonstração as leituras são geradas no navegador, " +
+      "no mesmo formato e ritmo do aparelho real: um movimento de abdução do ombro que se repete. " +
+      "Os botões funcionam sobre a simulação.";
+    cartaoVivo.appendChild(avisoDeSimulacao);
   }
 
   function desenharBotoes(estado) {
@@ -269,17 +312,20 @@
     desenharEstatisticas(estado);
     desenharDica(estado);
     desenharTelemetria(estado);
+    desenharAparelho(estado);
     desenharBotoes(estado);
+    desenharAvisoDeSimulacao(estado);
   }
 
   // ---------------------------------------------------------------- ações
 
-  function comandoSimples(botao, comando, mensagem) {
+  function comandoSimples(botao, comando, mensagem, depois) {
     if (!botao) return;
     botao.addEventListener("click", async () => {
       botao.disabled = true;
       try {
         await RehabitGoniometro.comando(comando);
+        if (depois) depois();
         RehabitToast.sucesso(mensagem);
       } catch (err) {
         RehabitToast.erro(err.message);
@@ -292,7 +338,13 @@
   }
 
   comandoSimples(botaoTarar, "TARAR", "Zerado — esta posição virou 0°. Faça isso com o braço pendurado.");
-  comandoSimples(botaoIdentificar, "IDENTIFICAR", "O LED do aparelho vai piscar por alguns segundos.");
+  comandoSimples(botaoIdentificar, "IDENTIFICAR", "O LED do aparelho vai piscar por alguns segundos.", () => {
+    identificarAte = Date.now() + 4000;
+    if (ultimoEstado) desenharAparelho(ultimoEstado);
+    setTimeout(() => {
+      if (ultimoEstado) desenharAparelho(ultimoEstado);
+    }, 4050);
+  });
   comandoSimples(botaoReiniciar, "REINICIAR", "Comando de reinício enviado ao aparelho.");
 
   if (botaoCaptura) {
