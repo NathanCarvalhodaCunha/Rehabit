@@ -14,6 +14,8 @@ import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.security.CodigoSeguro;
+import com.rehabit.security.Limite;
+import com.rehabit.security.LimiteDeTentativas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +60,7 @@ public class RecuperacaoSenhaService {
     private final ValidadorEmailService validadorEmail;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final LimiteDeTentativas limites;
     private final int expiracaoMinutos;
     private final String urlLogin;
 
@@ -67,6 +70,7 @@ public class RecuperacaoSenhaService {
                                    ValidadorEmailService validadorEmail,
                                    EmailService emailService,
                                    PasswordEncoder passwordEncoder,
+                                   LimiteDeTentativas limites,
                                    @Value("${rehabit.recuperacao.expiracao-minutos:30}") int expiracaoMinutos,
                                    @Value("${rehabit.app.url-login:}") String urlLogin) {
         this.recuperacaoRepository = recuperacaoRepository;
@@ -75,6 +79,7 @@ public class RecuperacaoSenhaService {
         this.validadorEmail = validadorEmail;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
+        this.limites = limites;
         this.expiracaoMinutos = expiracaoMinutos;
         this.urlLogin = urlLogin == null ? "" : urlLogin.trim().replaceAll("/+$", "");
     }
@@ -87,6 +92,9 @@ public class RecuperacaoSenhaService {
     @Transactional
     public void solicitar(EsqueciSenhaRequestDTO dados) {
         String email = validadorEmail.normalizar(dados.getEmail());
+        // Antes de saber se a conta existe: o 429 sai igual para todo e-mail,
+        // e a caixa de ninguém vira alvo de dezenas de e-mails seguidos.
+        limites.consumir(Limite.EMAIL_POR_DESTINATARIO, email);
         // Aproveita o pedido para varrer os vencidos: a tabela é pequena e o
         // projeto não tem agendador — mesma abordagem do pareamento.
         recuperacaoRepository.deleteByExpiraEmBefore(LocalDateTime.now().minusDays(1));
@@ -163,20 +171,25 @@ public class RecuperacaoSenhaService {
         String email = pedido.getEmail();
         String senhaCodificada = passwordEncoder.encode(dados.getNovaSenha());
 
+        // trocarSenha também derruba as sessões abertas: quem pede uma senha
+        // nova depois de uma invasão quer o invasor fora, não só a senha.
         if ("CLINICA".equals(pedido.getTipoConta())) {
             Clinica clinica = clinicaRepository.findByEmail(email)
                     .orElseThrow(() -> new AuthException("Conta não encontrada.", HttpStatus.BAD_REQUEST));
-            clinica.setSenha(senhaCodificada);
+            clinica.trocarSenha(senhaCodificada);
             clinicaRepository.save(clinica);
         } else {
             Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findByEmail(email)
                     .orElseThrow(() -> new AuthException("Conta não encontrada.", HttpStatus.BAD_REQUEST));
-            fisioterapeuta.setSenha(senhaCodificada);
+            fisioterapeuta.trocarSenha(senhaCodificada);
             fisioterapeutaRepository.save(fisioterapeuta);
         }
 
         pedido.setUsadoEm(LocalDateTime.now());
         recuperacaoRepository.save(pedido);
+        // Provou ser dono do e-mail: as senhas erradas de antes (dele ou de
+        // um robô) não podem deixá-lo trancado do lado de fora.
+        limites.zerar(Limite.LOGIN_POR_CONTA, email);
         log.info("Senha redefinida por e-mail para {}", EmailService.mascarar(email));
     }
 

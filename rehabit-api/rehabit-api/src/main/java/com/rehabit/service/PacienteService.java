@@ -14,6 +14,7 @@ import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
 import com.rehabit.security.PosseChecker;
+import com.rehabit.storage.FotosEmUso;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,17 +39,20 @@ public class PacienteService {
     private final SessaoRepository sessaoRepository;
     private final MedicaoRepository medicaoRepository;
     private final NotificacaoService notificacaoService;
+    private final FotosEmUso fotos;
 
     public PacienteService(PacienteRepository pacienteRepository,
                             FisioterapeutaRepository fisioterapeutaRepository,
                             SessaoRepository sessaoRepository,
                             MedicaoRepository medicaoRepository,
-                            NotificacaoService notificacaoService) {
+                            NotificacaoService notificacaoService,
+                            FotosEmUso fotos) {
         this.pacienteRepository = pacienteRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.sessaoRepository = sessaoRepository;
         this.medicaoRepository = medicaoRepository;
         this.notificacaoService = notificacaoService;
+        this.fotos = fotos;
     }
 
     @Transactional
@@ -71,7 +75,7 @@ public class PacienteService {
         paciente.setDataInicioTratamento(
                 dados.getDataInicioTratamento() != null ? dados.getDataInicioTratamento() : LocalDate.now());
         paciente.setSituacao(vazioParaNulo(dados.getSituacao()));
-        paciente.setFoto(vazioParaNulo(dados.getFoto()));
+        paciente.setFoto(fotos.aceitar(dados.getFoto(), null));
         paciente.setStatus("Ativo");
         paciente.setIdClinica(fisioterapeuta.getIdClinica());
         paciente.setIdFisioterapeuta(fisioterapeuta.getId());
@@ -114,7 +118,11 @@ public class PacienteService {
         paciente.setSexo(vazioParaNulo(dados.getSexo()));
         paciente.setSituacao(vazioParaNulo(dados.getSituacao()));
         if (dados.getFoto() != null) {
-            paciente.setFoto(dados.getFoto());
+            // A foto trocada sai do armazenamento: é foto de paciente, num
+            // endereço público, e não serve a mais ninguém.
+            String anterior = paciente.getFoto();
+            paciente.setFoto(fotos.aceitar(dados.getFoto(), anterior));
+            fotos.descartarDepoisDoCommit(anterior);
         }
         // Só troca o status quando a tela manda um valor conhecido — assim uma
         // tela antiga que não envia o campo não zera o status do paciente.

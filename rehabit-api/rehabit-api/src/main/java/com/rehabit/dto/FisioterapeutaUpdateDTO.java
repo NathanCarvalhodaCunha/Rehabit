@@ -14,10 +14,15 @@ public class FisioterapeutaUpdateDTO {
     @Email(message = "Informe um e-mail válido.")
     private String email;
 
+    @Size(max = 20, message = "O telefone pode ter no máximo 20 caracteres.")
     private String telefone;
+    @Size(max = 100, message = "A especialidade pode ter no máximo 100 caracteres.")
     private String especialidade;
+    @Size(max = 100, message = "A localidade pode ter no máximo 100 caracteres.")
     private String localidade;
+    @Size(max = 5000, message = "A descrição pode ter no máximo 5000 caracteres.")
     private String descricao;
+    @Size(max = 255, message = "O endereço da foto pode ter no máximo 255 caracteres.")
     private String foto;
     private String senhaAtual;
     private String novaSenha;

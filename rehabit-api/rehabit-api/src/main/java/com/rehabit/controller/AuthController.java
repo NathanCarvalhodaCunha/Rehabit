@@ -14,10 +14,14 @@ import com.rehabit.security.TurnstileService;
 import com.rehabit.service.AuthService;
 import com.rehabit.service.RecuperacaoSenhaService;
 import com.rehabit.service.VerificacaoEmailService;
+import com.rehabit.storage.EnvioDeFoto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,21 +32,26 @@ public class AuthController {
     private final RecuperacaoSenhaService recuperacaoSenhaService;
     private final VerificacaoEmailService verificacaoEmailService;
     private final TurnstileService turnstileService;
+    private final EnvioDeFoto envioDeFoto;
 
     public AuthController(AuthService authService,
                           RecuperacaoSenhaService recuperacaoSenhaService,
                           VerificacaoEmailService verificacaoEmailService,
-                          TurnstileService turnstileService) {
+                          TurnstileService turnstileService,
+                          EnvioDeFoto envioDeFoto) {
         this.authService = authService;
         this.recuperacaoSenhaService = recuperacaoSenhaService;
         this.verificacaoEmailService = verificacaoEmailService;
         this.turnstileService = turnstileService;
+        this.envioDeFoto = envioDeFoto;
     }
 
-    // As três rotas que recebem o token anti-robô (TurnstileService) são as
-    // que um robô teria interesse em martelar: o login, para adivinhar senha,
-    // e as duas que mandam e-mail. O /register não precisa: com o envio de
-    // e-mail ligado ele exige o código, que só sai por uma delas.
+    // As rotas que recebem o token anti-robô (TurnstileService) são as que um
+    // robô teria interesse em martelar: o login, para adivinhar senha, e as
+    // duas que mandam e-mail. O /register depende: com o código por e-mail
+    // ligado, quem chega a ele já passou pela verificação ao pedir o código;
+    // sem o código, é a única porta da criação de contas e confere o token.
+    // Além disso, todas têm limite de tentativas por IP (LimitePorIpInterceptor).
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(
@@ -53,7 +62,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> registrar(@Valid @RequestBody RegisterRequestDTO dados) {
+    public ResponseEntity<AuthResponseDTO> registrar(
+            @Valid @RequestBody RegisterRequestDTO dados,
+            @RequestHeader(value = TurnstileService.CABECALHO, required = false) String tokenAntiRobo) {
+        if (!verificacaoEmailService.isObrigatorio()) {
+            turnstileService.verificar(tokenAntiRobo);
+        }
         AuthResponseDTO resposta = authService.registrar(dados);
         return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
     }
@@ -81,6 +95,20 @@ public class AuthController {
             @Valid @RequestBody ConfirmarEmailRequestDTO dados) {
         verificacaoEmailService.confirmarCodigo(dados.getEmail(), dados.getCodigo());
         return ResponseEntity.ok(new MensagemDTO("E-mail confirmado."));
+    }
+
+    /**
+     * A foto do cadastro sobe antes de a conta existir, então não há token
+     * para pedir. Em troca, só passa com o e-mail já confirmado pelo código —
+     * o mesmo que o /register vai exigir em seguida —, com limite por e-mail
+     * e por IP. Era o que /api/uploads aberto a qualquer um fazia, sem nada
+     * disso.
+     */
+    @PostMapping("/cadastro/foto")
+    public ResponseEntity<Map<String, String>> enviarFotoDoCadastro(@RequestParam("arquivo") MultipartFile arquivo,
+                                                                    @RequestParam("email") String email) {
+        verificacaoEmailService.exigirConfirmadoParaFoto(email);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", envioDeFoto.salvar(arquivo)));
     }
 
     // ---- Recuperação de senha por e-mail ----

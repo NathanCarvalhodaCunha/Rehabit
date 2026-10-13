@@ -4,14 +4,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
@@ -87,6 +92,22 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para este endereço.");
     }
 
+    /**
+     * Arquivo acima do limite de upload. Caía no tratarGenerico() como 500,
+     * com stack trace em ERROR — e qualquer um podia provocar isso de fora.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> tratarArquivoGrande(MaxUploadSizeExceededException ex) {
+        log.debug("Upload recusado por tamanho: {}", ex.getMessage());
+        return resposta(HttpStatus.PAYLOAD_TOO_LARGE, "A foto passa do limite de 5 MB. Escolha uma imagem menor.");
+    }
+
+    /** Envio de arquivo malformado, ou sem o campo do arquivo. */
+    @ExceptionHandler({MultipartException.class, MissingServletRequestPartException.class})
+    public ResponseEntity<Map<String, String>> tratarEnvioDeArquivoInvalido(Exception ex) {
+        return resposta(HttpStatus.BAD_REQUEST, "Não foi possível ler o arquivo enviado.");
+    }
+
     // ---- Conexão fechada do outro lado ----
 
     /**
@@ -111,6 +132,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> tratarGenerico(Exception ex) {
+        // Os erros do próprio Spring MVC que já trazem um status 4xx (tipo de
+        // conteúdo não suportado, cabeçalho obrigatório ausente...) são erro de
+        // quem chamou: respondem com esse status, não como falha do servidor.
+        if (ex instanceof ErrorResponse erro && erro.getStatusCode().is4xxClientError()) {
+            HttpStatusCode status = erro.getStatusCode();
+            return resposta(HttpStatus.valueOf(status.value()), "Requisição inválida.");
+        }
         // A resposta continua genérica (não vaza detalhe interno para a tela),
         // mas o que aconteceu precisa ficar no log: antes a exceção era
         // engolida aqui e um bug real não deixava rastro nenhum.

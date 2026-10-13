@@ -10,6 +10,8 @@ import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.VerificacaoEmailRepository;
 import com.rehabit.security.CodigoSeguro;
+import com.rehabit.security.Limite;
+import com.rehabit.security.LimiteDeTentativas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +44,7 @@ public class VerificacaoEmailService {
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final ValidadorEmailService validadorEmail;
     private final EmailService emailService;
+    private final LimiteDeTentativas limites;
     private final int expiracaoMinutos;
     private final boolean obrigatorio;
 
@@ -50,6 +53,7 @@ public class VerificacaoEmailService {
                                    FisioterapeutaRepository fisioterapeutaRepository,
                                    ValidadorEmailService validadorEmail,
                                    EmailService emailService,
+                                   LimiteDeTentativas limites,
                                    @Value("${rehabit.verificacao.expiracao-minutos:15}") int expiracaoMinutos,
                                    @Value("${rehabit.email.confirmar-cadastro:}") String confirmarCadastro) {
         this.verificacaoRepository = verificacaoRepository;
@@ -57,6 +61,7 @@ public class VerificacaoEmailService {
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.validadorEmail = validadorEmail;
         this.emailService = emailService;
+        this.limites = limites;
         this.expiracaoMinutos = expiracaoMinutos;
 
         // Em branco = automático: exige o código quando há SMTP configurado.
@@ -80,6 +85,8 @@ public class VerificacaoEmailService {
     @Transactional
     public VerificacaoEnviadaDTO enviarCodigo(String emailBruto) {
         String email = validadorEmail.validarENormalizar(emailBruto);
+        // Conta antes do "já cadastrado", para o limite não dizer quem tem conta.
+        limites.consumir(Limite.EMAIL_POR_DESTINATARIO, email);
 
         if (clinicaRepository.existsByEmail(email) || fisioterapeutaRepository.existsByEmail(email)) {
             throw new AuthException("Este e-mail já está cadastrado.", HttpStatus.CONFLICT);
@@ -170,6 +177,18 @@ public class VerificacaoEmailService {
             throw new AuthException("Confirme seu e-mail com o código que enviamos antes de concluir o cadastro.",
                     HttpStatus.FORBIDDEN);
         }
+    }
+
+    /**
+     * Libera a foto do cadastro (veja AuthController): o mesmo e-mail
+     * confirmado que o /register vai exigir, com limite por endereço para
+     * um e-mail confirmado não virar um depósito de arquivos.
+     */
+    @Transactional(readOnly = true)
+    public void exigirConfirmadoParaFoto(String emailBruto) {
+        String email = validadorEmail.normalizar(emailBruto);
+        limites.consumir(Limite.FOTO_DO_CADASTRO_POR_EMAIL, email);
+        exigirConfirmado(email);
     }
 
     /** Apaga o registro depois que a conta foi criada — ele já cumpriu o papel. */

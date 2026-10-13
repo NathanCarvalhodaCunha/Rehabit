@@ -1,5 +1,6 @@
 package com.rehabit.dto;
 
+import com.rehabit.security.SenhaForte;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,13 +24,18 @@ public class FisioterapeutaCreateDTO {
     private String email;
 
     @NotBlank(message = "A senha é obrigatória.")
-    @Size(min = 6, message = "A senha deve ter ao menos 6 caracteres.")
+    @SenhaForte
     private String senha;
 
+    @Size(max = 20, message = "O telefone pode ter no máximo 20 caracteres.")
     private String telefone;
+    @Size(max = 100, message = "A especialidade pode ter no máximo 100 caracteres.")
     private String especialidade;
+    @Size(max = 5000, message = "A descrição pode ter no máximo 5000 caracteres.")
     private String descricao;
+    @Size(max = 100, message = "A localidade pode ter no máximo 100 caracteres.")
     private String localidade;
+    @Size(max = 255, message = "O endereço da foto pode ter no máximo 255 caracteres.")
     private String foto;
 
     public FisioterapeutaCreateDTO() {

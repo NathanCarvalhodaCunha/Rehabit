@@ -2,6 +2,8 @@ package com.rehabit.model;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "tb02_fisioterapeuta")
 public class Fisioterapeuta {
@@ -53,6 +55,15 @@ public class Fisioterapeuta {
      */
     @Column(name = "tb02_excluido_em")
     private java.time.LocalDateTime excluidoEm;
+
+    /**
+     * Última troca ou redefinição de senha; nulo se nunca houve (ou se foi
+     * antes de o campo existir). O JwtAuthenticationFilter recusa token
+     * emitido antes deste instante: trocar a senha encerra as sessões abertas,
+     * inclusive a de quem tiver roubado a antiga.
+     */
+    @Column(name = "tb02_credenciais_alteradas_em")
+    private Instant credenciaisAlteradasEm;
 
     public Fisioterapeuta() {
     }
@@ -125,6 +136,16 @@ public class Fisioterapeuta {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    /** Para senha nova de conta que já existe; o cadastro usa {@link #setSenha}. */
+    public void trocarSenha(String senhaCifrada) {
+        this.senha = senhaCifrada;
+        this.credenciaisAlteradasEm = Instant.now();
+    }
+
+    public Instant getCredenciaisAlteradasEm() {
+        return credenciaisAlteradasEm;
     }
 
     public String getDescricao() {

@@ -27,4 +27,7 @@ public interface PacienteRepository extends JpaRepository<Paciente, Integer> {
     @Modifying
     @Query("delete from Paciente p where p.idClinica = :idClinica")
     void deleteByIdClinica(@Param("idClinica") Integer idClinica);
+
+    /** Alguém ainda usa este arquivo? Veja FotosEmUso: só apaga o que ninguém usa. */
+    boolean existsByFoto(String foto);
 }

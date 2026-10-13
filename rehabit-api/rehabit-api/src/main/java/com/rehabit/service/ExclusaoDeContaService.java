@@ -20,13 +20,11 @@ import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.repository.SessaoRepository;
 import com.rehabit.repository.VerificacaoEmailRepository;
 import com.rehabit.security.PosseChecker;
-import com.rehabit.storage.FileStorageService;
+import com.rehabit.storage.FotosEmUso;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +62,7 @@ public class ExclusaoDeContaService {
     private final GoniometroRepository goniometroRepository;
     private final CodigoPareamentoRepository codigoPareamentoRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FileStorageService fileStorageService;
+    private final FotosEmUso fotosEmUso;
 
     public ExclusaoDeContaService(ClinicaRepository clinicaRepository,
                                   FisioterapeutaRepository fisioterapeutaRepository,
@@ -80,7 +78,7 @@ public class ExclusaoDeContaService {
                                   GoniometroRepository goniometroRepository,
                                   CodigoPareamentoRepository codigoPareamentoRepository,
                                   PasswordEncoder passwordEncoder,
-                                  FileStorageService fileStorageService) {
+                                  FotosEmUso fotosEmUso) {
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -95,7 +93,7 @@ public class ExclusaoDeContaService {
         this.goniometroRepository = goniometroRepository;
         this.codigoPareamentoRepository = codigoPareamentoRepository;
         this.passwordEncoder = passwordEncoder;
-        this.fileStorageService = fileStorageService;
+        this.fotosEmUso = fotosEmUso;
     }
 
     /** O que vai sumir, para a clínica ver antes de confirmar. */
@@ -172,25 +170,12 @@ public class ExclusaoDeContaService {
         codigoPareamentoRepository.deleteByIdClinica(idClinica);
         clinicaRepository.delete(clinica);
 
-        apagarFotosDepoisDoCommit(fotos);
-    }
-
-    /**
-     * As fotos saem só depois que o banco confirma, e sem poder desfazê-lo.
-     * A parte que precisa ser atômica é o banco: uma foto esquecida é limpeza
-     * recuperável, uma conta apagada pela metade não é. E apagar a foto antes
-     * do commit deixaria uma conta intacta sem foto se o banco falhasse.
-     */
-    private void apagarFotosDepoisDoCommit(List<String> fotos) {
-        if (fotos.isEmpty()) {
-            return;
-        }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                fotos.forEach(fileStorageService::excluir);
-            }
-        });
+        // As fotos saem só depois que o banco confirma, e sem poder desfazê-lo.
+        // A parte que precisa ser atômica é o banco: uma foto esquecida é
+        // limpeza recuperável, uma conta apagada pela metade não é. E só sai
+        // a foto que mais ninguém usa: a URL na linha desta conta pode ser a
+        // da foto de outra clínica, posta ali de propósito.
+        fotosEmUso.descartarDepoisDoCommit(fotos);
     }
 
     private static List<Integer> idsDe(List<Paciente> pacientes) {

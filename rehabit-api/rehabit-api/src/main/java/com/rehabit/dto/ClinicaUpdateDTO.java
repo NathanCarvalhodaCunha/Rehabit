@@ -11,16 +11,22 @@ public class ClinicaUpdateDTO {
     private String nome;
 
     @NotBlank(message = "O CNPJ é obrigatório.")
+    @Size(max = 18, message = "O CNPJ pode ter no máximo 18 caracteres.")
     private String cnpj;
 
     @NotBlank(message = "O e-mail é obrigatório.")
     @Email(message = "Informe um e-mail válido.")
     private String email;
 
+    @Size(max = 20, message = "O telefone pode ter no máximo 20 caracteres.")
     private String telefone;
+    @Size(max = 200, message = "O endereço pode ter no máximo 200 caracteres.")
     private String endereco;
+    @Size(max = 150, message = "O subtítulo pode ter no máximo 150 caracteres.")
     private String subtitulo;
+    @Size(max = 5000, message = "A descrição pode ter no máximo 5000 caracteres.")
     private String descricao;
+    @Size(max = 255, message = "O endereço da foto pode ter no máximo 255 caracteres.")
     private String foto;
     private String senhaAtual;
     private String novaSenha;

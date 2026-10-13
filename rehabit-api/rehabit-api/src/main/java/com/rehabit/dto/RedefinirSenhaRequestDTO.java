@@ -1,8 +1,8 @@
 package com.rehabit.dto;
 
+import com.rehabit.security.SenhaForte;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 /**
  * Conclusão da recuperação de senha. Aceita as duas formas de provar que a
@@ -20,7 +20,7 @@ public class RedefinirSenhaRequestDTO {
     private String codigo;
 
     @NotBlank(message = "A nova senha é obrigatória.")
-    @Size(min = 6, message = "A senha deve ter ao menos 6 caracteres.")
+    @SenhaForte
     private String novaSenha;
 
     public RedefinirSenhaRequestDTO() {

@@ -2,6 +2,7 @@ package com.rehabit.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /** Comando que a tela enfileira para o aparelho (site -> ESP32). */
 public class GoniometroComandoDTO {
@@ -10,6 +11,7 @@ public class GoniometroComandoDTO {
     private Integer idClinica;
 
     @NotBlank(message = "O comando é obrigatório.")
+    @Size(max = 30, message = "O comando pode ter no máximo 30 caracteres.")
     private String comando;
 
     public GoniometroComandoDTO() {

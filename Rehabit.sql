@@ -43,9 +43,6 @@ CREATE TABLE IF NOT EXISTS `tb01_clinica` (
   UNIQUE KEY `tb01_email_clinica` (`tb01_email_clinica`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Copiando dados para a tabela rehabit.tb01_clinica: ~0 rows (aproximadamente)
-INSERT IGNORE INTO `tb01_clinica` (`tb01_id_clinica`, `tb01_nome_clinica`, `tb01_CNPJ`, `tb01_endereco_clinica`, `tb01_telefone_clinica`, `tb01_email_clinica`, `tb01_senha_clinica`, `tb01_descricao_clinica`, `tb01_subtitulo`, `tb01_foto_clinica`) VALUES
-	(1, 'Comando Vermelho', '66666', 'Rua Pintosvaldo', '666666', 'nathan@gmail.com', '$2a$10$ezkmnMxW2XkREFz5WKc3UeHPmxaMfvHbBKdD1qQREvciEzN1KWDHW', 'Merda', 'Nathan', NULL);
 
 -- Copiando estrutura para tabela rehabit.tb02_fisioterapeuta
 CREATE TABLE IF NOT EXISTS `tb02_fisioterapeuta` (

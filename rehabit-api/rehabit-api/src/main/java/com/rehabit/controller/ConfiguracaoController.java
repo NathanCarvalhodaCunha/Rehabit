@@ -1,6 +1,7 @@
 package com.rehabit.controller;
 
 import com.rehabit.dto.ConfiguracaoDTO;
+import com.rehabit.dto.SenhaAlteradaDTO;
 import com.rehabit.dto.TrocarSenhaDTO;
 import com.rehabit.security.AuthContext;
 import com.rehabit.service.ConfiguracaoService;
@@ -48,10 +49,15 @@ public class ConfiguracaoController {
                 dados, AuthContext.id(request), AuthContext.tipo(request)));
     }
 
+    /**
+     * A troca derruba os tokens emitidos antes dela, inclusive o desta
+     * requisição: o site grava o token da resposta no lugar do antigo.
+     */
     @PutMapping("/senha")
-    public ResponseEntity<Void> trocarSenha(@Valid @RequestBody TrocarSenhaDTO dados,
-                                              HttpServletRequest request) {
-        configuracaoService.trocarSenha(dados, AuthContext.id(request), AuthContext.tipo(request));
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<SenhaAlteradaDTO> trocarSenha(@Valid @RequestBody TrocarSenhaDTO dados,
+                                                          HttpServletRequest request) {
+        String tokenNovo = configuracaoService.trocarSenha(dados, AuthContext.id(request), AuthContext.tipo(request));
+        return ResponseEntity.ok(new SenhaAlteradaDTO(
+                "Senha alterada. As sessões abertas em outros aparelhos foram encerradas.", tokenNovo));
     }
 }

@@ -114,6 +114,40 @@ Ao pôr o site em um endereço novo, dois ajustes fora do repositório:
    (`https://rehabit.com.br/Login`), que é o link do e-mail de "esqueci a
    senha". A variável só vale depois de um deploy da API.
 
+## Segurança em produção
+
+O que precisa estar configurado no Render, e o que muda para quem usa:
+
+| Variável | Para quê |
+| --- | --- |
+| `REHABIT_JWT_SECRET` | **Obrigatória.** Chave que assina as sessões e os tokens dos goniômetros. Gere com `openssl rand -base64 64` (mínimo de 32 bytes). Sem ela a API **não sobe** no Render nem no perfil `cloud`: o repositório não tem mais valor-padrão, porque quem conhece a chave assina token de qualquer conta. Trocá-la encerra todas as sessões e desliga todos os goniômetros, que precisam ser pareados de novo. |
+| `REHABIT_PROXIES_CONFIAVEIS` | Quantos proxies ficam na frente da API, para achar o IP real no `X-Forwarded-For` (os limites de tentativas são por IP). Em branco: 1 no Render, 0 fora dele. |
+| `REHABIT_LIMITES_ATIVO` | `false` desliga os limites de tentativas (login, cadastro, e-mails, códigos, pareamento, upload). Só para diagnóstico. |
+
+Outros pontos:
+
+- **Limites de tentativas.** Senha errada, código errado e pedido de e-mail
+  demais respondem 429 com o tempo de espera. Dez senhas erradas seguidas
+  travam aquela conta por 15 minutos (até a senha certa, para o limite não
+  revelar a senha) — o "Esqueci minha senha" continua funcionando.
+- **Trocar ou redefinir a senha encerra as sessões** abertas em outros
+  aparelhos. A tela que fez a troca recebe um token novo e segue logada.
+- **Senhas novas** precisam de 8 caracteres e não podem estar entre as mais
+  comuns. Contas antigas com senha mais curta continuam entrando.
+- **Evolução do banco.** O Hibernate roda com `ddl-auto=update` também no
+  PostgreSQL de produção: cria tabelas e colunas novas sozinho, mas nunca
+  apaga nem renomeia nada, e um erro de mapeamento pode alterar o esquema
+  real. O caminho seguro é passar a migrações versionadas (Flyway) e trocar
+  para `validate` — fica como próximo passo.
+- **H2 local** não abre mais servidor TCP (`AUTO_SERVER`): para olhar o banco
+  com outra ferramenta, pare a API antes.
+- **`Rehabit.sql`** não traz mais a linha de exemplo com hash de senha e
+  e-mail pessoal. Ela continua no histórico do git: se aquela senha for usada
+  em algum lugar, troque-a.
+- **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
+  cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
+  o da Vercel.
+
 ## Funcionalidades
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.

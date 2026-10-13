@@ -83,21 +83,22 @@ public class DispositivoService {
     /**
      * Chamado pelo próprio goniômetro, sem autenticação — é aqui que ele
      * ganha credencial. A proteção é o código: 6 dígitos, uso único e 10
-     * minutos de validade.
+     * minutos de validade, mais o limite de códigos errados por IP e no
+     * sistema todo (LimitePorIpInterceptor), que torna inviável adivinhar.
+     *
+     * Código vencido e código que nunca existiu dão a mesma resposta: com
+     * mensagens diferentes, cada palpite dizia também se aquele número tinha
+     * sido gerado por alguma clínica há pouco.
      */
     @Transactional
     public PareamentoRespostaDTO parear(PareamentoRequestDTO dados) {
         String informado = dados.getCodigo() == null ? "" : dados.getCodigo().trim();
 
         CodigoPareamento codigo = codigoRepository.findByCodigoAndUsadoFalse(informado)
+                .filter(c -> !c.getExpiraEm().isBefore(LocalDateTime.now()))
                 .orElseThrow(() -> new AuthException(
-                        "Código inválido ou já utilizado. Gere um novo na tela Dispositivo.",
+                        "Código inválido, expirado ou já utilizado. Gere um novo na tela Dispositivo.",
                         HttpStatus.BAD_REQUEST));
-
-        if (codigo.getExpiraEm().isBefore(LocalDateTime.now())) {
-            throw new AuthException("Código expirado. Gere um novo na tela Dispositivo.",
-                    HttpStatus.BAD_REQUEST);
-        }
 
         Clinica clinica = clinicaRepository.findById(codigo.getIdClinica())
                 .orElseThrow(() -> new AuthException("Clínica não encontrada.", HttpStatus.BAD_REQUEST));

@@ -6,10 +6,10 @@ import com.rehabit.exception.AuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Guarda o arquivo no Cloudinary (armazenamento persistente). Escolhido
@@ -36,9 +36,13 @@ public class CloudinaryFileStorageService implements FileStorageService {
     }
 
     @Override
-    public String salvar(MultipartFile arquivo) {
+    public String salvar(byte[] conteudo, TipoDeImagem tipo) {
         try {
-            Map<?, ?> resultado = cloudinary.uploader().upload(arquivo.getBytes(), ObjectUtils.emptyMap());
+            // O Cloudinary confere o formato de novo do lado dele: só imagem,
+            // e só os formatos que a API aceita (SVG, por exemplo, não).
+            Map<?, ?> resultado = cloudinary.uploader().upload(conteudo, ObjectUtils.asMap(
+                    "resource_type", "image",
+                    "allowed_formats", "jpg,png,gif,webp"));
             String url = (String) resultado.get("secure_url");
             if (url == null) {
                 throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -48,6 +52,24 @@ public class CloudinaryFileStorageService implements FileStorageService {
             logger.warn("Falha ao enviar arquivo para o Cloudinary", ex);
             throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public boolean guardou(String url) {
+        return urlDaConta(url, cloudinary.config.cloudName);
+    }
+
+    /**
+     * O formato exato da secure_url que o upload acima devolve, na conta
+     * configurada: ".../<conta>/image/upload/v<versão>/<id>.<formato>". Uma
+     * URL de outra conta do Cloudinary, ou com transformação, não passa.
+     */
+    static boolean urlDaConta(String url, String nomeDaConta) {
+        if (url == null || nomeDaConta == null || nomeDaConta.isBlank()) {
+            return false;
+        }
+        return Pattern.matches("https://res\\.cloudinary\\.com/" + Pattern.quote(nomeDaConta)
+                + "/image/upload/v[0-9]{1,15}/[A-Za-z0-9_-]{1,100}\\.(jpg|png|gif|webp)", url);
     }
 
     @Override

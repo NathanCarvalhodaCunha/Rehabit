@@ -4,13 +4,12 @@ import com.rehabit.exception.AuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Guarda o arquivo no disco local. Usado como alternativa quando o
@@ -22,6 +21,8 @@ public class LocalFileStorageService implements FileStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalFileStorageService.class);
     private static final String PREFIXO = "/uploads/";
+    private static final Pattern URL_SALVA = Pattern.compile(
+            "/uploads/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|png|gif|webp)");
 
     private final String uploadDir;
 
@@ -30,24 +31,25 @@ public class LocalFileStorageService implements FileStorageService {
     }
 
     @Override
-    public String salvar(MultipartFile arquivo) {
-        String extensao = "";
-        String nomeOriginal = arquivo.getOriginalFilename();
-        if (nomeOriginal != null && nomeOriginal.contains(".")) {
-            extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf('.'));
-        }
-        String nomeArquivo = UUID.randomUUID() + extensao;
+    public String salvar(byte[] conteudo, TipoDeImagem tipo) {
+        String nomeArquivo = UUID.randomUUID() + "." + tipo.extensao();
 
         try {
             Path pasta = Path.of(uploadDir).toAbsolutePath();
             Files.createDirectories(pasta);
-            Path destino = pasta.resolve(nomeArquivo).normalize();
-            arquivo.transferTo(new File(destino.toString()));
+            Files.write(pasta.resolve(nomeArquivo), conteudo);
         } catch (IOException ex) {
             throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return PREFIXO + nomeArquivo;
+    }
+
+    @Override
+    public boolean guardou(String url) {
+        return url != null
+                && URL_SALVA.matcher(url).matches()
+                && Files.isRegularFile(Path.of(uploadDir).toAbsolutePath().resolve(url.substring(PREFIXO.length())));
     }
 
     @Override

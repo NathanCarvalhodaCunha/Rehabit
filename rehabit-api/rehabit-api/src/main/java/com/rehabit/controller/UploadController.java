@@ -1,41 +1,33 @@
 package com.rehabit.controller;
 
-import com.rehabit.exception.AuthException;
-import com.rehabit.storage.FileStorageService;
+import com.rehabit.storage.EnvioDeFoto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Foto de perfil, de profissional e de paciente, enviada por quem está
+ * logado. Já foi pública: qualquer um na internet subia arquivos sem limite
+ * para o armazenamento da clínica. Agora passa pelo JwtAuthenticationFilter
+ * como qualquer rota; a foto do cadastro, de quem ainda não tem conta, vai
+ * por /api/auth/cadastro/foto, que exige o e-mail confirmado.
+ */
 @RestController
 @RequestMapping("/api/uploads")
 @CrossOrigin(origins = "*")
 public class UploadController {
 
-    private final FileStorageService fileStorageService;
+    private final EnvioDeFoto envioDeFoto;
 
-    public UploadController(FileStorageService fileStorageService) {
-        this.fileStorageService = fileStorageService;
+    public UploadController(EnvioDeFoto envioDeFoto) {
+        this.envioDeFoto = envioDeFoto;
     }
 
     @PostMapping
     public ResponseEntity<Map<String, String>> enviar(@RequestParam("arquivo") MultipartFile arquivo) {
-        if (arquivo.isEmpty()) {
-            throw new AuthException("Nenhum arquivo enviado.", HttpStatus.BAD_REQUEST);
-        }
-
-        String tipo = arquivo.getContentType();
-        if (tipo == null || !tipo.startsWith("image/")) {
-            throw new AuthException("Apenas imagens são permitidas.", HttpStatus.BAD_REQUEST);
-        }
-
-        String url = fileStorageService.salvar(arquivo);
-
-        Map<String, String> corpo = new HashMap<>();
-        corpo.put("url", url);
-        return ResponseEntity.status(HttpStatus.CREATED).body(corpo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", envioDeFoto.salvar(arquivo)));
     }
 }

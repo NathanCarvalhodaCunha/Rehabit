@@ -39,3 +39,11 @@ rehabit.mail.nome-remetente=Rehabit
 # Outro provedor de e-mail? Ajuste também o servidor:
 #spring.mail.host=smtp.office365.com
 #spring.mail.port=587
+
+# --- Chave dos tokens (opcional aqui) ---
+# Rodando local sem chave, a API sorteia uma a cada subida e avisa no log: as
+# sessões caem quando ela reinicia e o goniômetro precisa ser pareado de novo.
+# Para manter as sessões entre reinícios, gere uma com
+# "openssl rand -base64 64" e descomente a linha abaixo. Em produção (Render)
+# a chave é obrigatória e vem da variável REHABIT_JWT_SECRET.
+#rehabit.jwt.secret=cole-aqui-a-chave-gerada

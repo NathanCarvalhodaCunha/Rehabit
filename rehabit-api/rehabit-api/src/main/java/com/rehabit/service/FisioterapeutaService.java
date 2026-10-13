@@ -11,6 +11,7 @@ import com.rehabit.exception.AuthException;
 import com.rehabit.model.Agendamento;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Paciente;
+import com.rehabit.security.PoliticaDeSenha;
 import com.rehabit.security.PosseChecker;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Sessao;
@@ -21,6 +22,7 @@ import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.repository.SessaoRepository;
+import com.rehabit.storage.FotosEmUso;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class FisioterapeutaService {
     private final AgendamentoRepository agendamentoRepository;
     private final AgendamentoService agendamentoService;
     private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
+    private final FotosEmUso fotos;
 
     public FisioterapeutaService(FisioterapeutaRepository fisioterapeutaRepository,
                                   ClinicaRepository clinicaRepository,
@@ -58,7 +61,8 @@ public class FisioterapeutaService {
                                   ValidadorEmailService validadorEmail,
                                   AgendamentoRepository agendamentoRepository,
                                   AgendamentoService agendamentoService,
-                                  RecuperacaoSenhaRepository recuperacaoSenhaRepository) {
+                                  RecuperacaoSenhaRepository recuperacaoSenhaRepository,
+                                  FotosEmUso fotos) {
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.clinicaRepository = clinicaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -69,6 +73,7 @@ public class FisioterapeutaService {
         this.agendamentoRepository = agendamentoRepository;
         this.agendamentoService = agendamentoService;
         this.recuperacaoSenhaRepository = recuperacaoSenhaRepository;
+        this.fotos = fotos;
     }
 
     @Transactional
@@ -102,7 +107,7 @@ public class FisioterapeutaService {
         fisioterapeuta.setEspecialidade(vazioParaNulo(dados.getEspecialidade()));
         fisioterapeuta.setDescricao(vazioParaNulo(dados.getDescricao()));
         fisioterapeuta.setLocalidade(vazioParaNulo(dados.getLocalidade()));
-        fisioterapeuta.setFoto(vazioParaNulo(dados.getFoto()));
+        fisioterapeuta.setFoto(fotos.aceitar(dados.getFoto(), null));
 
         Fisioterapeuta salvo = fisioterapeutaRepository.save(fisioterapeuta);
         return new AuthResponseDTO(salvo.getId(), "FISIOTERAPEUTA", salvo.getNome(), salvo.getEmail(),
@@ -147,10 +152,10 @@ public class FisioterapeutaService {
                     || !passwordEncoder.matches(dados.getSenhaAtual(), fisioterapeuta.getSenha())) {
                 throw new AuthException("Senha atual incorreta.", HttpStatus.BAD_REQUEST);
             }
-            if (dados.getNovaSenha().length() < 6) {
-                throw new AuthException("A nova senha deve ter ao menos 6 caracteres.", HttpStatus.BAD_REQUEST);
-            }
-            fisioterapeuta.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            PoliticaDeSenha.exigir(dados.getNovaSenha());
+            // Encerra as sessões abertas desta conta, inclusive a de quem está
+            // editando o perfil (veja JwtAuthenticationFilter).
+            fisioterapeuta.trocarSenha(passwordEncoder.encode(dados.getNovaSenha()));
         } else if (dados.getSenhaAtual() != null && !dados.getSenhaAtual().isBlank()) {
             throw new AuthException("Informe a nova senha para trocar de senha.", HttpStatus.BAD_REQUEST);
         }
@@ -162,7 +167,9 @@ public class FisioterapeutaService {
         fisioterapeuta.setLocalidade(vazioParaNulo(dados.getLocalidade()));
         fisioterapeuta.setDescricao(vazioParaNulo(dados.getDescricao()));
         if (dados.getFoto() != null) {
-            fisioterapeuta.setFoto(dados.getFoto());
+            String anterior = fisioterapeuta.getFoto();
+            fisioterapeuta.setFoto(fotos.aceitar(dados.getFoto(), anterior));
+            fotos.descartarDepoisDoCommit(anterior);
         }
 
         return paraPerfilDTO(fisioterapeutaRepository.save(fisioterapeuta));
@@ -249,7 +256,8 @@ public class FisioterapeutaService {
     }
 
     @Transactional
-    public void marcarTutorialVisto(Integer id) {
+    public void marcarTutorialVisto(Integer id, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirFisioterapeutaDono(id, usuarioId, usuarioTipo);
         Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
         fisioterapeuta.setTutorialVisto(true);

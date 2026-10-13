@@ -1,5 +1,6 @@
 package com.rehabit.dto;
 
+import com.rehabit.security.SenhaForte;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -20,17 +21,23 @@ public class RegisterRequestDTO {
     private String email;
 
     @NotBlank(message = "A senha é obrigatória.")
-    @Size(min = 6, message = "A senha deve ter ao menos 6 caracteres.")
+    @SenhaForte
     private String senha;
 
     // Campos do pop-up "Informações opcionais", usados apenas quando
     // tipo = "instituicao". CNPJ é obrigatório (tb01_CNPJ é NOT NULL).
     @NotBlank(message = "O CNPJ é obrigatório.")
+    @Size(max = 18, message = "O CNPJ pode ter no máximo 18 caracteres.")
     private String cnpj;
+    @Size(max = 20, message = "O telefone pode ter no máximo 20 caracteres.")
     private String telefone;
+    @Size(max = 200, message = "O endereço pode ter no máximo 200 caracteres.")
     private String endereco;
+    @Size(max = 150, message = "O subtítulo pode ter no máximo 150 caracteres.")
     private String subtitulo;
+    @Size(max = 5000, message = "A descrição pode ter no máximo 5000 caracteres.")
     private String descricao;
+    @Size(max = 255, message = "O endereço da foto pode ter no máximo 255 caracteres.")
     private String foto;
 
     public RegisterRequestDTO() {
