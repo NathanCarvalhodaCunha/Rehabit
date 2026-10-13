@@ -144,6 +144,26 @@ Outros pontos:
 - **`Rehabit.sql`** não traz mais a linha de exemplo com hash de senha e
   e-mail pessoal. Ela continua no histórico do git: se aquela senha for usada
   em algum lugar, troque-a.
+- **Fotos.** O envio (`/api/uploads`) exige login; a foto do cadastro vai
+  por `/api/auth/cadastro/foto`, que exige o e-mail já confirmado. Só entra
+  JPG, PNG, GIF ou WEBP, reconhecido pelo conteúdo, e os metadados (GPS,
+  câmera) saem antes de gravar. O campo `foto` dos cadastros só aceita URL que
+  a própria API devolveu, e foto trocada é apagada quando ninguém mais a usa.
+  As fotos continuam num endereço público, mas impossível de adivinhar (UUID
+  ou id do Cloudinary).
+- **Endereço da API no site.** A CSP do `vercel.json` só deixa o site falar
+  com `https://rehabit-api-4tex.onrender.com` (e mostrar imagens dele e do
+  Cloudinary). Mudou o endereço da API? Troque também em `connect-src` e
+  `img-src`, senão o site para de carregar dados. O mesmo vale para o
+  firmware, que só confia nas autoridades certificadoras listadas nele (veja
+  o guia do goniômetro).
+- **Script inline.** O único é o do tema, no `index.html`, liberado na CSP
+  pelo hash do conteúdo. Mexeu nele, recalcule o hash — `tests/seguranca-front`
+  acusa a diferença.
+- **HSTS** vai sem `includeSubDomains`: não dá para garantir daqui que todo
+  subdomínio do domínio do site tem HTTPS. Confirmado isso, pode acrescentar.
+- **Testes de segurança.** `mvn test` na API e os de `tests/` no site (veja
+  `tests/README.md`).
 - **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
   cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
   o da Vercel.
