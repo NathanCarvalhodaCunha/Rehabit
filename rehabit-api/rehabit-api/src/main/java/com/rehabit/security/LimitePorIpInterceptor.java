@@ -49,6 +49,7 @@ public class LimitePorIpInterceptor implements HandlerInterceptor {
             new Rota("POST", "/api/auth/verificar-email/confirmar", false, List.of(Limite.CODIGO_POR_IP)),
             new Rota("POST", "/api/auth/recuperar-senha", false, List.of(Limite.CODIGO_POR_IP)),
             new Rota("GET", "/api/auth/recuperar-senha/validar", false, List.of(Limite.CODIGO_POR_IP)),
+            new Rota("POST", "/api/auth/recuperar-senha/validar", false, List.of(Limite.CODIGO_POR_IP)),
             new Rota("POST", "/api/dispositivos/parear", true,
                     List.of(Limite.PAREAMENTO_POR_IP, Limite.PAREAMENTO_GLOBAL)),
             new Rota("POST", "/api/uploads", false, List.of(Limite.UPLOAD_POR_IP)),

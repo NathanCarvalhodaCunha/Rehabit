@@ -7,8 +7,7 @@
 
   // Uma clínica pode abrir esta tela para editar os dados de um dos seus
   // profissionais, vinda de perfil-profissional.html.
-  const params = new URLSearchParams(window.location.search);
-  const idParam = params.get("id");
+  const idParam = idDaUrl("id");
   const editandoOutroProfissional = sessao.tipo === "CLINICA" && !!idParam;
   if (sessao.tipo !== "FISIOTERAPEUTA" && !editandoOutroProfissional) return;
   const idAlvo = editandoOutroProfissional ? idParam : sessao.id;

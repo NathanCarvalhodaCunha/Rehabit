@@ -144,6 +144,15 @@ function escaparHtml(valor) {
 
 const ORIGEM_API = new URL(API_BASE_URL).origin;
 
+// Id vindo da URL (?id=...). Só passa número: o valor vai para o caminho das
+// chamadas à API, e um link como "?id=5%26x%3D%2F..%2F..%2Fdispositivos%2F3"
+// fazia a tela chamar outra rota com a sessão de quem clicou — "Excluir
+// profissional" revogava um goniômetro. Qualquer outra coisa vira "sem id".
+function idDaUrl(nome) {
+  const valor = new URLSearchParams(window.location.search).get(nome);
+  return valor !== null && /^[0-9]{1,10}$/.test(valor) ? valor : null;
+}
+
 // A foto é texto que o próprio usuário grava no perfil, e aparece na tela de
 // outras pessoas (a clínica vê a foto de cada profissional). Só passa endereço
 // http(s) ou caminho /uploads/ da API; o resto (javascript:, data:, aspas para

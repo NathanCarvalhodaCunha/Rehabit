@@ -157,6 +157,17 @@ Outros pontos:
   `img-src`, senão o site para de carregar dados. O mesmo vale para o
   firmware, que só confia nas autoridades certificadoras listadas nele (veja
   o guia do goniômetro).
+- **Bibliotecas do site** (Toastify, GSAP, Chart.js, jsPDF) ficam em
+  `vendor/npm/<pacote>@<versão>/`, servidas pelo próprio site: a CSP não
+  confia em script de nenhum CDN. Para atualizar uma, copie o arquivo do
+  pacote publicado no npm para a pasta da versão nova, troque o caminho e o
+  `integrity` nas páginas — `tests/seguranca-front` confere que o arquivo é
+  byte a byte o do npm.
+- **Fotos do Cloudinary na CSP.** O `img-src` aceita qualquer conta do
+  `res.cloudinary.com`. Confirmado o nome da conta (está no `CLOUDINARY_URL`
+  do Render, `cloudinary://...@<nome>`), troque por
+  `https://res.cloudinary.com/<nome>/`: assim uma injeção de HTML não usa o
+  Cloudinary de outra pessoa para mandar dados para fora.
 - **Script inline.** O único é o do tema, no `index.html`, liberado na CSP
   pelo hash do conteúdo. Mexeu nele, recalcule o hash — `tests/seguranca-front`
   acusa a diferença.

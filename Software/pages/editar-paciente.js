@@ -5,8 +5,7 @@
   const sessao = getSessao();
   if (!sessao) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const idPaciente = params.get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) {
     RehabitToast.erro("Paciente não informado.");
     return;

@@ -13,7 +13,9 @@ window.RehabitRelatorio = (function () {
   // Versão fixa e hash do arquivo (o mesmo do pacote no npm): se a CDN
   // entregar outra coisa, o navegador recusa o script em vez de rodá-lo com
   // acesso à sessão. Trocar a versão exige trocar o hash junto.
-  var URL_JSPDF = "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+  // Servido pelo próprio site (vendor/), como as outras bibliotecas: a CSP não
+  // confia em script de nenhum outro endereço.
+  var URL_JSPDF = "../vendor/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
   var INTEGRIDADE_JSPDF = "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/";
 
   // A4 em milímetros.

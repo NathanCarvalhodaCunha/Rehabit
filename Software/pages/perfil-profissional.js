@@ -8,8 +8,7 @@
 
   // Uma clínica pode abrir esta tela para consultar (somente leitura) o
   // perfil de um dos seus profissionais, vindo da lista em instituicao.html.
-  const params = new URLSearchParams(window.location.search);
-  const idParam = params.get("id");
+  const idParam = idDaUrl("id");
   const somenteLeitura = sessao.tipo === "CLINICA" && !!idParam;
   if (sessao.tipo !== "FISIOTERAPEUTA" && !somenteLeitura) return;
   const idAlvo = somenteLeitura ? idParam : sessao.id;

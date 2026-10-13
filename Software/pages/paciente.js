@@ -231,8 +231,7 @@ function formatarDataLonga(dataIso) {
   const sessao = getSessao();
   if (!sessao) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const idPaciente = params.get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) {
     header.querySelector("h1").textContent = "Paciente não informado.";
     return;

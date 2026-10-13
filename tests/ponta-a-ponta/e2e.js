@@ -98,6 +98,7 @@ async function subirApi() {
     "--app.upload-dir=" + UPLOADS,
     "--rehabit.email.validar-dns=false",
     "--rehabit.email.confirmar-cadastro=true",
+    "--rehabit.app.url-login=" + SITE + "/Login",
     "--rehabit.keepalive.ativo=false",
     "--rehabit.demo.ativar=false"], { env, stdio: ["ignore", log, log] });
   for (let i = 0; i < 120; i++) {
@@ -249,7 +250,29 @@ async function main() {
     await pagina.waitForURL(/Login\/login/, { timeout: 15000 });
     conferir("senha trocada no perfil leva ao login", true);
 
-    /* 9. Cabeçalho do limite: 429 com mensagem */
+    /* 9. "Esqueci minha senha" pelo link do e-mail: o token sai da URL e vai no corpo */
+    await fetch(API + "/api/auth/esqueci-senha", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }) });
+    await new Promise((r) => setTimeout(r, 1000));
+    const textoLog = fs.readFileSync(LOG_API, "utf8");
+    const link = (textoLog.match(/http:\/\/localhost:8090\/Login\/redefinir-senha[^\s"<]*/g) || []).pop();
+    conferir("e-mail de recuperação trouxe o link", !!link);
+    urls.length = 0;
+    await pagina.goto(link);
+    await pagina.waitForTimeout(1500);
+    conferir("token some da barra de endereço", !/token=/.test(pagina.url()), pagina.url().replace(SITE, ""));
+    conferir("link validado por POST, sem token na URL da API",
+      urls.some((u) => u.startsWith("POST " + API + "/api/auth/recuperar-senha/validar"))
+        && !urls.some((u) => /recuperar-senha\/validar\?token=/.test(u)));
+    await pagina.fill("#novaSenha", "Senha-Pelo-Link-E2E-3");
+    await pagina.fill("#confirmarSenha", "Senha-Pelo-Link-E2E-3");
+    await pagina.click("#redefinirSenhaForm button[type=submit]");
+    await pagina.waitForURL(/Login\/login/, { timeout: 15000 });
+    const entrou = await fetch(API + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, senha: "Senha-Pelo-Link-E2E-3" }) });
+    conferir("senha nova pelo link funciona", entrou.status === 200, String(entrou.status));
+
+    /* 10. Cabeçalho do limite: 429 com mensagem */
     let ultimo;
     for (let i = 0; i < 12; i++) {
       ultimo = await fetch(API + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" },

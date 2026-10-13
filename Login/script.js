@@ -184,13 +184,19 @@ const redefinirSenhaForm = document.getElementById('redefinirSenhaForm');
 if (redefinirSenhaForm) {
   const parametros = new URLSearchParams(location.search);
   const token = (parametros.get('token') || '').trim();
+  // Lido o token (e o e-mail), a URL fica limpa: senão ele seguia na barra de
+  // endereço, no histórico do navegador e no Referer da volta para o login.
+  const emailDaUrl = parametros.get('email');
+  if (token || emailDaUrl) {
+    history.replaceState(null, '', location.pathname);
+  }
   const emailInput = document.getElementById('email');
   const codigoInput = document.getElementById('codigo');
   const subtitulo = document.getElementById('redefinirSubtitulo');
   const camposCodigo = redefinirSenhaForm.querySelectorAll('[data-campo-codigo]');
 
-  if (emailInput && parametros.get('email')) {
-    emailInput.value = parametros.get('email');
+  if (emailInput && emailDaUrl) {
+    emailInput.value = emailDaUrl;
   }
 
   // Só aceita dígitos no campo do código.
@@ -212,9 +218,12 @@ if (redefinirSenhaForm) {
     (async () => {
       RehabitLoader.show('Verificando link');
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/recuperar-senha/validar?token=${encodeURIComponent(token)}`
-        );
+        // No corpo, não na URL: a URL de cada requisição fica nos logs de acesso.
+        const response = await fetch(`${API_BASE_URL}/auth/recuperar-senha/validar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
         const dados = await response.json().catch(() => ({}));
 
         if (!response.ok || !dados.valido) {

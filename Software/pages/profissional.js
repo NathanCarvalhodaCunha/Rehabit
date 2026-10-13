@@ -7,8 +7,7 @@
 
   // Uma clínica pode abrir esta tela para ver a lista de pacientes de um
   // dos seus profissionais, vinda de perfil-profissional.html.
-  const params = new URLSearchParams(window.location.search);
-  const idParam = params.get("idFisioterapeuta");
+  const idParam = idDaUrl("idFisioterapeuta");
   const somenteLeitura = sessao.tipo === "CLINICA" && !!idParam;
   if (sessao.tipo !== "FISIOTERAPEUTA" && !somenteLeitura) return;
   const idFisioterapeuta = somenteLeitura ? idParam : sessao.id;

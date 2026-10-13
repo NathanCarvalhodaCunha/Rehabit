@@ -10,7 +10,7 @@
   const sessao = getSessao();
   if (!sessao) return;
 
-  const idPaciente = new URLSearchParams(window.location.search).get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) return;
 
   function formatarData(dataIso) {

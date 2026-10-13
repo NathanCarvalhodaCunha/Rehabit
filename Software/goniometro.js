@@ -19,10 +19,17 @@
   "use strict";
 
   var INTERVALO_POLLING_MS = 1000;
+  // Reconexão do SSE com espera que dobra a cada queda seguida (3 s, 6 s,
+  // 12 s), até um minuto. Sem isso, um stream que o servidor fechasse logo
+  // depois de abrir virava um pedido de ingresso a cada 3 s, para sempre.
   var ESPERA_RECONEXAO_MS = 3000;
-  // Duas quedas seguidas do SSE já bastam para desconfiar do transporte: a
-  // terceira tentativa não vale a pena quando o polling resolve na hora.
-  var FALHAS_ATE_DESISTIR_DO_SSE = 2;
+  var ESPERA_MAXIMA_MS = 60000;
+  // Só uma conexão que ficou de pé esse tempo conta como "funcionou" e zera a
+  // contagem de quedas — abrir e cair logo em seguida é queda.
+  var CONEXAO_ESTAVEL_MS = 30000;
+  // Quedas seguidas até desconfiar do transporte (proxy que corta streaming)
+  // e passar para o polling.
+  var FALHAS_ATE_DESISTIR_DO_SSE = 4;
 
   var idClinicaCache = null;
   var fonte = null;
@@ -33,6 +40,10 @@
   var usandoPolling = false;
   var ativo = false;
   var ultimoEstado = null;
+  // Cada abertura do SSE ganha um número. A resposta do ingresso de uma
+  // tentativa que já não é a última (a aba foi escondida, outra começou) é
+  // descartada: antes, idas e vindas da aba deixavam streams órfãos abertos.
+  var geracao = 0;
 
   function sessao() {
     return typeof getSessao === "function" ? getSessao() : null;
@@ -81,11 +92,26 @@
             return {};
           })
           .then(function (corpo) {
-            throw new Error(corpo.mensagem || "Não foi possível falar com o goniômetro.");
+            var erro = new Error(corpo.mensagem || "Não foi possível falar com o goniômetro.");
+            erro.status = r.status;
+            throw erro;
           });
       }
       return r.status === 204 ? null : r.json();
     });
+  }
+
+  /* Sessão vencida (401): para tudo e vai para o login, como as outras telas.
+     Sem acesso a esta clínica (403): para tudo e não insiste. Antes, um 401
+     virava um polling por segundo que nunca acabava. */
+  function tratarRecusa(erro) {
+    if (!erro || (erro.status !== 401 && erro.status !== 403)) return false;
+    desconectar();
+    if (erro.status === 401) {
+      localStorage.removeItem("rehabit_usuario");
+      window.location.href = typeof paginaLogin === "function" ? paginaLogin() : "../Login/login.html";
+    }
+    return true;
   }
 
   /* O EventSource não manda cabeçalho, e o token de sessão na URL ficava
@@ -99,23 +125,32 @@
       return;
     }
     fecharSse();
+    var minha = ++geracao;
+    if (document.hidden) return; // a volta da aba reabre
 
     buscarSilencioso("/goniometro/stream/ingresso?idClinica=" + id, { method: "POST" })
       .then(function (resposta) {
-        if (!ativo) return;
+        if (!ativo || document.hidden || minha !== geracao) return;
         fonte = new EventSource(
           API_BASE_URL + "/goniometro/stream?idClinica=" + id + "&ingresso=" + encodeURIComponent(resposta.ingresso)
         );
         ligarEventos(fonte, id);
       })
-      .catch(function () {
-        if (ativo) falhou(id);
+      .catch(function (erro) {
+        if (!ativo || minha !== geracao) return;
+        if (tratarRecusa(erro)) return;
+        falhou(id);
       });
   }
 
   function ligarEventos(origem, id) {
+    var abertaEm = 0;
+
+    origem.addEventListener("open", function () {
+      abertaEm = Date.now();
+    });
+
     origem.addEventListener("estado", function (evento) {
-      falhasSeguidas = 0;
       try {
         avisar(JSON.parse(evento.data));
       } catch (err) {
@@ -123,31 +158,28 @@
       }
     });
 
-    origem.addEventListener("open", function () {
-      falhasSeguidas = 0;
-    });
-
     origem.addEventListener("error", function () {
       if (!ativo || origem !== fonte) return;
       // A reconexão automática do EventSource repetiria a mesma URL, com o
       // ingresso já gasto. Fecha e abre de novo com um ingresso novo.
       fecharSse();
+      if (abertaEm && Date.now() - abertaEm >= CONEXAO_ESTAVEL_MS) falhasSeguidas = 0;
       falhou(id);
     });
   }
 
-  /* Duas quedas seguidas sem nenhum evento no meio: o SSE não vinga aqui
-     (proxy que corta streaming, por exemplo) e o polling assume. Uma conexão
-     que funcionou e caiu (rede, fim do tempo do servidor) só reabre. */
   function falhou(id) {
     falhasSeguidas++;
     if (falhasSeguidas >= FALHAS_ATE_DESISTIR_DO_SSE) {
       iniciarPolling(id);
-    } else {
-      timerReconexao = setTimeout(function () {
-        if (ativo) abrirSse(id);
-      }, ESPERA_RECONEXAO_MS);
+      return;
     }
+    var espera = Math.min(ESPERA_MAXIMA_MS, ESPERA_RECONEXAO_MS * Math.pow(2, falhasSeguidas - 1));
+    if (timerReconexao) clearTimeout(timerReconexao);
+    timerReconexao = setTimeout(function () {
+      timerReconexao = null;
+      if (ativo) abrirSse(id);
+    }, espera);
   }
 
   function fecharSse() {
@@ -163,9 +195,11 @@
     var buscar = function () {
       buscarSilencioso("/goniometro/estado?idClinica=" + id)
         .then(avisar)
-        .catch(function () {
-          // Servidor fora do ar: a tela mostra "desconectado" pelo próprio
-          // estado anterior; insistir em silêncio é o comportamento certo.
+        .catch(function (erro) {
+          // Sessão vencida ou sem acesso: para (veja tratarRecusa). Servidor
+          // fora do ar: a tela mostra "desconectado" pelo próprio estado
+          // anterior; insistir em silêncio é o comportamento certo.
+          tratarRecusa(erro);
         });
     };
     buscar();
@@ -196,6 +230,7 @@
   function desconectar() {
     ativo = false;
     ouvintes = [];
+    geracao++;
     fecharSse();
     pararPolling();
     if (timerReconexao) {
@@ -250,8 +285,13 @@
   document.addEventListener("visibilitychange", function () {
     if (!ativo) return;
     if (document.hidden) {
+      geracao++;
       fecharSse();
       pararPolling();
+      if (timerReconexao) {
+        clearTimeout(timerReconexao);
+        timerReconexao = null;
+      }
     } else if (idClinicaCache != null) {
       if (usandoPolling) iniciarPolling(idClinicaCache);
       else abrirSse(idClinicaCache);

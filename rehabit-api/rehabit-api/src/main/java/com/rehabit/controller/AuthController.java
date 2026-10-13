@@ -8,6 +8,7 @@ import com.rehabit.dto.MensagemDTO;
 import com.rehabit.dto.RecuperacaoStatusDTO;
 import com.rehabit.dto.RedefinirSenhaRequestDTO;
 import com.rehabit.dto.RegisterRequestDTO;
+import com.rehabit.dto.ValidarLinkRecuperacaoDTO;
 import com.rehabit.dto.VerificacaoEnviadaDTO;
 import com.rehabit.dto.VerificarEmailRequestDTO;
 import com.rehabit.security.TurnstileService;
@@ -127,9 +128,24 @@ public class AuthController {
         return ResponseEntity.ok(new MensagemDTO(recuperacaoSenhaService.getRespostaNeutra()));
     }
 
-    /** Confere o token do link antes de a tela mostrar o formulário. */
+    /**
+     * Confere o token do link antes de a tela mostrar o formulário. O token
+     * vai no corpo: na query string ele ficava nos logs de acesso da
+     * hospedagem, que guardam a URL de cada requisição.
+     */
+    @PostMapping("/recuperar-senha/validar")
+    public ResponseEntity<RecuperacaoStatusDTO> validarLinkRecuperacao(
+            @Valid @RequestBody ValidarLinkRecuperacaoDTO dados) {
+        return ResponseEntity.ok(recuperacaoSenhaService.validarToken(dados.getToken()));
+    }
+
+    /**
+     * A versão antiga, com o token na URL, para a tela publicada antes desta
+     * mudança (o site e a API são publicados em separado). Pode sair quando o
+     * site novo estiver no ar.
+     */
     @GetMapping("/recuperar-senha/validar")
-    public ResponseEntity<RecuperacaoStatusDTO> validarLinkRecuperacao(@RequestParam String token) {
+    public ResponseEntity<RecuperacaoStatusDTO> validarLinkRecuperacaoAntigo(@RequestParam String token) {
         return ResponseEntity.ok(recuperacaoSenhaService.validarToken(token));
     }
 

@@ -27,7 +27,7 @@ function argumento(nome, padrao) {
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : padrao;
 }
 const RAIZ = path.resolve(argumento("--raiz", RAIZ_REPO));
-const GRUPOS = argumento("--somente", "estatico,xss,ics,csp").split(",");
+const GRUPOS = argumento("--somente", "estatico,xss,ics,csp,ids").split(",");
 
 function carregarPlaywright() {
   const candidatos = [process.env.PLAYWRIGHT_MODULO, "playwright", "/opt/node-tools/node_modules/playwright"];
@@ -57,6 +57,11 @@ function registrar(grupo, nome, problemas) {
 /* ---------------------------------------------------------------------- */
 /* Leitura do HTML                                                        */
 /* ---------------------------------------------------------------------- */
+
+/** "../vendor/npm/pacote@1.2.3/arquivo.js" -> a URL equivalente no jsDelivr. */
+function urlEquivalenteNoCdn(url) {
+  return "https://cdn.jsdelivr.net/npm/" + url.slice(url.indexOf("vendor/npm/") + "vendor/npm/".length);
+}
 
 function paginasDoSite() {
   const lista = ["index.html"];
@@ -130,23 +135,32 @@ async function grupoEstatico() {
         .map((l) => ({ url: l.href, attrs: l, tipo: "folha de estilo" })),
     ].filter((e) => /^(https?:)?\/\//.test(e.url));
 
+    // Script e CSS de terceiros: só o CSS do Google Fonts, que muda conforme
+    // o navegador que pede (não tem hash fixo; fica contido pela CSP). As
+    // bibliotecas são servidas pelo próprio site, em vendor/npm/, com o
+    // caminho do jsDelivr: a CSP não confia em script de nenhum CDN.
     externos.forEach((e) => {
       const host = new URL(e.url, "https://x").hostname;
-      // O CSS do Google Fonts muda conforme o navegador que pede: não tem
-      // hash fixo, então não aceita SRI (fica contido pela CSP).
       if (host === "fonts.googleapis.com" && e.tipo === "folha de estilo") return;
-      if (host !== "cdn.jsdelivr.net") {
-        problemasSri.push(`${pagina}: ${e.tipo} de origem inesperada ${e.url}`);
-        return;
-      }
-      const partes = cdn.partesDaUrl(e.url);
+      problemasSri.push(`${pagina}: ${e.tipo} de origem inesperada ${e.url}`);
+    });
+
+    const vendorizados = [
+      ...scripts.filter((s) => s.attrs.src).map((s) => ({ url: s.attrs.src, attrs: s.attrs, tipo: "script" })),
+      ...links
+        .filter((l) => /stylesheet/i.test(l.rel || "") && l.href)
+        .map((l) => ({ url: l.href, attrs: l, tipo: "folha de estilo" })),
+    ].filter((e) => /(^|\/)vendor\/npm\//.test(e.url) && !/^(https?:)?\/\//.test(e.url));
+
+    vendorizados.forEach((e) => {
+      const url = urlEquivalenteNoCdn(e.url);
+      const partes = cdn.partesDaUrl(url);
       if (!partes || !partes.versao || !/^\d+\.\d+\.\d+$/.test(partes.versao) || !partes.caminho) {
         problemasSri.push(`${pagina}: versão/arquivo não fixados em ${e.url}`);
       }
       if (!/^sha384-/.test(e.attrs.integrity || "")) problemasSri.push(`${pagina}: sem integrity sha384 em ${e.url}`);
-      if (e.attrs.crossorigin !== "anonymous") problemasSri.push(`${pagina}: sem crossorigin="anonymous" em ${e.url}`);
-      if (!urlsCdn.has(e.url)) urlsCdn.set(e.url, new Set());
-      urlsCdn.get(e.url).add(e.attrs.integrity || "(nenhum)");
+      if (!urlsCdn.has(url)) urlsCdn.set(url, new Set());
+      urlsCdn.get(url).add(e.attrs.integrity || "(nenhum)");
     });
 
     scripts
@@ -174,14 +188,15 @@ async function grupoEstatico() {
   else {
     if (!integridadeJspdf) problemasSri.push("relatorio.js: o jsPDF é injetado sem integrity (INTEGRIDADE_JSPDF)");
     if (!/script\.integrity\s*=\s*INTEGRIDADE_JSPDF/.test(relatorio)) problemasSri.push("relatorio.js: script.integrity não é definido");
-    if (!/script\.crossOrigin\s*=\s*"anonymous"/.test(relatorio)) problemasSri.push('relatorio.js: script.crossOrigin = "anonymous" ausente');
-    if (!urlsCdn.has(urlJspdf)) urlsCdn.set(urlJspdf, new Set());
-    urlsCdn.get(urlJspdf).add(integridadeJspdf || "(nenhum)");
+    if (!/vendor\/npm\//.test(urlJspdf)) problemasSri.push(`relatorio.js: o jsPDF vem de fora do site (${urlJspdf})`);
+    const urlJspdfNoCdn = urlEquivalenteNoCdn(urlJspdf);
+    if (!urlsCdn.has(urlJspdfNoCdn)) urlsCdn.set(urlJspdfNoCdn, new Set());
+    urlsCdn.get(urlJspdfNoCdn).add(integridadeJspdf || "(nenhum)");
   }
-  registrar("estatico", "SRI e versão fixa em todo script/CSS de CDN (SEC-23)", problemasSri);
+  registrar("estatico", "bibliotecas servidas pelo site, com versão fixa e SRI; nada de CDN (SEC-23)", problemasSri);
 
-  // O hash declarado tem de ser o do arquivo que o jsDelivr serve, que é o
-  // arquivo do pacote no npm.
+  // O arquivo em vendor/ tem de ser, byte a byte, o do pacote publicado no
+  // npm, e o integrity declarado tem de ser o hash dele.
   const problemasHash = [];
   for (const [url, integridades] of urlsCdn) {
     const partes = cdn.partesDaUrl(url);
@@ -201,8 +216,11 @@ async function grupoEstatico() {
     integridades.forEach((i) => {
       if (i !== esperado) problemasHash.push(`${url}: integrity ${i} != ${esperado}`);
     });
+    const local = path.join(RAIZ, "vendor", "npm", url.slice("https://cdn.jsdelivr.net/npm/".length));
+    if (!fs.existsSync(local)) problemasHash.push(`${url}: falta ${path.relative(RAIZ, local)}`);
+    else if (!fs.readFileSync(local).equals(arquivo)) problemasHash.push(`${path.relative(RAIZ, local)}: difere do pacote do npm`);
   }
-  registrar("estatico", "integrity confere com o arquivo publicado no npm", problemasHash);
+  registrar("estatico", "vendor/ é o arquivo publicado no npm, e o integrity confere", problemasHash);
 
   registrar("estatico", "sem script inline fora da CSP, sem on*= e sem javascript: no HTML (SEC-09)", problemasInline);
 
@@ -753,11 +771,50 @@ async function grupoCsp(navegador, servidor) {
 
 /* ---------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------- */
+/* Ids da URL nos caminhos da API                                         */
+/* ---------------------------------------------------------------------- */
+
+// Um ?id= que não é número ia direto para o caminho das chamadas: um link
+// com "5&x=/../../dispositivos/3" fazia "Excluir profissional" revogar um
+// goniômetro, e "1/../../configuracoes?x=" fazia "Salvar paciente" apagar a
+// configuração de atendimento. Agora id que não é número vira "sem id".
+const IDS_HOSTIS = [
+  { sessao: "clinica", url: "Software/perfil-profissional.html?id=" + encodeURIComponent("5&x=/../../dispositivos/3") },
+  { sessao: "profissional", url: "Software/editar-paciente.html?id=" + encodeURIComponent("1/../../configuracoes?x=") },
+  { sessao: "clinica", url: "Software/editar-perfil-profissional.html?id=" + encodeURIComponent("2/../../clinicas/9") },
+  { sessao: "clinica", url: "Software/desempenho.html?id=" + encodeURIComponent("2/../../clinicas/9") },
+  { sessao: "clinica", url: "Software/profissional.html?idFisioterapeuta=" + encodeURIComponent("3/../../dispositivos/1") },
+  { sessao: "profissional", url: "Software/paciente.html?id=" + encodeURIComponent("4/../../configuracoes") },
+  { sessao: "profissional", url: "Software/cadastrar-sessao.html?id=" + encodeURIComponent("4/../../configuracoes") },
+];
+
+async function grupoIds(navegador, servidor) {
+  const problemas = [];
+  for (const caso of IDS_HOSTIS) {
+    const { contexto, pagina, registro } = await abrir(navegador, servidor, {
+      cspAtiva: false,
+      sessao: api.sessao(caso.sessao, false),
+      responder: api.criarApi({ hostil: false }),
+    });
+    try {
+      await pagina.goto(`${servidor.origem}/${caso.url}`, { waitUntil: "load" });
+      await assentar(pagina);
+      registro.api
+        .filter((chamada) => /\.\.|%2e%2e|\/dispositivos\/[0-9]|\/configuracoes\?x|\/clinicas\/9/i.test(chamada))
+        .forEach((chamada) => problemas.push(`${caso.url.split("?")[0]}: ${chamada}`));
+    } finally {
+      await contexto.close();
+    }
+  }
+  registrar("ids", "?id= que não é número não chega aos caminhos da API", problemas);
+}
+
 async function principal() {
   console.log(`Raiz testada: ${RAIZ}\n`);
   if (GRUPOS.includes("estatico")) await grupoEstatico();
 
-  const precisaNavegador = GRUPOS.some((g) => ["xss", "ics", "csp"].includes(g));
+  const precisaNavegador = GRUPOS.some((g) => ["xss", "ics", "csp", "ids"].includes(g));
   if (precisaNavegador) {
     const { chromium } = carregarPlaywright();
     const servidor = await iniciarServidor(RAIZ);
@@ -768,6 +825,7 @@ async function principal() {
       if (GRUPOS.includes("xss")) await grupoXss(navegador, servidor);
       if (GRUPOS.includes("ics")) await grupoIcs(navegador, servidor);
       if (GRUPOS.includes("csp")) await grupoCsp(navegador, servidor);
+      if (GRUPOS.includes("ids")) await grupoIds(navegador, servidor);
     } finally {
       await navegador.close();
       await servidor.fechar();

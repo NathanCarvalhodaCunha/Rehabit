@@ -8,11 +8,10 @@
   if (!sessao) return;
 
   const seletorProfissional = document.getElementById("desempenho-profissional");
-  const params = new URLSearchParams(window.location.search);
 
   // A clínica escolhe qual profissional ver; o profissional vê o próprio.
   const ehClinica = sessao.tipo === "CLINICA";
-  let idAtual = params.get("id") || (ehClinica ? null : sessao.id);
+  let idAtual = idDaUrl("id") || (ehClinica ? null : sessao.id);
 
   let graficoSessoes = null;
   let graficoGanhos = null;
