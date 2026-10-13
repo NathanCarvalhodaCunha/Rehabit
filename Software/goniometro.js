@@ -139,6 +139,12 @@
       .catch(function (erro) {
         if (!ativo || minha !== geracao) return;
         if (tratarRecusa(erro)) return;
+        // API sem a rota do ingresso (a antiga, enquanto o Render não publica
+        // a nova): não adianta insistir no SSE, vai direto para o polling.
+        if (erro && (erro.status === 404 || erro.status === 405)) {
+          iniciarPolling(id);
+          return;
+        }
         falhou(id);
       });
   }

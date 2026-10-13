@@ -219,11 +219,23 @@ if (redefinirSenhaForm) {
       RehabitLoader.show('Verificando link');
       try {
         // No corpo, não na URL: a URL de cada requisição fica nos logs de acesso.
-        const response = await fetch(`${API_BASE_URL}/auth/recuperar-senha/validar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
+        let response = null;
+        try {
+          response = await fetch(`${API_BASE_URL}/auth/recuperar-senha/validar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+        } catch (erroDaRotaNova) {
+          response = null;
+        }
+        // Compatibilidade: a API antiga só valida por GET — o POST nem passa
+        // da checagem de CORS e o navegador só vê um erro de rede. O site
+        // publica sozinho no merge, a API do Render não; pode sair quando o
+        // Render estiver com a API nova.
+        if (!response || response.status === 404 || response.status === 405) {
+          response = await fetch(`${API_BASE_URL}/auth/recuperar-senha/validar?token=${encodeURIComponent(token)}`);
+        }
         const dados = await response.json().catch(() => ({}));
 
         if (!response.ok || !dados.valido) {

@@ -357,7 +357,22 @@
         var formData = new FormData();
         formData.append('arquivo', arquivoSelecionado);
         formData.append('email', dados.email);
-        var uploadRes = await fetch(base() + '/auth/cadastro/foto', { method: 'POST', body: formData });
+        var uploadRes = null;
+        try {
+          uploadRes = await fetch(base() + '/auth/cadastro/foto', { method: 'POST', body: formData });
+        } catch (erroDaRotaNova) {
+          uploadRes = null;
+        }
+        // Compatibilidade: o site publica sozinho no merge, mas a API do
+        // Render não. A API antiga não tem esta rota — responde 404 sem os
+        // cabeçalhos de CORS, e o navegador só vê um erro de rede — e ainda
+        // aceitava o envio sem login em /uploads. Com a API nova a rota
+        // existe; pode sair quando o Render estiver com ela.
+        if (!uploadRes || uploadRes.status === 404 || uploadRes.status === 405) {
+          var formAntigo = new FormData();
+          formAntigo.append('arquivo', arquivoSelecionado);
+          uploadRes = await fetch(base() + '/uploads', { method: 'POST', body: formAntigo });
+        }
         var uploadData = await uploadRes.json().catch(function () { return {}; });
         if (!uploadRes.ok) {
           RehabitToast.erro(uploadData.mensagem || 'Não foi possível enviar a foto de perfil.');
