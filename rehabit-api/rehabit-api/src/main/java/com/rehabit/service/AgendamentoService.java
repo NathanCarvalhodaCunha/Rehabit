@@ -82,6 +82,12 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoDTO remarcar(Integer id, AgendamentoCreateDTO dados, Integer usuarioId, String usuarioTipo) {
+        // A tela de remarcar manda só data, hora e observação (sem paciente),
+        // então o DTO não passa por @Valid aqui: o teto da observação, que o
+        // @Size do DTO cobre no cadastro, é conferido na mão.
+        if (dados.getObservacao() != null && dados.getObservacao().length() > 255) {
+            throw new AuthException("A observação pode ter no máximo 255 caracteres.", HttpStatus.BAD_REQUEST);
+        }
         Agendamento agendamento = carregarComPosse(id, usuarioId, usuarioTipo);
 
         if (dados.getData() == null || dados.getHora() == null) {

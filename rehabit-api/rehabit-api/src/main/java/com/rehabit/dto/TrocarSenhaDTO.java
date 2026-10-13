@@ -1,7 +1,7 @@
 package com.rehabit.dto;
 
+import com.rehabit.security.SenhaForte;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public class TrocarSenhaDTO {
 
@@ -9,7 +9,7 @@ public class TrocarSenhaDTO {
     private String senhaAtual;
 
     @NotBlank(message = "Informe a nova senha.")
-    @Size(min = 6, message = "A nova senha deve ter ao menos 6 caracteres.")
+    @SenhaForte
     private String novaSenha;
 
     public TrocarSenhaDTO() {

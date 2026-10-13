@@ -84,8 +84,8 @@ public class FisioterapeutaController {
     }
 
     @PutMapping("/{id}/tutorial-visto")
-    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id) {
-        fisioterapeutaService.marcarTutorialVisto(id);
+    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id, HttpServletRequest request) {
+        fisioterapeutaService.marcarTutorialVisto(id, AuthContext.id(request), AuthContext.tipo(request));
         return ResponseEntity.ok().build();
     }
 }

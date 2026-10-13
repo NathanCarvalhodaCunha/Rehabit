@@ -219,14 +219,6 @@ function formatarDataCurta(dataIso) {
   return `${dia}/${mes}`;
 }
 
-// O prontuário é texto livre digitado pelo profissional e vai para dentro
-// de um template de HTML — precisa ser escapado.
-function escaparHtml(texto) {
-  const div = document.createElement("div");
-  div.textContent = texto;
-  return div.innerHTML;
-}
-
 function formatarDataLonga(dataIso) {
   const [ano, mes, dia] = dataIso.split("-");
   return `${dia}/${mes}/${ano}`;
@@ -239,8 +231,7 @@ function formatarDataLonga(dataIso) {
   const sessao = getSessao();
   if (!sessao) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const idPaciente = params.get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) {
     header.querySelector("h1").textContent = "Paciente não informado.";
     return;
@@ -270,15 +261,7 @@ function formatarDataLonga(dataIso) {
       const inicioTexto = paciente.dataInicioTratamento ? formatarDataLonga(paciente.dataInicioTratamento) : "-";
       const fisioTexto = paciente.nomeFisioterapeuta || "-";
 
-      const fotoPaciente = urlFoto(paciente.foto);
-      if (fotoPaciente) {
-        const avatarEl = header.querySelector(".avatar-lg");
-        if (avatarEl) {
-          avatarEl.style.backgroundImage = `url("${fotoPaciente}")`;
-          avatarEl.style.backgroundSize = "cover";
-          avatarEl.style.backgroundPosition = "center";
-        }
-      }
+      aplicarFoto(header.querySelector(".avatar-lg"), paciente.foto);
 
       header.querySelector("h1").textContent = paciente.nome;
       header.querySelector(".patient-meta.desktop-only").innerHTML =
@@ -341,16 +324,14 @@ function formatarDataLonga(dataIso) {
               .map(
                 (s) => `
             <tr>
-              <td>${formatarDataLonga(s.data)}${s.hora ? ` <span class="sessao-hora">${s.hora.slice(0, 5)}</span>` : ""}${
-                  s.observacoes
-                    ? `<div class="sessao-obs">${escaparHtml(s.observacoes)}</div>`
-                    : ""
-                }</td>
-              <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
-              <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}${
+              <td>${escaparHtml(formatarDataLonga(s.data))}${
+                  s.hora ? ` <span class="sessao-hora">${escaparHtml(s.hora.slice(0, 5))}</span>` : ""
+                }${s.observacoes ? `<div class="sessao-obs">${escaparHtml(s.observacoes)}</div>` : ""}</td>
+              <td>${s.duracao != null ? escaparHtml(s.duracao) + " min" : "-"}</td>
+              <td>${s.amplitudeMedia != null ? escaparHtml(s.amplitudeMedia) + "°" : "-"}${
                   s.temCurva
-                    ? ` <button type="button" class="btn-curva" data-curva="${s.id}" data-curva-rotulo="${formatarDataLonga(
-                        s.data
+                    ? ` <button type="button" class="btn-curva" data-curva="${escaparHtml(s.id)}" data-curva-rotulo="${escaparHtml(
+                        formatarDataLonga(s.data)
                       )}" title="Ver a curva do movimento">Ver curva</button>`
                     : ""
                 }</td>

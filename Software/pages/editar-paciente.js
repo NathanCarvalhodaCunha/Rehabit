@@ -5,8 +5,7 @@
   const sessao = getSessao();
   if (!sessao) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const idPaciente = params.get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) {
     RehabitToast.erro("Paciente não informado.");
     return;
@@ -48,13 +47,9 @@
       preencher("p-meta-amplitude", p.metaAmplitude);
       preencher("p-meta-data", p.metaData);
 
-      const foto = urlFoto(p.foto);
-      if (foto) {
-        const avatarEl = document.querySelector(".edit-avatar-card .avatar-lg");
-        avatarEl.style.backgroundImage = `url("${foto}")`;
-        avatarEl.style.backgroundSize = "cover";
-        avatarEl.style.backgroundPosition = "center";
-      }
+      // Só pinta com foto válida: sem ela, não apaga a prévia de um arquivo
+      // que a pessoa tenha escolhido enquanto a tela carregava.
+      if (urlFoto(p.foto)) aplicarFoto(document.querySelector(".edit-avatar-card .avatar-lg"), p.foto);
     })
     .catch((err) => RehabitToast.erro(err.message));
 
@@ -76,6 +71,8 @@
         formData.append("arquivo", arquivoFotoProfissional);
         const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
+          // O envio de fotos exige login, como qualquer outra rota da API.
+          headers: cabecalhosAutenticados(),
           body: formData,
         });
         const uploadDados = await uploadResponse.json().catch(() => ({}));

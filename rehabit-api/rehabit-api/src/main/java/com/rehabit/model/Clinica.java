@@ -2,6 +2,8 @@ package com.rehabit.model;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "tb01_clinica")
 public class Clinica {
@@ -40,6 +42,15 @@ public class Clinica {
 
     @Column(name = "tb01_tutorial_visto", columnDefinition = "boolean not null default false")
     private boolean tutorialVisto;
+
+    /**
+     * Última troca ou redefinição de senha; nulo se nunca houve (ou se foi
+     * antes de o campo existir). O JwtAuthenticationFilter recusa token
+     * emitido antes deste instante: trocar a senha encerra as sessões abertas,
+     * inclusive a de quem tiver roubado a antiga.
+     */
+    @Column(name = "tb01_credenciais_alteradas_em")
+    private Instant credenciaisAlteradasEm;
 
     public Clinica() {
     }
@@ -100,6 +111,16 @@ public class Clinica {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    /** Para senha nova de conta que já existe; o cadastro usa {@link #setSenha}. */
+    public void trocarSenha(String senhaCifrada) {
+        this.senha = senhaCifrada;
+        this.credenciaisAlteradasEm = Instant.now();
+    }
+
+    public Instant getCredenciaisAlteradasEm() {
+        return credenciaisAlteradasEm;
     }
 
     public String getDescricao() {

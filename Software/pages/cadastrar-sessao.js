@@ -135,8 +135,7 @@
     });
   })();
 
-  const params = new URLSearchParams(window.location.search);
-  const idPaciente = params.get("id");
+  const idPaciente = idDaUrl("id");
   if (!idPaciente) {
     header.querySelector("h1").textContent = "Paciente não informado.";
     return;
@@ -155,14 +154,6 @@
     return `${dia}/${mes}`;
   }
 
-  // O prontuário é texto livre digitado pelo profissional e vai para dentro
-  // de um template de HTML — precisa ser escapado.
-  function escaparHtml(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function carregarPacienteEHistorico() {
     return Promise.all([apiGet(`/pacientes/${idPaciente}`), apiGet(`/pacientes/${idPaciente}/sessoes`)]).then(
       ([paciente, sessoes]) => {
@@ -174,13 +165,7 @@
 
         // O cabeçalho desta tela é o mesmo da ficha do paciente, mas a foto
         // nunca era preenchida aqui: ficava sempre o círculo cinza vazio.
-        const fotoPaciente = urlFoto(paciente.foto);
-        const avatarEl = header.querySelector(".avatar-lg");
-        if (fotoPaciente && avatarEl) {
-          avatarEl.style.backgroundImage = `url("${fotoPaciente}")`;
-          avatarEl.style.backgroundSize = "cover";
-          avatarEl.style.backgroundPosition = "center";
-        }
+        aplicarFoto(header.querySelector(".avatar-lg"), paciente.foto);
 
         header.querySelector("h1").textContent = paciente.nome;
         header.querySelector(".patient-meta.desktop-only").innerHTML =
@@ -215,11 +200,11 @@
             }
             return `
               <tr>
-                <td><span class="desktop-only">${formatarDataLonga(s.data)}</span><span class="mobile-only">${formatarDataCurta(s.data)}</span>${
-                  s.hora ? ` <span class="sessao-hora">${s.hora.slice(0, 5)}</span>` : ""
-                }</td>
-                <td>${s.duracao != null ? s.duracao + " min" : "-"}</td>
-                <td>${s.amplitudeMedia != null ? s.amplitudeMedia + "°" : "-"}</td>
+                <td><span class="desktop-only">${escaparHtml(formatarDataLonga(s.data))}</span><span class="mobile-only">${escaparHtml(
+                  formatarDataCurta(s.data)
+                )}</span>${s.hora ? ` <span class="sessao-hora">${escaparHtml(s.hora.slice(0, 5))}</span>` : ""}</td>
+                <td>${s.duracao != null ? escaparHtml(s.duracao) + " min" : "-"}</td>
+                <td>${s.amplitudeMedia != null ? escaparHtml(s.amplitudeMedia) + "°" : "-"}</td>
                 <td class="${avancoClasse}">${avancoTexto}</td>
               </tr>`;
           })

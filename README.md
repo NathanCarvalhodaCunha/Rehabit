@@ -114,6 +114,73 @@ Ao pôr o site em um endereço novo, dois ajustes fora do repositório:
    (`https://rehabit.com.br/Login`), que é o link do e-mail de "esqueci a
    senha". A variável só vale depois de um deploy da API.
 
+## Segurança em produção
+
+O que precisa estar configurado no Render, e o que muda para quem usa:
+
+| Variável | Para quê |
+| --- | --- |
+| `REHABIT_JWT_SECRET` | **Obrigatória.** Chave que assina as sessões e os tokens dos goniômetros. Gere com `openssl rand -base64 64` (mínimo de 32 bytes). Sem ela a API **não sobe** no Render nem no perfil `cloud`: o repositório não tem mais valor-padrão, porque quem conhece a chave assina token de qualquer conta. Trocá-la encerra todas as sessões e desliga todos os goniômetros, que precisam ser pareados de novo. |
+| `REHABIT_PROXIES_CONFIAVEIS` | Quantos proxies ficam na frente da API, para achar o IP real no `X-Forwarded-For` (os limites de tentativas são por IP). Em branco: 1 no Render, 0 fora dele. |
+| `REHABIT_LIMITES_ATIVO` | `false` desliga os limites de tentativas (login, cadastro, e-mails, códigos, pareamento, upload). Só para diagnóstico. |
+
+Outros pontos:
+
+- **Limites de tentativas.** Senha errada, código errado e pedido de e-mail
+  demais respondem 429 com o tempo de espera. Dez senhas erradas seguidas
+  travam aquela conta por 15 minutos (até a senha certa, para o limite não
+  revelar a senha) — o "Esqueci minha senha" continua funcionando.
+- **Trocar ou redefinir a senha encerra as sessões** abertas em outros
+  aparelhos. A tela que fez a troca recebe um token novo e segue logada.
+- **Senhas novas** precisam de 8 caracteres e não podem estar entre as mais
+  comuns. Contas antigas com senha mais curta continuam entrando.
+- **Evolução do banco.** O Hibernate roda com `ddl-auto=update` também no
+  PostgreSQL de produção: cria tabelas e colunas novas sozinho, mas nunca
+  apaga nem renomeia nada, e um erro de mapeamento pode alterar o esquema
+  real. O caminho seguro é passar a migrações versionadas (Flyway) e trocar
+  para `validate` — fica como próximo passo.
+- **H2 local** não abre mais servidor TCP (`AUTO_SERVER`): para olhar o banco
+  com outra ferramenta, pare a API antes.
+- **`Rehabit.sql`** não traz mais a linha de exemplo com hash de senha e
+  e-mail pessoal. Ela continua no histórico do git: se aquela senha for usada
+  em algum lugar, troque-a.
+- **Fotos.** O envio (`/api/uploads`) exige login; a foto do cadastro vai
+  por `/api/auth/cadastro/foto`, que exige o e-mail já confirmado. Só entra
+  JPG, PNG, GIF ou WEBP, reconhecido pelo conteúdo, e os metadados (GPS,
+  câmera) saem antes de gravar. O campo `foto` dos cadastros só aceita URL que
+  a própria API devolveu, e foto trocada é apagada quando ninguém mais a usa.
+  As fotos continuam num endereço público, mas impossível de adivinhar (UUID
+  ou id do Cloudinary).
+- **Endereço da API no site.** A CSP do `vercel.json` só deixa o site falar
+  com `https://rehabit-api-4tex.onrender.com` (e mostrar imagens dele e do
+  Cloudinary). Mudou o endereço da API? Troque também em `connect-src` e
+  `img-src`, senão o site para de carregar dados. O mesmo vale para o
+  firmware, que só confia nas autoridades certificadoras listadas nele (veja
+  o guia do goniômetro).
+- **Bibliotecas do site** (Toastify, GSAP, Chart.js, jsPDF) ficam em
+  `vendor/npm/<pacote>@<versão>/`, servidas pelo próprio site: a CSP não
+  confia em script de nenhum CDN. Para atualizar uma, copie o arquivo do
+  pacote publicado no npm para a pasta da versão nova, troque o caminho e o
+  `integrity` nas páginas — `tests/seguranca-front` confere que o arquivo é
+  byte a byte o do npm.
+- **Fotos do Cloudinary na CSP.** O `img-src` aceita qualquer conta do
+  `res.cloudinary.com`. Confirmado o nome da conta (está no `CLOUDINARY_URL`
+  do Render, `cloudinary://...@<nome>`), troque por
+  `https://res.cloudinary.com/<nome>/`: assim uma injeção de HTML não usa o
+  Cloudinary de outra pessoa para mandar dados para fora.
+- **Script inline.** O único é o do tema, no `index.html`, liberado na CSP
+  pelo hash do conteúdo. Mexeu nele, recalcule o hash — `tests/seguranca-front`
+  acusa a diferença.
+- **HSTS** vai sem `includeSubDomains`: não dá para garantir daqui que todo
+  subdomínio do domínio do site tem HTTPS. Confirmado isso, pode acrescentar.
+- **Testes de segurança.** `mvn test` na API e os de `tests/` no site (veja
+  `tests/README.md`). O relatório da auditoria de outubro de 2026 — o que foi
+  encontrado, como foi corrigido e o que ainda depende de configuração — está
+  em `docs/seguranca/auditoria-2026-10.md`.
+- **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
+  cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
+  o da Vercel.
+
 ## Funcionalidades
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.

@@ -11,12 +11,6 @@
   var indice = 0;
   var timer = null;
 
-  function escapar(texto) {
-    var div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   /**
    * A API já devolve só o que a conta enxerga: uma clínica acha profissionais
    * e pacientes, um profissional acha apenas os próprios pacientes. O texto do
@@ -64,7 +58,7 @@
   }
 
   function vazio(mensagem) {
-    listaEl.innerHTML = '<p class="busca-vazio">' + escapar(mensagem) + "</p>";
+    listaEl.innerHTML = '<p class="busca-vazio">' + escaparHtml(mensagem) + "</p>";
   }
 
   function iconeDe(tipo) {
@@ -80,20 +74,25 @@
     }
     listaEl.innerHTML = resultados
       .map(function (r, i) {
-        var foto = typeof urlFoto === "function" ? urlFoto(r.foto) : null;
-        var avatar = foto
-          ? '<span class="busca-avatar" style="background-image:url(\'' + foto + "');\"></span>"
+        // Sem foto válida fica o ícone; com ela, um <span> vazio que recebe a
+        // foto pelo CSSOM logo abaixo — nunca dentro de um style="" (SEC-02).
+        var avatar = urlFoto(r.foto)
+          ? '<span class="busca-avatar"></span>'
           : '<span class="busca-avatar busca-avatar-icone">' + iconeDe(r.tipo) + "</span>";
         return (
           '<button type="button" class="busca-item' + (i === indice ? " is-ativo" : "") + '" data-indice="' + i + '">' +
           avatar +
-          '<span class="busca-texto"><strong>' + escapar(r.nome) + "</strong>" +
-          "<span>" + escapar(r.detalhe || "") + "</span></span>" +
+          '<span class="busca-texto"><strong>' + escaparHtml(r.nome) + "</strong>" +
+          "<span>" + escaparHtml(r.detalhe || "") + "</span></span>" +
           '<span class="busca-tag">' + (r.tipo === "PROFISSIONAL" ? "Profissional" : "Paciente") + "</span>" +
           "</button>"
         );
       })
       .join("");
+    listaEl.querySelectorAll(".busca-item").forEach(function (item, i) {
+      var avatar = item.querySelector(".busca-avatar:not(.busca-avatar-icone)");
+      if (avatar) aplicarFoto(avatar, resultados[i].foto);
+    });
   }
 
   function buscar() {

@@ -38,4 +38,7 @@ public interface FisioterapeutaRepository extends JpaRepository<Fisioterapeuta, 
     @Modifying
     @Query("delete from Fisioterapeuta f where f.idClinica = :idClinica")
     void deleteByIdClinica(@Param("idClinica") Integer idClinica);
+
+    /** Alguém ainda usa este arquivo? Veja FotosEmUso: só apaga o que ninguém usa. */
+    boolean existsByFoto(String foto);
 }

@@ -4,10 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Última correção da linha 3.5, a última da geração 3.x e ainda com
+         correções de segurança. A 3.3.0 trazia Tomcat 10.1.24, Spring 6.1.8 e
+         Spring Security 6.3.0, todos com CVEs publicadas desde então. A 4.x
+         exige migração (Jackson 3, Spring 7) e fica para depois. -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version>
+        <version>3.5.16</version>
         <relativePath/>
     </parent>
 
@@ -67,18 +71,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.6</version>
+            <version>0.12.7</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.6</version>
+            <version>0.12.7</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.6</version>
+            <version>0.12.7</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>

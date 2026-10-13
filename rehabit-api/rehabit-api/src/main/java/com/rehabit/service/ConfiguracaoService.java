@@ -9,6 +9,7 @@ import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.ConfiguracaoRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
+import com.rehabit.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,15 +28,18 @@ public class ConfiguracaoService {
     private final ClinicaRepository clinicaRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public ConfiguracaoService(ConfiguracaoRepository configuracaoRepository,
                                 ClinicaRepository clinicaRepository,
                                 FisioterapeutaRepository fisioterapeutaRepository,
-                                PasswordEncoder passwordEncoder) {
+                                PasswordEncoder passwordEncoder,
+                                JwtService jwtService) {
         this.configuracaoRepository = configuracaoRepository;
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     /** Nunca devolve vazio: quem ainda não configurou nada recebe os padrões. */
@@ -161,24 +165,31 @@ public class ConfiguracaoService {
         return a.isBefore(b) ? a : b;
     }
 
+    /**
+     * Trocar a senha encerra todas as sessões abertas da conta (veja
+     * JwtAuthenticationFilter), inclusive a de quem está trocando.
+     *
+     * @return token novo para o aparelho que fez a troca seguir logado
+     */
     @Transactional
-    public void trocarSenha(TrocarSenhaDTO dados, Integer usuarioId, String usuarioTipo) {
+    public String trocarSenha(TrocarSenhaDTO dados, Integer usuarioId, String usuarioTipo) {
         exigirSessao(usuarioId, usuarioTipo);
 
         if ("CLINICA".equals(usuarioTipo)) {
             Clinica clinica = clinicaRepository.findById(usuarioId)
                     .orElseThrow(() -> new AuthException("Conta não encontrada.", HttpStatus.NOT_FOUND));
             conferirSenhaAtual(dados.getSenhaAtual(), clinica.getSenha());
-            clinica.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            clinica.trocarSenha(passwordEncoder.encode(dados.getNovaSenha()));
             clinicaRepository.save(clinica);
-            return;
+        } else {
+            Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(usuarioId)
+                    .orElseThrow(() -> new AuthException("Conta não encontrada.", HttpStatus.NOT_FOUND));
+            conferirSenhaAtual(dados.getSenhaAtual(), fisioterapeuta.getSenha());
+            fisioterapeuta.trocarSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            fisioterapeutaRepository.save(fisioterapeuta);
         }
-
-        Fisioterapeuta fisioterapeuta = fisioterapeutaRepository.findById(usuarioId)
-                .orElseThrow(() -> new AuthException("Conta não encontrada.", HttpStatus.NOT_FOUND));
-        conferirSenhaAtual(dados.getSenhaAtual(), fisioterapeuta.getSenha());
-        fisioterapeuta.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
-        fisioterapeutaRepository.save(fisioterapeuta);
+        // Emitido depois da troca, então passa pela checagem que barra os antigos.
+        return jwtService.gerarToken(usuarioId, usuarioTipo);
     }
 
     private void conferirSenhaAtual(String informada, String armazenada) {
@@ -187,8 +198,13 @@ public class ConfiguracaoService {
         }
     }
 
+    /**
+     * Só clínica e profissional têm configuração e senha. Outro tipo (o token
+     * do goniômetro, que o filtro já barra antes daqui) cairia no ramo do
+     * profissional e alcançaria o registro de quem tivesse o mesmo id.
+     */
     private void exigirSessao(Integer usuarioId, String usuarioTipo) {
-        if (usuarioId == null || usuarioTipo == null) {
+        if (usuarioId == null || !("CLINICA".equals(usuarioTipo) || "FISIOTERAPEUTA".equals(usuarioTipo))) {
             throw new AuthException("Sessão inválida.", HttpStatus.UNAUTHORIZED);
         }
     }

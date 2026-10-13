@@ -1,6 +1,7 @@
 package com.rehabit.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,6 +17,7 @@ public class AgendamentoCreateDTO {
     @NotNull(message = "O horário é obrigatório.")
     private LocalTime hora;
 
+    @Size(max = 255, message = "A observação pode ter no máximo 255 caracteres.")
     private String observacao;
 
     public AgendamentoCreateDTO() {

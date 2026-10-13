@@ -40,8 +40,8 @@ public class ClinicaController {
     }
 
     @PutMapping("/{id}/tutorial-visto")
-    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id) {
-        clinicaService.marcarTutorialVisto(id);
+    public ResponseEntity<Void> marcarTutorialVisto(@PathVariable Integer id, HttpServletRequest request) {
+        clinicaService.marcarTutorialVisto(id, AuthContext.id(request), AuthContext.tipo(request));
         return ResponseEntity.ok().build();
     }
 

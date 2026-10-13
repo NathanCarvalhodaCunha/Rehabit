@@ -2,9 +2,11 @@ package com.rehabit.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -28,8 +30,10 @@ public class SessaoCreateDTO {
     // cabeça); o teto de 360° é folga, só para barrar o que é impossível.
     @DecimalMin(value = "0.0", message = "A amplitude não pode ser negativa.")
     @DecimalMax(value = "360.0", message = "A amplitude não pode passar de 360°.")
+    @Digits(integer = 3, fraction = 2, message = "A amplitude aceita até duas casas decimais.")
     private BigDecimal amplitudeMedia;
 
+    @Size(max = 5000, message = "As observações pode ter no máximo 5000 caracteres.")
     private String observacoes;
 
     /** Escala de dor 0–10 relatada pelo paciente. */

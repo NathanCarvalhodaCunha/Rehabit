@@ -71,7 +71,8 @@ public class GoniometroController {
                                                                      HttpServletRequest request) {
         if (AuthContext.idClinicaDoDispositivo(request) != null) {
             Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
-            return ResponseEntity.ok(goniometroService.registrarTelemetriaDeDispositivo(idClinicaAtiva, dados));
+            return ResponseEntity.ok(goniometroService.registrarTelemetriaDeDispositivo(
+                    idClinicaAtiva, AuthContext.id(request), dados));
         }
         if (dados.getIdClinica() == null) {
             throw new AuthException("A clínica é obrigatória.", HttpStatus.BAD_REQUEST);
@@ -92,17 +93,26 @@ public class GoniometroController {
     /**
      * Fluxo de eventos em tempo real.
      *
-     * O EventSource do navegador não deixa mandar cabeçalho, então o token vem
-     * na query string — o JwtAuthenticationFilter aceita esse formato só neste
-     * caminho.
+     * O EventSource do navegador não deixa mandar cabeçalho, então a URL leva
+     * um ingresso de uso único (POST /stream/ingresso), nunca o token de
+     * sessão. Há teto de telas abertas por pessoa e por clínica (veja
+     * GoniometroStream).
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestParam Integer idClinica, HttpServletRequest request) {
-        GoniometroEstadoDTO inicial = goniometroService.estado(
-                idClinica, AuthContext.id(request), AuthContext.tipo(request));
+    public ResponseEntity<SseEmitter> stream(@RequestParam Integer idClinica, HttpServletRequest request) {
+        GoniometroEstadoDTO inicial;
+        SseEmitter emitter;
+        try {
+            inicial = goniometroService.estado(idClinica, AuthContext.id(request), AuthContext.tipo(request));
+            emitter = stream.inscrever(idClinica, AuthContext.tipo(request) + ":" + AuthContext.id(request));
+        } catch (AuthException recusa) {
+            // O EventSource pede text/event-stream e não lê corpo de erro: o
+            // JSON de sempre não tinha como ser escrito nessa resposta, e o
+            // 403/429 virava 500. Aqui sai só o status.
+            return ResponseEntity.status(recusa.getStatus()).build();
+        }
         goniometroService.marcarInteresse(idClinica);
 
-        SseEmitter emitter = stream.inscrever(idClinica);
         try {
             // Estado inicial no próprio handshake: a tela já abre preenchida,
             // sem esperar o próximo pacote do aparelho.
@@ -110,7 +120,7 @@ public class GoniometroController {
         } catch (IOException erro) {
             emitter.completeWithError(erro);
         }
-        return emitter;
+        return ResponseEntity.ok(emitter);
     }
 
     // ---------------- Site -> aparelho ----------------
@@ -143,7 +153,7 @@ public class GoniometroController {
                                                     HttpServletRequest request) {
         if (AuthContext.idClinicaDoDispositivo(request) != null) {
             Integer idClinicaAtiva = dispositivoService.exigirDispositivoAtivo(AuthContext.id(request));
-            goniometroService.registrarLeituraDeDispositivo(idClinicaAtiva, dados.getAngulo());
+            goniometroService.registrarLeituraDeDispositivo(idClinicaAtiva, AuthContext.id(request), dados.getAngulo());
             return ResponseEntity.ok().build();
         }
         if (dados.getIdClinica() == null) {

@@ -47,9 +47,48 @@ window.RehabitCalendario = (function () {
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 
-  /** Quebra de linha CRLF e escape de vírgula/ponto-e-vírgula são exigências do formato iCalendar. */
+  /**
+   * Valor de texto do iCalendar (RFC 5545, 3.3.11): barra, vírgula e
+   * ponto-e-vírgula escapados, e toda quebra de linha vira o "\n" literal.
+   * A quebra conta em todas as formas — CRLF, LF e também o CR sozinho: uma
+   * observação com CR solto passava crua, e os calendários que aceitam CR como
+   * fim de linha liam ali propriedades novas (um alarme injetado no evento).
+   * Os outros caracteres de controle (menos o tab) não cabem num texto e saem.
+   */
   function escaparIcs(texto) {
-    return String(texto || "").replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+    return String(texto || "")
+      .replace(/\r\n|\r|\n/g, "\n")
+      .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "")
+      .replace(/([\\;,])/g, "\\$1")
+      .replace(/\n/g, "\\n");
+  }
+
+  const LIMITE_OCTETOS = 75;
+  const utf8 = new TextEncoder();
+
+  /**
+   * Linhas de mais de 75 octetos são dobradas: CRLF seguido de um espaço, que
+   * o leitor remove ao juntar. O corte respeita o UTF-8 — nunca no meio de um
+   * caractere acentuado.
+   */
+  function dobrarLinha(linha) {
+    const partes = [];
+    let atual = "";
+    let octetos = 0;
+    for (const caractere of linha) {
+      const tamanho = utf8.encode(caractere).length;
+      // A partir da segunda parte, o espaço da dobra ocupa um dos 75 octetos.
+      const limite = partes.length ? LIMITE_OCTETOS - 1 : LIMITE_OCTETOS;
+      if (octetos + tamanho > limite) {
+        partes.push(atual);
+        atual = "";
+        octetos = 0;
+      }
+      atual += caractere;
+      octetos += tamanho;
+    }
+    partes.push(atual);
+    return partes.join("\r\n ");
   }
 
   function montarIcs(agendamentos, duracaoMin) {
@@ -62,7 +101,7 @@ window.RehabitCalendario = (function () {
     agendamentos.forEach((a) => {
       linhas.push(
         "BEGIN:VEVENT",
-        `UID:rehabit-${a.id}@rehabit`,
+        `UID:rehabit-${escaparIcs(a.id)}@rehabit`,
         `DTSTART:${carimboLocal(a.data, a.hora)}`,
         `DTEND:${carimboLocal(a.data, a.hora, duracaoMin || DURACAO_PADRAO_MIN)}`,
         `SUMMARY:${escaparIcs(tituloDoEvento(a))}`,
@@ -71,7 +110,7 @@ window.RehabitCalendario = (function () {
       );
     });
     linhas.push("END:VCALENDAR");
-    return linhas.join("\r\n");
+    return linhas.map(dobrarLinha).join("\r\n");
   }
 
   function baixarIcs(agendamentos, duracaoMin) {

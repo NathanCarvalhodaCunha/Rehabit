@@ -1,15 +1,14 @@
 package com.rehabit.storage;
 
-import org.springframework.web.multipart.MultipartFile;
-
 public interface FileStorageService {
 
     /**
-     * Salva o arquivo e devolve a URL pra acessá-lo depois: relativa
-     * (ex.: "/uploads/x.png") no modo local, absoluta (ex.:
-     * "https://res.cloudinary.com/...") no modo nuvem.
+     * Salva uma imagem já conferida (veja EnvioDeFoto) e devolve a URL pra
+     * acessá-la depois: relativa (ex.: "/uploads/x.png") no modo local,
+     * absoluta (ex.: "https://res.cloudinary.com/...") no modo nuvem. A
+     * extensão vem do tipo detectado nos bytes, nunca do nome do arquivo.
      */
-    String salvar(MultipartFile arquivo);
+    String salvar(byte[] conteudo, TipoDeImagem tipo);
 
     /**
      * Apaga um arquivo que {@link #salvar} guardou. Melhor esforço, e nunca
@@ -18,4 +17,12 @@ public interface FileStorageService {
      * de ter dado certo.
      */
     void excluir(String url);
+
+    /**
+     * A URL tem o formato exato do que {@link #salvar} devolve hoje, e aponta
+     * para este armazenamento? É o que o campo "foto" de clínica, profissional
+     * e paciente aceita: antes ia qualquer texto para o banco e de lá para um
+     * style="background-image:url(...)" nas telas.
+     */
+    boolean guardou(String url);
 }

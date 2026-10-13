@@ -33,6 +33,8 @@
         formData.append("arquivo", arquivoFotoProfissional);
         const uploadResponse = await buscar(`${API_BASE_URL}/uploads`, {
           method: "POST",
+          // O envio de fotos exige login, como qualquer outra rota da API.
+          headers: cabecalhosAutenticados(),
           body: formData,
         });
         const uploadDados = await uploadResponse.json().catch(() => ({}));

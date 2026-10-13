@@ -2,6 +2,7 @@ package com.rehabit.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -17,5 +18,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String location = "file:" + new File(uploadDir).getAbsolutePath() + File.separator;
         registry.addResourceHandler("/uploads/**").addResourceLocations(location);
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new CabecalhosDosUploads()).addPathPatterns("/uploads/**");
     }
 }

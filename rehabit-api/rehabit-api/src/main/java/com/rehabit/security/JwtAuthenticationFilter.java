@@ -14,20 +14,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String STREAM = "/api/goniometro/stream";
+    private static final String EMISSAO_DE_INGRESSO = "/api/goniometro/stream/ingresso";
+
     private final JwtService jwtService;
+    private final IngressoDoStream ingressos;
     private final ClinicaRepository clinicaRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JwtAuthenticationFilter(JwtService jwtService, ClinicaRepository clinicaRepository,
+    public JwtAuthenticationFilter(JwtService jwtService, IngressoDoStream ingressos,
+                                   ClinicaRepository clinicaRepository,
                                    FisioterapeutaRepository fisioterapeutaRepository) {
         this.jwtService = jwtService;
+        this.ingressos = ingressos;
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
     }
@@ -48,11 +56,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = extrairToken(request);
-        JwtService.TokenDados dados = token != null ? jwtService.validar(token) : null;
+        JwtService.TokenDados dados = identificar(request);
 
         if (dados == null || !contaAindaValida(dados)) {
             escreverNaoAutenticado(response);
+            return;
+        }
+
+        // O token do goniômetro dura um ano, fica gravado num aparelho na
+        // parede e qualquer clínica gera um pareando o próprio aparelho. Fora
+        // das rotas dele, o id do dispositivo caía nos services como se fosse
+        // o de um profissional — o de mesmo número, de outra clínica.
+        if ("DISPOSITIVO".equals(dados.tipo()) && !ehRotaDoAparelho(request)) {
+            escreverErro(response, HttpStatus.FORBIDDEN,
+                    "Este token é de um goniômetro e só serve para enviar leituras.");
             return;
         }
 
@@ -72,9 +89,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * O token é stateless e vale 30 dias: assinatura e validade em dia não
-     * dizem se a conta ainda existe. Sem esta consulta, uma clínica ou um
-     * profissional excluídos seguiriam usando a API com o token que já
-     * tinham até ele vencer — inclusive em outros aparelhos logados.
+     * dizem se a conta ainda existe, nem se a senha mudou depois que ele saiu.
+     * Sem esta consulta, uma clínica ou um profissional excluídos seguiriam
+     * usando a API com o token que já tinham até ele vencer — e quem trocou a
+     * senha depois de uma invasão continuaria com o invasor lá dentro.
      *
      * É uma busca por chave primária a mais por requisição, e fica sem cache
      * de propósito — um cache reabriria justamente a janela que isto fecha.
@@ -85,19 +103,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private boolean contaAindaValida(JwtService.TokenDados dados) {
         if ("CLINICA".equals(dados.tipo())) {
-            return clinicaRepository.existsById(dados.id());
+            return clinicaRepository.findById(dados.id())
+                    .map(c -> emitidoDepoisDaUltimaTroca(dados, c.getCredenciaisAlteradasEm()))
+                    .orElse(false);
         }
         if ("FISIOTERAPEUTA".equals(dados.tipo())) {
             return fisioterapeutaRepository.findById(dados.id())
-                    .map(f -> !f.isExcluido())
+                    .map(f -> !f.isExcluido() && emitidoDepoisDaUltimaTroca(dados, f.getCredenciaisAlteradasEm()))
                     .orElse(false);
         }
         return true;
     }
 
+    /**
+     * O token guarda o instante em milissegundos (veja JwtService.emitidoEm),
+     * e o banco grava a troca com mais precisão: corta-se a troca no
+     * milissegundo, senão o token novo, pedido logo em seguida, pareceria
+     * anterior a ela.
+     */
+    private static boolean emitidoDepoisDaUltimaTroca(JwtService.TokenDados dados, Instant credenciaisAlteradasEm) {
+        return credenciaisAlteradasEm == null
+                || !dados.emitidoEm().isBefore(credenciaisAlteradasEm.truncatedTo(ChronoUnit.MILLIS));
+    }
+
+    /** O que o firmware chama depois de pareado — e só isso. */
+    private static boolean ehRotaDoAparelho(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return "POST".equals(request.getMethod())
+                && (path.equals("/api/goniometro/telemetria") || path.equals("/api/goniometro/leitura"));
+    }
+
+    /**
+     * Pedir o ingresso do stream é POST, mas só serve para assistir ao
+     * goniômetro: a conta de demonstração também precisa dele.
+     */
     private static boolean alteraDados(HttpServletRequest request) {
         String metodo = request.getMethod();
-        return !"GET".equals(metodo) && !"HEAD".equals(metodo);
+        return !"GET".equals(metodo) && !"HEAD".equals(metodo)
+                && !request.getRequestURI().equals(EMISSAO_DE_INGRESSO);
     }
 
     /**
@@ -124,23 +167,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * O token normalmente vem no cabeçalho Authorization. A exceção é o SSE do
+     * O token vem no cabeçalho Authorization. A exceção é o SSE do
      * goniômetro: o EventSource do navegador não permite cabeçalhos
-     * customizados, então ali — e só ali — o token também é aceito na query
-     * string. Restringir ao caminho do stream evita que tokens comecem a
-     * circular em URLs (e portanto em logs de acesso e no histórico) do resto
-     * da API.
+     * customizados, então ali — e só ali — a URL pode levar uma credencial.
+     * Mas não o token de sessão, que vale 30 dias e iria parar em log de
+     * proxy: só o ingresso de uso único (IngressoDoStream), preso à clínica
+     * do parâmetro idClinica. Token de sessão na URL é ignorado, e sem outra
+     * credencial a resposta é 401.
      */
-    private String extrairToken(HttpServletRequest request) {
+    private JwtService.TokenDados identificar(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
+            return jwtService.validar(header.substring(7));
         }
-        if (request.getRequestURI().equals("/api/goniometro/stream")) {
-            String daQuery = request.getParameter("token");
-            if (daQuery != null && !daQuery.isBlank()) {
-                return daQuery;
-            }
+        if (request.getRequestURI().equals(STREAM) && "GET".equals(request.getMethod())) {
+            return ingressos.resgatar(request.getParameter("ingresso"), request.getParameter("idClinica"));
         }
         return null;
     }
@@ -168,16 +209,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (path.equals("/api/health") && "GET".equals(metodo)) {
             return true;
         }
+        // As fotos são lidas por <img> e CSS, que não mandam cabeçalho de
+        // autorização. O nome é um UUID sorteado (ninguém chega a uma foto
+        // sem já ter visto o endereço dela), e o arquivo sai do disco sem
+        // metadados e com cabeçalhos que impedem rodar como página (veja
+        // CabecalhosDosUploads).
         if (path.startsWith("/uploads/") && "GET".equals(metodo)) {
             return true;
         }
         // O goniômetro ainda não tem token quando vai parear — é justamente o
         // que ele busca aqui. Protegido pelo código de uso único e curta
         // validade, não por autenticação.
-        if (path.equals("/api/dispositivos/parear") && "POST".equals(metodo)) {
-            return true;
-        }
-        return path.equals("/api/uploads") && "POST".equals(metodo);
+        // O envio de fotos (/api/uploads) já esteve aqui e não está mais:
+        // exige login. A foto do cadastro vai por /api/auth/cadastro/foto.
+        return path.equals("/api/dispositivos/parear") && "POST".equals(metodo);
     }
 
     private void escreverNaoAutenticado(HttpServletResponse response) throws IOException {

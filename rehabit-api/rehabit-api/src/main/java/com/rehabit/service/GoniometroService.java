@@ -11,6 +11,8 @@ import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Goniometro;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.GoniometroRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -51,6 +54,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 @Service
 public class GoniometroService {
+
+    private static final Logger log = LoggerFactory.getLogger(GoniometroService.class);
+
+    /**
+     * Faixa aceita para o ângulo, conferida antes de qualquer conta. O
+     * firmware mede o ângulo entre dois vetores (0° a 180°) com duas casas;
+     * a folga cobre ruído. Sem isto, um "angulo": 1e999999999 fazia o
+     * setScale() do arredondamento montar um número de um bilhão de dígitos
+     * e travava a CPU da API com um único pacote.
+     */
+    private static final BigDecimal ANGULO_MINIMO = new BigDecimal("-5");
+    private static final BigDecimal ANGULO_MAXIMO = new BigDecimal("185");
+    private static final BigDecimal BRUTO_LIMITE = new BigDecimal("360");
 
     /** Sem pacote nesse tempo, o aparelho é considerado offline pela tela. */
     private static final long TIMEOUT_CONEXAO_SEGUNDOS = 8;
@@ -85,6 +101,16 @@ public class GoniometroService {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private record Amostra(long instante, BigDecimal angulo) {
+    }
+
+    /**
+     * Comando esperando o aparelho buscar. Vai para o goniômetro que estava
+     * mandando leituras quando o comando foi dado — o que a tela mostrava —,
+     * e não para o primeiro aparelho da clínica que aparecer: com dois
+     * pareados, o outro consumia a tara, a captura e até o REINICIAR.
+     * Destino nulo = sem aparelho pareado identificado (teste sem hardware).
+     */
+    private record Comando(String nome, Integer destino) {
     }
 
     /** Tudo que se sabe do aparelho de uma clínica agora. Só existe em memória. */
@@ -123,7 +149,9 @@ public class GoniometroService {
         volatile Long ultimaCurvaIniciadaEm;
 
         final Deque<Amostra> historico = new ArrayDeque<>();
-        final Queue<String> comandos = new ConcurrentLinkedQueue<>();
+        final Queue<Comando> comandos = new ConcurrentLinkedQueue<>();
+        /** O aparelho pareado que mandou a última leitura. */
+        volatile Integer dispositivoAtual;
     }
 
     private final GoniometroRepository goniometroRepository;
@@ -150,7 +178,7 @@ public class GoniometroService {
     public GoniometroComandoRespostaDTO registrarTelemetria(GoniometroTelemetriaDTO dados, Integer usuarioId,
                                                              String usuarioTipo) {
         verificarPosseClinica(dados.getIdClinica(), usuarioId, usuarioTipo);
-        return aplicarTelemetria(dados.getIdClinica(), dados);
+        return aplicarTelemetria(dados.getIdClinica(), null, dados);
     }
 
     /**
@@ -159,26 +187,35 @@ public class GoniometroService {
      * isso aqui não há o que checar — e o corpo do pacote nem carrega clínica,
      * justamente para um aparelho não conseguir escrever na clínica de outro.
      */
-    public GoniometroComandoRespostaDTO registrarTelemetriaDeDispositivo(Integer idClinica,
+    public GoniometroComandoRespostaDTO registrarTelemetriaDeDispositivo(Integer idClinica, Integer idDispositivo,
                                                                           GoniometroTelemetriaDTO dados) {
-        return aplicarTelemetria(idClinica, dados);
+        return aplicarTelemetria(idClinica, idDispositivo, dados);
     }
 
     /** Leitura simples de um aparelho pareado (endpoint antigo, sem telemetria). */
-    public void registrarLeituraDeDispositivo(Integer idClinica, BigDecimal angulo) {
+    public void registrarLeituraDeDispositivo(Integer idClinica, Integer idDispositivo, BigDecimal angulo) {
         GoniometroTelemetriaDTO dados = new GoniometroTelemetriaDTO();
         dados.setAngulo(angulo);
-        aplicarTelemetria(idClinica, dados);
+        aplicarTelemetria(idClinica, idDispositivo, dados);
     }
 
-    private GoniometroComandoRespostaDTO aplicarTelemetria(Integer idClinica, GoniometroTelemetriaDTO dados) {
+    private GoniometroComandoRespostaDTO aplicarTelemetria(Integer idClinica, Integer idDispositivo,
+                                                           GoniometroTelemetriaDTO dados) {
+        // Os DTOs já trazem os mesmos limites; repetir aqui cobre quem monta o
+        // pacote na mão (a /leitura antiga) e qualquer caminho futuro, e
+        // acontece antes de estado, histórico e captura serem tocados.
+        BigDecimal angulo = arredondar(exigirFaixa(dados.getAngulo(), ANGULO_MINIMO, ANGULO_MAXIMO));
+        BigDecimal anguloBruto = arredondar(exigirFaixa(dados.getAnguloBruto(), BRUTO_LIMITE.negate(), BRUTO_LIMITE));
+
         EstadoVivo estado = estados.computeIfAbsent(idClinica, k -> new EstadoVivo());
         carregarCadastroSePreciso(idClinica, estado);
         Instant agora = Instant.now();
-        BigDecimal angulo = arredondar(dados.getAngulo());
 
+        if (idDispositivo != null) {
+            estado.dispositivoAtual = idDispositivo;
+        }
         estado.angulo = angulo;
-        estado.anguloBruto = arredondar(dados.getAnguloBruto());
+        estado.anguloBruto = anguloBruto;
         if (dados.getBateria() != null) estado.bateria = limitarBateria(dados.getBateria());
         if (dados.getRssi() != null) estado.rssi = dados.getRssi();
         if (temTexto(dados.getNumeroSerie())) estado.numeroSerie = dados.getNumeroSerie().trim();
@@ -197,7 +234,7 @@ public class GoniometroService {
 
         stream.publicar(idClinica, "estado", montarEstado(idClinica, estado, false));
 
-        String comando = estado.comandos.poll();
+        String comando = proximoComando(estado, idDispositivo);
         return new GoniometroComandoRespostaDTO(comando != null ? comando : "NENHUM",
                 intervaloSugerido(idClinica, estado), interessados(idClinica, estado), estado.capturando);
     }
@@ -358,6 +395,11 @@ public class GoniometroService {
         }
     }
 
+    /** Só a clínica ou um profissional dela acompanham o goniômetro (veja IngressoDoStreamController). */
+    public void exigirAcesso(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
+    }
+
     /** Marca interesse sem montar o DTO — usado quando a tela abre o SSE. */
     public void marcarInteresse(Integer idClinica) {
         estados.computeIfAbsent(idClinica, k -> new EstadoVivo()).ultimoInteresse = Instant.now();
@@ -382,7 +424,11 @@ public class GoniometroService {
         while (estado.comandos.size() >= 5) {
             estado.comandos.poll();
         }
-        estado.comandos.add(normalizado);
+        enfileirar(estado, normalizado);
+        if ("REINICIAR".equals(normalizado)) {
+            log.info("REINICIAR pedido para o goniômetro {} da clínica {} por {} {}",
+                    estado.dispositivoAtual, idClinica, usuarioTipo, usuarioId);
+        }
         return montarEstado(idClinica, estado, true);
     }
 
@@ -411,7 +457,7 @@ public class GoniometroService {
             estado.ultimaCurva = null;
             estado.ultimaCurvaIniciadaEm = null;
         }
-        estado.comandos.add("INICIAR_CAPTURA");
+        enfileirar(estado, "INICIAR_CAPTURA");
         GoniometroEstadoDTO dto = montarEstado(idClinica, estado, true);
         stream.publicar(idClinica, "estado", dto);
         return dto;
@@ -428,7 +474,7 @@ public class GoniometroService {
             }
             estado.capturando = false;
         }
-        estado.comandos.add("PARAR_CAPTURA");
+        enfileirar(estado, "PARAR_CAPTURA");
         GoniometroEstadoDTO dto = montarEstado(idClinica, estado, true);
         stream.publicar(idClinica, "estado", dto);
         return dto;
@@ -652,6 +698,42 @@ public class GoniometroService {
         }
         return estado.ultimoInteresse != null
                 && estado.ultimoInteresse.isAfter(Instant.now().minusSeconds(INTERESSE_VALIDO_SEGUNDOS));
+    }
+
+    private static void enfileirar(EstadoVivo estado, String comando) {
+        estado.comandos.add(new Comando(comando, estado.dispositivoAtual));
+    }
+
+    /**
+     * O primeiro comando endereçado a quem está pedindo. Um aparelho só leva
+     * o que é dele (ou o que não tem destino); a clínica testando sem
+     * hardware (idDispositivo nulo) leva qualquer um.
+     */
+    private static String proximoComando(EstadoVivo estado, Integer idDispositivo) {
+        for (Iterator<Comando> it = estado.comandos.iterator(); it.hasNext(); ) {
+            Comando comando = it.next();
+            boolean ehDele = idDispositivo == null || comando.destino() == null
+                    || comando.destino().equals(idDispositivo);
+            if (ehDele && estado.comandos.remove(comando)) {
+                return comando.nome();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Confere tamanho e faixa só com operações baratas (escala, precisão e
+     * compareTo não materializam o número). 400 para o que não é um ângulo.
+     */
+    private static BigDecimal exigirFaixa(BigDecimal valor, BigDecimal minimo, BigDecimal maximo) {
+        if (valor == null) {
+            return null;
+        }
+        if (valor.scale() > 6 || valor.scale() < -3 || valor.precision() > 9
+                || valor.compareTo(minimo) < 0 || valor.compareTo(maximo) > 0) {
+            throw new AuthException("Ângulo fora da faixa do goniômetro.", HttpStatus.BAD_REQUEST);
+        }
+        return valor;
     }
 
     private static BigDecimal arredondar(BigDecimal valor) {

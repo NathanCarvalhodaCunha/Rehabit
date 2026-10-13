@@ -1,6 +1,10 @@
 package com.rehabit.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -21,15 +25,24 @@ public class GoniometroTelemetriaDTO {
     private Integer idClinica;
 
     @NotNull(message = "O ângulo é obrigatório.")
+    @Digits(integer = 3, fraction = 6, message = "Ângulo em formato inválido.")
+    @DecimalMin(value = "-5", message = "Ângulo fora da faixa do goniômetro (0° a 180°).")
+    @DecimalMax(value = "185", message = "Ângulo fora da faixa do goniômetro (0° a 180°).")
     private BigDecimal angulo;
 
     /** Ângulo antes do offset de tara, útil para diagnosticar montagem invertida. */
+    @Digits(integer = 3, fraction = 6, message = "Ângulo bruto em formato inválido.")
+    @DecimalMin(value = "-360", message = "Ângulo bruto fora da faixa.")
+    @DecimalMax(value = "360", message = "Ângulo bruto fora da faixa.")
     private BigDecimal anguloBruto;
 
     private Integer bateria;
     private Integer rssi;
+    @Size(max = 32, message = "O número de série pode ter no máximo 32 caracteres.")
     private String numeroSerie;
+    @Size(max = 32, message = "A versão do firmware pode ter no máximo 32 caracteres.")
     private String firmware;
+    @Size(max = 45, message = "O IP pode ter no máximo 45 caracteres.")
     private String ip;
 
     /** true depois que o giroscópio terminou a calibração inicial do boot. */

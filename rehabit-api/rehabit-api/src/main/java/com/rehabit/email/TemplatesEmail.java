@@ -2,7 +2,7 @@ package com.rehabit.email;
 
 /**
  * Monta o HTML dos e-mails transacionais. São montados aqui, em Java, e não
- * com um motor de template (Thymeleaf e afins) porque são só dois e-mails —
+ * com um motor de template (Thymeleaf e afins) porque são só três e-mails —
  * uma dependência a mais não se pagaria.
  */
 public final class TemplatesEmail {
@@ -94,6 +94,35 @@ public final class TemplatesEmail {
                 + "Código de confirmação do cadastro: " + codigo + "\n\n"
                 + "O código vale por " + minutos + " minutos.\n"
                 + "Se não foi você quem tentou criar uma conta, é só ignorar este e-mail.\n";
+    }
+
+    /**
+     * Para quem pede o código de cadastro com um e-mail que já tem conta. A
+     * tela recebe a mesma resposta de um e-mail novo (veja
+     * VerificacaoEmailService.enviarCodigo); só o dono da caixa de entrada
+     * fica sabendo que a conta existe.
+     */
+    public static String contaJaExistenteHtml() {
+        return layout("Você já tem conta no Rehabit", """
+                <p style="margin:0 0 14px;font-size:16px;color:#2B3440;">Olá!</p>
+                <p style="margin:0 0 14px;font-size:16px;color:#2B3440;line-height:1.55;">
+                  Alguém pediu para criar uma conta no Rehabit com este e-mail, mas ele
+                  <strong>já tem uma conta</strong>. Não é preciso cadastrar de novo: entre
+                  com ele na tela de login.
+                </p>
+                <p style="margin:0 0 0;font-size:14px;color:#5F6C7B;line-height:1.55;">
+                  Não lembra a senha? Use <strong>Esqueci minha senha</strong> na tela de login.
+                  Se não foi você quem tentou o cadastro, é só ignorar este e-mail.
+                </p>
+                """);
+    }
+
+    public static String contaJaExistenteTexto() {
+        return "Olá!\n\n"
+                + "Alguém pediu para criar uma conta no Rehabit com este e-mail, mas ele já tem uma conta. "
+                + "Não é preciso cadastrar de novo: entre com ele na tela de login.\n\n"
+                + "Não lembra a senha? Use \"Esqueci minha senha\" na tela de login.\n"
+                + "Se não foi você quem tentou o cadastro, é só ignorar este e-mail.\n";
     }
 
     private static String layout(String titulo, String conteudo) {

@@ -13,7 +13,9 @@ import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
+import com.rehabit.security.PoliticaDeSenha;
 import com.rehabit.security.PosseChecker;
+import com.rehabit.storage.FotosEmUso;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class ClinicaService {
     private final MedicaoRepository medicaoRepository;
     private final PasswordEncoder passwordEncoder;
     private final ValidadorEmailService validadorEmail;
+    private final FotosEmUso fotos;
 
     public ClinicaService(ClinicaRepository clinicaRepository,
                            FisioterapeutaRepository fisioterapeutaRepository,
@@ -42,7 +45,8 @@ public class ClinicaService {
                            SessaoRepository sessaoRepository,
                            MedicaoRepository medicaoRepository,
                            PasswordEncoder passwordEncoder,
-                           ValidadorEmailService validadorEmail) {
+                           ValidadorEmailService validadorEmail,
+                           FotosEmUso fotos) {
         this.clinicaRepository = clinicaRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -50,6 +54,7 @@ public class ClinicaService {
         this.medicaoRepository = medicaoRepository;
         this.passwordEncoder = passwordEncoder;
         this.validadorEmail = validadorEmail;
+        this.fotos = fotos;
     }
 
     public ClinicaPerfilDTO buscarPerfil(Integer id, Integer usuarioId, String usuarioTipo) {
@@ -83,10 +88,10 @@ public class ClinicaService {
             if (dados.getSenhaAtual() == null || !passwordEncoder.matches(dados.getSenhaAtual(), clinica.getSenha())) {
                 throw new AuthException("Senha atual incorreta.", HttpStatus.BAD_REQUEST);
             }
-            if (dados.getNovaSenha().length() < 6) {
-                throw new AuthException("A nova senha deve ter ao menos 6 caracteres.", HttpStatus.BAD_REQUEST);
-            }
-            clinica.setSenha(passwordEncoder.encode(dados.getNovaSenha()));
+            PoliticaDeSenha.exigir(dados.getNovaSenha());
+            // Encerra as sessões abertas desta conta, inclusive a de quem está
+            // editando o perfil (veja JwtAuthenticationFilter).
+            clinica.trocarSenha(passwordEncoder.encode(dados.getNovaSenha()));
         } else if (dados.getSenhaAtual() != null && !dados.getSenhaAtual().isBlank()) {
             throw new AuthException("Informe a nova senha para trocar de senha.", HttpStatus.BAD_REQUEST);
         }
@@ -99,14 +104,17 @@ public class ClinicaService {
         clinica.setSubtitulo(vazioParaNulo(dados.getSubtitulo()));
         clinica.setDescricao(vazioParaNulo(dados.getDescricao()));
         if (dados.getFoto() != null) {
-            clinica.setFoto(dados.getFoto());
+            String anterior = clinica.getFoto();
+            clinica.setFoto(fotos.aceitar(dados.getFoto(), anterior));
+            fotos.descartarDepoisDoCommit(anterior);
         }
 
         return paraDTO(clinicaRepository.save(clinica));
     }
 
     @Transactional
-    public void marcarTutorialVisto(Integer id) {
+    public void marcarTutorialVisto(Integer id, Integer usuarioId, String usuarioTipo) {
+        PosseChecker.exigirClinicaDona(id, usuarioId, usuarioTipo);
         Clinica clinica = clinicaRepository.findById(id)
                 .orElseThrow(() -> new AuthException("Instituição não encontrada.", HttpStatus.NOT_FOUND));
         clinica.setTutorialVisto(true);

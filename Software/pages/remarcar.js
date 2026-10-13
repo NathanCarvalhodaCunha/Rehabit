@@ -17,12 +17,6 @@ window.RehabitRemarcar = (function () {
   var overlay = null;
   var contexto = null;
 
-  function escapar(valor) {
-    var div = document.createElement("div");
-    div.textContent = valor == null ? "" : String(valor);
-    return div.innerHTML;
-  }
-
   function formatarData(dataIso) {
     if (!dataIso) return "";
     var p = String(dataIso).slice(0, 10).split("-");
@@ -154,8 +148,8 @@ window.RehabitRemarcar = (function () {
     var c = campos();
 
     overlay.querySelector("[data-atual]").innerHTML =
-      "<strong>" + escapar(agendamento.nomePaciente || "Paciente") + "</strong> · hoje marcada para " +
-      escapar(formatarData(agendamento.data)) + " às " + escapar(String(agendamento.hora || "").slice(0, 5));
+      "<strong>" + escaparHtml(agendamento.nomePaciente || "Paciente") + "</strong> · hoje marcada para " +
+      escaparHtml(formatarData(agendamento.data)) + " às " + escaparHtml(String(agendamento.hora || "").slice(0, 5));
 
     overlay.querySelector("[data-limite]").textContent =
       limites.horaAbertura && limites.horaFechamento

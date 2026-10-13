@@ -85,8 +85,8 @@
         RehabitToast.erro("Preencha a senha atual e a nova senha.");
         return;
       }
-      if (nova.length < 6) {
-        RehabitToast.erro("A nova senha deve ter ao menos 6 caracteres.");
+      if (nova.length < 8) {
+        RehabitToast.erro("A nova senha deve ter ao menos 8 caracteres.");
         return;
       }
 
@@ -96,8 +96,13 @@
       botao.textContent = "Alterando...";
 
       try {
-        await apiPut("/configuracoes/senha", { senhaAtual: atual, novaSenha: nova });
-        RehabitToast.sucesso("Senha alterada com sucesso.");
+        const resposta = await apiPut("/configuracoes/senha", { senhaAtual: atual, novaSenha: nova });
+        // Trocar a senha encerra as sessões abertas, esta inclusive; a API
+        // devolve um token novo para este aparelho continuar entrando.
+        if (resposta && resposta.token) {
+          localStorage.setItem("rehabit_usuario", JSON.stringify(Object.assign({}, getSessao(), { token: resposta.token })));
+        }
+        RehabitToast.sucesso((resposta && resposta.mensagem) || "Senha alterada com sucesso.");
         formSenha.reset();
       } catch (err) {
         RehabitToast.erro(err.message);
@@ -130,8 +135,9 @@
     bloco.querySelector(".btn-danger").addEventListener("click", abrirExclusaoDeConta);
   }
 
+  // Vai para dentro do HTML do diálogo, então o número da API sai escapado.
   function plural(n, singular, varios) {
-    return `${n} ${n === 1 ? singular : varios}`;
+    return `${escaparHtml(n)} ${n === 1 ? singular : varios}`;
   }
 
   async function abrirExclusaoDeConta() {

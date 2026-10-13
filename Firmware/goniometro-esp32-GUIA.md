@@ -127,27 +127,76 @@ Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 
 ## 3. Reconfigurar depois (trocou de Wi-Fi ou de clínica)
 
-**Só trocou a rede ou a senha do Wi-Fi?** Desligue e ligue o aparelho: sem
-conseguir entrar na rede salva, ele abre o portal sozinho. Escolha a rede
-nova, digite a senha e deixe o código em branco — o pareamento e a tara
-continuam guardados.
+**Só trocou a rede ou a senha do Wi-Fi?** Ligue o aparelho e espere a luz
+piscar devagar (sem Wi-Fi). Segure o botão **BOOT** até a luz passar a
+respirar e solte — pode levar até uns 17 segundos, porque entre uma tentativa
+de entrar no Wi-Fi e outra o aparelho não lê o botão. O portal fica aberto por
+3 minutos, contados da abertura. Escolha a rede nova,
+digite a senha e deixe o código em branco — o pareamento e a tara continuam
+guardados. Se os 3 minutos passarem sem configuração, o portal fecha e o
+aparelho volta a tentar a rede salva; é só segurar o BOOT de novo.
+
+> **Por que o portal não abre mais sozinho?** Até o firmware 2.3, bastava a
+> rede salva falhar uma vez (o roteador reiniciando, ou alguém derrubando o
+> Wi-Fi de propósito) para o portal abrir e ficar aberto, com a senha
+> `rehabit123`, que está publicada. Qualquer pessoa por perto podia então
+> trocar a rede do aparelho e parear ele com outra clínica. Agora, com a rede
+> já salva, o portal só abre com o botão — com o aparelho na mão.
 
 **Mudou de clínica?** Com o aparelho ligado, segure o botão **BOOT** até a
 luz ficar fraca e parada e solte. Costuma levar uns 5 segundos; com a internet
 fora do ar pode levar até meio minuto, porque o botão só é lido entre um envio
 e outro. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
-ao portal, onde vai o código da clínica nova. (Se o portal já abriu sozinho,
-porque a rede antiga não existe ali, o BOOT não faz nada: vá direto a ele.)
+ao portal, onde vai o código da clínica nova. (Se a rede antiga não existe
+no lugar novo, o aparelho fica piscando devagar, sem Wi-Fi: segure o BOOT por
+até a luz respirar para abrir o portal e preencha a rede nova **e** o código novo.)
 Confira na lista **Goniômetros
 pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
-o código não pegou — e, se o portal tinha aberto sozinho, o aparelho segue com
-o pareamento antigo. Como ele já está no Wi-Fi, agora o BOOT funciona: segure
-até a luz ficar fraca e parada e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
+o código não pegou e o aparelho segue com o pareamento antigo. Como ele já
+está no Wi-Fi, agora o BOOT de 5 segundos funciona: segure até a luz ficar
+fraca e parada e refaça com um código novo. Depois, refaça o **Zerar (tara)**.
 
 ## 4. Se um aparelho sumir ou for roubado
 
 Na tela Dispositivo, clique em **Revogar**. O token daquele aparelho para de
 valer na hora, sem mexer na senha de ninguém.
+
+Revogue sempre, mesmo que o aparelho apareça depois, e **troque a senha do
+Wi-Fi da clínica**. O token (que vale um ano) e a senha do Wi-Fi ficam
+gravados na memória do ESP32 sem criptografia (a criptografia da flash do
+ESP32 queima fusíveis da placa, sem volta, e não vale o risco num protótipo),
+e quem tiver o aparelho na mão e um cabo USB consegue lê-los. Com o token, dá
+para mandar leituras falsas para a clínica — e só para isso: ele não abre
+paciente, agenda nem nenhuma outra tela, e o Revogar o anula. A senha do
+Wi-Fi, só trocando no roteador.
+
+## Segurança da conexão
+
+Desde o firmware 2.4 o aparelho confere o certificado HTTPS da API contra as
+autoridades certificadoras listadas no fim do `goniometro-esp32.ino` (Let's
+Encrypt, Google Trust Services, DigiCert e Amazon). Antes ele aceitava
+qualquer certificado: alguém na mesma rede podia se passar pela API, ler o
+token do aparelho e o código de pareamento e mandar comandos a ele.
+
+O portal de configuração mostra só a escolha da rede e o campo do código: as
+páginas do WiFiManager para gravar outro firmware, apagar a configuração e
+ver os dados da placa respondem "não encontrado". Elas permitiam, a qualquer
+um conectado ao portal, gravar um firmware que lesse o token e a senha do
+Wi-Fi da memória.
+
+Mesmo assim, abra o portal só quando for configurar, longe de gente
+desconhecida: a senha dele (`rehabit123`) é pública, e quem estiver perto com
+ela consegue ler o que passa por ali — inclusive a senha do Wi-Fi que você
+digita.
+
+O aparelho também não confere a data de validade do certificado (não tem
+relógio acertado); ele confere a cadeia e o nome do servidor.
+
+Se a API mudar de endereço e o certificado novo vier de uma autoridade que
+não está na lista, o aparelho deixa de conseguir enviar (a luz mostra
+"servidor não responde" e o Monitor Serial mostra erro de conexão). Para
+resolver, acrescente a raiz nova ao bloco `RAIZES_TLS`, no fim do firmware, e
+grave de novo.
 
 ---
 
@@ -194,7 +243,7 @@ Com o cabo USB ligado, abra o **Monitor Serial** (Ferramentas → Monitor
 Serial), velocidade **115200**. Você deve ver, em ordem:
 
 ```
-Rehabit — goniometro digital, firmware 2.3
+Rehabit — goniometro digital, firmware 2.4
 MPU6050 encontrado.
 Calibrando o giroscopio — mantenha o aparelho PARADO...
 Giroscopio calibrado (bias X=...)
@@ -223,7 +272,7 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Pisca devagar: meio segundo aceso, meio apagado | Sem Wi-Fi (ainda conectando, ou a conexão caiu) **ou** sem pareamento (nunca pareado, token recusado ou aparelho revogado) — veja abaixo como saber qual dos dois |
 | Pisca muito rápido por 4 s (uns 6 por segundo) | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
-| "Respirando": acende e apaga suave, num ciclo de 3 s | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" está no ar para o celular (aparelho sem configuração, depois do BOOT 5 s, rede ou senha do Wi-Fi trocada, aparelho vindo de outra clínica, ou a rede salva não estava no ar quando ele ligou) |
+| "Respirando": acende e apaga suave, num ciclo de 3 s | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" está no ar para o celular (aparelho sem configuração, depois do BOOT 5 s, ou do BOOT 2 s enquanto ele não consegue entrar na rede salva; nesse último caso o portal fecha sozinho em 3 minutos) |
 | Fraca e parada logo depois de ligar (uns 2,5 s) | Calibrando o giroscópio: deixe o aparelho parado |
 | Pisca rápido sem parar desde o boot (uns 3 por segundo) | MPU6050 não foi encontrado — confira a fiação |
 | Apagado | Sem energia: bateria descarregada ou chave desligada |
@@ -236,10 +285,11 @@ encontrado, Identificar, gravando, portal, calibrando, sem Wi-Fi, sem
 pareamento, servidor sem responder.
 
 **Sem Wi-Fi ou sem pareamento?** Os dois piscam igual. Desligue, ligue e
-espere um minuto. Se ele não encontrar a rede salva, abre o portal e a luz
-passa a respirar: era o Wi-Fi (confira o roteador, ou escolha a rede de novo
-no portal). Se a luz continuar piscando devagar, ele entrou no Wi-Fi e o
-problema é o pareamento: segure o BOOT por 5 segundos e pareie de novo. Com o
+espere um minuto, depois segure o BOOT por uns 17 segundos. Se a luz passar a
+respirar, ele não estava conseguindo entrar na rede salva: era o Wi-Fi
+(confira o roteador, ou escolha a rede de novo no portal). Se nada mudar, ele
+já estava no Wi-Fi e o problema é o pareamento: segure o BOOT por 5 segundos e
+pareie de novo. Com o
 cabo USB, o Monitor Serial diz direto qual dos dois é (tabela de Problemas
 comuns, abaixo).
 
@@ -272,7 +322,8 @@ rápido para ninguém.
 | `Pareamento falhou (status=400)` | Código expirado ou já usado — gere outro na tela Dispositivo. |
 | `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
 | `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
-| `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. |
+| `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. Se a internet está boa e o erro não passa, o certificado da API pode ter vindo de uma autoridade fora da lista (veja "Segurança da conexão"). |
+| `Nao consegui entrar na rede salva; tento de novo em instantes.` | A rede salva não respondeu. Se ela mudou, segure o BOOT até a luz respirar para abrir o portal (fecha sozinho em 3 minutos). |
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 10 s, a luz faz a piscada dupla até ele responder. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
@@ -309,13 +360,15 @@ ainda não tem credencial nenhuma). Daí em diante tudo vai com
 `Authorization: Bearer <token do aparelho>`.
 
 **`POST /api/goniometro/telemetria`** — um pacote por amostra. Só o `angulo` é
-obrigatório; o resto é telemetria de apoio e pode faltar. **Não** mande
+obrigatório; o resto é telemetria de apoio e pode faltar. A API recusa (400)
+`angulo` fora de -5 a 185, `anguloBruto` fora de -360 a 360, mais de 6 casas
+decimais, e `numeroSerie`/`firmware` com mais de 32 caracteres. **Não** mande
 `idClinica`: ela sai do token do aparelho, e é isso que impede um goniômetro
 de escrever na clínica de outro.
 
 ```json
 { "angulo": 87.4, "anguloBruto": 87.4, "bateria": 82, "rssi": -54,
-  "numeroSerie": "A1B2-C3D4", "firmware": "2.3",
+  "numeroSerie": "A1B2-C3D4", "firmware": "2.4",
   "ip": "192.168.1.55", "calibrado": true }
 ```
 
@@ -336,7 +389,9 @@ existindo para não quebrar firmware gravado antes desta versão, mas ele não
 recebe comandos de volta.
 
 **Do lado do site**, para referência: `GET /api/goniometro/estado` devolve o
-retrato completo, `GET /api/goniometro/stream` é o SSE (token na query, porque
-o `EventSource` do navegador não deixa mandar cabeçalho), e
+retrato completo, `GET /api/goniometro/stream` é o SSE (o `EventSource` do
+navegador não deixa mandar cabeçalho, então a tela pede antes um ingresso de
+uso único em `POST /api/goniometro/stream/ingresso` e o põe na query — nunca o
+token de sessão), e
 `POST /api/goniometro/comando`, `/captura/iniciar` e `/captura/parar`
 enfileiram as ações do profissional.

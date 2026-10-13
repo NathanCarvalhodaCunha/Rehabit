@@ -53,12 +53,6 @@
     return String(horaIso || "").slice(0, 5);
   }
 
-  function escaparHtml(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto == null ? "" : String(texto);
-    return div.innerHTML;
-  }
-
   /** "14:30" + 45 min -> "15:15". Devolve null se passar da meia-noite. */
   function somarMinutos(hm, minutos) {
     const [h, m] = hm.split(":").map(Number);
@@ -132,34 +126,34 @@
   function itemHtml(a) {
     const ehHistorico = abaAtual === "realizadas";
     const remarcadaDe = a.dataOriginal
-      ? `<div class="agenda-obs">Remarcada de ${formatarDataCurta(a.dataOriginal)}${
-          a.horaOriginal ? " às " + formatarHoraCurta(a.horaOriginal) : ""
+      ? `<div class="agenda-obs">Remarcada de ${escaparHtml(formatarDataCurta(a.dataOriginal))}${
+          a.horaOriginal ? " às " + escaparHtml(formatarHoraCurta(a.horaOriginal)) : ""
         }</div>`
       : "";
 
     return `
-      <li class="agenda-item${ehHistorico ? " is-passada" : ""}" data-id="${a.id}">
-        <div class="agenda-when">${formatarDataCurta(a.data)}<br/><span class="hora">${formatarHoraCurta(a.hora)}</span></div>
+      <li class="agenda-item${ehHistorico ? " is-passada" : ""}" data-id="${escaparHtml(a.id)}">
+        <div class="agenda-when">${escaparHtml(formatarDataCurta(a.data))}<br/><span class="hora">${escaparHtml(formatarHoraCurta(a.hora))}</span></div>
         <div>
-          <button type="button" class="agenda-patient link-paciente" data-id-paciente="${a.idPaciente}">
+          <button type="button" class="agenda-patient link-paciente" data-id-paciente="${escaparHtml(a.idPaciente)}">
             ${escaparHtml(a.nomePaciente || "Paciente")}
           </button>${SELOS_PRESENCA[a.status] || ""}
           ${a.observacao ? `<div class="agenda-obs">${escaparHtml(a.observacao)}</div>` : ""}
           ${remarcadaDe}
           <div class="agenda-presenca">
-            <button type="button" data-presenca="REALIZADA" data-id="${a.id}">Compareceu</button>
-            <button type="button" data-presenca="FALTOU" data-id="${a.id}">Faltou</button>
-            <button type="button" data-remarcar="${a.id}">Remarcar</button>
+            <button type="button" data-presenca="REALIZADA" data-id="${escaparHtml(a.id)}">Compareceu</button>
+            <button type="button" data-presenca="FALTOU" data-id="${escaparHtml(a.id)}">Faltou</button>
+            <button type="button" data-remarcar="${escaparHtml(a.id)}">Remarcar</button>
           </div>
           ${
             ehHistorico
               ? ""
-              : `<a class="agenda-export" href="${RehabitCalendario.linkGoogle(a, expediente.duracao)}" target="_blank" rel="noopener">
+              : `<a class="agenda-export" href="${escaparHtml(RehabitCalendario.linkGoogle(a, expediente.duracao))}" target="_blank" rel="noopener">
             ${iconeAgenda()} Adicionar ao Google Agenda
           </a>`
           }
         </div>
-        <button type="button" class="agenda-cancel" data-id="${a.id}">${ehHistorico ? "Excluir" : "Cancelar"}</button>
+        <button type="button" class="agenda-cancel" data-id="${escaparHtml(a.id)}">${ehHistorico ? "Excluir" : "Cancelar"}</button>
       </li>`;
   }
 
@@ -222,12 +216,13 @@
       if (c.idPaciente != null) porId.set(String(c.idPaciente), c.nomePaciente || "Paciente");
     });
     const selecionado = filtroPaciente.value;
-    filtroPaciente.innerHTML =
-      '<option value="">Todos os pacientes</option>' +
-      [...porId.entries()]
+    // <option> montado pelo DOM: valor e texto nunca passam por HTML (SEC-24).
+    filtroPaciente.replaceChildren(
+      new Option("Todos os pacientes", ""),
+      ...[...porId.entries()]
         .sort((a, b) => a[1].localeCompare(b[1], "pt-BR"))
-        .map(([id, nome]) => `<option value="${id}">${escaparHtml(nome)}</option>`)
-        .join("");
+        .map(([id, nome]) => new Option(nome, id))
+    );
     if (selecionado && porId.has(selecionado)) filtroPaciente.value = selecionado;
   }
 
@@ -325,9 +320,10 @@
 
   apiGet(`/pacientes?idFisioterapeuta=${sessao.id}`)
     .then((pacientes) => {
-      selectPaciente.innerHTML =
-        '<option value="">Selecione um paciente</option>' +
-        pacientes.map((p) => `<option value="${p.id}">${escaparHtml(p.nome)}</option>`).join("");
+      selectPaciente.replaceChildren(
+        new Option("Selecione um paciente", ""),
+        ...pacientes.map((p) => new Option(p.nome ?? "", p.id))
+      );
     })
     .catch((err) => RehabitToast.erro(err.message));
 

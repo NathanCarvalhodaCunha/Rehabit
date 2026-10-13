@@ -57,8 +57,10 @@ class ExclusaoDeContaDaClinicaTest extends TesteDeIntegracao {
      * Toda entidade que existe hoje. Se aparecer uma nova, o teste
      * {@link #nenhumaEntidadeNovaFicaDeForaDaExclusao} quebra de propósito.
      */
+    // ArquivoEnviado não pertence a clínica: é a lista de fotos recém-enviadas
+    // que a LimpezaDeEnvios apaga se ninguém passar a usar.
     private static final Set<String> ENTIDADES_CONHECIDAS = Set.of(
-            "Agendamento", "Clinica", "CodigoPareamento", "Configuracao", "Dispositivo",
+            "Agendamento", "ArquivoEnviado", "Clinica", "CodigoPareamento", "Configuracao", "Dispositivo",
             "Fisioterapeuta", "Goniometro", "Medicao", "Notificacao", "Paciente",
             "RecuperacaoSenha", "Sessao", "VerificacaoEmail");
 

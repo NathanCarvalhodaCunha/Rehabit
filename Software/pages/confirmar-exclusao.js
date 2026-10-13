@@ -8,7 +8,7 @@
    Uso:
      RehabitConfirmarExclusao.abrir({
        titulo: "Excluir Ana Souza",
-       corpo: "<p>...</p>",             // HTML já escapado por quem chama
+       corpo: "<p>...</p>",             // HTML já escapado por quem chama (escaparHtml)
        rotuloConfirmar: "Excluir",      // null: só "Voltar" (nada a confirmar)
        podeConfirmar: function (caixa) { return true; },  // reavaliado a cada digitação
        aoConfirmar: function (caixa) { return promessa; }
@@ -19,12 +19,6 @@ window.RehabitConfirmarExclusao = (function () {
 
   var overlay = null;
   var contexto = null;
-
-  function escapar(valor) {
-    var div = document.createElement("div");
-    div.textContent = valor == null ? "" : String(valor);
-    return div.innerHTML;
-  }
 
   function montar() {
     overlay = document.createElement("div");
@@ -121,5 +115,5 @@ window.RehabitConfirmarExclusao = (function () {
       });
   }
 
-  return { abrir: abrir, fechar: fechar, escapar: escapar };
+  return { abrir: abrir, fechar: fechar };
 })();

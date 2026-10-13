@@ -15,12 +15,6 @@
   const campoValidade = overlay.querySelector("[data-validade]");
   let contador = null;
 
-  function escapar(texto) {
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
-
   function tempoRelativo(iso) {
     if (!iso) return "nunca enviou leitura";
     const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -55,12 +49,12 @@
             return `
             <li class="dispositivo-item${d.ativo ? "" : " is-revogado"}">
               <div class="dispositivo-info">
-                <strong>${escapar(d.nome)}${situacao}</strong>
+                <strong>${escaparHtml(d.nome)}${situacao}</strong>
                 <span>${tempoRelativo(d.ultimoContato)}</span>
               </div>
               ${
                 d.ativo
-                  ? `<button type="button" class="btn-danger btn-pequeno" data-revogar="${d.id}">Revogar</button>`
+                  ? `<button type="button" class="btn-danger btn-pequeno" data-revogar="${escaparHtml(d.id)}">Revogar</button>`
                   : ""
               }
             </li>`;
@@ -69,7 +63,7 @@
         if (typeof RehabitAnim !== "undefined") RehabitAnim.staggerList(lista);
       })
       .catch((err) => {
-        lista.innerHTML = `<li class="dispositivo-vazio">${escapar(err.message)}</li>`;
+        lista.innerHTML = `<li class="dispositivo-vazio">${escaparHtml(err.message)}</li>`;
       });
   }
 

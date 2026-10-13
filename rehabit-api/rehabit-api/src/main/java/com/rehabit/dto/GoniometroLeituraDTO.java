@@ -1,5 +1,8 @@
 package com.rehabit.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -15,6 +18,9 @@ public class GoniometroLeituraDTO {
     private Integer idClinica;
 
     @NotNull(message = "O ângulo é obrigatório.")
+    @Digits(integer = 3, fraction = 6, message = "Ângulo em formato inválido.")
+    @DecimalMin(value = "-5", message = "Ângulo fora da faixa do goniômetro (0° a 180°).")
+    @DecimalMax(value = "185", message = "Ângulo fora da faixa do goniômetro (0° a 180°).")
     private BigDecimal angulo;
 
     public GoniometroLeituraDTO() {
