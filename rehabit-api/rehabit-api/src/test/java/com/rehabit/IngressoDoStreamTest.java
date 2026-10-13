@@ -2,6 +2,7 @@ package com.rehabit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rehabit.model.Clinica;
+import com.rehabit.model.Fisioterapeuta;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -94,17 +95,60 @@ class IngressoDoStreamTest extends TesteDeIntegracao {
     }
 
     @Test
-    void pedirIngressoParaOutraClinicaNaoDaAcessoAoStreamDela() throws Exception {
+    void naoHaIngressoParaOStreamDeOutraClinica() throws Exception {
         Clinica clinica = novaClinica();
         Clinica outra = novaClinica();
-        String corpo = mvc.perform(post("/api/goniometro/stream/ingresso")
+        mvc.perform(post("/api/goniometro/stream/ingresso")
                         .param("idClinica", String.valueOf(outra.getId()))
                         .header("Authorization", tokenDe(clinica)))
-                .andReturn().getResponse().getContentAsString();
-        String ingresso = json.readTree(corpo).path("ingresso").asText("");
+                .andExpect(status().isForbidden());
+    }
 
-        // O ingresso só leva a identidade de quem pediu: abrir o stream da
-        // outra clínica esbarra na mesma checagem de dono de sempre.
-        abrirStream(outra, ingresso).andExpect(status().isForbidden());
+    @Test
+    void telasAbertasNaoSeguramConexaoDoBanco() throws Exception {
+        // Com o Open Session In View ligado, cada stream aberto segurava uma
+        // conexão do banco (o pool tem 10) enquanto durasse: a 11ª tela
+        // derrubava a API para todo mundo.
+        Clinica clinica = novaClinica();
+        for (int i = 0; i < 15; i++) {
+            Fisioterapeuta profissional = novoProfissional(clinica);
+            String ingresso = json.readTree(mvc.perform(post("/api/goniometro/stream/ingresso")
+                            .param("idClinica", String.valueOf(clinica.getId()))
+                            .header("Authorization", tokenDe(profissional)))
+                    .andReturn().getResponse().getContentAsString()).get("ingresso").asText();
+            mvc.perform(get("/api/goniometro/stream")
+                            .param("idClinica", String.valueOf(clinica.getId()))
+                            .param("ingresso", ingresso))
+                    .andExpect(request().asyncStarted());
+        }
+
+        mvc.perform(get("/api/clinicas/{id}", clinica.getId()).header("Authorization", tokenDe(clinica)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void recusaNoStreamSaiComOStatusMesmoPedindoEventStream() throws Exception {
+        // O EventSource manda "Accept: text/event-stream", e o erro em JSON não
+        // podia ser escrito nessa resposta: o 429 do teto (e o 403 de posse)
+        // viravam 500. Enche a clínica com 20 pessoas e tenta a 21ª.
+        Clinica clinica = novaClinica();
+        for (int i = 0; i < 20; i++) {
+            Fisioterapeuta profissional = novoProfissional(clinica);
+            String ingresso = json.readTree(mvc.perform(post("/api/goniometro/stream/ingresso")
+                            .param("idClinica", String.valueOf(clinica.getId()))
+                            .header("Authorization", tokenDe(profissional)))
+                    .andReturn().getResponse().getContentAsString()).get("ingresso").asText();
+            mvc.perform(get("/api/goniometro/stream")
+                            .param("idClinica", String.valueOf(clinica.getId()))
+                            .param("ingresso", ingresso)
+                            .header("Accept", "text/event-stream"))
+                    .andExpect(request().asyncStarted());
+        }
+
+        mvc.perform(get("/api/goniometro/stream")
+                        .param("idClinica", String.valueOf(clinica.getId()))
+                        .param("ingresso", pedirIngresso(clinica))
+                        .header("Accept", "text/event-stream"))
+                .andExpect(status().isTooManyRequests());
     }
 }

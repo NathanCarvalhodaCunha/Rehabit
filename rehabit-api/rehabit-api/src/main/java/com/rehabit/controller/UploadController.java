@@ -1,6 +1,10 @@
 package com.rehabit.controller;
 
+import com.rehabit.security.AuthContext;
+import com.rehabit.security.Limite;
+import com.rehabit.security.LimiteDeTentativas;
 import com.rehabit.storage.EnvioDeFoto;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +25,17 @@ import java.util.Map;
 public class UploadController {
 
     private final EnvioDeFoto envioDeFoto;
+    private final LimiteDeTentativas limites;
 
-    public UploadController(EnvioDeFoto envioDeFoto) {
+    public UploadController(EnvioDeFoto envioDeFoto, LimiteDeTentativas limites) {
         this.envioDeFoto = envioDeFoto;
+        this.limites = limites;
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> enviar(@RequestParam("arquivo") MultipartFile arquivo) {
+    public ResponseEntity<Map<String, String>> enviar(@RequestParam("arquivo") MultipartFile arquivo,
+                                                      HttpServletRequest request) {
+        limites.consumir(Limite.UPLOAD_POR_CONTA, AuthContext.tipo(request) + ":" + AuthContext.id(request));
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", envioDeFoto.salvar(arquivo)));
     }
 }

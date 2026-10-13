@@ -1,8 +1,11 @@
 package com.rehabit.storage;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * Tira da foto o que não é a imagem: EXIF (com a localização GPS de onde a
@@ -16,12 +19,23 @@ import java.util.Arrays;
  * Só a orientação sobrevive: sem ela a foto de celular em pé aparece deitada.
  * Nada é recomprimido — os bytes da imagem passam intactos.
  *
- * GIF e WEBP passam como vieram: câmera de celular não gera nenhum dos dois.
+ * Nos quatro formatos a regra é a mesma: fica só o que se sabe que é imagem
+ * (lista do que fica, não do que sai). Um bloco desconhecido — de fabricante,
+ * de proveniência (C2PA), o EXIF de um WEBP, o comentário de um GIF — sai.
  */
 final class MetadadosDaImagem {
 
     private static final byte[] EXIF = "Exif\0\0".getBytes(StandardCharsets.ISO_8859_1);
     private static final byte[] ICC = "ICC_PROFILE\0".getBytes(StandardCharsets.ISO_8859_1);
+    private static final byte[] JFIF = "JFIF\0".getBytes(StandardCharsets.ISO_8859_1);
+    private static final byte[] ADOBE = "Adobe".getBytes(StandardCharsets.ISO_8859_1);
+
+    /** Pedaços do PNG que descrevem a imagem; o resto (textos, EXIF, C2PA, privados) sai. */
+    private static final Set<String> PEDACOS_PNG = Set.of(
+            "IHDR", "PLTE", "IDAT", "IEND", "tRNS", "gAMA", "cHRM", "sRGB", "iCCP", "sBIT", "pHYs",
+            "bKGD", "hIST", "acTL", "fcTL", "fdAT", "cICP", "mDCv", "cLLi");
+    /** Pedaços do WEBP que descrevem a imagem; EXIF e XMP saem. */
+    private static final Set<String> PEDACOS_WEBP = Set.of("VP8 ", "VP8L", "VP8X", "ALPH", "ANIM", "ANMF", "ICCP");
 
     private MetadadosDaImagem() {
     }
@@ -31,7 +45,8 @@ final class MetadadosDaImagem {
         return switch (tipo) {
             case JPEG -> limparJpeg(conteudo);
             case PNG -> limparPng(conteudo);
-            default -> conteudo;
+            case WEBP -> limparWebp(conteudo);
+            case GIF -> limparGif(conteudo);
         };
     }
 
@@ -80,14 +95,26 @@ final class MetadadosDaImagem {
                 continue;
             }
 
-            if (manter(marcador, in, i + 2, fim)) {
-                if (marcador == 0xE0 && mantidos.size() == 0 && jfif == null) {
-                    // O APP0 (JFIF) tem de vir logo depois do SOI; a orientação entra depois dele.
+            if (marcador == 0xE0) {
+                // Só o cabeçalho JFIF, e sem a miniatura que ele pode carregar
+                // (a foto antes do recorte). Tem de vir logo depois do SOI; a
+                // orientação entra depois dele.
+                if (jfif == null && mantidos.size() == 0 && fim - (i + 2) >= 14 && comecaCom(in, i + 2, JFIF)) {
                     comecaComJfif = true;
-                    jfif = Arrays.copyOfRange(in, i - 2, fim);
-                } else {
-                    mantidos.write(in, i - 2, fim - (i - 2));
+                    jfif = new byte[18];
+                    jfif[0] = (byte) 0xFF;
+                    jfif[1] = (byte) 0xE0;
+                    jfif[3] = 16;
+                    System.arraycopy(in, i + 2, jfif, 4, 12);   // JFIF\0, versão, unidade, densidades
                 }
+            } else if (marcador == 0xEE) {
+                // Adobe: os 12 bytes que dizem como decodificar as cores (CMYK), nada além.
+                if (fim - (i + 2) >= 12 && comecaCom(in, i + 2, ADOBE)) {
+                    mantidos.write(new byte[] {(byte) 0xFF, (byte) 0xEE, 0, 14}, 0, 4);
+                    mantidos.write(in, i + 2, 12);
+                }
+            } else if (manter(marcador, in, i + 2, fim)) {
+                mantidos.write(in, i - 2, fim - (i - 2));
             }
             i = fim;
         }
@@ -106,22 +133,20 @@ final class MetadadosDaImagem {
     }
 
     /**
-     * JFIF, perfil de cor (ICC, no APP2) e Adobe (APP14, necessário para
-     * decodificar CMYK) ficam; EXIF/XMP (APP1), IPTC (APP13), os demais APPn
-     * — onde fabricantes guardam metadado próprio e imagens extras (MPF) —
-     * e comentários (COM) saem. Tabelas e cabeçalhos da imagem (DQT, DHT,
-     * SOF, DRI...) ficam todos.
+     * Ficam as tabelas e cabeçalhos da imagem (SOFn, DHT, DAC, DQT, DNL, DRI,
+     * DHP, EXP) e o perfil de cor (ICC, no APP2). JFIF e Adobe são tratados à
+     * parte, reescritos no mínimo. Saem EXIF/XMP (APP1), IPTC (APP13), os
+     * demais APPn — onde fabricantes guardam metadado próprio e imagens extras
+     * (MPF) —, comentários (COM) e qualquer marcador reservado.
      */
     private static boolean manter(int marcador, byte[] in, int inicioDosDados, int fim) {
-        if (marcador == 0xFE) {
-            return false;
+        if (marcador >= 0xC0 && marcador <= 0xCF) {
+            return true;
         }
-        if (marcador >= 0xE0 && marcador <= 0xEF) {
-            return marcador == 0xE0
-                    || marcador == 0xEE
-                    || (marcador == 0xE2 && fim - inicioDosDados >= ICC.length && comecaCom(in, inicioDosDados, ICC));
+        if (marcador >= 0xDB && marcador <= 0xDF) {
+            return true;
         }
-        return true;
+        return marcador == 0xE2 && fim - inicioDosDados >= ICC.length && comecaCom(in, inicioDosDados, ICC);
     }
 
     private static int lerMarcador(byte[] in, int i) {
@@ -220,8 +245,7 @@ final class MetadadosDaImagem {
             exigir(tamanho >= 0 && i + 12 + tamanho <= in.length);
             String tipo = new String(in, i + 4, 4, StandardCharsets.ISO_8859_1);
             int fim = (int) (i + 12 + tamanho);
-            if (!tipo.equals("eXIf") && !tipo.equals("tEXt") && !tipo.equals("zTXt")
-                    && !tipo.equals("iTXt") && !tipo.equals("tIME")) {
+            if (PEDACOS_PNG.contains(tipo)) {
                 saida.write(in, i, fim - i);
             }
             i = fim;
@@ -229,6 +253,98 @@ final class MetadadosDaImagem {
                 return saida.toByteArray();
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // WEBP: "RIFF", tamanho, "WEBP" e pedaços (tipo, tamanho, dados, byte de
+    // alinhamento quando o tamanho é ímpar)
+    // ------------------------------------------------------------------
+
+    private static byte[] limparWebp(byte[] in) {
+        exigir(in.length >= 12);
+        ByteArrayOutputStream pedacos = new ByteArrayOutputStream(in.length);
+        int i = 12;
+        while (i + 8 <= in.length) {
+            String tipo = new String(in, i, 4, StandardCharsets.ISO_8859_1);
+            long tamanho = ler32(in, i + 4, true);
+            exigir(i + 8 + tamanho <= in.length);
+            int fim = (int) Math.min(i + 8 + tamanho + (tamanho & 1), in.length);
+            if (PEDACOS_WEBP.contains(tipo)) {
+                byte[] pedaco = Arrays.copyOfRange(in, i, fim);
+                if (tipo.equals("VP8X") && tamanho >= 1) {
+                    pedaco[8] &= (byte) ~0x0C;   // tira os avisos de "tem EXIF" e "tem XMP"
+                }
+                pedacos.writeBytes(pedaco);
+            }
+            i = fim;
+        }
+        byte[] corpo = pedacos.toByteArray();
+        return ByteBuffer.allocate(12 + corpo.length).order(ByteOrder.LITTLE_ENDIAN)
+                .put(in, 0, 4).putInt(4 + corpo.length).put(in, 8, 4).put(corpo)
+                .array();
+    }
+
+    // ------------------------------------------------------------------
+    // GIF: cabeçalho, tabela de cores, e blocos (extensões e imagens) até o fim
+    // ------------------------------------------------------------------
+
+    private static byte[] limparGif(byte[] in) {
+        exigir(in.length >= 13);
+        ByteArrayOutputStream saida = new ByteArrayOutputStream(in.length);
+        int i = 13 + tamanhoDaTabelaDeCores(in[10]);
+        exigir(i <= in.length);
+        saida.write(in, 0, i);
+        while (true) {
+            exigir(i < in.length);
+            int bloco = in[i] & 0xFF;
+            if (bloco == 0x3B) {                          // fim: o que vier depois sai
+                saida.write(0x3B);
+                return saida.toByteArray();
+            }
+            int inicio = i;
+            if (bloco == 0x21) {
+                exigir(i + 2 <= in.length);
+                int rotulo = in[i + 1] & 0xFF;
+                int fim = depoisDosSubblocos(in, i + 2);
+                // Ficam o controle de animação (F9) e a extensão de repetição
+                // (NETSCAPE2.0/ANIMEXTS1.0); comentários (FE), texto (01) e as
+                // demais extensões de aplicativo (XMP, por exemplo) saem.
+                if (rotulo == 0xF9 || (rotulo == 0xFF && ehRepeticao(in, i + 2))) {
+                    saida.write(in, inicio, fim - inicio);
+                }
+                i = fim;
+            } else if (bloco == 0x2C) {
+                exigir(i + 10 <= in.length);
+                int j = i + 10 + tamanhoDaTabelaDeCores(in[i + 9]);
+                exigir(j + 1 <= in.length);
+                i = depoisDosSubblocos(in, j + 1);       // pula o tamanho mínimo do LZW
+                saida.write(in, inicio, i - inicio);
+            } else {
+                throw new IllegalArgumentException("Estrutura de imagem inválida.");
+            }
+        }
+    }
+
+    private static int tamanhoDaTabelaDeCores(byte empacotado) {
+        return (empacotado & 0x80) == 0 ? 0 : 3 * (1 << ((empacotado & 0x07) + 1));
+    }
+
+    private static int depoisDosSubblocos(byte[] in, int i) {
+        while (true) {
+            exigir(i < in.length);
+            int tamanho = in[i] & 0xFF;
+            i += 1 + tamanho;
+            if (tamanho == 0) {
+                return i;
+            }
+        }
+    }
+
+    private static boolean ehRepeticao(byte[] in, int i) {
+        byte[] netscape = "NETSCAPE2.0".getBytes(StandardCharsets.ISO_8859_1);
+        byte[] animexts = "ANIMEXTS1.0".getBytes(StandardCharsets.ISO_8859_1);
+        return i < in.length && (in[i] & 0xFF) == 11
+                && (comecaCom(in, i + 1, netscape) || comecaCom(in, i + 1, animexts));
     }
 
     // ------------------------------------------------------------------

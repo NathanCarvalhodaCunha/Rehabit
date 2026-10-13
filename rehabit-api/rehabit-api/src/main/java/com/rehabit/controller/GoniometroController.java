@@ -99,10 +99,18 @@ public class GoniometroController {
      * GoniometroStream).
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestParam Integer idClinica, HttpServletRequest request) {
-        GoniometroEstadoDTO inicial = goniometroService.estado(
-                idClinica, AuthContext.id(request), AuthContext.tipo(request));
-        SseEmitter emitter = stream.inscrever(idClinica, AuthContext.tipo(request) + ":" + AuthContext.id(request));
+    public ResponseEntity<SseEmitter> stream(@RequestParam Integer idClinica, HttpServletRequest request) {
+        GoniometroEstadoDTO inicial;
+        SseEmitter emitter;
+        try {
+            inicial = goniometroService.estado(idClinica, AuthContext.id(request), AuthContext.tipo(request));
+            emitter = stream.inscrever(idClinica, AuthContext.tipo(request) + ":" + AuthContext.id(request));
+        } catch (AuthException recusa) {
+            // O EventSource pede text/event-stream e não lê corpo de erro: o
+            // JSON de sempre não tinha como ser escrito nessa resposta, e o
+            // 403/429 virava 500. Aqui sai só o status.
+            return ResponseEntity.status(recusa.getStatus()).build();
+        }
         goniometroService.marcarInteresse(idClinica);
 
         try {
@@ -112,7 +120,7 @@ public class GoniometroController {
         } catch (IOException erro) {
             emitter.completeWithError(erro);
         }
-        return emitter;
+        return ResponseEntity.ok(emitter);
     }
 
     // ---------------- Site -> aparelho ----------------

@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -144,6 +146,26 @@ class LimitesDeTentativasTest extends TesteDeIntegracao {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"mais@teste.rehabit\",\"senha\":\"palpite\"}"))
                 .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void umaContaNaoEnviaFotosSemFim() throws Exception {
+        // Cada envio de um IP diferente: o limite é da conta, não da rede.
+        Clinica clinica = novaClinica();
+        byte[] png = Imagens.png(2, 2);
+        for (int i = 0; i < 100; i++) {
+            mvc.perform(multipart("/api/uploads")
+                            .file(new MockMultipartFile("arquivo", "f.png", "image/png", png))
+                            .header("Authorization", tokenDe(clinica))
+                            .header("X-Forwarded-For", "10.8." + (i / 200) + "." + (i % 200)))
+                    .andExpect(status().isCreated());
+        }
+        mvc.perform(multipart("/api/uploads")
+                        .file(new MockMultipartFile("arquivo", "f.png", "image/png", png))
+                        .header("Authorization", tokenDe(clinica))
+                        .header("X-Forwarded-For", "10.8.9.9"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.mensagem", containsString("horas")));
     }
 
     @Test

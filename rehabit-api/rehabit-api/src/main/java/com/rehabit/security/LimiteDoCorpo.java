@@ -36,8 +36,7 @@ public class LimiteDoCorpo extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        String tipo = request.getContentType();
-        if (tipo != null && tipo.toLowerCase(Locale.ROOT).startsWith("multipart/")) {
+        if (ehEnvioDeFoto(request)) {
             chain.doFilter(request, response);
             return;
         }
@@ -50,6 +49,19 @@ public class LimiteDoCorpo extends OncePerRequestFilter {
             return;
         }
         chain.doFilter(declarado < 0 ? new CorpoLimitado(request) : request, response);
+    }
+
+    /**
+     * As duas rotas que recebem arquivo ficam com o limite do multipart (5 MB).
+     * Só elas: dispensar qualquer "Content-Type: multipart/..." dava 5 MB, em
+     * vez de 256 KB, a qualquer rota — inclusive as públicas.
+     */
+    private static boolean ehEnvioDeFoto(HttpServletRequest request) {
+        String tipo = request.getContentType();
+        String caminho = request.getRequestURI();
+        return "POST".equals(request.getMethod())
+                && tipo != null && tipo.toLowerCase(Locale.ROOT).startsWith("multipart/")
+                && (caminho.equals("/api/uploads") || caminho.equals("/api/auth/cadastro/foto"));
     }
 
     /** Lê o corpo até o teto e falha depois dele (o Spring transforma isso em 400). */

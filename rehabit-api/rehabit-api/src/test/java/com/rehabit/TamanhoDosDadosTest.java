@@ -97,6 +97,22 @@ class TamanhoDosDadosTest extends TesteDeIntegracao {
     }
 
     @Test
+    void dizerQueEMultipartNaoTiraOTetoDasRotasJson() throws Exception {
+        // Só as duas rotas de foto ficam com os 5 MB do multipart.
+        mvc.perform(post("/api/auth/login")
+                        .contentType("multipart/form-data; boundary=x")
+                        .content("x".repeat(300 * 1024)))
+                .andExpect(status().isPayloadTooLarge());
+    }
+
+    @Test
+    void corpoDeFormularioNaoELidoAntesDaAutenticacao() {
+        // O FormContentFilter lia corpos form-urlencoded de PUT/PATCH/DELETE
+        // de qualquer um; acima do teto, estourava como 500.
+        assertThat(contexto.getBeanNamesForType(org.springframework.web.filter.FormContentFilter.class)).isEmpty();
+    }
+
+    @Test
     void corpoAcimaDoTetoNemELido() throws Exception {
         Fisioterapeuta profissional = novoProfissional(novaClinica());
         Paciente paciente = novoPaciente(profissional);

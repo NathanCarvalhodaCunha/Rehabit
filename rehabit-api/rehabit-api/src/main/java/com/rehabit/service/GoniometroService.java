@@ -395,6 +395,11 @@ public class GoniometroService {
         }
     }
 
+    /** Só a clínica ou um profissional dela acompanham o goniômetro (veja IngressoDoStreamController). */
+    public void exigirAcesso(Integer idClinica, Integer usuarioId, String usuarioTipo) {
+        verificarPosseClinica(idClinica, usuarioId, usuarioTipo);
+    }
+
     /** Marca interesse sem montar o DTO — usado quando a tela abre o SSE. */
     public void marcarInteresse(Integer idClinica) {
         estados.computeIfAbsent(idClinica, k -> new EstadoVivo()).ultimoInteresse = Instant.now();

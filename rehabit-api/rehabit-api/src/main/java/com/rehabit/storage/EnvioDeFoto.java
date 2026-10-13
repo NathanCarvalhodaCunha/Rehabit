@@ -1,6 +1,8 @@
 package com.rehabit.storage;
 
 import com.rehabit.exception.AuthException;
+import com.rehabit.model.ArquivoEnviado;
+import com.rehabit.repository.ArquivoEnviadoRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -9,6 +11,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 /**
  * Recebe a foto que o site manda (perfil, profissional, paciente, cadastro) e
@@ -21,11 +25,15 @@ import java.io.IOException;
 public class EnvioDeFoto {
 
     private final FileStorageService armazenamento;
+    private final ArquivoEnviadoRepository enviados;
+    private final Clock relogio;
     private final DataSize limite;
 
-    public EnvioDeFoto(FileStorageService armazenamento,
+    public EnvioDeFoto(FileStorageService armazenamento, ArquivoEnviadoRepository enviados, Clock relogio,
                        @Value("${spring.servlet.multipart.max-file-size:5MB}") DataSize limite) {
         this.armazenamento = armazenamento;
+        this.enviados = enviados;
+        this.relogio = relogio;
         this.limite = limite;
     }
 
@@ -55,6 +63,10 @@ public class EnvioDeFoto {
         } catch (IllegalArgumentException ex) {
             throw new AuthException("A imagem parece estar corrompida. Tente outra foto.", HttpStatus.BAD_REQUEST);
         }
-        return armazenamento.salvar(limpo, tipo);
+        String url = armazenamento.salvar(limpo, tipo);
+        // Entra na lista do que ainda não foi usado; a LimpezaDeEnvios apaga
+        // se nenhum cadastro passar a usar.
+        enviados.save(new ArquivoEnviado(url, LocalDateTime.now(relogio)));
+        return url;
     }
 }

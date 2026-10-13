@@ -93,12 +93,16 @@ public class FotosEmUso {
         });
     }
 
+    /** Algum cadastro (clínica, profissional ou paciente) aponta para este arquivo? */
+    public boolean emUso(String foto) {
+        return clinicaRepository.existsByFoto(foto)
+                || fisioterapeutaRepository.existsByFoto(foto)
+                || pacienteRepository.existsByFoto(foto);
+    }
+
     private void apagarAsQueSobraram(Set<String> fotos) {
         for (String foto : fotos) {
-            boolean emUso = clinicaRepository.existsByFoto(foto)
-                    || fisioterapeutaRepository.existsByFoto(foto)
-                    || pacienteRepository.existsByFoto(foto);
-            if (!emUso) {
+            if (!emUso(foto)) {
                 armazenamento.excluir(foto);
             }
         }

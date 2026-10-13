@@ -282,6 +282,16 @@ CREATE TABLE IF NOT EXISTS `tb12_verificacao_email` (
 
 -- Copiando dados para a tabela rehabit.tb12_verificacao_email: ~0 rows (aproximadamente)
 
+-- Copiando estrutura para tabela rehabit.tb13_arquivo_enviado
+-- Fotos recém-enviadas; as que nenhum cadastro usar em um dia são apagadas.
+CREATE TABLE IF NOT EXISTS `tb13_arquivo_enviado` (
+  `tb13_id_arquivo` int(11) NOT NULL AUTO_INCREMENT,
+  `tb13_url` varchar(255) NOT NULL,
+  `tb13_enviado_em` datetime NOT NULL,
+  PRIMARY KEY (`tb13_id_arquivo`),
+  UNIQUE KEY `tb13_url` (`tb13_url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;

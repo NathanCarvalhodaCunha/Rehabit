@@ -146,6 +146,51 @@ class EnvioDeFotosTest extends TesteDeIntegracao {
     }
 
     @Test
+    void blocosDesconhecidosSaemEmTodosOsFormatos() throws Exception {
+        Clinica clinica = novaClinica();
+        Object[][] casos = {
+                {"a.png", "image/png", Imagens.pngComPedacoPrivado(4, 4), "png"},
+                {"a.jpg", "image/jpeg", Imagens.jpegComBlocosEstranhos(8, 6), "jpg"},
+                {"a.webp", "image/webp", Imagens.webpComExif(), "webp"},
+                {"a.gif", "image/gif", Imagens.gifComComentario(), "gif"},
+        };
+        for (Object[] caso : casos) {
+            byte[] original = (byte[]) caso[2];
+            assertThat(Imagens.contem(original, Imagens.SEGREDO)).isTrue();
+            String url = urlDe(enviar(tokenDe(clinica), (String) caso[0], (String) caso[1], original)
+                    .andExpect(status().isCreated()));
+            byte[] salvo = noDisco(url);
+            assertThat(url).endsWith("." + caso[3]);
+            assertThat(Imagens.contem(salvo, Imagens.SEGREDO)).as("metadado sobrou em " + caso[3]).isFalse();
+        }
+    }
+
+    @Test
+    void oJpegEOGifContinuamAbrindoDepoisDaLimpeza() throws Exception {
+        Clinica clinica = novaClinica();
+        byte[] jpeg = noDisco(urlDe(enviar(tokenDe(clinica), "a.jpg", "image/jpeg", Imagens.jpegComBlocosEstranhos(8, 6))
+                .andExpect(status().isCreated())));
+        byte[] gif = noDisco(urlDe(enviar(tokenDe(clinica), "a.gif", "image/gif", Imagens.gifComComentario())
+                .andExpect(status().isCreated())));
+
+        assertThat(ImageIO.read(new ByteArrayInputStream(jpeg)).getWidth()).isEqualTo(8);
+        assertThat(ImageIO.read(new ByteArrayInputStream(gif)).getWidth()).isEqualTo(1);
+    }
+
+    @Test
+    void oWebpPerdeOAvisoDeExifNoCabecalho() throws Exception {
+        Clinica clinica = novaClinica();
+        byte[] salvo = noDisco(urlDe(enviar(tokenDe(clinica), "a.webp", "image/webp", Imagens.webpComExif())
+                .andExpect(status().isCreated())));
+
+        // RIFF com o tamanho certo e o VP8X sem a flag de EXIF.
+        int tamanhoRiff = (salvo[4] & 0xFF) | (salvo[5] & 0xFF) << 8 | (salvo[6] & 0xFF) << 16 | (salvo[7] & 0xFF) << 24;
+        assertThat(tamanhoRiff).isEqualTo(salvo.length - 8);
+        assertThat(new String(salvo, 12, 4, StandardCharsets.ISO_8859_1)).isEqualTo("VP8X");
+        assertThat(salvo[20] & 0x08).isZero();
+    }
+
+    @Test
     void arquivoAntigoQueNaoEImagemNaoEServido() throws Exception {
         // Como ficaria a pasta depois do upload antigo, que gravava a extensão do cliente.
         Path pasta = Path.of(pastaDeUploads).toAbsolutePath();

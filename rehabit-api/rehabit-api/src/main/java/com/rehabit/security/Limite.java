@@ -46,6 +46,12 @@ public enum Limite {
             "Muitas tentativas de pareamento no sistema agora. Tente de novo em %s."),
     UPLOAD_POR_IP(30, Duration.ofMinutes(10),
             "Muitos envios de arquivo a partir desta rede. Tente de novo em %s."),
+    /**
+     * Por conta logada, venha de que IP vier: cadastrar uma equipe e os
+     * pacientes do dia com foto cabe com folga; encher o armazenamento, não.
+     */
+    UPLOAD_POR_CONTA(100, Duration.ofDays(1),
+            "Muitas fotos enviadas por esta conta hoje. Tente de novo em %s."),
     /** A foto do cadastro: quem escolhe uma, desiste e escolhe outra cabe com folga. */
     FOTO_DO_CADASTRO_POR_EMAIL(5, Duration.ofHours(1),
             "Muitas fotos enviadas para este cadastro. Tente de novo em %s."),
@@ -80,6 +86,10 @@ public enum Limite {
             return segundos == 1 ? "1 segundo" : segundos + " segundos";
         }
         long minutos = (segundos + 59) / 60;
+        if (minutos > 90) {
+            long horas = (minutos + 59) / 60;
+            return horas + " horas";
+        }
         return minutos == 1 ? "1 minuto" : minutos + " minutos";
     }
 }
