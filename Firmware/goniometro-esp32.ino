@@ -15,8 +15,8 @@
 //   5. O aparelho grava tudo na memória e já se conecta.
 //
 // Trocou só a rede ou a senha do Wi-Fi: ligue o aparelho e, quando a luz
-// mostrar "sem Wi-Fi", segure o botão BOOT por 2 segundos. O portal abre por
-// 3 minutos; deixe o código em branco e o pareamento e a tara ficam. (Ele não
+// mostrar "sem Wi-Fi", segure o botão BOOT até ela passar a respirar (até uns
+// 17 segundos). O portal abre por 3 minutos; deixe o código em branco e o pareamento e a tara ficam. (Ele não
 // abre mais sozinho quando a rede salva falha: veja conectarOuAbrirPortal.)
 // Mudou de clínica: segure o botão BOOT por 5 segundos com o aparelho ligado
 // e conectado. Ele apaga a configuração e volta ao passo 2.
@@ -43,7 +43,7 @@
 //   MPU6050 SDA  -> GPIO21
 //   MPU6050 SCL  -> GPIO22
 //   LED de status-> GPIO19 -> resistor 220 ohm -> LED azul -> GND
-//   Botão BOOT   -> GPIO0 (já existe na placa; 2 s sem Wi-Fi abre o portal,
+//   Botão BOOT   -> GPIO0 (já existe na placa; segurado sem Wi-Fi abre o portal,
 //                   5 s conectado apaga a configuração)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
 //
@@ -84,6 +84,7 @@
 #include <Adafruit_Sensor.h>
 #include <WiFiManager.h>
 #include <Preferences.h>
+#include <esp_mac.h>
 
 // ------------------------------------------------------------------
 // Configuração
@@ -97,12 +98,19 @@ const char *VERSAO_FIRMWARE = "2.4";
 
 const char *AP_NOME = "Rehabit-Goniometro";
 // A senha do portal está publicada neste arquivo e no guia: ela só impede que
-// o celular de alguém entre na rede por acaso. A proteção de verdade é o
-// portal não ficar aberto: ele só abre sozinho na primeira configuração; com
-// a rede já salva, só abre com o botão, por 3 minutos.
+// o celular de alguém entre na rede por acaso. Quem souber a senha e estiver
+// perto consegue até ler o que passa pelo portal (a senha do Wi-Fi da clínica
+// e o código). A proteção de verdade é o portal quase nunca estar aberto: ele
+// só abre sozinho na primeira configuração; com a rede já salva, só com o
+// botão, por 3 minutos contados da abertura.
 const char *AP_SENHA = "rehabit123";
 const unsigned long PORTAL_TEMPO_LIMITE_S = 180;
 const unsigned long SEGURAR_PARA_PORTAL_MS = 2000;
+// Cada tentativa de entrar na rede salva leva até CONEXAO_S; entre uma e
+// outra, o botão é lido por ESCUTA_BOTAO_MS. Segurando o BOOT direto, o portal
+// abre em no máximo uns 17 s.
+const unsigned long CONEXAO_S = 10;
+const unsigned long ESCUTA_BOTAO_MS = 5000;
 
 // Autoridades certificadoras em que o aparelho confia para falar com a API
 // (definidas no fim do arquivo). Antes a conexão HTTPS não conferia
@@ -149,7 +157,6 @@ const unsigned long CAPTURA_SEM_CONTATO_MS = 10000;
 // ------------------------------------------------------------------
 
 WiFiClientSecure clienteSeguro;
-WiFiClient clienteInseguro;
 
 Adafruit_MPU6050 mpu;
 Preferences memoria;
@@ -201,8 +208,10 @@ volatile uint32_t ultimoEnvioOk = 0;        // millis() da última telemetria ac
 // contato — aquela conta é só com respostas de verdade.
 volatile uint32_t silencioDesde = 0;
 
-WiFiClient &clienteParaUrl(const char *url) {
-  return String(url).startsWith("https://") ? (WiFiClient &)clienteSeguro : clienteInseguro;
+// Só HTTPS, com o certificado conferido (veja setup). Um BASE_URL "http://"
+// não cai num cliente sem TLS: a conexão simplesmente falha.
+WiFiClient &clienteParaUrl(const char *) {
+  return clienteSeguro;
 }
 
 // ------------------------------------------------------------------
@@ -313,8 +322,11 @@ int extrairBooleano(const String &json, const char *chave) {
 // Número de série derivado do MAC: é único por placa, não precisa ser
 // cadastrado à mão e continua o mesmo depois de regravar o firmware.
 String montarNumeroSerie() {
+  // Direto do eFuse: no núcleo 3.x, WiFi.macAddress() com o Wi-Fi ainda
+  // desligado não preenche nada, e o número de série saía do lixo da pilha
+  // (um aparelho novo no servidor a cada boot).
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
   char buffer[10];
   snprintf(buffer, sizeof(buffer), "%02X%02X-%02X%02X", mac[2], mac[3], mac[4], mac[5]);
   return String(buffer);
@@ -743,7 +755,7 @@ bool parear(const String &codigo) {
  * Abre o portal de configuração e espera a pessoa terminar ou o tempo limite
  * passar (0 = sem limite). Devolve true se saiu dele conectado.
  */
-bool abrirPortal(WiFiManager &wm, unsigned long tempoLimiteS) {
+bool abrirPortal(WiFiManager &wm, WiFiManagerParameter &campoCodigo, unsigned long tempoLimiteS) {
   wm.setConfigPortalTimeout(tempoLimiteS);
   Serial.printf("Portal aberto: conecte o celular no Wi-Fi \"%s\" (senha %s).\n", AP_NOME, AP_SENHA);
   // O portal quase nunca abre sozinho (o Windows praticamente nunca detecta
@@ -755,7 +767,38 @@ bool abrirPortal(WiFiManager &wm, unsigned long tempoLimiteS) {
   }
   bool conectou = wm.startConfigPortal(AP_NOME, AP_SENHA);
   portalAberto = false;
+  if (!conectou) {
+    // Um código digitado num portal que ninguém concluiu não vale depois:
+    // senão quem estava no portal pareava o aparelho com a clínica dele
+    // assim que a rede salva voltasse.
+    campoCodigo.setValue("", 6);
+  }
   return conectou;
+}
+
+/**
+ * O portal é só para escolher a rede e digitar o código. O WiFiManager também
+ * serve, sem senha nenhuma além da do Wi-Fi do portal, páginas para gravar
+ * outro firmware (/update, /u), apagar a configuração (/erase), reiniciar e
+ * ver os dados da placa — e firmware gravado ali lê o token e a senha do
+ * Wi-Fi da clínica guardados na memória. Elas somem do menu e, mais
+ * importante, respondem 404: estas rotas entram antes das do WiFiManager, e o
+ * servidor usa a primeira que casar.
+ */
+void fecharPaginasPerigosas(WiFiManager &wm) {
+  static std::vector<const char *> menu = {"wifi", "exit"};
+  wm.setMenu(menu);
+  wm.setShowInfoUpdate(false);
+  wm.setShowInfoErase(false);
+  wm.setWebServerCallback([&wm]() {
+    for (const char *rota : {"/update", "/u", "/erase", "/restart", "/info"}) {
+      wm.server->on(rota, HTTP_ANY, [&wm]() { wm.server->send(404, "text/plain", ""); });
+    }
+  });
+  // O tempo limite conta da abertura do portal, e não da última página vista:
+  // senão um celular que recarregasse a página a cada minuto o deixava aberto
+  // para sempre.
+  wm.setWebPortalClientCheck(false);
 }
 
 /** Espera até esperaMs; devolve true se o BOOT ficou apertado por 2 s nesse meio-tempo. */
@@ -787,11 +830,17 @@ void conectarOuAbrirPortal() {
   // Enquanto o portal estiver aberto, o setup() fica parado dentro dele — a
   // luz respira sozinha.
   wm.setAPCallback([](WiFiManager *) { portalAberto = true; });
+  fecharPaginasPerigosas(wm);
 
+  // getWiFiIsSaved() lê a rede salva do driver do Wi-Fi, que precisa estar
+  // ligado: sem isto a resposta saía do lixo da memória, e um aparelho
+  // configurado podia abrir o portal sem tempo limite a cada boot (ou um
+  // novo nunca abrir o dele).
+  WiFi.mode(WIFI_STA);
   if (!wm.getWiFiIsSaved()) {
     // Primeira configuração (ou depois do reset de 5 s): não há rede para
     // tentar, então o portal abre e espera o tempo que for preciso.
-    if (!abrirPortal(wm, 0)) {
+    if (!abrirPortal(wm, campoCodigo, 0)) {
       Serial.println("Falhou ao configurar. Reiniciando...");
       delay(2000);
       ESP.restart();
@@ -804,13 +853,13 @@ void conectarOuAbrirPortal() {
     // rede e o pareamento do aparelho. Agora o portal precisa do botão, ou
     // seja, de alguém com o aparelho na mão.
     wm.setEnableConfigPortal(false);
-    wm.setConnectTimeout(20);
+    wm.setConnectTimeout(CONEXAO_S);
     while (!wm.autoConnect(AP_NOME, AP_SENHA)) {
-      Serial.println("Nao consegui entrar na rede salva; tento de novo em 10 s.");
-      Serial.println("Mudou a rede ou a senha do Wi-Fi? Segure o botao BOOT por 2 s para abrir o portal.");
-      if (pediuPortal(10000)) {
+      Serial.println("Nao consegui entrar na rede salva; tento de novo em instantes.");
+      Serial.println("Mudou a rede ou a senha do Wi-Fi? Segure o botao BOOT ate a luz respirar (ate uns 17 s).");
+      if (pediuPortal(ESCUTA_BOTAO_MS)) {
         wm.setEnableConfigPortal(true);
-        bool conectou = abrirPortal(wm, PORTAL_TEMPO_LIMITE_S);
+        bool conectou = abrirPortal(wm, campoCodigo, PORTAL_TEMPO_LIMITE_S);
         wm.setEnableConfigPortal(false);
         if (conectou) break;
         Serial.println("Portal fechado sem nova configuracao. Voltando a tentar a rede salva.");
@@ -840,8 +889,16 @@ void conectarOuAbrirPortal() {
 void verificarBotaoDeReset() {
   bool pressionado = digitalRead(PINO_BOTAO_RESET) == LOW;
 
+  // Quem segurava o BOOT para abrir o portal pode ainda estar segurando
+  // quando a rede volta e o loop começa: isso não pode virar o reset de 5 s,
+  // que apaga tudo. Só conta um aperto que começou com o loop já rodando.
+  static bool soltoDesdeOInicio = false;
   if (!pressionado) {
+    soltoDesdeOInicio = true;
     botaoPressionadoDesde = 0;
+    return;
+  }
+  if (!soltoDesdeOInicio) {
     return;
   }
   if (botaoPressionadoDesde == 0) {

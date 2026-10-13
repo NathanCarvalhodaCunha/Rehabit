@@ -42,12 +42,14 @@ echo.
 
 REM 3) Roda o backend (jar ja compilado, com banco de dados embutido) em uma janela separada
 echo Iniciando o backend (Spring Boot)...
-start "Rehabit - Backend" cmd /k "cd /d "%~dp0rehabit-api\rehabit-api" && java -jar target\rehabit-api-1.0.0.jar"
+REM    So em 127.0.0.1: sem isso a API (e o banco com os prontuarios) ficava
+REM    aberta para qualquer aparelho da mesma rede Wi-Fi.
+start "Rehabit - Backend" cmd /k "cd /d "%~dp0rehabit-api\rehabit-api" && java -jar target\rehabit-api-1.0.0.jar --server.address=127.0.0.1"
 
 echo Aguardando o backend responder na porta 8080...
 :waitbackend
 timeout /t 2 /nobreak >nul
-powershell -NoProfile -Command "if (Test-NetConnection -ComputerName localhost -Port 8080 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "if (Test-NetConnection -ComputerName 127.0.0.1 -Port 8080 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>&1
 if errorlevel 1 goto waitbackend
 
 echo Backend no ar!

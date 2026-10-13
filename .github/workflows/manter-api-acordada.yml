@@ -35,6 +35,9 @@ on:
   # minutos antes de uma apresentação.
   workflow_dispatch:
 
+# Só faz um curl na API pública: o token do GitHub não precisa de permissão nenhuma.
+permissions: {}
+
 concurrency:
   group: manter-api-acordada
   cancel-in-progress: false

@@ -128,8 +128,10 @@ Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 ## 3. Reconfigurar depois (trocou de Wi-Fi ou de clínica)
 
 **Só trocou a rede ou a senha do Wi-Fi?** Ligue o aparelho e espere a luz
-piscar devagar (sem Wi-Fi). Segure o botão **BOOT** por 2 segundos e solte: a
-luz passa a respirar e o portal abre, por 3 minutos. Escolha a rede nova,
+piscar devagar (sem Wi-Fi). Segure o botão **BOOT** até a luz passar a
+respirar e solte — pode levar até uns 17 segundos, porque entre uma tentativa
+de entrar no Wi-Fi e outra o aparelho não lê o botão. O portal fica aberto por
+3 minutos, contados da abertura. Escolha a rede nova,
 digite a senha e deixe o código em branco — o pareamento e a tara continuam
 guardados. Se os 3 minutos passarem sem configuração, o portal fecha e o
 aparelho volta a tentar a rede salva; é só segurar o BOOT de novo.
@@ -147,7 +149,7 @@ fora do ar pode levar até meio minuto, porque o botão só é lido entre um env
 e outro. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
 ao portal, onde vai o código da clínica nova. (Se a rede antiga não existe
 no lugar novo, o aparelho fica piscando devagar, sem Wi-Fi: segure o BOOT por
-2 segundos para abrir o portal e preencha a rede nova **e** o código novo.)
+até a luz respirar para abrir o portal e preencha a rede nova **e** o código novo.)
 Confira na lista **Goniômetros
 pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
 o código não pegou e o aparelho segue com o pareamento antigo. Como ele já
@@ -159,12 +161,14 @@ fraca e parada e refaça com um código novo. Depois, refaça o **Zerar (tara)**
 Na tela Dispositivo, clique em **Revogar**. O token daquele aparelho para de
 valer na hora, sem mexer na senha de ninguém.
 
-Revogue sempre, mesmo que o aparelho apareça depois: o token fica gravado na
-memória do ESP32 sem criptografia (a criptografia da flash do ESP32 queima
-fusíveis da placa, sem volta, e não vale o risco num protótipo), e quem tiver
-o aparelho na mão e um cabo USB consegue lê-lo. Com o token, dá para mandar
-leituras falsas para a clínica — e só para isso: ele não abre paciente,
-agenda nem nenhuma outra tela, e o Revogar o anula.
+Revogue sempre, mesmo que o aparelho apareça depois, e **troque a senha do
+Wi-Fi da clínica**. O token (que vale um ano) e a senha do Wi-Fi ficam
+gravados na memória do ESP32 sem criptografia (a criptografia da flash do
+ESP32 queima fusíveis da placa, sem volta, e não vale o risco num protótipo),
+e quem tiver o aparelho na mão e um cabo USB consegue lê-los. Com o token, dá
+para mandar leituras falsas para a clínica — e só para isso: ele não abre
+paciente, agenda nem nenhuma outra tela, e o Revogar o anula. A senha do
+Wi-Fi, só trocando no roteador.
 
 ## Segurança da conexão
 
@@ -173,6 +177,20 @@ autoridades certificadoras listadas no fim do `goniometro-esp32.ino` (Let's
 Encrypt, Google Trust Services, DigiCert e Amazon). Antes ele aceitava
 qualquer certificado: alguém na mesma rede podia se passar pela API, ler o
 token do aparelho e o código de pareamento e mandar comandos a ele.
+
+O portal de configuração mostra só a escolha da rede e o campo do código: as
+páginas do WiFiManager para gravar outro firmware, apagar a configuração e
+ver os dados da placa respondem "não encontrado". Elas permitiam, a qualquer
+um conectado ao portal, gravar um firmware que lesse o token e a senha do
+Wi-Fi da memória.
+
+Mesmo assim, abra o portal só quando for configurar, longe de gente
+desconhecida: a senha dele (`rehabit123`) é pública, e quem estiver perto com
+ela consegue ler o que passa por ali — inclusive a senha do Wi-Fi que você
+digita.
+
+O aparelho também não confere a data de validade do certificado (não tem
+relógio acertado); ele confere a cadeia e o nome do servidor.
 
 Se a API mudar de endereço e o certificado novo vier de uma autoridade que
 não está na lista, o aparelho deixa de conseguir enviar (a luz mostra
@@ -267,7 +285,7 @@ encontrado, Identificar, gravando, portal, calibrando, sem Wi-Fi, sem
 pareamento, servidor sem responder.
 
 **Sem Wi-Fi ou sem pareamento?** Os dois piscam igual. Desligue, ligue e
-espere um minuto, depois segure o BOOT por 2 segundos. Se a luz passar a
+espere um minuto, depois segure o BOOT por uns 17 segundos. Se a luz passar a
 respirar, ele não estava conseguindo entrar na rede salva: era o Wi-Fi
 (confira o roteador, ou escolha a rede de novo no portal). Se nada mudar, ele
 já estava no Wi-Fi e o problema é o pareamento: segure o BOOT por 5 segundos e
@@ -305,7 +323,7 @@ rápido para ninguém.
 | `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
 | `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
 | `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. Se a internet está boa e o erro não passa, o certificado da API pode ter vindo de uma autoridade fora da lista (veja "Segurança da conexão"). |
-| `Nao consegui entrar na rede salva; tento de novo em 10 s.` | A rede salva não respondeu. Se ela mudou, segure o BOOT por 2 s para abrir o portal (fecha sozinho em 3 minutos). |
+| `Nao consegui entrar na rede salva; tento de novo em instantes.` | A rede salva não respondeu. Se ela mudou, segure o BOOT até a luz respirar para abrir o portal (fecha sozinho em 3 minutos). |
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 10 s, a luz faz a piscada dupla até ele responder. |
 | O ângulo não bate com a posição do braço | Falta zerar. Deixe o braço pendurado e clique em **Zerar (tara)**. |
 | O braço na horizontal não marca 90° | A tara foi feita com o braço fora da posição pendurada. Refaça com o braço solto ao lado do tronco. |
