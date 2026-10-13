@@ -237,7 +237,7 @@ Outros pontos:
 - Cadastro de pacientes e vínculo com profissionais.
 - Registro de sessões de fisioterapia e histórico de evolução por paciente.
 - Goniômetro digital integrado, em tempo real (veja abaixo).
-- Tema claro/escuro em todas as telas.
+- Tema claro/escuro em todas as telas (a página inicial abre no claro; o escuro fica para quem o escolhe no botão).
 
 ## O goniômetro em tempo real
 

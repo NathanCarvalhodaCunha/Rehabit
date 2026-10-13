@@ -8,8 +8,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="site.webmanifest" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#060d22" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="description" content="Rehabit é um goniômetro digital integrado a um sistema web para clínicas de fisioterapia: a amplitude de movimento chega à tela em tempo real e vira o gráfico de evolução do paciente. TCC da Etec Prof. Carmine Biagio Tundisi." />
   <link rel="canonical" href="https://rehabit.com.br/" />
   <meta property="og:type" content="website" />
@@ -79,15 +78,12 @@
        qualquer caractere aqui dentro, recalcule o hash lá (o teste em
        tests/seguranca-front acusa a diferença). -->
   <script>
-    // Tema antes da primeira pintura, para a página não piscar clara: a
-    // escolha salva no botão de tema ou, sem ela, o tema do aparelho.
+    // Tema antes da primeira pintura, para a página não piscar: o claro é o
+    // padrão, e o escuro só vale para quem o escolheu no botão de tema.
     (function () {
       var tema = null;
       try { tema = localStorage.getItem("rehabit_tema"); } catch (e) {}
-      if (tema !== "claro" && tema !== "escuro") {
-        tema = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
-      }
-      document.documentElement.setAttribute("data-tema", tema);
+      document.documentElement.setAttribute("data-tema", tema === "escuro" ? "escuro" : "claro");
 
       var fonte = document.createElement("link");
       fonte.rel = "stylesheet";
@@ -129,7 +125,7 @@
     <aside class="sidebar">
       <a href="#inicio" class="logo" aria-label="Rehabit, início da página">
         <picture>
-          <source srcset="assets/inicio/logo-escuro.png 256w, assets/inicio/logo-escuro-450.png 450w" sizes="150px" media="(prefers-color-scheme: dark)" data-tema-escuro="all" />
+          <source srcset="assets/inicio/logo-escuro.png 256w, assets/inicio/logo-escuro-450.png 450w" sizes="150px" media="not all" data-tema-escuro="all" />
           <img src="assets/inicio/logo.png" srcset="assets/inicio/logo.png 256w, assets/inicio/logo-450.png 450w" sizes="150px"
                width="150" height="46" alt="Rehabit" fetchpriority="high" />
         </picture>
@@ -158,7 +154,7 @@
     <header class="mobile-topbar">
       <a href="#inicio" class="logo" aria-label="Rehabit, início da página">
         <picture>
-          <source srcset="assets/inicio/logo-escuro.png 256w, assets/inicio/logo-escuro-450.png 450w" sizes="120px" media="(prefers-color-scheme: dark)" data-tema-escuro="all" />
+          <source srcset="assets/inicio/logo-escuro.png 256w, assets/inicio/logo-escuro-450.png 450w" sizes="120px" media="not all" data-tema-escuro="all" />
           <img src="assets/inicio/logo.png" srcset="assets/inicio/logo.png 256w, assets/inicio/logo-450.png 450w" sizes="120px"
                width="120" height="37" alt="Rehabit" />
         </picture>
@@ -202,7 +198,7 @@
           </div>
           <div class="card kpi-card">
             <p class="kpi-rotulo">Testes automatizados</p>
-            <p class="kpi-valor">60</p>
+            <p class="kpi-valor">148</p>
             <p class="kpi-detalhe pos">na API do sistema</p>
           </div>
           <div class="card kpi-card">
@@ -225,7 +221,7 @@
                 <!-- No celular este cartão some e entra o gráfico em SVG logo abaixo;
                      a imagem de 1 pixel evita que o print seja baixado à toa ali. -->
                 <source media="(max-width: 767px)" srcset="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
-                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all"
+                <source media="not all" data-tema-escuro="all"
                         sizes="(min-width: 768px) and (max-width: 1024px) and (max-height: 500px) calc(100vw - 84px), (min-width: 1480px) 736px, (min-width: 1100px) calc(100vw - 744px), calc(100vw - 352px)"
                         srcset="assets/inicio/tela-inicio-escuro-600.jpg 600w, assets/inicio/tela-inicio-escuro-900.jpg 900w, assets/inicio/tela-inicio-escuro.jpg 1200w, assets/inicio/tela-inicio-escuro-1440.jpg 1440w" />
                 <img src="assets/inicio/tela-inicio.jpg" width="1200" height="750" fetchpriority="high"
@@ -429,7 +425,7 @@
           <div class="fluxo" role="img" aria-label="O goniômetro manda as leituras pela internet para a API, que guarda os dados no banco PostgreSQL e repassa cada leitura ao navegador em tempo real.">
             <div class="no">
               <strong>Goniômetro</strong>
-              <span>ESP32 + MPU6050</span>
+              <span>ESP32 + MPU6050, na bateria</span>
             </div>
             <div class="seta"><span>Wi-Fi · HTTPS</span><span>leituras do ângulo</span></div>
             <div class="no no-central">
@@ -480,7 +476,7 @@
           <li class="card description-card">
             <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>
             <h3>Acesso protegido</h3>
-            <p>Confirmação do e-mail por código, verificação anti-robô e recuperação de senha.</p>
+            <p>Confirmação do e-mail por código, verificação anti-robô, limite de tentativas e recuperação de senha. Trocar a senha encerra as outras sessões.</p>
           </li>
           <li class="card description-card">
             <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></span>
@@ -502,7 +498,7 @@
             <a class="ampliar" href="assets/inicio/tela-paciente.jpg" data-escuro="assets/inicio/tela-paciente-escuro.jpg"
                aria-haspopup="dialog" aria-label="Ampliar a tela: Ficha do paciente">
               <picture>
-                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
+                <source media="not all" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
                         srcset="assets/inicio/tela-paciente-escuro-600.jpg 600w, assets/inicio/tela-paciente-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-paciente-600.jpg" width="1200" height="750" loading="lazy"
                      sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
@@ -516,7 +512,7 @@
             <a class="ampliar" href="assets/inicio/tela-sessao.jpg" data-escuro="assets/inicio/tela-sessao-escuro.jpg"
                aria-haspopup="dialog" aria-label="Ampliar a tela: Registro de sessão">
               <picture>
-                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
+                <source media="not all" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
                         srcset="assets/inicio/tela-sessao-escuro-600.jpg 600w, assets/inicio/tela-sessao-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-sessao-600.jpg" width="1200" height="750" loading="lazy"
                      sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
@@ -530,7 +526,7 @@
             <a class="ampliar" href="assets/inicio/tela-agenda.jpg" data-escuro="assets/inicio/tela-agenda-escuro.jpg"
                aria-haspopup="dialog" aria-label="Ampliar a tela: Agenda">
               <picture>
-                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
+                <source media="not all" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
                         srcset="assets/inicio/tela-agenda-escuro-600.jpg 600w, assets/inicio/tela-agenda-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-agenda-600.jpg" width="1200" height="750" loading="lazy"
                      sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
@@ -544,7 +540,7 @@
             <a class="ampliar" href="assets/inicio/tela-desempenho.jpg" data-escuro="assets/inicio/tela-desempenho-escuro.jpg"
                aria-haspopup="dialog" aria-label="Ampliar a tela: Desempenho">
               <picture>
-                <source media="(prefers-color-scheme: dark)" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
+                <source media="not all" data-tema-escuro="all" sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
                         srcset="assets/inicio/tela-desempenho-escuro-600.jpg 600w, assets/inicio/tela-desempenho-escuro.jpg 1200w" />
                 <img src="assets/inicio/tela-desempenho-600.jpg" width="1200" height="750" loading="lazy"
                      sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
@@ -560,35 +556,168 @@
       <section class="secao" id="goniometro" aria-labelledby="gonio-titulo">
         <header class="titulo-secao">
           <h2 id="gonio-titulo">O goniômetro digital</h2>
-          <p>Um ESP32 com um sensor MPU6050 (acelerômetro e giroscópio), programado pela equipe, mede o ângulo e envia cada leitura ao sistema pelo Wi-Fi.</p>
+          <p>Um ESP32 com um sensor MPU6050 (acelerômetro e giroscópio), alimentado por uma bateria recarregável, mede o ângulo e envia cada leitura ao sistema pelo Wi-Fi. O firmware, na versão 2.4, foi escrito pela equipe.</p>
         </header>
         <div class="grade grade-2 gonio">
+          <figure class="card tela">
+            <figcaption class="card-cabeca"><h3 class="card-titulo">Circuito do aparelho</h3><span>Esquema montado no Cirkit Designer. Toque ou clique para ampliar.</span></figcaption>
+            <a class="ampliar circuito" href="assets/inicio/circuito.jpg" aria-haspopup="dialog" aria-label="Ampliar o esquema do circuito">
+              <img src="assets/inicio/circuito-1000.jpg" width="1830" height="1719" loading="lazy"
+                   srcset="assets/inicio/circuito-500.jpg 500w, assets/inicio/circuito-1000.jpg 1000w, assets/inicio/circuito.jpg 1830w"
+                   sizes="(min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) and (min-height: 501px) calc(100vw - 350px), (min-width: 1025px) calc(100vw - 350px), calc(100vw - 84px)"
+                   alt="Esquema do circuito: a bateria 18650 passa pelo carregador TP4056, pela chave liga/desliga e pelo conversor MT3608 até o pino VIN do ESP32. O ESP32 alimenta o sensor MPU6050 pelo pino 3V3, conversa com ele pelos pinos D21 e D22 e acende o LED azul de status pelo D19, com um resistor de 220 ohms." />
+            </a>
+          </figure>
+          <div class="card pecas">
+            <h3 class="card-titulo">Peças</h3>
+            <div class="pecas-grupos">
+              <div>
+                <p class="pecas-grupo">Medida e controle</p>
+                <dl class="lista-info">
+                  <div><dt>ESP32 DevKit V1</dt><dd>Lê o sensor, calcula o ângulo e envia pelo Wi-Fi.</dd></div>
+                  <div><dt>MPU6050 (GY-521)</dt><dd>Acelerômetro e giroscópio, ligado ao ESP32 por I2C (GPIO21 e GPIO22) e alimentado pelos 3,3 V da placa.</dd></div>
+                  <div><dt>LED azul de 3 mm e resistor de 220 Ω</dt><dd>A luz de status, no GPIO19.</dd></div>
+                  <div><dt>Botão BOOT</dt><dd>Já vem na placa (GPIO0): reabre a configuração do Wi-Fi e do pareamento.</dd></div>
+                </dl>
+              </div>
+              <div>
+                <p class="pecas-grupo">Energia, na ordem do circuito</p>
+                <dl class="lista-info">
+                  <div><dt>Bateria 18650</dt><dd>Célula de lítio de 3,7 V, recarregável.</dd></div>
+                  <div><dt>TP4056</dt><dd>Carrega a bateria pelo USB e protege a célula.</dd></div>
+                  <div><dt>Chave liga/desliga</dt><dd>Entre o carregador e o conversor.</dd></div>
+                  <div><dt>MT3608</dt><dd>Eleva a tensão da bateria para os 5 V da entrada VIN do ESP32.</dd></div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grade grade-2 gonio abaixo">
           <figure class="card gonio-foto">
             <img src="assets/inicio/goniometro-600.jpg" width="1200" height="530" loading="lazy"
                  srcset="assets/inicio/goniometro-600.jpg 600w, assets/inicio/goniometro.jpg 1200w"
-                 sizes="(min-width: 700px) and (max-width: 1024px) and (max-height: 500px) calc(50vw - 74px), (min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) calc(50vw - 208px), (min-width: 700px) calc(50vw - 74px), calc(100vw - 84px)"
-                 alt="Protótipo do goniômetro: placa ESP32 ligada por fios a um sensor MPU6050 numa protoboard" />
-            <figcaption>Protótipo: ESP32 e sensor MPU6050 na protoboard.</figcaption>
+                 sizes="(min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) and (min-height: 501px) calc(100vw - 350px), (min-width: 1025px) calc(100vw - 350px), calc(100vw - 84px)"
+                 alt="Primeiro protótipo do goniômetro: placa ESP32 ligada por fios a um sensor MPU6050 numa protoboard, alimentada pelo cabo USB" />
+            <figcaption>Primeiro protótipo: ESP32 e MPU6050 na protoboard, ainda no cabo USB.</figcaption>
           </figure>
           <div class="card">
-            <h3 class="card-titulo">Informações do dispositivo</h3>
+            <h3 class="card-titulo">Montagem</h3>
             <dl class="lista-info">
-              <div><dt>Zero na pose do paciente</dt><dd>O ângulo é medido a partir do braço pendurado ao lado do tronco, então a placa funciona presa em qualquer orientação.</dd></div>
-              <div><dt>Leitura estável</dt><dd>Um filtro complementar combina acelerômetro e giroscópio.</dd></div>
-              <div><dt>Tempo real</dt><dd>As leituras chegam ao navegador por <span lang="en">Server-Sent Events</span>, com consulta periódica como reserva.</dd></div>
-              <div><dt>Pareamento seguro</dt><dd>O aparelho se liga à clínica por um código de 6 dígitos e usa um token próprio, que pode ser revogado.</dd></div>
-              <div><dt>Economia de bateria</dt><dd>O servidor dita o ritmo: 10 leituras por segundo gravando, uma a cada 2 segundos parado.</dd></div>
+              <div><dt>Da protoboard à placa soldada</dt><dd>O protótipo ligado ao computador pelo USB virou um circuito soldado, com bateria, que funciona sem cabo.</dd></div>
+              <div><dt>Conferência depois da solda</dt><dd>Antes de gravar o firmware, um roteiro com multímetro confere cada ligação e procura curtos, com tudo desligado.</dd></div>
+              <div><dt>Regulagem do MT3608</dt><dd>Ajustado para 5 V no multímetro antes de ligar o ESP32: de fábrica, ele pode entregar mais de 12 V.</dd></div>
+              <div><dt>Carga e nível da bateria</dt><dd>A bateria carrega pelo USB do TP4056, com a chave desligada. Mostrar o nível no site é opcional: pede um divisor de tensão no GPIO34.</dd></div>
             </dl>
           </div>
         </div>
 
+        <h3 class="subtitulo">Como o aparelho funciona</h3>
+        <ul class="grade grade-4">
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M4 19 16 7"/><path d="M10.5 19a6.5 6.5 0 0 0-1.9-4.6"/></svg></span>
+            <h3>Zero na pose do paciente</h3>
+            <p>O botão Zerar marca o braço pendurado ao lado do tronco como 0°, então a placa funciona presa em qualquer orientação. O zero fica guardado mesmo desligando.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>
+            <h3>Leitura estável</h3>
+            <p>Um filtro complementar combina acelerômetro e giroscópio, e o giroscópio é calibrado toda vez que o aparelho liga.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            <h3>Tempo real</h3>
+            <p>As leituras chegam ao navegador por <span lang="en">Server-Sent Events</span>, com consulta periódica como reserva.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18h3"/></svg></span>
+            <h3>Configuração pelo celular</h3>
+            <p>Sem tela e sem cabo: o aparelho abre um Wi-Fi próprio, e pelo celular se escolhem a rede da clínica e o código de pareamento.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4"/><path d="m10.4 12.6 9.1-9.1"/><path d="m16 6 2.5 2.5"/><path d="m13.5 8.5 2 2"/></svg></span>
+            <h3>Pareamento seguro</h3>
+            <p>O código de 6 dígitos vale 10 minutos e serve uma vez. Com ele, o aparelho ganha um token próprio, que a clínica pode revogar.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5v-3a4 4 0 0 1 8 0v3"/><path d="M12 14.5V17"/></svg></span>
+            <h3>Conexão conferida</h3>
+            <p>Desde o firmware 2.4, o aparelho confere o certificado HTTPS do servidor, e a configuração só reabre pelo botão BOOT, com o aparelho na mão.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21.5 2.5 11 13"/><path d="M21.5 2.5 15 21.5l-4-8.5-8.5-4z"/></svg></span>
+            <h3>Comandos pela tela</h3>
+            <p>Zerar, identificar o aparelho, gravar e reiniciar. O aparelho não fica escutando: o comando volta na resposta de cada envio.</p>
+          </li>
+          <li class="card description-card">
+            <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/><path d="M6.5 10.5v3M10 10.5v3"/></svg></span>
+            <h3>Ritmo que poupa bateria</h3>
+            <p>O servidor dita o ritmo: 10 leituras por segundo gravando, 2,5 com a tela aberta e uma a cada 2 segundos sem ninguém olhando.</p>
+          </li>
+        </ul>
+
+        <!-- Mesmos padrões e textos da seção "O que a luz do aparelho está
+             dizendo" do tutorial (Software/tutorial-goniometro.html), que
+             seguem brilhoDoModo() em Firmware/goniometro-esp32.ino: mudou o
+             ritmo lá, muda aqui também. -->
+        <h3 class="subtitulo">A luz de status</h3>
+        <p class="texto-apoio">O goniômetro não tem tela: é o LED azul que conta o que está acontecendo, e cada situação tem um jeito próprio de piscar. A luz roda numa tarefa à parte do resto do firmware, então o ritmo não depende da internet. Dentro do sistema, o tutorial da tela Dispositivo diz o que fazer em cada caso.</p>
+        <ul class="grade grade-4 luzes">
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="tudo-certo" aria-hidden="true"></span>
+            <div><p class="luz-como">Uma piscada curtinha a cada 2 segundos</p><p class="luz-selo ok">Tudo certo</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="calibrando" aria-hidden="true"></span>
+            <div><p class="luz-como">Fraca e parada, logo depois de ligar</p><p class="luz-selo ok">Calibrando o sensor</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="gravando" aria-hidden="true"></span>
+            <div><p class="luz-como">Acesa forte, sem piscar</p><p class="luz-selo ok">Gravando</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="identificar" aria-hidden="true"></span>
+            <div><p class="luz-como">Pisca muito rápido por 4 segundos e para</p><p class="luz-selo ok">Identificando</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="portal" aria-hidden="true"></span>
+            <div><p class="luz-como">“Respirando”: acende e apaga devagar, bem suave</p><p class="luz-selo atencao">Esperando configuração</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="devagar" aria-hidden="true"></span>
+            <div><p class="luz-como">Pisca devagar: meio segundo acesa, meio apagada</p><p class="luz-selo atencao">Sem Wi-Fi ou sem pareamento</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="sem-servidor" aria-hidden="true"></span>
+            <div><p class="luz-como">Piscada dupla a cada 2 segundos</p><p class="luz-selo atencao">Servidor não responde</p></div>
+          </li>
+          <li class="card luz">
+            <span class="luz-led" data-ritmo="sensor" aria-hidden="true"></span>
+            <div><p class="luz-como">Pisca rápido sem parar, desde que é ligado</p><p class="luz-selo atencao">Sensor não encontrado</p></div>
+          </li>
+        </ul>
+
         <h3 class="subtitulo">Validação</h3>
-        <p class="texto-apoio">O plano do projeto prevê testes funcionais e unitários para validar a precisão dos sensores, o tempo de resposta do sistema e a segurança dos dados.</p>
+        <p class="texto-apoio">O plano do projeto prevê testes funcionais e unitários para validar a precisão dos sensores, o tempo de resposta do sistema e a segurança dos dados. Os testes do software já estão em uso; as medidas com o aparelho estão previstas.</p>
         <ul class="grade grade-3">
           <li class="card description-card">
             <span class="badge-status ok">Em uso</span>
             <h3>Testes automatizados da API</h3>
-            <p>Testes de integração cobrem as regras mais sensíveis: exclusão de conta, sessões, conta de demonstração e verificação anti-robô.</p>
+            <p>148 testes de integração rodam a API com banco em memória: login e limites de tentativa, senhas e sessões, fotos, goniômetro, exclusão de conta e as contas de demonstração.</p>
+          </li>
+          <li class="card description-card">
+            <span class="badge-status ok">Em uso</span>
+            <h3>Testes no navegador</h3>
+            <p>No Chromium, 79 verificações de segurança percorrem todas as telas, e 23 de ponta a ponta usam a API de verdade: cadastro com foto, login, goniômetro e recuperação de senha.</p>
+          </li>
+          <li class="card description-card">
+            <span class="badge-status ok">Em uso</span>
+            <h3>Teste da placa</h3>
+            <p>Um programa próprio confere cada peça depois da solda (LED, barramento I2C, MPU6050, Wi-Fi e quedas de energia) e diz qual falhou.</p>
+          </li>
+          <li class="card description-card">
+            <span class="badge-status ok">Concluída</span>
+            <h3>Auditoria de segurança</h3>
+            <p>Em outubro de 2026, a API, o site e o firmware foram revisados com base no OWASP Top 10. As falhas encontradas foram corrigidas, a maioria com um teste automático que impede que voltem.</p>
           </li>
           <li class="card description-card">
             <span class="badge-status">Previsto</span>
@@ -613,7 +742,7 @@
           <div class="card kpi-card"><p class="kpi-rotulo">Front-end</p><p class="kpi-texto">HTML, CSS e JavaScript puros, com animações em GSAP</p></div>
           <div class="card kpi-card"><p class="kpi-rotulo">Back-end</p><p class="kpi-texto">API REST em Java 17 com Spring Boot</p></div>
           <div class="card kpi-card"><p class="kpi-rotulo">Banco de dados</p><p class="kpi-texto">PostgreSQL (H2 no desenvolvimento)</p></div>
-          <div class="card kpi-card"><p class="kpi-rotulo">Hardware</p><p class="kpi-texto">ESP32 e MPU6050, firmware em C++ (Arduino)</p></div>
+          <div class="card kpi-card"><p class="kpi-rotulo">Hardware</p><p class="kpi-texto">ESP32, MPU6050 e bateria 18650, com firmware 2.4 em C++ (Arduino)</p></div>
           <div class="card kpi-card"><p class="kpi-rotulo">Hospedagem</p><p class="kpi-texto">Vercel para o site e Render para a API</p></div>
         </div>
 
@@ -632,7 +761,8 @@
               <h3 class="card-titulo">Código e guias</h3>
               <ul class="lista-links">
                 <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit">Código no GitHub</a><span>todo o projeto é aberto, com licença MIT</span></li>
-                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/goniometro-esp32-GUIA.md">Guia de montagem do goniômetro</a><span>peças, ligações e gravação do firmware</span></li>
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/goniometro-esp32-GUIA.md">Guia de montagem do goniômetro</a><span>peças, esquema, ligações e gravação do firmware</span></li>
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/teste-hardware-GUIA.md">Teste da placa soldada</a><span>multímetro, regulagem do MT3608 e programa de teste</span></li>
                 <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/tree/main/docs/MER">Arquivos do MER</a><span>modelo do banco em brModelo, PNG e XML</span></li>
               </ul>
             </div>

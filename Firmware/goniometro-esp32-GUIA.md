@@ -57,6 +57,11 @@ E a alimentação, pela bateria:
 | MT3608 VOUT+ (regulado em **5 V**) | ESP32 VIN |
 | MT3608 VOUT− | ESP32 GND |
 
+O esquema da montagem, feito no Cirkit Designer, mostra todas essas ligações
+(menos o divisor da bateria, que é opcional — veja abaixo):
+
+![Esquema do circuito do goniômetro no Cirkit Designer](esquema-circuito.png)
+
 SDA/SCL são os pinos padrão de I2C na maioria das DevKit; confira a serigrafia
 da sua se for diferente.
 

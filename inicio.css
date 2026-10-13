@@ -3,8 +3,8 @@
    mesma barra lateral, cartões, indicadores, botões e cores. Só o pedaço que
    a página usa está aqui, para ela não carregar as 2.000 linhas do sistema.
    O tema escuro liga com data-tema="escuro" no <html>: um script no <head>
-   põe o atributo antes da primeira pintura (escolha salva no botão de tema
-   ou, sem ela, o tema do aparelho). */
+   põe o atributo antes da primeira pintura. O padrão é o claro; o escuro só
+   vale para quem o escolheu no botão de tema. */
 
 /* Fonte reserva com as medidas da Inter. A Inter carrega sem travar a
    página; até ela chegar o texto sai nesta Arial ajustada, que ocupa quase o
@@ -51,6 +51,17 @@
   --avatar-bg: #D1D5DB;
   --avatar-ink: #374151;
   --shadow-card: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 1px rgba(16, 24, 40, .03);
+  /* Luz de status do goniômetro: as cores do tutorial (Software/styles.css). */
+  --led-aceso: #2F80FF;
+  --led-apagado: #C8D2E1;
+  --led-aro: #FFFFFF;
+  --led-sombra: rgba(16, 24, 40, .14);
+  --led-caixa: linear-gradient(180deg, #F5F9FF 0%, #E8F1FF 100%);
+  --led-caixa-borda: rgba(21, 101, 216, .14);
+  --led-ok-fundo: rgba(22, 163, 74, .12);
+  --led-ok-texto: #166534;
+  --led-atencao-fundo: rgba(234, 179, 8, .18);
+  --led-atencao-texto: #92400E;
 }
 
 /* Cores do tema escuro do sistema (Software/dark.css). */
@@ -74,6 +85,16 @@
   --avatar-bg: #1F2A50;
   --avatar-ink: #E6EAF5;
   --shadow-card: none;
+  /* Luz de status: as cores do tutorial no escuro (Software/dark.css). */
+  --led-apagado: #2A3563;
+  --led-aro: #1B2647;
+  --led-sombra: rgba(0, 0, 0, .35);
+  --led-caixa: linear-gradient(180deg, rgba(47, 128, 255, .06) 0%, rgba(47, 128, 255, .13) 100%);
+  --led-caixa-borda: #1F2A50;
+  --led-ok-fundo: rgba(43, 209, 126, .16);
+  --led-ok-texto: #2BD17E;
+  --led-atencao-fundo: rgba(234, 179, 8, .18);
+  --led-atencao-texto: #FBBF24;
 }
 
 * { box-sizing: border-box; }
@@ -358,6 +379,121 @@ cite { font-style: normal; white-space: nowrap; }
 .lista-info div:last-child { border-bottom: 0; padding-bottom: 0; }
 .lista-info dt { font-weight: 700; color: var(--ink-strong); font-size: 15px; }
 .lista-info dd { margin: 2px 0 0; color: var(--ink-muted); font-size: 14.5px; }
+
+/* Entre 700 e 1099 px, duas colunas teriam ~350 px: o esquema ficaria
+   miúdo e sobraria um vão embaixo dele e da foto. Ali vai uma coluna só. */
+@media (min-width: 700px) and (max-width: 1099px) { .grade.gonio { grid-template-columns: minmax(0, 1fr); } }
+
+/* Peças, em dois grupos: o do sensor e o da energia. Com o cartão largo
+   (uma coluna só, no tablet), os grupos ficam lado a lado. */
+.pecas { container: pecas / inline-size; }
+.pecas-grupos { display: grid; margin-top: 10px; }
+.pecas-grupo {
+  margin: 16px 0 0; color: var(--ink-muted);
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+}
+.pecas-grupos > div:first-child .pecas-grupo { margin-top: 0; }
+@container pecas (min-width: 560px) {
+  .pecas-grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+  .pecas-grupo { margin-top: 0; }
+}
+.pecas .lista-info { margin-top: 0; }
+.pecas .lista-info div { padding: 9px 0; }
+.pecas .lista-info div:last-child { padding-bottom: 0; }
+/* O esquema tem o fundo cinza-claro do Cirkit Designer, também no escuro. */
+.circuito { background: #EFEFEF; }
+
+/* Luz de status: o mesmo LED do tutorial da tela Dispositivo
+   (.tutorial-led-* em Software/styles.css), com os ritmos de brilhoDoModo()
+   do firmware. Parada (sem animação), a luz que pisca aparece acesa; a que
+   respira, no meio do ciclo; a da calibração, fraca. */
+.luz { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; align-items: start; padding: 16px 18px; }
+.luz-led {
+  position: relative; width: 48px; height: 48px; border-radius: 13px;
+  background: var(--led-caixa); border: 1px solid var(--led-caixa-borda);
+}
+.luz-led::before,
+.luz-led::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+}
+/* O aro em volta é a base do LED: sem ele, a luz apagada parece um furo. */
+.luz-led::before {
+  background: var(--led-apagado);
+  box-shadow: 0 0 0 3px var(--led-aro), inset 0 -2px 3px var(--led-sombra);
+}
+.luz-led::after {
+  background: radial-gradient(circle at 38% 34%, #D6E6FF 0 18%, var(--led-aceso) 62%);
+  box-shadow: 0 0 10px 3px rgba(47, 128, 255, .55), 0 0 26px 9px rgba(47, 128, 255, .24);
+}
+.luz-led[data-ritmo="portal"]::after { opacity: .5; }
+/* BRILHO_CALIBRANDO do firmware: (38 / 255) ^ 0,6. */
+.luz-led[data-ritmo="calibrando"]::after { opacity: .319; }
+.luz-como { color: var(--ink-strong); font-size: 14.5px; font-weight: 700; line-height: 1.4; }
+.luz-selo {
+  display: inline-flex; align-items: flex-start; gap: 6px; max-width: 100%; margin-top: 8px;
+  padding: 3px 10px; border-radius: 11px; font-size: 12px; font-weight: 800; line-height: 1.35;
+}
+.luz-selo::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 5px; border-radius: 50%; background: currentColor; }
+.luz-selo.ok { background: var(--led-ok-fundo); color: var(--led-ok-texto); }
+.luz-selo.atencao { background: var(--led-atencao-fundo); color: var(--led-atencao-texto); }
+/* Tempos de brilhoDoModo(): 60 aceso / 1940 apagado (tudo certo), 80 / 80
+   por 4 s (Identificar), cosseno de 3 s entre o brilho 10 e o 255 (portal),
+   500 / 500 (sem Wi-Fi ou sem pareamento), piscada dupla 100-150-100-1650
+   (servidor calado) e 150 / 150 (sem sensor). */
+@media (prefers-reduced-motion: no-preference) {
+  .luz-led[data-ritmo="tudo-certo"]::after { animation: luz-tudo-certo 2s step-end infinite; }
+  .luz-led[data-ritmo="identificar"]::after { animation: luz-identificar 6s step-end infinite; }
+  .luz-led[data-ritmo="portal"]::after { animation: luz-respirar 3s linear infinite; }
+  .luz-led[data-ritmo="devagar"]::after { animation: luz-pisca 1s step-end infinite; }
+  .luz-led[data-ritmo="sem-servidor"]::after { animation: luz-dupla 2s step-end infinite; }
+  .luz-led[data-ritmo="sensor"]::after { animation: luz-pisca 300ms step-end infinite; }
+}
+@keyframes luz-pisca {
+  0% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes luz-tudo-certo {
+  0% { opacity: 1; }
+  3%, 100% { opacity: 0; }
+}
+@keyframes luz-dupla {
+  0%, 12.5% { opacity: 1; }
+  5%, 17.5%, 100% { opacity: 0; }
+}
+/* 25 piscadas de 80 ms em 4 s e a volta à piscada curtinha aos 4 s; os
+   valores redondos ficam um décimo de milésimo abaixo (19,9999%) pelo mesmo
+   motivo explicado no tutorial: a porcentagem em precisão simples. */
+@keyframes luz-identificar {
+  0%, 2.6666%, 5.3333%, 7.9999%, 10.6666%, 13.3333%, 15.9999%, 18.6666%,
+  21.3333%, 23.9999%, 26.6666%, 29.3333%, 31.9999%, 34.6666%, 37.3333%,
+  39.9999%, 42.6666%, 45.3333%, 47.9999%, 50.6666%, 53.3333%, 55.9999%,
+  58.6666%, 61.3333%, 63.9999%, 66.6666% { opacity: 1; }
+  1.3333%, 3.9999%, 6.6666%, 9.3333%, 11.9999%, 14.6666%, 17.3333%, 19.9999%,
+  22.6666%, 25.3333%, 27.9999%, 30.6666%, 33.3333%, 35.9999%, 38.6666%,
+  41.3333%, 43.9999%, 46.6666%, 49.3333%, 51.9999%, 54.6666%, 57.3333%,
+  59.9999%, 62.6666%, 65.3333%, 67.6666%, 100% { opacity: 0; }
+}
+/* Respirando: um ponto a cada 100 ms do cosseno do firmware, já com o
+   expoente 0,6, como no tutorial. */
+@keyframes luz-respirar {
+  0%, 100% { opacity: .143; }
+  3.3333%, 96.6667% { opacity: .168; }
+  6.6667%, 93.3333% { opacity: .224; }
+  10%, 90% { opacity: .293; }
+  13.3333%, 86.6667% { opacity: .381; }
+  16.6667%, 83.3333% { opacity: .464; }
+  20%, 80% { opacity: .553; }
+  23.3333%, 76.6667% { opacity: .636; }
+  26.6667%, 73.3333% { opacity: .713; }
+  30%, 70% { opacity: .784; }
+  33.3333%, 66.6667% { opacity: .849; }
+  36.6667%, 63.3333% { opacity: .9; }
+  40%, 60% { opacity: .945; }
+  43.3333%, 56.6667% { opacity: .974; }
+  46.6667%, 53.3333% { opacity: .993; }
+  50% { opacity: 1; }
+}
 
 /* Documentação */
 .tecnologias { margin-bottom: 16px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
