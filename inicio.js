@@ -221,8 +221,10 @@ document.querySelectorAll("[data-tema-botao]").forEach(function (botao) {
   for (let i = 0; i < JANELA; i++) passo();
   while ((n / HZ) % CICLO < CICLO * 0.45) passo();
 
-  const reduzirMovimento = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let pausadoPeloUsuario = reduzirMovimento;
+  // Começa sempre rodando, mesmo com "reduzir movimento" ligado no aparelho:
+  // parada, a simulação não mostra nada. O botão Pausar está ali para quem
+  // quiser parar.
+  let pausadoPeloUsuario = false;
   let visivel = false;
 
   function atualizarRelogio() {
