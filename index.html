@@ -421,24 +421,65 @@
         </ol>
 
         <div class="card arquitetura">
-          <h3 class="card-titulo">Arquitetura</h3>
-          <div class="fluxo" role="img" aria-label="O goniômetro manda as leituras pela internet para a API, que guarda os dados no banco PostgreSQL e repassa cada leitura ao navegador em tempo real.">
-            <div class="no">
-              <strong>Goniômetro</strong>
-              <span>ESP32 + MPU6050, na bateria</span>
+          <div class="card-cabeca">
+            <h3 class="card-titulo">Arquitetura</h3>
+            <span>Cada ligação nos dois sentidos</span>
+          </div>
+          <div class="arq">
+            <div class="arq-moldura" aria-hidden="true"><span>Back-end</span></div>
+
+            <div class="arq-no arq-gonio">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.5-6"/><circle cx="12" cy="17" r="1.3"/></svg></span>
+              <div>
+                <strong>Goniômetro</strong>
+                <span class="arq-tec">ESP32 + MPU6050</span>
+                <p>Mede o ângulo 100 vezes por segundo, na bateria.</p>
+              </div>
             </div>
-            <div class="seta"><span>Wi-Fi · HTTPS</span><span>leituras do ângulo</span></div>
-            <div class="no no-central">
-              <strong>API</strong>
-              <span>Java · Spring Boot · Render</span>
-              <div class="no-banco"><strong>Banco de dados</strong><span>PostgreSQL</span></div>
+
+            <div class="arq-liga arq-liga-h arq-liga-1">
+              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Leituras do ângulo</strong><span>HTTPS · até 10 por segundo</span></span></div>
+              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Comandos</strong><span>gravar, zerar, identificar</span></span></div>
             </div>
-            <div class="seta"><span>SSE</span><span>tempo real</span></div>
-            <div class="no">
-              <strong>Navegador</strong>
-              <span>site na Vercel</span>
+
+            <div class="arq-no arq-api">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6"/></svg></span>
+              <div>
+                <strong>API</strong>
+                <span class="arq-tec">Java · Spring Boot · Render</span>
+                <p>Confere o aparelho e quem está logado, e guarda cada sessão.</p>
+              </div>
+            </div>
+
+            <div class="arq-liga arq-liga-banco">
+              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Grava</strong><span>sessões e curvas</span></span></div>
+              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Consulta</strong><span>fichas e gráficos</span></span></div>
+            </div>
+
+            <div class="arq-no arq-banco">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg></span>
+              <div>
+                <strong>Banco de dados</strong>
+                <span class="arq-tec">PostgreSQL</span>
+                <p>Clínicas, pacientes, sessões e medições.</p>
+              </div>
+            </div>
+
+            <div class="arq-liga arq-liga-h arq-liga-2">
+              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Ângulo ao vivo</strong><span>SSE · sem recarregar</span></span></div>
+              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Telas e comandos</strong><span>HTTPS · REST</span></span></div>
+            </div>
+
+            <div class="arq-no arq-nav">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 21h7M12 17v4"/></svg></span>
+              <div>
+                <strong>Navegador</strong>
+                <span class="arq-tec">Site na Vercel</span>
+                <p>O fisioterapeuta acompanha o ângulo e grava o movimento.</p>
+              </div>
             </div>
           </div>
+          <p class="arq-nota">O goniômetro não recebe conexões: os comandos da tela voltam na resposta de cada envio dele.</p>
         </div>
 
         <h3 class="subtitulo">O que o sistema faz</h3>
