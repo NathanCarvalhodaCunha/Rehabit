@@ -1,6 +1,6 @@
 # Auditoria de segurança do Rehabit — outubro de 2026
 
-Branch: `ccr-81dc4b05-1x3i6j` (base: `7322333`, o `main` depois do PR #29).
+Correções no `main` pelo PR #30 (merge `2280783`, de 13/10/2026), sobre a base `7322333`, que era o `main` depois do PR #29.
 
 ## 1. Escopo e método
 
@@ -104,6 +104,7 @@ Branch: `ccr-81dc4b05-1x3i6j` (base: `7322333`, o `main` depois do PR #29).
 | API (JUnit + MockMvc, H2 em memória) | **140 passando**, 0 falhas (eram cerca de 60 antes da auditoria) | `cd rehabit-api/rehabit-api && mvn test` |
 | Site (Playwright: estático, XSS em 20+ telas, ICS, CSP em todas as páginas, ids da URL) | **79 de 79** | `node tests/seguranca-front/rodar.js` |
 | Ponta a ponta local (jar + site + Chromium) | **23 de 23** | `node tests/ponta-a-ponta/e2e.js` |
+| Site novo contra a API antiga (o jar do `main` de antes) | **6 de 6** | cadastro com foto, login, goniômetro e link de recuperação |
 | Firmware | Compila sem avisos nos núcleos ESP32 2.0.9 e 3.3.2; bloco de certificados conferido (7 raízes, SHA-256 igual ao repositório da Mozilla) | `arduino-cli compile` |
 
 **Contraprova no código antigo:**
@@ -120,7 +121,11 @@ Branch: `ccr-81dc4b05-1x3i6j` (base: `7322333`, o `main` depois do PR #29).
 1. **`REHABIT_JWT_SECRET` no Render, antes do deploy.** Sem ela a API não sobe em produção. Gere com `openssl rand -base64 64`.
    - Se houver qualquer chance de a produção ter rodado com o valor-padrão antigo (ele está no histórico do git e era usado quando a variável faltava), a troca é obrigatória.
    - Trocar encerra todas as sessões e exige parear de novo todos os goniômetros.
-2. **Ordem do deploy:** API primeiro, depois o site. O site novo usa rotas que só a API nova tem: foto do cadastro, ingresso do SSE e validação do link por POST. O banco ganha sozinho a tabela `tb13_arquivo_enviado` e as colunas novas (`ddl-auto=update`).
+2. **Deploy da API:** o site já está no ar com o merge, mas a API do Render só muda com o deploy dela (*Manual Deploy → Deploy latest commit*), e só sobe com a chave do item 1. Até lá, o site novo continua funcionando com a API antiga:
+   - a foto do cadastro e o link de recuperação voltam para as rotas antigas;
+   - o goniômetro passa ao polling.
+
+   O banco ganha sozinho a tabela `tb13_arquivo_enviado` e as colunas novas (`ddl-auto=update`).
 3. **Firmware 2.4:** testar num aparelho antes de distribuir, depois regravar todos os aparelhos (a 2.3 aceita qualquer certificado). Conferir:
    - a cadeia de certificado da produção é aceita;
    - um aparelho novo abre o portal sozinho;
