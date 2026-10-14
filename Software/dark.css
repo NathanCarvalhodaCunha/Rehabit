@@ -485,15 +485,14 @@ body.dark .aviso-demo {
 
 /* ---------- Tutorial do goniômetro: luz do aparelho (tema escuro) ----------
    A luz acesa é o mesmo azul nos dois temas; mudam a luz apagada, o aro e a
-   caixinha em volta dela, os cartões e o trilho da barrinha de ritmo, que no
-   escuro sumiriam. Os títulos já ficam brancos pelo --ink-strong do tema. */
+   caixinha em volta dela e os cartões, que no escuro sumiriam. Os títulos já
+   ficam brancos pelo --ink-strong do tema. */
 body.dark .tutorial-led-card {
   --led-apagado: #2A3563;
   --led-aro: #1B2647;
   --led-sombra: rgba(0,0,0,.35);
   --led-caixa: linear-gradient(180deg, rgba(47,128,255,.06) 0%, rgba(47,128,255,.13) 100%);
   --led-caixa-borda: #1F2A50;
-  --led-trilho: #1B2647;
   --led-marca: rgba(47,128,255,.1);
   --led-cartao: #0B1430;
   --led-icone: #7AAFFF;

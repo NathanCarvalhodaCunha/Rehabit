@@ -482,7 +482,8 @@ button { font-family: inherit; cursor: pointer; }
 .aparelho-marca { fill: rgba(255,255,255,.82); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-anchor: middle; }
 /* Luz: apagada sem contato, acesa recebendo leituras ou gravando, fraca
    calibrando (BRILHO_CALIBRANDO do firmware: (38 / 255) ^ 0,6). Parada (sem
-   animação), a que pisca aparece acesa, como no tutorial. */
+   animação), a que pisca aparece acesa, como no tutorial. Pisca sempre,
+   mesmo com "reduzir movimento" ligado, como as luzes do tutorial. */
 .aparelho-luz { opacity: 0; transition: opacity .2s; }
 .aparelho[data-ritmo="tudo-certo"] .aparelho-luz,
 .aparelho[data-ritmo="gravando"] .aparelho-luz,
@@ -499,14 +500,12 @@ button { font-family: inherit; cursor: pointer; }
 .aparelho[data-estado="sem-contato"] .aparelho-onda-ponto { fill: var(--aparelho-onda-sem-contato); }
 /* Esperando o aparelho: um anel que se abre devagar em volta dele. */
 .aparelho-procura { fill: none; stroke: var(--aparelho-onda); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
-@media (prefers-reduced-motion: no-preference) {
-  .aparelho[data-ritmo="tudo-certo"] .aparelho-luz { animation: tutorial-led-tudo-certo 2s step-end infinite; }
-  .aparelho[data-ritmo="identificar"] .aparelho-luz { animation: tutorial-led-identificar 6s step-end infinite; }
-  .aparelho[data-estado="ligado"] .aparelho-onda { animation: aparelho-onda 2s ease-in-out infinite; }
-  .aparelho[data-estado="ligado"] .aparelho-onda:nth-child(2) { animation-delay: .2s; }
-  .aparelho[data-estado="ligado"] .aparelho-onda:nth-child(3) { animation-delay: .4s; }
-  .aparelho:not([data-estado="ligado"]) .aparelho-procura { animation: aparelho-procura 2.6s ease-out infinite; }
-}
+.aparelho[data-ritmo="tudo-certo"] .aparelho-luz { animation: tutorial-led-tudo-certo 2s step-end infinite; }
+.aparelho[data-ritmo="identificar"] .aparelho-luz { animation: tutorial-led-identificar 6s step-end infinite; }
+.aparelho[data-estado="ligado"] .aparelho-onda { animation: aparelho-onda 2s ease-in-out infinite; }
+.aparelho[data-estado="ligado"] .aparelho-onda:nth-child(2) { animation-delay: .2s; }
+.aparelho[data-estado="ligado"] .aparelho-onda:nth-child(3) { animation-delay: .4s; }
+.aparelho:not([data-estado="ligado"]) .aparelho-procura { animation: aparelho-procura 2.6s ease-out infinite; }
 @keyframes aparelho-onda {
   0%, 100% { opacity: .35; }
   50% { opacity: 1; }
@@ -3160,9 +3159,9 @@ button.form-avatar {
    mais contraste com o apagado do que a tela consegue mostrar, e com a conta
    direta a luz fraca da calibração (38 de 255, opacidade .149) ficava igual à
    apagada. Com o expoente ela fica em .319 — fraca, mas acesa —, e o aceso e
-   o apagado dos piscas continuam 1 e 0. Sem animação (prefers-reduced-motion),
-   cada luz fica parada e uma barrinha desenha 6 segundos do ritmo no lugar do
-   movimento. */
+   o apagado dos piscas continuam 1 e 0. As luzes piscam sempre, mesmo com
+   "reduzir movimento" ligado no aparelho: o jeito de piscar é o que o
+   tutorial ensina, e parada a luz não diz nada. */
 .tutorial-led-card {
   --led-aceso: #2F80FF;
   --led-apagado: #C8D2E1;
@@ -3170,7 +3169,6 @@ button.form-avatar {
   --led-sombra: rgba(16,24,40,.14);
   --led-caixa: linear-gradient(180deg, #F5F9FF 0%, #E8F1FF 100%);
   --led-caixa-borda: rgba(21,101,216,.14);
-  --led-trilho: #E3E9F2;
   --led-marca: #F0F6FF;
   --led-cartao: #FFFFFF;
   --led-icone: var(--brand);
@@ -3185,7 +3183,6 @@ button.form-avatar {
 }
 .tutorial-led-head h3 { margin: 0 0 6px; font-size: 18px; font-weight: 800; color: var(--ink-strong); letter-spacing: -.01em; }
 .tutorial-led-head > p { margin: 0; max-width: 820px; color: var(--ink); font-size: 14.5px; line-height: 1.55; }
-.tutorial-led-head .tutorial-led-legenda { margin-top: 14px; color: var(--ink-muted); font-size: 13px; font-weight: 600; }
 
 .tutorial-led-card a {
   color: var(--brand); font-weight: 600;
@@ -3238,19 +3235,10 @@ button.form-avatar {
   .tutorial-led-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tutorial-led-item.is-largo { grid-column: 1 / -1; }
   .tutorial-led-item.is-largo .tutorial-led-desc { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 28px; }
-  /* Mesma largura da barrinha dos cartões de meia linha (meia lista menos o
-     vão e o padding), para 6 s terem o mesmo tamanho em todos. */
-  .tutorial-led-item.is-largo .tutorial-led-ritmo { width: calc(50% - 27px); }
-  /* Cabeça, barrinha e descrição em linhas compartilhadas com o cartão
-     vizinho: um título que quebra linha não desce a barrinha e o divisor só
-     de um lado. A barrinha só aparece sem animação, daí as duas contagens. */
+  /* Cabeça e descrição em linhas compartilhadas com o cartão vizinho: um
+     título que quebra linha não desce o divisor só de um lado. */
   @supports (grid-template-rows: subgrid) {
     .tutorial-led-lista > .tutorial-led-item { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 14px; align-content: start; }
-  }
-}
-@media (min-width: 960px) and (prefers-reduced-motion: reduce) {
-  @supports (grid-template-rows: subgrid) {
-    .tutorial-led-lista > .tutorial-led-item { grid-row: span 3; }
   }
 }
 .tutorial-led-item {
@@ -3317,67 +3305,18 @@ button.form-avatar {
 .tutorial-led-casos { margin: 0; padding-left: 18px; }
 .tutorial-led-casos li + li { margin-top: 6px; }
 
-/* Barrinha do ritmo: 100% da largura são 6 s, então 1 s = 16,667%. A
-   piscada de 60 ms ganha no mínimo 3 px, senão some em tela estreita. */
-.tutorial-led-ritmo {
-  display: block; width: 100%; height: 10px;
-  border-radius: 4px; background-color: var(--led-trilho); background-repeat: no-repeat;
-}
-.tutorial-led-ritmo[data-ritmo="tudo-certo"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 max(1%, 3px), transparent 0 33.3333%);
-}
-.tutorial-led-ritmo[data-ritmo="calibrando"] {
-  background-image: linear-gradient(rgba(47,128,255,.319), rgba(47,128,255,.319));
-}
-.tutorial-led-ritmo[data-ritmo="gravando"] { background-color: var(--led-aceso); }
-/* Os 4 s do Identificar ocupam 2/3 da barra (dentro deles, 80 ms = 2%); aos
-   4 s a luz volta ao padrão de antes, aqui o de tudo certo, que já começa
-   com a piscada curtinha. */
-.tutorial-led-ritmo[data-ritmo="identificar"] {
-  background-image:
-    repeating-linear-gradient(90deg, var(--led-aceso) 0 2%, transparent 0 4%),
-    linear-gradient(90deg, transparent 0 66.6667%, var(--led-aceso) 0 calc(66.6667% + max(1%, 3px)), transparent 0);
-  background-size: 66.6667% 100%, 100% 100%;
-}
-/* Respirando: dois ciclos de 3 s, com o brilho de 250 em 250 ms. O azul é
-   o --led-aceso com a mesma opacidade da luz animada como transparência. */
-.tutorial-led-ritmo[data-ritmo="portal"] {
-  background-image: repeating-linear-gradient(90deg,
-    rgba(47,128,255,.143) 0%, rgba(47,128,255,.254) 4.1667%, rgba(47,128,255,.464) 8.3333%,
-    rgba(47,128,255,.677) 12.5%, rgba(47,128,255,.849) 16.6667%, rgba(47,128,255,.962) 20.8333%,
-    rgba(47,128,255,1) 25%, rgba(47,128,255,.962) 29.1667%, rgba(47,128,255,.849) 33.3333%,
-    rgba(47,128,255,.677) 37.5%, rgba(47,128,255,.464) 41.6667%, rgba(47,128,255,.254) 45.8333%,
-    rgba(47,128,255,.143) 50%);
-}
-.tutorial-led-ritmo[data-ritmo="devagar"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 8.3333%, transparent 0 16.6667%);
-}
-/* 100 aceso, 150 apagado, 100 aceso e 1650 apagado, três vezes. */
-.tutorial-led-ritmo[data-ritmo="sem-servidor"] {
-  background-image: repeating-linear-gradient(90deg,
-    var(--led-aceso) 0 1.6667%, transparent 0 4.1667%,
-    var(--led-aceso) 0 5.8333%, transparent 0 33.3333%);
-}
-.tutorial-led-ritmo[data-ritmo="sensor"] {
-  background-image: repeating-linear-gradient(90deg, var(--led-aceso) 0 2.5%, transparent 0 5%);
-}
-
-/* Com movimento liberado, a luz pisca de verdade e a barrinha sai de cena.
-   Tempos de brilhoDoModo(): 60 aceso / 1940 apagado (tudo certo), 80 / 80 por
-   4 s (Identificar), cosseno de 3 s entre o brilho 10 e o 255 (portal),
-   500 / 500 (sem Wi-Fi ou sem pareamento), piscada dupla 100-150-100-1650
-   (servidor calado) e 150 / 150 (sem sensor). Todo padrão começa aceso, como
-   no firmware, que recomeça o ritmo a cada troca de modo. */
-@media (prefers-reduced-motion: no-preference) {
-  .tutorial-led-ritmo,
-  .tutorial-led-head .tutorial-led-legenda { display: none; }
-  .tutorial-led-luz[data-ritmo="tudo-certo"]::after { animation: tutorial-led-tudo-certo 2s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="identificar"]::after { animation: tutorial-led-identificar 6s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="portal"]::after { animation: tutorial-led-respirar 3s linear infinite; }
-  .tutorial-led-luz[data-ritmo="devagar"]::after { animation: tutorial-led-pisca 1s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="sem-servidor"]::after { animation: tutorial-led-dupla 2s step-end infinite; }
-  .tutorial-led-luz[data-ritmo="sensor"]::after { animation: tutorial-led-pisca 300ms step-end infinite; }
-}
+/* A luz pisca de verdade. Tempos de brilhoDoModo(): 60 aceso / 1940 apagado
+   (tudo certo), 80 / 80 por 4 s (Identificar), cosseno de 3 s entre o
+   brilho 10 e o 255 (portal), 500 / 500 (sem Wi-Fi ou sem pareamento),
+   piscada dupla 100-150-100-1650 (servidor calado) e 150 / 150 (sem
+   sensor). Todo padrão começa aceso, como no firmware, que recomeça o ritmo
+   a cada troca de modo. */
+.tutorial-led-luz[data-ritmo="tudo-certo"]::after { animation: tutorial-led-tudo-certo 2s step-end infinite; }
+.tutorial-led-luz[data-ritmo="identificar"]::after { animation: tutorial-led-identificar 6s step-end infinite; }
+.tutorial-led-luz[data-ritmo="portal"]::after { animation: tutorial-led-respirar 3s linear infinite; }
+.tutorial-led-luz[data-ritmo="devagar"]::after { animation: tutorial-led-pisca 1s step-end infinite; }
+.tutorial-led-luz[data-ritmo="sem-servidor"]::after { animation: tutorial-led-dupla 2s step-end infinite; }
+.tutorial-led-luz[data-ritmo="sensor"]::after { animation: tutorial-led-pisca 300ms step-end infinite; }
 @keyframes tutorial-led-pisca {
   0% { opacity: 1; }
   50%, 100% { opacity: 0; }

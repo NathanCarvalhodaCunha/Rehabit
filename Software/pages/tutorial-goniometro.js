@@ -38,10 +38,6 @@
     return -(Math.cos(Math.PI * t) - 1) / 2;
   }
 
-  function prefersReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-
   let animando = false;
 
   function animarSweep(onDone) {
@@ -80,12 +76,9 @@
     });
   }
 
-  if (prefersReducedMotion()) {
-    // Sem animação, mostra o fim do movimento: é a posição que o tutorial
-    // está ensinando a alcançar.
-    aplicar(ABERTURA_FINAL);
-  } else {
-    aplicar(ABERTURA_INICIAL);
-    loop();
-  }
+  // Anima sempre, mesmo com "reduzir movimento" ligado no aparelho: o braço
+  // subindo e o ângulo contando são o que o tutorial ensina, e parado o
+  // boneco não mostra de onde vêm os 90°.
+  aplicar(ABERTURA_INICIAL);
+  loop();
 })();
