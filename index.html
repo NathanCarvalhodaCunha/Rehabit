@@ -444,23 +444,14 @@
             <h3 class="card-titulo">Arquitetura</h3>
             <span>Cada ligação nos dois sentidos.</span>
           </div>
+          <!-- Os três grupos seguem o mesmo desenho: moldura, a peça principal em
+               cima (a que fala com o grupo vizinho), a ligação nos dois sentidos e
+               a peça de apoio embaixo. Ida é de cima para baixo (ou da esquerda
+               para a direita); volta, o contrário. -->
           <div class="arq">
             <div class="arq-moldura arq-moldura-gonio" aria-hidden="true"><span>Goniômetro</span></div>
             <div class="arq-moldura arq-moldura-back" aria-hidden="true"><span>Back-end</span></div>
-
-            <div class="arq-no arq-sensor">
-              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12V3.5M12 12l7.4 4.3M12 12l-7.4 4.3"/><path d="M9.5 6 12 3.5 14.5 6M17 17.6l2.4-1.3-.9-2.6M5.5 13.7l-.9 2.6L7 17.6"/></svg></span>
-              <div>
-                <strong>Sensor MPU6050</strong>
-                <span class="arq-tec">Acelerômetro + giroscópio</span>
-                <p>Preso ao segmento que se move, sente a inclinação e a rotação da articulação.</p>
-              </div>
-            </div>
-
-            <div class="arq-liga arq-liga-sensor">
-              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Aceleração e giro</strong><span>100 vezes por segundo</span></span></div>
-              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Pede a leitura</strong><span>I²C a 400 kHz</span></span></div>
-            </div>
+            <div class="arq-moldura arq-moldura-front" aria-hidden="true"><span>Front-end</span></div>
 
             <div class="arq-no arq-esp">
               <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9.5 2.5V6M14.5 2.5V6M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5"/></svg></span>
@@ -476,6 +467,24 @@
               </div>
             </div>
 
+            <div class="arq-liga arq-liga-sensor">
+              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Pede a leitura</strong><span>I²C a 400 kHz</span></span></div>
+              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Aceleração e giro</strong><span>100 vezes por segundo</span></span></div>
+            </div>
+
+            <div class="arq-no arq-sensor">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12V3.5M12 12l7.4 4.3M12 12l-7.4 4.3"/><path d="M9.5 6 12 3.5 14.5 6M17 17.6l2.4-1.3-.9-2.6M5.5 13.7l-.9 2.6L7 17.6"/></svg></span>
+              <div>
+                <strong>Sensor MPU6050</strong>
+                <span class="arq-tec">Acelerômetro + giroscópio</span>
+                <p>Preso ao segmento que se move, sente a inclinação e a rotação da articulação.</p>
+                <ul class="arq-chips">
+                  <li>Calibrado ao ligar</li>
+                  <li>3,3 V da placa</li>
+                </ul>
+              </div>
+            </div>
+
             <div class="arq-liga arq-liga-h arq-liga-1">
               <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Leituras do ângulo</strong><span>HTTPS · até 10 por segundo</span></span></div>
               <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Comandos</strong><span>gravar, zerar, identificar</span></span></div>
@@ -487,6 +496,11 @@
                 <strong>API</strong>
                 <span class="arq-tec">Java · Spring Boot · Render</span>
                 <p>Confere o aparelho e quem está logado, e guarda cada sessão.</p>
+                <ul class="arq-chips">
+                  <li>Tokens JWT</li>
+                  <li>Limite de tentativas</li>
+                  <li>Verificação anti-robô</li>
+                </ul>
               </div>
             </div>
 
@@ -501,6 +515,10 @@
                 <strong>Banco de dados</strong>
                 <span class="arq-tec">PostgreSQL</span>
                 <p>Clínicas, pacientes, sessões e medições.</p>
+                <ul class="arq-chips">
+                  <li>Hibernate (JPA)</li>
+                  <li>H2 no desenvolvimento</li>
+                </ul>
               </div>
             </div>
 
@@ -513,8 +531,31 @@
               <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 21h7M12 17v4"/></svg></span>
               <div>
                 <strong>Navegador</strong>
-                <span class="arq-tec">Site na Vercel</span>
+                <span class="arq-tec">HTML, CSS e JavaScript</span>
                 <p>O fisioterapeuta acompanha o ângulo e grava o movimento.</p>
+                <ul class="arq-chips">
+                  <li>Tema claro e escuro</li>
+                  <li>Gráficos de evolução</li>
+                  <li>Relatórios em PDF</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="arq-liga arq-liga-vercel">
+              <div class="arq-via ida"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Pede as telas</strong><span>HTTPS</span></span></div>
+              <div class="arq-via volta"><span class="arq-trilho" aria-hidden="true"></span><span class="arq-rotulo"><strong>Páginas do site</strong><span>HTML, CSS e JS</span></span></div>
+            </div>
+
+            <div class="arq-no arq-vercel">
+              <span class="arq-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.1 4.5 4.5 0 0 0 6.5 19z"/></svg></span>
+              <div>
+                <strong>Vercel</strong>
+                <span class="arq-tec">rehabit.com.br</span>
+                <p>Entrega as páginas do site, com os cabeçalhos de segurança.</p>
+                <ul class="arq-chips">
+                  <li>CSP e HSTS</li>
+                  <li>Publica a cada merge</li>
+                </ul>
               </div>
             </div>
           </div>

@@ -335,7 +335,8 @@ cite { font-style: normal; white-space: nowrap; }
 .abaixo { margin-top: 16px; }
 
 /* Textos corridos justificados: parágrafos, descrições, legendas e
-   referências. Títulos, rótulos, selos e números continuam à esquerda. A
+   referências. Títulos, rótulos, selos, números e o texto do cartão da
+   arquitetura (caixas estreitas demais para justificar) continuam à esquerda. A
    hifenização (pelo lang="pt-BR" do html) evita os buracos entre as palavras
    que o justificado abre nas colunas estreitas, e só parte palavra de 6
    letras ou mais, deixando ao menos 3 de cada lado. */
@@ -345,8 +346,6 @@ cite { font-style: normal; white-space: nowrap; }
 .description-card p,
 .access-card .s,
 .lista-info dd,
-.arq-no p,
-.arq-nota,
 .patrocinador-texto p,
 .referencias li,
 .sim-rodape figcaption,
@@ -372,12 +371,13 @@ cite { font-style: normal; white-space: nowrap; }
 }
 .icone-card svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Arquitetura. Uma grade só para os dois arranjos, com cada peça na sua
-   célula: no celular tudo empilhado, com as ligações em pé; com o cartão
-   largo, ESP32, API e navegador lado a lado, o sensor debaixo do ESP32 e o
-   banco debaixo da API. Cada moldura (goniômetro e back-end) é um elemento à
-   parte que ocupa as células das suas peças, então as abraça nos dois
-   arranjos. */
+/* Arquitetura. Três grupos com o mesmo desenho: moldura, a peça principal
+   em cima (ESP32, API, navegador), a ligação nos dois sentidos e a peça de
+   apoio embaixo (sensor, banco, Vercel). Uma grade só para os dois
+   arranjos, com cada peça na sua célula: no celular os grupos se empilham;
+   com o cartão largo, ficam lado a lado e as ligações entre eles deitam.
+   Cada moldura é um elemento à parte que ocupa as células do seu grupo, então
+   abraça as peças nos dois arranjos. */
 .arquitetura { margin-top: 16px; container: arq / inline-size; }
 .arquitetura .card-cabeca { margin-bottom: 16px; }
 .arq {
@@ -391,18 +391,21 @@ cite { font-style: normal; white-space: nowrap; }
   --arq-moldura: rgba(122, 175, 255, .35);
   --arq-moldura-fundo: rgba(47, 128, 255, .06);
 }
-/* Celular: do sensor ao navegador, de cima para baixo. */
-.arq-sensor { grid-area: 1 / 1; }
+/* Celular: um grupo embaixo do outro, ligados pelas ligações entre eles. */
+.arq-esp { grid-area: 1 / 1; }
 .arq-liga-sensor { grid-area: 2 / 1; }
-.arq-esp { grid-area: 3 / 1; }
+.arq-sensor { grid-area: 3 / 1; }
 .arq-liga-1 { grid-area: 4 / 1; }
 .arq-api { grid-area: 5 / 1; }
 .arq-liga-banco { grid-area: 6 / 1; }
 .arq-banco { grid-area: 7 / 1; }
 .arq-liga-2 { grid-area: 8 / 1; }
 .arq-nav { grid-area: 9 / 1; }
+.arq-liga-vercel { grid-area: 10 / 1; }
+.arq-vercel { grid-area: 11 / 1; }
 .arq-moldura-gonio { grid-area: 1 / 1 / 4 / 2; }
 .arq-moldura-back { grid-area: 5 / 1 / 8 / 2; }
+.arq-moldura-front { grid-area: 9 / 1 / 12 / 2; }
 .arq-moldura {
   position: relative;
   border: 1px dashed var(--arq-moldura); border-radius: 14px; background: var(--arq-moldura-fundo);
@@ -412,15 +415,14 @@ cite { font-style: normal; white-space: nowrap; }
   font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
 }
 /* Dentro da moldura: espaço para o rótulo em cima e para a borda dos lados. */
-.arq-sensor, .arq-api { margin: 30px 12px 0; }
-.arq-esp, .arq-banco { margin: 0 12px 12px; }
+.arq-esp, .arq-api, .arq-nav { margin: 30px 12px 0; }
+.arq-sensor, .arq-banco, .arq-vercel { margin: 0 12px 12px; }
 
 .arq-no {
   display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; align-content: start;
   padding: 14px 16px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--hairline);
   position: relative; /* fica por cima da moldura */
 }
-.arq-api { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-suave); }
 .arq-icone {
   display: grid; place-items: center; width: 40px; height: 40px;
   border-radius: 10px; background: var(--brand-suave); color: var(--brand-texto);
@@ -441,11 +443,12 @@ cite { font-style: normal; white-space: nowrap; }
    volta à direita. */
 .arq-liga {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 14px; align-items: center; padding: 10px 12px;
+  column-gap: 10px; align-items: center; padding: 10px 6px;
 }
 .arq-via { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .arq-liga .ida { flex-direction: row-reverse; text-align: right; }
-.arq-rotulo { min-width: 0; font-size: 12.5px; line-height: 1.35; }
+/* Palavra que não cabe na via quebra em vez de vazar por baixo da vizinha. */
+.arq-rotulo { min-width: 0; font-size: 12.5px; line-height: 1.35; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
 .arq-rotulo strong { display: block; color: var(--ink-strong); font-size: 13px; }
 .arq-rotulo span { display: block; color: var(--ink-muted); }
 
@@ -477,35 +480,33 @@ cite { font-style: normal; white-space: nowrap; }
 
 .arq-nota { margin: 16px 0 0; color: var(--ink-muted); font-size: 13.5px; }
 
-/* Cartão largo: goniômetro, API e navegador na mesma linha. As ligações
+/* Cartão largo: os três grupos lado a lado, em colunas iguais. As ligações
    entre eles deitam: a via de ida em cima, com o rótulo sobre o trilho, e a
    de volta embaixo, com o rótulo sob o trilho. */
 @container arq (min-width: 860px) {
-  /* O goniômetro, com mais coisa dentro, fica com a coluna mais larga. */
-  .arq { grid-template-columns: minmax(0, 1.2fr) minmax(112px, 136px) minmax(0, 1fr) minmax(112px, 136px) minmax(0, .85fr); }
+  /* As ligações entre os grupos crescem junto com eles (0,6 da largura de um
+     grupo): com largura fixa, sobrava pouco para as vias em pé dentro dos
+     grupos nos cartões mais estreitos. */
+  .arq { grid-template-columns: minmax(0, 1fr) minmax(110px, .6fr) minmax(0, 1fr) minmax(110px, .6fr) minmax(0, 1fr); }
   /* Ícone em cima do título: a coluna é estreita para os dois lado a lado. */
   .arq-no { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  /* O ESP32 sobe para a linha da API (é ele que fala com ela) e o sensor
-     desce para a linha do banco. */
-  .arq-esp { grid-area: 1 / 1; margin: 30px 12px 0; }
+  .arq-esp { grid-area: 1 / 1; }
   .arq-liga-sensor { grid-area: 2 / 1; }
-  .arq-sensor { grid-area: 3 / 1; margin: 0 12px 12px; }
+  .arq-sensor { grid-area: 3 / 1; }
   .arq-liga-1 { grid-area: 1 / 2; }
   .arq-api { grid-area: 1 / 3; }
   .arq-liga-banco { grid-area: 2 / 3; }
   .arq-banco { grid-area: 3 / 3; }
   .arq-liga-2 { grid-area: 1 / 4; }
   .arq-nav { grid-area: 1 / 5; }
+  .arq-liga-vercel { grid-area: 2 / 5; }
+  .arq-vercel { grid-area: 3 / 5; }
   .arq-moldura-gonio { grid-area: 1 / 1 / 4 / 2; }
   .arq-moldura-back { grid-area: 1 / 3 / 4 / 4; }
-  /* O navegador e as ligações descem o mesmo tanto que o ESP32 e a API
-     descem para o rótulo da moldura, e esticam até a mesma altura. */
-  .arq-nav, .arq-liga-1, .arq-liga-2 { margin-top: 30px; }
-  /* Com o sensor embaixo, o dado dele sobe e o pedido do ESP32 desce. */
-  .arq-liga-sensor .ida .arq-trilho::after { top: -2px; bottom: auto; border-top-width: 0; border-bottom: 8px solid var(--arq-linha); }
-  .arq-liga-sensor .volta .arq-trilho::after { top: auto; bottom: -2px; border-bottom-width: 0; border-top: 8px solid var(--arq-linha); }
-  .arq-liga-sensor .ida .arq-trilho::before { animation-name: arq-sobe; }
-  .arq-liga-sensor .volta .arq-trilho::before { animation-name: arq-desce; }
+  .arq-moldura-front { grid-area: 1 / 5 / 4 / 6; }
+  /* As ligações entre os grupos descem o mesmo tanto que as peças de cima
+     descem para o rótulo da moldura: assim ficam na altura delas. */
+  .arq-liga-1, .arq-liga-2 { margin-top: 30px; }
   .arq-liga-h { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 0 10px; align-self: center; }
   .arq-liga-h .arq-via { flex: none; flex-direction: column; align-items: stretch; gap: 6px; text-align: center; }
   .arq-liga-h .ida { flex-direction: column-reverse; }
