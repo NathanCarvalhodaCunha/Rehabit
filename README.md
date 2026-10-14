@@ -4,6 +4,8 @@ Sistema de acompanhamento de fisioterapia para clínicas: cadastro de pacientes 
 
 Projeto de conclusão de curso (TCC) — Ensino Médio Técnico.
 
+**Site:** [rehabit.com.br](https://rehabit.com.br)
+
 ## Stack
 
 - **Frontend** — HTML, CSS e JavaScript puros (sem framework/bundler), com animações via [GSAP](https://gsap.com/). Duas áreas: `Login/` (autenticação) e `Software/` (aplicação, pós-login).
