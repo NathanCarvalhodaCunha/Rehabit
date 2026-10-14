@@ -246,6 +246,12 @@ cite { font-style: normal; white-space: nowrap; }
 .pro-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 24px; margin-bottom: 28px; }
 .pro-greeting h1 { margin: 0 0 8px; font-size: 28px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
 .pro-greeting h1 em { font-style: normal; color: var(--brand-texto); }
+/* A marca e o assunto do site dentro do h1, numa linha pequena acima do
+   slogan: é o título que o Google lê primeiro. */
+.pro-greeting h1 .h1-marca {
+  display: block; margin-bottom: 8px; color: var(--brand-texto);
+  font-size: 13px; font-weight: 800; letter-spacing: .06em; line-height: 1.4; text-transform: uppercase;
+}
 .pro-greeting p { color: var(--ink-muted); font-weight: 600; font-size: 15px; max-width: 46em; }
 .pro-user { display: flex; align-items: center; gap: 14px; }
 .pro-user strong { display: block; color: var(--ink-strong); font-size: 15px; text-wrap: balance; }
@@ -327,6 +333,10 @@ cite { font-style: normal; white-space: nowrap; }
 @media (min-width: 768px) and (max-width: 899px) { #projeto .grade-2 { grid-template-columns: minmax(0, 1fr); } }
 @media (min-width: 1280px) { .grade-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .abaixo { margin-top: 16px; }
+
+/* Perguntas frequentes: links no meio do texto, sublinhados para não
+   dependerem só da cor. */
+.perguntas a { color: var(--brand-texto); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 
 /* Como funciona */
 .passo-num {

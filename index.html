@@ -9,7 +9,8 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="site.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Rehabit é um goniômetro digital integrado a um sistema web para clínicas de fisioterapia: a amplitude de movimento chega à tela em tempo real e vira o gráfico de evolução do paciente. TCC da Etec Prof. Carmine Biagio Tundisi." />
+  <meta name="description" content="Rehabit: goniômetro digital e sistema web para clínicas de fisioterapia, TCC da Etec Prof. Carmine Biagio Tundisi, em Atibaia. A amplitude de movimento chega à tela em tempo real e vira o gráfico de evolução do paciente." />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://rehabit.com.br/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Rehabit" />
@@ -30,11 +31,24 @@
         "@type": "WebSite",
         "@id": "https://rehabit.com.br/#site",
         "name": "Rehabit",
+        "alternateName": ["Rehabit TCC", "rehabit.com.br"],
         "url": "https://rehabit.com.br/",
-        "inLanguage": "pt-BR"
+        "description": "Goniômetro digital e sistema web para clínicas de fisioterapia, TCC da Etec Prof. Carmine Biagio Tundisi, em Atibaia (SP).",
+        "inLanguage": "pt-BR",
+        "publisher": { "@id": "https://rehabit.com.br/#equipe" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://rehabit.com.br/#equipe",
+        "name": "Equipe Rehabit",
+        "url": "https://rehabit.com.br/",
+        "logo": "https://rehabit.com.br/icon-512.png",
+        "email": "tccrehabit@gmail.com",
+        "sameAs": ["https://github.com/NathanCarvalhodaCunha/Rehabit"]
       },
       {
         "@type": "SoftwareApplication",
+        "@id": "https://rehabit.com.br/#app",
         "name": "Rehabit",
         "url": "https://rehabit.com.br/",
         "applicationCategory": "HealthApplication",
@@ -43,6 +57,9 @@
         "description": "Goniômetro digital integrado a um sistema web para clínicas de fisioterapia: cadastro de pacientes e profissionais, agenda, registro de sessões e medição da amplitude de movimento em tempo real. Trabalho de Conclusão de Curso do Técnico em Desenvolvimento de Sistemas.",
         "image": "https://rehabit.com.br/og-image.jpg",
         "screenshot": "https://rehabit.com.br/assets/inicio/tela-paciente.jpg",
+        "keywords": "goniômetro digital, fisioterapia, amplitude de movimento, goniometria, TCC, Etec, Atibaia, ESP32, MPU6050",
+        "isAccessibleForFree": true,
+        "publisher": { "@id": "https://rehabit.com.br/#equipe" },
         "author": [
           { "@type": "Person", "name": "Jonatan Schaak" },
           { "@type": "Person", "name": "Matheus Gonçalves da Silva" },
@@ -111,6 +128,7 @@
       <symbol id="i-telas" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
       <symbol id="i-goniometro" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></symbol>
       <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+      <symbol id="i-perguntas" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
       <symbol id="i-equipe" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
       <symbol id="i-patrocinio" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
       <symbol id="i-externo" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
@@ -138,6 +156,7 @@
         <a href="#telas"><svg class="ico" aria-hidden="true"><use href="#i-telas"/></svg>Telas</a>
         <a href="#goniometro"><svg class="ico" aria-hidden="true"><use href="#i-goniometro"/></svg>Goniômetro</a>
         <a href="#documentacao"><svg class="ico" aria-hidden="true"><use href="#i-doc"/></svg>Documentação</a>
+        <a href="#perguntas"><svg class="ico" aria-hidden="true"><use href="#i-perguntas"/></svg>Perguntas</a>
         <a href="#equipe"><svg class="ico" aria-hidden="true"><use href="#i-equipe"/></svg>Equipe</a>
         <a href="#patrocinio"><svg class="ico" aria-hidden="true"><use href="#i-patrocinio"/></svg>Patrocínio</a>
       </nav>
@@ -173,7 +192,7 @@
       <section class="secao" id="inicio" aria-labelledby="inicio-titulo">
         <header class="pro-header">
           <div class="pro-greeting">
-            <h1 id="inicio-titulo">A evolução do paciente, <em>medida em graus</em>.</h1>
+            <h1 id="inicio-titulo"><span class="h1-marca">Rehabit · goniômetro digital para fisioterapia<span class="sr-only">.</span></span> A evolução do paciente, <em>medida em graus</em>.</h1>
             <p>O Rehabit une um goniômetro digital a um sistema web para clínicas de fisioterapia: o ângulo da articulação chega à tela em tempo real, e cada sessão vira um ponto no gráfico de evolução do paciente.</p>
           </div>
           <div class="pro-user">
@@ -836,6 +855,42 @@
               </ul>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Perguntas frequentes: respondem, com texto visível, o que se procura
+           no Google sobre o projeto ("o que é o Rehabit", "TCC Etec",
+           "goniômetro digital"). Mudou um fato aqui, confira o resto da página. -->
+      <section class="secao" id="perguntas" aria-labelledby="perguntas-titulo">
+        <header class="titulo-secao">
+          <h2 id="perguntas-titulo">Perguntas frequentes</h2>
+          <p>O essencial sobre o Rehabit, o goniômetro digital e o TCC.</p>
+        </header>
+        <div class="grade grade-2 perguntas">
+          <article class="card description-card">
+            <h3>O que é o Rehabit?</h3>
+            <p>Um goniômetro digital ligado a um sistema web para clínicas de fisioterapia. O aparelho mede a amplitude de movimento da articulação e manda cada leitura à tela do fisioterapeuta em tempo real; o sistema guarda as sessões e mostra a evolução do paciente em gráfico.</p>
+          </article>
+          <article class="card description-card">
+            <h3>Quem desenvolveu o Rehabit?</h3>
+            <p>Cinco alunos do Ensino Médio com Habilitação Profissional de Técnico em Desenvolvimento de Sistemas da Etec Prof. Carmine Biagio Tundisi, em Atibaia (SP), com a orientação de dois professores. É o Trabalho de Conclusão de Curso (TCC) da turma, apresentado em 2026.</p>
+          </article>
+          <article class="card description-card">
+            <h3>O que é um goniômetro digital?</h3>
+            <p>O goniômetro mede o ângulo de uma articulação, como o ombro ou o joelho. O manual tem duas hastes e uma escala lida a olho; o do Rehabit usa um sensor MPU6050 (acelerômetro e giroscópio) e um ESP32, que calculam o ângulo e o enviam pelo Wi-Fi.</p>
+          </article>
+          <article class="card description-card">
+            <h3>Como o Rehabit ajuda na fisioterapia?</h3>
+            <p>A amplitude de movimento é um dos principais sinais de que o tratamento está funcionando. Com o Rehabit, ela deixa de ser estimada a olho: cada sessão registra o ângulo, a dor relatada e a curva do movimento, e a ficha mostra o progresso do paciente até a meta.</p>
+          </article>
+          <article class="card description-card">
+            <h3>Dá para testar o sistema?</h3>
+            <p>Sim: a <a href="Login/login.html?demo">conta de demonstração</a> abre uma clínica fictícia com pacientes, meses de sessões e um goniômetro simulado na tela Dispositivo. Ela é só de leitura; para usar com dados próprios, <a href="Login/register.html">cadastre a sua clínica</a>.</p>
+          </article>
+          <article class="card description-card">
+            <h3>O código do Rehabit é aberto?</h3>
+            <p>Sim. O site, a API em Java com Spring Boot e o firmware do goniômetro estão no <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">GitHub</a>, com licença MIT, junto com o guia de montagem do aparelho.</p>
+          </article>
         </div>
       </section>
 
