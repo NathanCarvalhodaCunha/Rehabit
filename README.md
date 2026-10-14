@@ -237,6 +237,14 @@ Outros pontos:
   `tests/README.md`). O relatório da auditoria de outubro de 2026 — o que foi
   encontrado, como foi corrigido e o que ainda depende de configuração — está
   em `docs/seguranca/auditoria-2026-10.md`.
+- **Varredura de segredos.** Em 14/10/2026, o histórico completo (239
+  commits, todos os branches) passou pelo gitleaks 8.21 e por uma busca
+  própria: chave dos tokens, Brevo, Cloudinary, Turnstile, banco, chaves
+  privadas e senhas de app. Nenhuma senha ou chave de serviço externo
+  apareceu. No histórico ficaram só a chave antiga dos tokens, que é o motivo
+  de a `REHABIT_JWT_SECRET` ser obrigatória e nova, e o hash da linha antiga
+  do `Rehabit.sql`. Para repetir: `gitleaks git --log-opts="--all"` num
+  clone completo (`git clone --mirror`).
 - **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
   cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
   o da Vercel.
