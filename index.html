@@ -198,7 +198,7 @@
           </div>
           <div class="card kpi-card">
             <p class="kpi-rotulo">Testes automatizados</p>
-            <p class="kpi-valor">148</p>
+            <p class="kpi-valor">156</p>
             <p class="kpi-detalhe pos">na API do sistema</p>
           </div>
           <div class="card kpi-card">
@@ -290,7 +290,7 @@
           <div class="col-side">
             <div class="card access-card">
               <p class="t">Conta de demonstração</p>
-              <p class="s">Entre com um perfil de teste: uma fisioterapeuta de clínica fictícia, com pacientes e meses de sessões. Dá para ver tudo; nada pode ser alterado.</p>
+              <p class="s">Entre com um perfil de teste: uma fisioterapeuta de clínica fictícia, com pacientes, meses de sessões e um goniômetro simulado na tela Dispositivo. Dá para ver tudo; nada pode ser alterado.</p>
               <a class="btn-primary" href="Login/login.html?demo">Entrar na demonstração</a>
               <p class="s alternativa">Prefere usar dados seus? <a class="link" href="Login/register.html">Cadastre sua clínica</a>.</p>
             </div>
@@ -390,7 +390,7 @@
           </div>
           <div class="card access-card">
             <p class="t">Quer ver por dentro?</p>
-            <p class="s">Use o perfil de teste da conta de demonstração e navegue pelas telas com dados fictícios.</p>
+            <p class="s">Use o perfil de teste da conta de demonstração e navegue pelas telas com dados fictícios. Na tela Dispositivo, um goniômetro simulado manda leituras como o aparelho de verdade.</p>
             <a class="btn-primary" href="Login/login.html?demo">Entrar na demonstração</a>
           </div>
         </div>
@@ -697,7 +697,7 @@
           <li class="card description-card">
             <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4"/><path d="m10.4 12.6 9.1-9.1"/><path d="m16 6 2.5 2.5"/><path d="m13.5 8.5 2 2"/></svg></span>
             <h3>Pareamento seguro</h3>
-            <p>O código de 6 dígitos vale 10 minutos e serve uma vez. Com ele, o aparelho ganha um token próprio, que a clínica pode revogar.</p>
+            <p>A clínica ou um profissional dela gera, na tela Dispositivo, um código de 6 dígitos que vale 10 minutos e serve uma vez. Com ele, o aparelho ganha um token próprio, que a clínica pode revogar.</p>
           </li>
           <li class="card description-card">
             <span class="icone-card" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5v-3a4 4 0 0 1 8 0v3"/><path d="M12 14.5V17"/></svg></span>
@@ -763,7 +763,7 @@
           <li class="card description-card">
             <span class="badge-status ok">Em uso</span>
             <h3>Testes automatizados da API</h3>
-            <p>148 testes de integração rodam a API com banco em memória: login e limites de tentativa, senhas e sessões, fotos, goniômetro, exclusão de conta e as contas de demonstração.</p>
+            <p>156 testes de integração rodam a API com banco em memória: login e limites de tentativa, senhas e sessões, fotos, goniômetro e pareamento, exclusão de conta e as contas de exemplo.</p>
           </li>
           <li class="card description-card">
             <span class="badge-status ok">Em uso</span>
@@ -778,7 +778,7 @@
           <li class="card description-card">
             <span class="badge-status ok">Concluída</span>
             <h3>Auditoria de segurança</h3>
-            <p>Em outubro de 2026, a API, o site e o firmware foram revisados com base no OWASP Top 10. As falhas encontradas foram corrigidas, a maioria com um teste automático que impede que voltem.</p>
+            <p>Em outubro de 2026, a API, o site e o firmware foram revisados com base no OWASP Top 10: 36 achados na auditoria e 18 na reauditoria. Os que dependiam do código foram corrigidos, a maioria com um teste que impede que voltem, e o histórico do repositório passou por uma varredura de segredos.</p>
           </li>
           <li class="card description-card">
             <span class="badge-status">Previsto</span>
@@ -825,6 +825,7 @@
                 <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/goniometro-esp32-GUIA.md">Guia de montagem do goniômetro</a><span>peças, esquema, ligações e gravação do firmware</span></li>
                 <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/Firmware/teste-hardware-GUIA.md">Teste da placa soldada</a><span>multímetro, regulagem do MT3608 e programa de teste</span></li>
                 <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/tree/main/docs/MER">Arquivos do MER</a><span>modelo do banco em brModelo, PNG e XML</span></li>
+                <li><a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/docs/seguranca/auditoria-2026-10.md">Auditoria de segurança</a><span>o que foi encontrado, corrigido e testado em outubro de 2026</span></li>
               </ul>
             </div>
             <div class="card referencias">
