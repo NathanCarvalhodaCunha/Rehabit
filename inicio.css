@@ -334,6 +334,29 @@ cite { font-style: normal; white-space: nowrap; }
 @media (min-width: 1280px) { .grade-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .abaixo { margin-top: 16px; }
 
+/* Textos corridos justificados: parágrafos, descrições, legendas e
+   referências. Títulos, rótulos, selos e números continuam à esquerda. A
+   hifenização (pelo lang="pt-BR" do html) evita os buracos entre as palavras
+   que o justificado abre nas colunas estreitas, e só parte palavra de 6
+   letras ou mais, deixando ao menos 3 de cada lado. */
+.pro-greeting p,
+.titulo-secao p,
+.texto-apoio,
+.description-card p,
+.access-card .s,
+.lista-info dd,
+.arq-no p,
+.arq-nota,
+.patrocinador-texto p,
+.referencias li,
+.sim-rodape figcaption,
+.gonio-foto figcaption {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
+}
+
 /* Perguntas frequentes: links no meio do texto, sublinhados para não
    dependerem só da cor. */
 .perguntas a { color: var(--brand-texto); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
