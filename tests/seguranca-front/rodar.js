@@ -240,6 +240,13 @@ async function grupoEstatico() {
       if ((csp["object-src"] || []).join(" ") !== "'none'") problemasCabecalhos.push(`${caminho}: object-src não é 'none'`);
       if ((csp["frame-ancestors"] || []).join(" ") !== "'none'") problemasCabecalhos.push(`${caminho}: frame-ancestors não é 'none'`);
       if (!csp["base-uri"]) problemasCabecalhos.push(`${caminho}: CSP sem base-uri`);
+      // Fotos do Cloudinary só da conta do Rehabit: com o host inteiro, uma
+      // injeção de HTML mandaria dados para a conta de outra pessoa.
+      (csp["img-src"] || []).filter((f) => /cloudinary\.com/i.test(f)).forEach((f) => {
+        if (!/^https:\/\/res\.cloudinary\.com\/[a-z0-9_-]+\/$/i.test(f)) {
+          problemasCabecalhos.push(`${caminho}: img-src aceita o Cloudinary fora da conta do Rehabit (${f})`);
+        }
+      });
       if (!csp["form-action"]) problemasCabecalhos.push(`${caminho}: CSP sem form-action`);
     }
     const hsts = h["Strict-Transport-Security"] || "";

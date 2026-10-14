@@ -163,8 +163,13 @@ lá, no modo avançado, com dois registros:
 | CNAME | `www.rehabit.com.br` | `0720e30296230fa6.vercel-dns-017.com` |
 
 O `www` redireciona para o endereço sem `www` (308, configurado em *Domains*
-na Vercel). O GitHub Pages (`nathancarvalhodacunha.github.io/Rehabit`) segue
-publicando a mesma `main` e serve de reserva.
+na Vercel). O GitHub Pages (`nathancarvalhodacunha.github.io/Rehabit`) não é
+mais uma cópia do site: o arquivo `CNAME` da raiz dá a ele o domínio
+`rehabit.com.br`, e o GitHub responde a qualquer endereço do `github.io` com um
+redirecionamento para o mesmo caminho em `rehabit.com.br`. A cópia não recebia
+a CSP nem o HSTS do `vercel.json` e concorria na busca. Para desligar o Pages de
+vez: *Settings → Pages → Unpublish site* (aí o `CNAME` deixa de ter efeito).
+O `CNAME` está no `.vercelignore`, então não vira endereço no site.
 
 Ao pôr o site em um endereço novo, dois ajustes fora do repositório:
 
@@ -225,11 +230,13 @@ Outros pontos:
   pacote publicado no npm para a pasta da versão nova, troque o caminho e o
   `integrity` nas páginas — `tests/seguranca-front` confere que o arquivo é
   byte a byte o do npm.
-- **Fotos do Cloudinary na CSP.** O `img-src` aceita qualquer conta do
-  `res.cloudinary.com`. Confirmado o nome da conta (está no `CLOUDINARY_URL`
-  do Render, `cloudinary://...@<nome>`), troque por
-  `https://res.cloudinary.com/<nome>/`: assim uma injeção de HTML não usa o
-  Cloudinary de outra pessoa para mandar dados para fora.
+- **Fotos do Cloudinary na CSP.** O `img-src` só aceita a conta do Rehabit,
+  `https://res.cloudinary.com/xuo5tlgh/`: assim uma injeção de HTML não usa o
+  Cloudinary de outra pessoa para mandar dados para fora. O nome da conta é o
+  que vem depois do `@` no `CLOUDINARY_URL` do Render; se a conta mudar,
+  troque no `vercel.json` e em `tests/seguranca-front/api-simulada.js` (o
+  teste estático reprova se o `img-src` voltar a aceitar o Cloudinary
+  inteiro).
 - **Script inline.** O único é o do tema, no `index.html`, liberado na CSP
   pelo hash do conteúdo. Mexeu nele, recalcule o hash — `tests/seguranca-front`
   acusa a diferença.
@@ -247,9 +254,10 @@ Outros pontos:
   de a `REHABIT_JWT_SECRET` ser obrigatória e nova, e o hash da linha antiga
   do `Rehabit.sql`. Para repetir: `gitleaks git --log-opts="--all"` num
   clone completo (`git clone --mirror`).
-- **GitHub Pages.** A cópia de reserva em `github.io` não recebe os
-  cabeçalhos de segurança do `vercel.json` (CSP, HSTS). O endereço oficial é
-  o da Vercel.
+- **GitHub Pages.** A cópia em `github.io` não recebia os cabeçalhos de
+  segurança do `vercel.json` (CSP, HSTS). Agora ela só redireciona para
+  `rehabit.com.br`, pelo arquivo `CNAME` (veja
+  [Onde o site está publicado](#onde-o-site-está-publicado)).
 
 ## Funcionalidades
 
@@ -456,7 +464,7 @@ apagado.
 
 | Onde o site está aberto | O que acontece |
 | --- | --- |
-| `rehabit.com.br` e GitHub Pages | Caixinha com a site key de `Login/turnstile.js` (vazia = sem verificação) |
+| `rehabit.com.br` | Caixinha com a site key de `Login/turnstile.js` (vazia = sem verificação) |
 | `localhost` | Caixinha com a [chave de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) da Cloudflare, que aprova sempre (com a faixa "Somente para teste") |
 | `file://` | Sem verificação — o Turnstile não roda sem endereço; a caixinha some e o botão fica liberado |
 
@@ -478,11 +486,11 @@ nem de cartão. **A ordem importa**: com a chave secreta no Render e o site
 publicado sem a site key, ninguém consegue entrar.
 
 1. Em [dash.cloudflare.com](https://dash.cloudflare.com) → *Turnstile* →
-   *Add widget*: hostnames `rehabit.com.br` e
-   `nathancarvalhodacunha.github.io`, modo **Managed**.
+   *Add widget*: hostname `rehabit.com.br`, modo **Managed** (o `github.io`
+   só redireciona para ele e não precisa estar no widget).
 2. Copie a **site key** para `CHAVE_DO_SITE` em `Login/turnstile.js` e leve
    para a `main`. Ela é pública: só funciona nos hostnames cadastrados no
-   widget. O GitHub Pages publica sozinho em segundos.
+   widget. A Vercel publica sozinha em segundos.
 3. Abra o site publicado e faça um login: no console do navegador não pode
    aparecer nenhum aviso `[Turnstile]`.
 4. Confira que o Render já está com a versão nova da API — no *Logs* dele
@@ -567,7 +575,7 @@ Hoje o relógio é o da própria API:
 
 **Horas do plano gratuito.** Acordada 24 h, a instância gasta ~720 a 744 horas
 por mês das **750** gratuitas. Isso só fecha se ela for o **único** web service
-gratuito da conta no Render (o front-end está no GitHub Pages, então não
+gratuito da conta no Render (o front-end está na Vercel, então não
 conta). Se houver outro, as horas acabam antes do fim do mês e o Render suspende
 os serviços: nesse caso, defina `REHABIT_KEEPALIVE_ATIVO=false` no Render e
 desative o workflow. A solução definitiva, se um dia houver orçamento, é o plano

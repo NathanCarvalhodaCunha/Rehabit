@@ -8,6 +8,8 @@
 /.github
 /Rehabit.sql
 /iniciar-rehabit.bat
+# Domínio do GitHub Pages: faz o github.io redirecionar para rehabit.com.br.
+/CNAME
 /tests
 # Documentação do repositório (variáveis de produção, arquitetura): é para
 # quem mantém o projeto, não para o visitante do site.

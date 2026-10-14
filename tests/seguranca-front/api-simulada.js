@@ -13,7 +13,8 @@ const ORIGEM_API = "https://rehabit-api-4tex.onrender.com";
 const UUID = "0f8fad5b-d9cb-469f-a165-70867728950e";
 const FOTO_UPLOAD = `/uploads/${UUID}.png`;
 const FOTO_UPLOAD_ABSOLUTA = `${ORIGEM_API}${FOTO_UPLOAD}`;
-const FOTO_CLOUDINARY = "https://res.cloudinary.com/rehabit/image/upload/v1/perfis/foto.jpg";
+// Na conta do Rehabit no Cloudinary, a única que o img-src do vercel.json aceita.
+const FOTO_CLOUDINARY = "https://res.cloudinary.com/xuo5tlgh/image/upload/v1/perfis/foto.jpg";
 
 /** Fecha aspas (duplas e simples), fecha a tag e injeta um <img> que avisa. */
 function carga(campo) {
