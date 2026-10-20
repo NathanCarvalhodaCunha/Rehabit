@@ -50,9 +50,26 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 Com `REHABIT_DEMO=true`, a API cria na subida uma clínica completa para
 apresentar e testar o sistema: a **Clínica Movimento Fisioterapia**, com cinco
 fisioterapeutas de especialidades diferentes e dezesseis pacientes com
-anamnese, metas, meses de sessões com a evolução da amplitude e da dor, faltas,
-uma consulta remarcada e a agenda das próximas duas semanas. As datas são
-relativas ao dia em que a conta é criada.
+anamnese, metas, meses de sessões com a evolução da amplitude e da dor (cada
+uma com a consulta em que o paciente compareceu, que a aba *Realizadas* da
+agenda lista), faltas, uma consulta remarcada e a agenda das próximas duas
+semanas.
+
+**A conta fica sempre em dia.** As datas são relativas ao dia em que ela é
+montada: o histórico termina na véspera e a agenda começa no dia seguinte.
+Como ninguém altera a conta, essas datas iam ficando para trás — semanas
+depois, o histórico parava no dia da montagem e as consultas "marcadas" eram
+de dias que já tinham passado. Agora, na subida da API e todo dia às 3h30
+(horário de Brasília), a API confere a agenda dela: se a primeira consulta por
+vir já é de hoje ou de antes, a clínica é apagada e montada de novo com as
+datas do dia (`GeradorDeClinica.refazerSeVencida`). Montada numa sexta, a
+agenda só começa na segunda, então a conta vale o fim de semana inteiro. Em
+dia, nada acontece, então a variável pode ficar ligada; como a conta é só de
+leitura, refazê-la não apaga nada que alguém tenha feito nela. Quem estiver
+logado na hora em que ela é refeita precisa entrar de novo (a senha é a
+mesma). Se refazer falhar, nada se perde: a API sobe assim mesmo, com a conta
+que já existia, avisa no log e tenta de novo na madrugada seguinte (ou na
+próxima subida).
 
 | Conta | E-mail |
 |---|---|
@@ -70,8 +87,7 @@ essa senha é pública: o botão "Entrar na demonstração" da página inicial a
 leitura**: a API recusa com 403 qualquer alteração vinda da clínica de
 demonstração ou de um profissional dela (`JwtAuthenticationFilter`), e as telas
 mostram um aviso no topo. Se trocar `REHABIT_DEMO_SENHA` no Render, troque
-também no `demonstracao.js`. A criação é idempotente — se a clínica já existe,
-nada acontece —, então a variável pode ficar ligada. Os e-mails usam o domínio
+também no `demonstracao.js`. Os e-mails usam o domínio
 reservado `.example`, e os telefones são fictícios: para testar o lembrete no
 WhatsApp de verdade, use uma conta comum.
 
@@ -126,8 +142,9 @@ mas tem três diferenças:
 
 No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
 `REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
-mostra `Clínica Alvorada Fisioterapia criada`. Assim como a demonstração, a
-criação é idempotente e nunca apaga o que a equipe mudou.
+mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente e,
+ao contrário da demonstração, a conta não se refaz sozinha: nunca apaga o que
+a equipe mudou.
 
 As datas contam a partir do dia em que a conta é criada: o histórico termina na
 véspera e a agenda começa no dia seguinte. Se a conta for criada bem antes da

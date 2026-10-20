@@ -22,6 +22,10 @@ public class RelogioDeTeste extends Clock {
         agora = agora.plus(quanto);
     }
 
+    public void irPara(Instant instante) {
+        agora = instante;
+    }
+
     @Override
     public Instant instant() {
         return agora;

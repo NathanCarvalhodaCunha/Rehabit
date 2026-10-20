@@ -4,10 +4,13 @@ import com.rehabit.demo.GeradorDeClinica.DadosDaClinica;
 import com.rehabit.demo.GeradorDeClinica.PacienteFicticio;
 import com.rehabit.demo.GeradorDeClinica.Profissional;
 import com.rehabit.demo.GeradorDeClinica.Roteiro;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -27,8 +30,12 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * dados que se parecem com os de uma clínica de verdade. Quem monta a
  * clínica é o {@link GeradorDeClinica}; aqui fica só quem ela é.
  *
- * Liga com REHABIT_DEMO=true e roda na subida da API. É idempotente: se o
- * e-mail da clínica já existe, não faz nada — então pode ficar ligada.
+ * Liga com REHABIT_DEMO=true e roda na subida da API e toda madrugada. As
+ * datas são as do dia em que a conta é montada; quando a agenda dela vira
+ * passado, a conta é refeita com as datas do dia (veja
+ * GeradorDeClinica.refazerSeVencida). Em dia, nada acontece — então a
+ * variável pode ficar ligada. Como a conta é só de leitura, refazê-la não
+ * apaga nada que alguém tenha feito nela.
  *
  * Os e-mails usam o domínio .example, reservado para exemplos (RFC 2606):
  * uma recuperação de senha nunca vai parar na caixa de alguém de verdade.
@@ -39,6 +46,8 @@ import static java.time.DayOfWeek.WEDNESDAY;
 public class ContaDeDemonstracao implements ApplicationRunner {
 
     public static final String EMAIL_CLINICA = "contato@movimento.example";
+
+    private static final Logger log = LoggerFactory.getLogger(ContaDeDemonstracao.class);
 
     private static final DadosDaClinica CLINICA = new DadosDaClinica(
             "Clínica Movimento Fisioterapia", EMAIL_CLINICA, "47.315.268/0001-86", "(11) 3571-2040",
@@ -192,12 +201,35 @@ public class ContaDeDemonstracao implements ApplicationRunner {
         this.senha = senha;
     }
 
+    /**
+     * Não derruba a subida da API se refazer a conta falhar: o site inteiro
+     * sairia do ar por causa de uma conta de exemplo. A transação desfaz o
+     * que tinha sido apagado, a conta antiga fica e a madrugada tenta de novo.
+     */
     @Override
     public void run(ApplicationArguments args) {
-        criarSeNaoExistir();
+        try {
+            manterEmDia();
+        } catch (RuntimeException e) {
+            log.error("Conta de demonstração não atualizada; segue a que já existia.", e);
+        }
     }
 
-    /** @return true se criou; false se a conta já existia. */
+    /**
+     * A API pode ficar dias sem reiniciar: de madrugada, no horário de
+     * Brasília, a conta confere as datas de novo, para amanhecer em dia.
+     */
+    @Scheduled(cron = "0 30 3 * * *", zone = "America/Sao_Paulo")
+    public void conferirDeMadrugada() {
+        manterEmDia();
+    }
+
+    /** @return true se criou ou refez a conta; false se ela já estava em dia. */
+    public boolean manterEmDia() {
+        return gerador.refazerSeVencida(ROTEIRO, senha);
+    }
+
+    /** @return true se criou; false se a conta já existia, em dia ou não. */
     public boolean criarSeNaoExistir() {
         return gerador.criarSeNaoExistir(ROTEIRO, senha);
     }
