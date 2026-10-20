@@ -270,6 +270,11 @@ cite { font-style: normal; white-space: nowrap; }
   width: 52px; height: 52px; border-radius: 50%;
   background: var(--avatar-bg); color: var(--avatar-ink); font-size: 14px; font-weight: 800;
 }
+/* Foto no lugar das iniciais, no mesmo círculo; o fundo aparece enquanto carrega. */
+.avatar-foto {
+  display: block; flex: none; width: 52px; height: 52px; border-radius: 50%;
+  background: var(--avatar-bg); object-fit: cover;
+}
 
 /* ---------- Indicadores (Home do sistema) ---------- */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 24px; }
@@ -808,6 +813,7 @@ cite { font-style: normal; white-space: nowrap; }
 
   .lista-equipe li { grid-template-columns: 44px minmax(0, 1fr); }
   .lista-equipe .avatar-iniciais { width: 44px; height: 44px; font-size: 13px; }
+  .lista-equipe .avatar-foto { width: 44px; height: 44px; }
   .lista-equipe .papel { grid-column: 2; justify-self: start; margin-top: -6px; }
 
   .mobile-bottomnav {
