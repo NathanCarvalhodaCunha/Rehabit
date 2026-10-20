@@ -96,16 +96,40 @@ class ContaDeDemonstracaoTest extends TesteDeIntegracao {
         demonstracao.criarSeNaoExistir();
 
         List<Agendamento> agenda = agendamentos.findAll();
-        assertThat(agenda).extracting(Agendamento::getStatus).contains("AGENDADA", "FALTOU", "REMARCADA");
+        assertThat(agenda).extracting(Agendamento::getStatus).contains("AGENDADA", "REALIZADA", "FALTOU", "REMARCADA");
         Set<String> ocupados = new HashSet<>();
         for (Agendamento a : agenda) {
             String chave = a.getIdFisioterapeuta() + "|" + a.getDataAgendamento() + "|" + a.getHoraAgendamento();
             assertThat(ocupados.add(chave)).as("horário repetido: %s", chave).isTrue();
-            if ("FALTOU".equals(a.getStatus())) {
+            if ("REALIZADA".equals(a.getStatus()) || "FALTOU".equals(a.getStatus())) {
                 assertThat(a.getDataAgendamento()).isBefore(HOJE);
             } else {
                 assertThat(a.getDataAgendamento()).isAfter(HOJE);
             }
+        }
+    }
+
+    @Test
+    void cadaSessaoSaiuDeUmaConsultaEmQueOPacienteCompareceu() {
+        demonstracao.criarSeNaoExistir();
+
+        // A aba "Realizadas" da agenda do profissional lista as consultas que
+        // já passaram; sem elas, mostrava só as faltas.
+        List<Sessao> todas = sessoes.findAll();
+        List<Agendamento> realizadas = agendamentos.findAll().stream()
+                .filter(a -> "REALIZADA".equals(a.getStatus()))
+                .toList();
+        assertThat(realizadas).hasSameSizeAs(todas);
+        for (Sessao s : todas) {
+            assertThat(realizadas).as("consulta da sessão de %s", s.getDataSessao())
+                    .filteredOn(a -> a.getIdPaciente().equals(s.getIdPaciente())
+                            && a.getDataAgendamento().equals(s.getDataSessao()))
+                    .singleElement()
+                    .satisfies(a -> {
+                        assertThat(a.getIdFisioterapeuta()).isEqualTo(s.getIdFisioterapeuta());
+                        // A sessão é registrada ao fim da consulta.
+                        assertThat(a.getHoraAgendamento()).isBefore(s.getHoraSessao());
+                    });
         }
     }
 }

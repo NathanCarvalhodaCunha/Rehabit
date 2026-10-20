@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Integer> {
 
@@ -29,6 +30,10 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Intege
             Integer idFisioterapeuta, LocalDate dataAgendamento);
 
     long countByIdPacienteIn(Collection<Integer> idsPacientes);
+
+    /** A primeira consulta ainda por vir (pelo status) desses pacientes. */
+    Optional<Agendamento> findFirstByIdPacienteInAndStatusInOrderByDataAgendamentoAsc(
+            Collection<Integer> idsPacientes, Collection<String> status);
 
     @Modifying
     @Query("delete from Agendamento a where a.idPaciente in :idsPacientes")

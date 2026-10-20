@@ -17,6 +17,7 @@ import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.NotificacaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.SessaoRepository;
+import com.rehabit.service.ExclusaoDeContaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,18 +34,20 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Monta uma clínica inteira a partir de um {@link Roteiro}: a equipe, os
  * pacientes com anamnese e metas, meses de sessões com a evolução da
- * amplitude e da dor, faltas, uma consulta remarcada, a agenda das próximas
- * semanas e o sino da clínica. É o que a conta de demonstração e a conta da
- * apresentação têm em comum — muda só quem é a clínica, quem atende e quem é
- * atendido.
+ * amplitude e da dor (cada uma com a consulta em que o paciente compareceu),
+ * faltas, uma consulta remarcada, a agenda das próximas semanas e o sino da
+ * clínica. É o que a conta de demonstração e a conta da apresentação têm em
+ * comum — muda só quem é a clínica, quem atende e quem é atendido.
  *
  * Todas as datas são relativas ao dia em que roda: o histórico termina ontem
- * e a agenda começa amanhã.
+ * e a agenda começa amanhã. A conta de demonstração, que ninguém altera, se
+ * refaz quando essas datas ficam para trás (refazerSeVencida).
  *
  * Nasce aqui, e não pelas rotas da API, porque a API só registra uma sessão
  * no momento em que ela acontece, e uma clínica de exemplo precisa de histórico.
@@ -105,6 +108,9 @@ public class GeradorDeClinica {
                     "Reavaliação com o goniômetro: evolução dentro do esperado para a meta.",
                     "Programa domiciliar revisado; paciente executa os exercícios sem ajuda."));
 
+    /** O que ainda está por vir na agenda; FALTOU é passado por definição. */
+    private static final List<String> STATUS_A_VIR = List.of("AGENDADA", "REMARCADA");
+
     private static final List<String> OBSERVACOES_AGENDA = List.of(
             "Sessão de rotina", "Reavaliação com o goniômetro", "Fortalecimento",
             "Trazer os exames de imagem", "Sessão de rotina", "Treino funcional");
@@ -118,13 +124,14 @@ public class GeradorDeClinica {
     private final ConfiguracaoRepository configuracoes;
     private final NotificacaoRepository notificacoes;
     private final PasswordEncoder passwordEncoder;
+    private final ExclusaoDeContaService exclusao;
     private final Clock relogio;
 
     public GeradorDeClinica(ClinicaRepository clinicas, FisioterapeutaRepository fisioterapeutas,
                             PacienteRepository pacientes, SessaoRepository sessoes,
                             MedicaoRepository medicoes, AgendamentoRepository agendamentos,
                             ConfiguracaoRepository configuracoes, NotificacaoRepository notificacoes,
-                            PasswordEncoder passwordEncoder, Clock relogio) {
+                            PasswordEncoder passwordEncoder, ExclusaoDeContaService exclusao, Clock relogio) {
         this.clinicas = clinicas;
         this.fisioterapeutas = fisioterapeutas;
         this.pacientes = pacientes;
@@ -134,7 +141,50 @@ public class GeradorDeClinica {
         this.configuracoes = configuracoes;
         this.notificacoes = notificacoes;
         this.passwordEncoder = passwordEncoder;
+        this.exclusao = exclusao;
         this.relogio = relogio;
+    }
+
+    /**
+     * Para a conta de demonstração: as datas dela são as do dia em que foi
+     * montada, e ninguém mexe nela (é só de leitura). Com os dias, o
+     * histórico para de chegar ao presente e a agenda vira passado — consulta
+     * "marcada" para a semana anterior. Quando a primeira consulta por vir já
+     * é de hoje ou de antes (ou não sobrou nenhuma), a clínica inteira é
+     * apagada e montada de novo com as datas de hoje.
+     *
+     * Num fim de semana, a agenda montada na sexta só começa na segunda: a
+     * conta segue valendo até lá. Nunca usar numa conta que aceita
+     * alterações — o que mudassem nela iria junto.
+     *
+     * @return true se criou ou refez; false se ainda estava em dia.
+     */
+    @Transactional
+    public boolean refazerSeVencida(Roteiro roteiro, String senha) {
+        Optional<Clinica> existente = clinicas.findByEmail(roteiro.clinica().email());
+        if (existente.isPresent()) {
+            LocalDate hoje = LocalDate.now(relogio.withZone(RelogioConfig.FUSO));
+            Optional<LocalDate> primeiraAVir = primeiraConsultaAVir(existente.get());
+            if (primeiraAVir.isPresent() && primeiraAVir.get().isAfter(hoje)) {
+                return false;
+            }
+            exclusao.apagarClinicaInteira(existente.get());
+            // A exclusão da linha da clínica fica na fila até o flush; sem ele,
+            // a clínica nova (mesmo e-mail e CNPJ, colunas únicas) entraria antes.
+            clinicas.flush();
+            log.info("{}: a primeira consulta por vir era {}; refazendo com as datas de hoje.",
+                    roteiro.clinica().nome(), primeiraAVir.map(LocalDate::toString).orElse("nenhuma"));
+        }
+        return criarSeNaoExistir(roteiro, senha);
+    }
+
+    private Optional<LocalDate> primeiraConsultaAVir(Clinica clinica) {
+        List<Integer> idsPacientes = pacientes.findByIdClinica(clinica.getId()).stream()
+                .map(Paciente::getId)
+                .toList();
+        if (idsPacientes.isEmpty()) return Optional.empty();
+        return agendamentos.findFirstByIdPacienteInAndStatusInOrderByDataAgendamentoAsc(idsPacientes, STATUS_A_VIR)
+                .map(Agendamento::getDataAgendamento);
     }
 
     /**
@@ -173,7 +223,7 @@ public class GeradorDeClinica {
             List<LocalDate> datas = datasDasSessoes(ficticio, agora.toLocalDate(), falta);
             Paciente paciente = criarPaciente(ficticio, responsavel, datas.get(0));
             recentes.addAll(criarSessoes(ficticio, paciente, datas));
-            criarAgenda(ficticio, paciente, i, agora.toLocalDate(), falta, roteiro.semanasDeAgenda());
+            criarAgenda(ficticio, paciente, i, agora.toLocalDate(), datas, falta, roteiro.semanasDeAgenda());
         }
         criarNotificacoes(clinica, recentes);
 
@@ -318,13 +368,22 @@ public class GeradorDeClinica {
     }
 
     /**
-     * Agenda de quem está em tratamento: as próximas semanas nos dias e
-     * horários de sempre, a falta de quem faltou e uma consulta remarcada,
-     * para a tela mostrar todos os estados. Cada paciente de um profissional
-     * tem horário próprio, então nada colide.
+     * Agenda do paciente. Cada sessão do histórico saiu de uma consulta no
+     * horário de sempre, com a presença marcada — é o que a aba "Realizadas"
+     * da agenda do profissional lista. Quem está em tratamento tem ainda as
+     * próximas semanas nos dias e horários de sempre, a falta de quem faltou
+     * e uma consulta remarcada, para a tela mostrar todos os estados. Cada
+     * paciente de um profissional tem horário próprio, então nada colide.
      */
     private void criarAgenda(PacienteFicticio ficticio, Paciente paciente, int indice, LocalDate hoje,
-                             LocalDate falta, int semanas) {
+                             List<LocalDate> atendimentos, LocalDate falta, int semanas) {
+        for (int k = 0; k < atendimentos.size(); k++) {
+            Agendamento a = novoAgendamento(paciente, atendimentos.get(k), ficticio.horario(), k == 0
+                    ? "Avaliação inicial"
+                    : OBSERVACOES_AGENDA.get((indice + k) % OBSERVACOES_AGENDA.size()));
+            a.setStatus("REALIZADA");
+            agendamentos.save(a);
+        }
         if (!"Ativo".equals(ficticio.status())) return;
 
         if (falta != null) {

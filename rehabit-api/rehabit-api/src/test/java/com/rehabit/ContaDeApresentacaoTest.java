@@ -128,7 +128,7 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
         for (Agendamento a : agenda) {
             String chave = a.getIdFisioterapeuta() + "|" + a.getDataAgendamento() + "|" + a.getHoraAgendamento();
             assertThat(ocupados.add(chave)).as("horário repetido: %s", chave).isTrue();
-            if ("FALTOU".equals(a.getStatus())) {
+            if ("REALIZADA".equals(a.getStatus()) || "FALTOU".equals(a.getStatus())) {
                 assertThat(a.getDataAgendamento()).isBefore(HOJE);
             } else {
                 assertThat(a.getDataAgendamento()).isAfter(HOJE);

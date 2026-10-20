@@ -117,7 +117,19 @@ public class ExclusaoDeContaService {
         if (senha == null || !passwordEncoder.matches(senha, clinica.getSenha())) {
             throw new AuthException("Senha incorreta.", HttpStatus.FORBIDDEN);
         }
+        apagarClinicaInteira(clinica);
+    }
 
+    /**
+     * Apaga a clínica e tudo o que é dela, sem conferir posse nem senha: quem
+     * chama já conferiu (a exclusão pedida pela própria clínica, acima) ou é
+     * o próprio sistema — a conta de demonstração, que se refaz com as datas
+     * do dia (veja GeradorDeClinica.refazerSeVencida). Precisa de transação
+     * aberta: as fotos só saem depois que ela confirma.
+     */
+    @Transactional
+    public void apagarClinicaInteira(Clinica clinica) {
+        Integer idClinica = clinica.getId();
         // Inclui os profissionais excluídos: a linha deles ainda existe.
         List<Fisioterapeuta> profissionais = fisioterapeutaRepository.findByIdClinicaOrderByNomeAsc(idClinica);
         List<Paciente> pacientes = pacienteRepository.findByIdClinica(idClinica);
