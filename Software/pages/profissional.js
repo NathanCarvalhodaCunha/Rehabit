@@ -67,7 +67,7 @@
       el.textContent = dataAtualPorExtenso();
     });
     // Nem por um instante a foto da clínica no lugar da do profissional.
-    document.querySelectorAll(".inst-avatar").forEach((el) => aplicarFoto(el, null));
+    document.querySelectorAll(".inst-avatar, .mobile-avatar").forEach((el) => aplicarFoto(el, null));
     apiGet(`/fisioterapeutas/${idFisioterapeuta}`)
       .then((f) => {
         document.querySelectorAll(".pro-greeting h1").forEach((el) => {

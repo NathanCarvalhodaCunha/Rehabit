@@ -570,6 +570,21 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     }
 
     @Test
+    void sempreHaUmaConsultaRemarcadaAFrenteParaATelaMostrarTodosOsEstados() {
+        apresentacao.preparar();
+
+        for (LocalDate d = HOJE.plusDays(1); !d.isAfter(BANCA.plusDays(3)); d = d.plusDays(1)) {
+            irParaODia(d);
+            apresentacao.conferirDeMadrugada();
+            LocalDate dia = d;
+            assertThat(agendaDaClinica()).as("remarcada à frente em %s", d)
+                    .filteredOn(a -> "REMARCADA".equals(a.getStatus()) && !a.getDataAgendamento().isBefore(dia))
+                    .hasSize(1)
+                    .allSatisfy(a -> assertThat(a.getDataOriginal()).isEqualTo(a.getDataAgendamento().minusDays(1)));
+        }
+    }
+
+    @Test
     void asSessoesNovasSeguemACurvaDoPaciente() {
         apresentacao.preparar();
         Map<Integer, Sessao> ultimaAntes = sessoesDaClinica().stream().collect(Collectors.toMap(

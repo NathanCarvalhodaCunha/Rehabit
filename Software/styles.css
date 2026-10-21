@@ -725,7 +725,7 @@ button { font-family: inherit; cursor: pointer; }
     text-align: right; max-width: 80px;
   }
   /* No celular o número vai junto do rótulo, no tamanho dele: "4 pacientes ativos". */
-  .fisio-count .num { font: inherit; color: inherit; }
+  .fisio-count .num { font: inherit; color: inherit; margin-right: .3em; }
   .fisio-count .lbl { display: inline; }
 
   /* Dispositivo mobile spacing */

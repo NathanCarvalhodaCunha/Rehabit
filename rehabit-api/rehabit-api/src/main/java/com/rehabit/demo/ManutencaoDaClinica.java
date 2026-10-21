@@ -321,6 +321,7 @@ public class ManutencaoDaClinica {
             conta.setAgendaAte(ate);
             contasDoRoteiro.save(conta);
         }
+        garantirUmaRemarcada(roteiro, daClinica, hoje);
         avisar(clinica, registradas);
         if (!registradas.isEmpty()) {
             log.info("{}: {} sessão(ões) registrada(s) até {}.", roteiro.clinica().nome(), registradas.size(),
@@ -374,6 +375,40 @@ public class ManutencaoDaClinica {
         agenda.addAll(novas);
         agenda.sort(java.util.Comparator.comparing(Agendamento::getDataAgendamento)
                 .thenComparing(Agendamento::getHoraAgendamento));
+    }
+
+    /**
+     * Como na montagem, a agenda mostra todos os estados, inclusive uma
+     * consulta remarcada à frente. A do roteiro passa e vira realizada; então,
+     * sem nenhuma remarcada de hoje em diante, a próxima consulta marcada do
+     * primeiro paciente do roteiro em tratamento (de depois de amanhã em
+     * diante) sai remarcada do dia anterior, no mesmo horário.
+     */
+    private void garantirUmaRemarcada(Roteiro roteiro, List<Paciente> daClinica, LocalDate hoje) {
+        Map<String, Paciente> porCpf = daClinica.stream()
+                .collect(Collectors.toMap(Paciente::getCpf, Function.identity(), (a, b) -> a));
+        List<Paciente> emTratamento = roteiro.pacientes().stream()
+                .map(f -> porCpf.get(f.cpf()))
+                .filter(p -> p != null && "Ativo".equals(p.getStatus()))
+                .toList();
+        List<List<Agendamento>> agendas = emTratamento.stream()
+                .map(p -> agendamentos.findByIdPacienteOrderByDataAgendamentoAscHoraAgendamentoAsc(p.getId()))
+                .toList();
+        boolean temRemarcada = agendas.stream().flatMap(List::stream)
+                .anyMatch(a -> "REMARCADA".equals(a.getStatus()) && !a.getDataAgendamento().isBefore(hoje));
+        if (temRemarcada) return;
+        for (List<Agendamento> agenda : agendas) {
+            Agendamento proxima = agenda.stream()
+                    .filter(a -> "AGENDADA".equals(a.getStatus()) && a.getDataAgendamento().isAfter(hoje.plusDays(1)))
+                    .findFirst().orElse(null);
+            if (proxima == null) continue;
+            proxima.setDataOriginal(proxima.getDataAgendamento().minusDays(1));
+            proxima.setHoraOriginal(proxima.getHoraAgendamento());
+            proxima.setStatus("REMARCADA");
+            proxima.setObservacao("Remarcada a pedido do paciente");
+            agendamentos.save(proxima);
+            return;
+        }
     }
 
     /**
