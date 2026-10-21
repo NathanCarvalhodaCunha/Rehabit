@@ -11,6 +11,7 @@ import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Notificacao;
 import com.rehabit.model.Paciente;
+import com.rehabit.model.SenhaAplicada;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.AgendamentoRepository;
 import com.rehabit.repository.ClinicaRepository;
@@ -19,6 +20,7 @@ import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.NotificacaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.RecuperacaoSenhaRepository;
+import com.rehabit.repository.SenhaAplicadaRepository;
 import com.rehabit.repository.SessaoRepository;
 import com.rehabit.security.Limite;
 import com.rehabit.security.LimiteDeTentativas;
@@ -56,8 +58,9 @@ import java.util.stream.Collectors;
  *
  * - fotos: põe as do roteiro onde falta foto; a que a equipe trocou pela tela
  *   fica;
- * - senha: deixa as contas do roteiro com a senha configurada, trocando só
- *   quando ela mudou (a troca derruba as sessões abertas, como qualquer troca);
+ * - senha: aplica a senha configurada às contas do roteiro quando a
+ *   configuração muda (a troca derruba as sessões abertas, como qualquer
+ *   troca); uma senha trocada pela tela fica até a configuração mudar;
  * - atendimento: a clínica segue atendendo. A consulta de um paciente do
  *   roteiro que passou sem ninguém mexer nela (ainda marcada) vira realizada,
  *   com a sessão, a medição e o aviso no sino, e a agenda de quem está em
@@ -88,6 +91,7 @@ public class ManutencaoDaClinica {
     private final AgendamentoService agendamentoService;
     private final NotificacaoRepository notificacoes;
     private final RecuperacaoSenhaRepository recuperacoes;
+    private final SenhaAplicadaRepository senhasAplicadas;
     private final PasswordEncoder passwordEncoder;
     private final LimiteDeTentativas limites;
     private final EnvioDeFoto envioDeFoto;
@@ -99,7 +103,8 @@ public class ManutencaoDaClinica {
                                PacienteRepository pacientes, SessaoRepository sessoes, MedicaoRepository medicoes,
                                AgendamentoRepository agendamentos, AgendamentoService agendamentoService,
                                NotificacaoRepository notificacoes,
-                               RecuperacaoSenhaRepository recuperacoes, PasswordEncoder passwordEncoder,
+                               RecuperacaoSenhaRepository recuperacoes, SenhaAplicadaRepository senhasAplicadas,
+                               PasswordEncoder passwordEncoder,
                                LimiteDeTentativas limites, EnvioDeFoto envioDeFoto, FotosEmUso fotosEmUso,
                                FileStorageService armazenamento, Clock relogio) {
         this.clinicas = clinicas;
@@ -111,6 +116,7 @@ public class ManutencaoDaClinica {
         this.agendamentoService = agendamentoService;
         this.notificacoes = notificacoes;
         this.recuperacoes = recuperacoes;
+        this.senhasAplicadas = senhasAplicadas;
         this.passwordEncoder = passwordEncoder;
         this.limites = limites;
         this.envioDeFoto = envioDeFoto;
@@ -119,10 +125,23 @@ public class ManutencaoDaClinica {
         this.relogio = relogio;
     }
 
-    /** A clínica do roteiro: pelo e-mail ou, se a equipe o trocou pela tela, pelo CNPJ. */
+    /**
+     * A clínica do roteiro é a que tem o CNPJ dele (coluna única). Não pelo
+     * e-mail: se a equipe trocar o da clínica pela tela, outra clínica pode
+     * adotar o antigo e passaria a receber a senha e as fotos.
+     */
     private Clinica clinicaDo(Roteiro roteiro) {
-        return clinicas.findByEmail(roteiro.clinica().email())
-                .or(() -> clinicas.findByCnpj(roteiro.clinica().cnpj()))
+        return clinicas.findByCnpj(roteiro.clinica().cnpj()).orElse(null);
+    }
+
+    /**
+     * Um profissional do roteiro: pelo e-mail, e só se for da clínica do
+     * roteiro e não tiver sido excluído. Excluído pela clínica, ele deixa o
+     * e-mail livre, e quem o adotar em outra clínica não é dele.
+     */
+    private Fisioterapeuta profissionalDo(Clinica clinica, Profissional p) {
+        return fisioterapeutas.findByEmail(p.email())
+                .filter(f -> clinica.getId().equals(f.getIdClinica()) && !f.isExcluido())
                 .orElse(null);
     }
 
@@ -153,11 +172,11 @@ public class ManutencaoDaClinica {
                 }
             }
         }
+        Clinica daClinica = clinicaDo(roteiro);
         for (Profissional p : roteiro.profissionais()) {
-            if (p.foto() == null) continue;
-            // O profissional excluído pela clínica muda de e-mail: não é achado aqui.
-            Fisioterapeuta f = fisioterapeutas.findByEmail(p.email()).orElse(null);
-            if (f == null || f.isExcluido() || !semFoto(f.getFoto())) continue;
+            if (p.foto() == null || daClinica == null) continue;
+            Fisioterapeuta f = profissionalDo(daClinica, p);
+            if (f == null || !semFoto(f.getFoto())) continue;
             String url = enviar(p.foto());
             if (url != null) {
                 String anterior = f.getFoto();
@@ -193,33 +212,41 @@ public class ManutencaoDaClinica {
     // ---------------------------------------------------------------- senha
 
     /**
-     * Deixa a clínica e os profissionais do roteiro com a senha configurada.
-     * Só troca a de quem está com outra (conferir não muda nada): a troca
-     * derruba as sessões abertas daquela conta, então fazê-la sem precisar
-     * deslogaria quem estivesse apresentando a cada subida da API. Como na
-     * redefinição por e-mail, a troca zera o limite de tentativas de login e
-     * invalida links de recuperação pendentes.
+     * Aplica a senha configurada à clínica e aos profissionais do roteiro —
+     * mas só quando a configuração muda (ou na primeira vez). Uma senha
+     * trocada pela tela, às vezes justamente porque a da variável vazou, fica
+     * valendo nas subidas seguintes; para aplicar de novo, muda-se a variável.
+     *
+     * Entre as contas, só troca a de quem está com outra senha: a troca derruba
+     * as sessões abertas daquela conta. Como na redefinição por e-mail, zera o
+     * limite de tentativas de login e invalida links de recuperação pendentes.
      *
      * @return quantas contas tiveram a senha trocada
      */
     @Transactional
     public int alinharSenhas(Roteiro roteiro, String senha) {
-        int trocadas = 0;
         Clinica clinica = clinicaDo(roteiro);
-        if (clinica != null && !passwordEncoder.matches(senha, clinica.getSenha())) {
+        if (clinica == null) return 0;
+        SenhaAplicada ultima = senhasAplicadas.findById(roteiro.clinica().cnpj()).orElse(null);
+        if (ultima != null && passwordEncoder.matches(senha, ultima.getImpressao())) return 0;
+
+        int trocadas = 0;
+        if (!passwordEncoder.matches(senha, clinica.getSenha())) {
             clinica.trocarSenha(passwordEncoder.encode(senha));
             clinicas.save(clinica);
             depoisDaTroca(clinica.getEmail());
             trocadas++;
         }
         for (Profissional p : roteiro.profissionais()) {
-            Fisioterapeuta f = fisioterapeutas.findByEmail(p.email()).orElse(null);
-            if (f == null || f.isExcluido() || passwordEncoder.matches(senha, f.getSenha())) continue;
+            Fisioterapeuta f = profissionalDo(clinica, p);
+            if (f == null || passwordEncoder.matches(senha, f.getSenha())) continue;
             f.trocarSenha(passwordEncoder.encode(senha));
             fisioterapeutas.save(f);
             depoisDaTroca(f.getEmail());
             trocadas++;
         }
+        senhasAplicadas.save(new SenhaAplicada(roteiro.clinica().cnpj(), passwordEncoder.encode(senha),
+                relogio.instant()));
         if (trocadas > 0) {
             log.info("{}: senha alinhada com a configuração em {} conta(s).", roteiro.clinica().nome(), trocadas);
         }

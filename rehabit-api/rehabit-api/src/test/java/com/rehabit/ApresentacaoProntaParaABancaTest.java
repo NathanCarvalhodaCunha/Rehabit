@@ -48,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -271,6 +272,71 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         mvc.perform(get("/api/fisioterapeutas/" + profissional("mariana").getId())
                         .header("Authorization", sessaoDaMariana))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void senhaTrocadaPelaTelaFicaEnquantoAVariavelNaoMuda() throws Exception {
+        apresentacao.preparar();
+        // A Mariana troca a senha pela tela (por exemplo, porque a da variável vazou).
+        mvc.perform(put("/api/configuracoes/senha").header("Authorization", tokenDe(profissional("mariana")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\":\"" + SENHA_DA_BANCA + "\",\"novaSenha\":\"Senha-Da-Mariana-77\"}"))
+                .andExpect(status().isOk());
+
+        apresentacao.preparar();
+        apresentacao.conferirDeMadrugada();
+
+        assertThat(login("tccrehabit+mariana@gmail.com", "Senha-Da-Mariana-77")).isEqualTo(200);
+        assertThat(login("tccrehabit+mariana@gmail.com", SENHA_DA_BANCA)).isEqualTo(401);
+        assertThat(login("tccrehabit+lucas@gmail.com", SENHA_DA_BANCA)).isEqualTo(200);
+
+        // Quando a variável muda, ela vale de novo para as cinco.
+        new ContaDeApresentacao(gerador, manutencao, "Outra-Senha-Da-Banca-9").preparar();
+        for (String email : EMAILS) {
+            assertThat(login(email, "Outra-Senha-Da-Banca-9")).as(email).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void contaDeOutraClinicaComUmEmailDoRoteiroNaoEhTocada() throws Exception {
+        apresentacao.preparar();
+        // A clínica exclui o Renato pela tela: o e-mail dele fica livre...
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/fisioterapeutas/" + profissional("renato").getId())
+                        .param("transferirPara", String.valueOf(profissional("mariana").getId()))
+                        .header("Authorization", tokenDe(clinica())))
+                .andExpect(status().is2xxSuccessful());
+        // ...e outra clínica cadastra alguém com ele.
+        Clinica outra = novaClinica();
+        Fisioterapeuta deFora = novoProfissional(outra);
+        deFora.setEmail("tccrehabit+renato@gmail.com");
+        fisioterapeutas.save(deFora);
+
+        new ContaDeApresentacao(gerador, manutencao, "Outra-Senha-Da-Banca-9").preparar();
+
+        Fisioterapeuta depois = fisioterapeutas.findById(deFora.getId()).orElseThrow();
+        assertThat(passwordEncoder.matches(SENHA, depois.getSenha())).isTrue();
+        assertThat(depois.getFoto()).isNull();
+        assertThat(depois.getCredenciaisAlteradasEm()).isNull();
+    }
+
+    @Test
+    void clinicaDeForaQueAdotouOEmailAntigoNaoEhTocada() throws Exception {
+        apresentacao.preparar();
+        Clinica alvorada = clinica();
+        alvorada.setEmail("alvorada.nova@teste.rehabit");
+        clinicas.save(alvorada);
+        Clinica deFora = novaClinica();
+        deFora.setEmail(ContaDeApresentacao.EMAIL_CLINICA);
+        clinicas.save(deFora);
+
+        new ContaDeApresentacao(gerador, manutencao, "Outra-Senha-Da-Banca-9").preparar();
+
+        Clinica depois = clinicas.findById(deFora.getId()).orElseThrow();
+        assertThat(passwordEncoder.matches(SENHA, depois.getSenha())).isTrue();
+        assertThat(depois.getFoto()).isNull();
+        // A Alvorada, achada pelo CNPJ, recebeu a senha nova.
+        assertThat(login("alvorada.nova@teste.rehabit", "Outra-Senha-Da-Banca-9")).isEqualTo(200);
     }
 
     @Test

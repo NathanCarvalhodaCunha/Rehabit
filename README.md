@@ -153,14 +153,17 @@ mas tem quatro diferenças:
 No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
 `REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
 mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente: a conta
-é reconhecida pelo e-mail ou pelo CNPJ da clínica e nunca é apagada nem refeita.
+é reconhecida pelo CNPJ (ou pelo e-mail) da clínica e nunca é apagada nem refeita.
 
-**A senha é a da variável, nas cinco contas.** Se `REHABIT_APRESENTACAO_SENHA`
-mudar, a próxima subida troca a senha da clínica e dos quatro profissionais e
-encerra as sessões abertas deles; com a mesma senha, nada acontece. Uma senha
-trocada pela tela vale até a próxima subida da API, quando volta a ser a da
-variável. A senha não vai para o repositório nem para o PR: a equipe a guarda
-num PDF à parte.
+**A senha é a da variável, nas cinco contas.** Quando `REHABIT_APRESENTACAO_SENHA`
+muda (ou na primeira subida com esta versão), a API aplica a senha à clínica e
+aos quatro profissionais e encerra as sessões abertas deles; a tabela
+`tb14_senha_aplicada` guarda só o BCrypt da última senha aplicada. Com a mesma
+variável, nada acontece — uma senha trocada pela tela, até como reação a um
+vazamento, fica valendo. Só são tocadas a clínica com o CNPJ do roteiro e os
+profissionais dela: um e-mail do roteiro que outra conta venha a usar fica de
+fora. A senha não vai para o repositório nem para o PR: a equipe a guarda num
+PDF à parte.
 
 **Fotos.** A clínica tem um logo (o sol nascendo sobre a Pedra Grande) e cada
 profissional, um retrato ilustrado — não são rostos de pessoas reais: estilo

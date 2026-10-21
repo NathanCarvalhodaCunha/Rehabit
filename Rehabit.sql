@@ -292,6 +292,16 @@ CREATE TABLE IF NOT EXISTS `tb13_arquivo_enviado` (
   UNIQUE KEY `tb13_url` (`tb13_url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Copiando estrutura para tabela rehabit.tb14_senha_aplicada
+-- A última senha de configuração aplicada às contas da apresentação (só o
+-- BCrypt): a API só a aplica de novo quando a variável muda.
+CREATE TABLE IF NOT EXISTS `tb14_senha_aplicada` (
+  `tb14_cnpj` varchar(18) NOT NULL,
+  `tb14_impressao` varchar(100) NOT NULL,
+  `tb14_aplicada_em` datetime NOT NULL,
+  PRIMARY KEY (`tb14_cnpj`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
