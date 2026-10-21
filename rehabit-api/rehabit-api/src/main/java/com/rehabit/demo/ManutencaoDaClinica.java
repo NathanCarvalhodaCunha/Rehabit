@@ -397,9 +397,19 @@ public class ManutencaoDaClinica {
         boolean temRemarcada = agendas.stream().flatMap(List::stream)
                 .anyMatch(a -> "REMARCADA".equals(a.getStatus()) && !a.getDataAgendamento().isBefore(hoje));
         if (temRemarcada) return;
+        Map<Integer, LocalTime> horarioDoRoteiro = new HashMap<>();
+        roteiro.pacientes().forEach(f -> {
+            Paciente p = porCpf.get(f.cpf());
+            if (p != null) horarioDoRoteiro.put(p.getId(), f.horario());
+        });
         for (List<Agendamento> agenda : agendas) {
+            // Só uma consulta como as que a montagem e a manutenção criam (no
+            // horário do roteiro e com uma das observações delas): a que a
+            // equipe marcou pela tela, com a anotação dela, fica como está.
             Agendamento proxima = agenda.stream()
                     .filter(a -> "AGENDADA".equals(a.getStatus()) && a.getDataAgendamento().isAfter(hoje.plusDays(1)))
+                    .filter(a -> a.getHoraAgendamento().equals(horarioDoRoteiro.get(a.getIdPaciente()))
+                            && GeradorDeClinica.OBSERVACOES_AGENDA.contains(a.getObservacao()))
                     .findFirst().orElse(null);
             if (proxima == null) continue;
             proxima.setDataOriginal(proxima.getDataAgendamento().minusDays(1));
@@ -495,8 +505,20 @@ public class ManutencaoDaClinica {
         return salva;
     }
 
-    /** O sino da clínica com as sessões novas, como o registro de verdade faz. */
+    /**
+     * O sino da clínica com as sessões novas, como o registro de verdade faz.
+     * Como na montagem, só os três avisos mais novos ficam não lidos: os de
+     * sessão nova das rodadas anteriores passam a lidos, senão, rodando toda
+     * madrugada, o sino chegaria à banca com dezenas.
+     */
     private void avisar(Clinica clinica, List<Sessao> registradas) {
+        if (registradas.isEmpty()) return;
+        notificacoes.findByIdClinicaOrderByCriadaEmDesc(clinica.getId()).stream()
+                .filter(n -> "NOVA_SESSAO".equals(n.getTipo()) && !n.isLida())
+                .forEach(n -> {
+                    n.setLida(true);
+                    notificacoes.save(n);
+                });
         Map<Integer, String> nomes = new HashMap<>();
         List<Sessao> maisNovas = registradas.stream()
                 .sorted((a, b) -> LocalDateTime.of(b.getDataSessao(), b.getHoraSessao())

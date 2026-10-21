@@ -9,9 +9,12 @@ import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Notificacao;
 import com.rehabit.model.Paciente;
+import com.rehabit.model.RecuperacaoSenha;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.ArquivoEnviadoRepository;
+import com.rehabit.repository.ConfiguracaoRepository;
 import com.rehabit.repository.NotificacaoRepository;
+import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.storage.EnvioDeFoto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,6 +90,8 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     @Autowired private EnvioDeFoto envio;
     @Autowired private ArquivoEnviadoRepository enviados;
     @Autowired private NotificacaoRepository notificacoes;
+    @Autowired private RecuperacaoSenhaRepository recuperacoes;
+    @Autowired private ConfiguracaoRepository configuracoes;
     @Autowired private RelogioDeTeste relogio;
     @Value("${app.upload-dir}") private String pastaDeUploads;
 
@@ -173,6 +178,8 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
             assertThat(url).matches("/uploads/[0-9a-f-]{36}\\.png");
             assertThat(arquivoDe(url)).exists();
         });
+        // Pelo mesmo caminho das fotos do site: só o EnvioDeFoto registra o envio.
+        assertThat(enviados.findAll()).extracting(e -> e.getUrl()).containsAll(fotos);
         // Servida como imagem e sem login, do jeito que o site a pede.
         mvc.perform(get(clinica().getFoto()))
                 .andExpect(status().isOk())
@@ -186,16 +193,24 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     }
 
     @Test
-    void aContaCriadaAntesDasFotosGanhaAsFotosENadaMaisMuda() {
+    void aContaCriadaAntesDasFotosGanhaAsFotosENadaMaisMuda() throws Exception {
         // Como a conta que já existe em produção: criada sem fotos.
         assertThat(apresentacao.criarSeNaoExistir()).isTrue();
         assertThat(clinica().getFoto()).isNull();
         Integer id = clinica().getId();
         long sessoesAntes = sessoes.count();
         long agendaAntes = agendamentos.count();
+        String sessaoDaClinica = tokenDe(clinica());
+        String sessaoDaMariana = tokenDe(profissional("mariana"));
 
         apresentacao.preparar();
 
+        // A senha já era a da variável: ninguém é deslogado.
+        mvc.perform(get("/api/clinicas/" + id).header("Authorization", sessaoDaClinica)).andExpect(status().isOk());
+        mvc.perform(get("/api/fisioterapeutas/" + profissional("mariana").getId())
+                .header("Authorization", sessaoDaMariana)).andExpect(status().isOk());
+        assertThat(clinica().getCredenciaisAlteradasEm()).isNull();
+        assertThat(equipe()).allSatisfy(f -> assertThat(f.getCredenciaisAlteradasEm()).isNull());
         assertThat(clinica().getId()).isEqualTo(id);
         assertThat(fotosPorEmail().values()).hasSize(5).doesNotContainNull();
         assertThat(sessoes.count()).isEqualTo(sessoesAntes);
@@ -213,7 +228,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         long enviosAntes = enviados.count();
 
         apresentacao.preparar();
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         assertThat(profissional("mariana").getFoto()).isEqualTo(daEquipe);
         assertThat(fotosPorEmail()).isEqualTo(antes);
@@ -260,6 +275,14 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         apresentacao.preparar();
         String sessaoDaClinica = tokenDe(clinica());
         String sessaoDaMariana = tokenDe(profissional("mariana"));
+        RecuperacaoSenha pedido = new RecuperacaoSenha();
+        pedido.setEmail("tccrehabit+lucas@gmail.com");
+        pedido.setTipoConta("FISIOTERAPEUTA");
+        pedido.setTokenHash("hash-do-teste");
+        pedido.setCodigoHash("hash");
+        pedido.setCriadoEm(java.time.LocalDateTime.now());
+        pedido.setExpiraEm(java.time.LocalDateTime.now().plusMinutes(30));
+        recuperacoes.save(pedido);
 
         new ContaDeApresentacao(gerador, manutencao, "Outra-Senha-Da-Banca-9").preparar();
 
@@ -267,6 +290,8 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
             assertThat(login(email, "Outra-Senha-Da-Banca-9")).as(email).isEqualTo(200);
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(401);
         }
+        // Um "esqueci a senha" pedido antes da troca não vale mais.
+        assertThat(recuperacoes.findById(pedido.getId())).isEmpty();
         mvc.perform(get("/api/clinicas/" + clinica().getId()).header("Authorization", sessaoDaClinica))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/fisioterapeutas/" + profissional("mariana").getId())
@@ -284,7 +309,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
                 .andExpect(status().isOk());
 
         apresentacao.preparar();
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         assertThat(login("tccrehabit+mariana@gmail.com", "Senha-Da-Mariana-77")).isEqualTo(200);
         assertThat(login("tccrehabit+mariana@gmail.com", SENHA_DA_BANCA)).isEqualTo(401);
@@ -397,7 +422,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         for (LocalDate d = HOJE.plusDays(1); !d.isAfter(BANCA); d = d.plusDays(1)) {
             irParaODia(d);
-            apresentacao.conferirDeMadrugada();
+            apresentacao.manterEmDia();
         }
 
         assertThat(sessoesDaClinica()).extracting(Sessao::getDataSessao)
@@ -416,12 +441,12 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     void rodarDeNovoNoMesmoDiaNaoAtendeDeNovo() {
         apresentacao.preparar();
         irParaODia(LocalDate.of(2026, 10, 23));
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
         long sessoesAntes = sessoes.count();
         long agendaAntes = agendamentos.count();
         long avisosAntes = notificacoes.count();
 
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
         apresentacao.preparar();
 
         assertThat(sessoes.count()).isEqualTo(sessoesAntes);
@@ -454,7 +479,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         Agendamento consultaDoNovo = novoAgendamento(novo, lucas, quinta, LocalTime.of(15, 30));
 
         irParaODia(LocalDate.of(2026, 10, 24));
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         assertThat(agendamentos.findById(falta.getId()).orElseThrow().getStatus()).isEqualTo("FALTOU");
         assertThat(sessoesDe(claudia)).extracting(Sessao::getDataSessao).doesNotContain(quarta);
@@ -477,7 +502,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         LocalDate ultimaConsulta = agendaDe(rodrigo).get(agendaDe(rodrigo).size() - 1).getDataAgendamento();
 
         irParaODia(BANCA);
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         assertThat(sessoesDe(rodrigo)).extracting(Sessao::getDataSessao)
                 .allSatisfy(d -> assertThat(d).isBefore(HOJE));
@@ -495,7 +520,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         pacientes.save(simone);
 
         irParaODia(LocalDate.of(2026, 10, 23));
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         // Nada entre a alta e hoje: nem consulta, nem sessão inventada.
         assertThat(sessoesDe(simone)).extracting(Sessao::getDataSessao)
@@ -520,7 +545,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         for (LocalDate d = HOJE.plusDays(1); !d.isAfter(LocalDate.of(2026, 10, 24)); d = d.plusDays(1)) {
             irParaODia(d);
-            apresentacao.conferirDeMadrugada();
+            apresentacao.manterEmDia();
         }
 
         assertThat(agendaDe(osvaldo)).extracting(Agendamento::getDataAgendamento)
@@ -565,7 +590,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(200);
         }
         irParaODia(LocalDate.of(2026, 10, 24));
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
         assertThat(sessoesDaClinica()).extracting(Sessao::getDataSessao).contains(LocalDate.of(2026, 10, 23));
     }
 
@@ -575,13 +600,92 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         for (LocalDate d = HOJE.plusDays(1); !d.isAfter(BANCA.plusDays(3)); d = d.plusDays(1)) {
             irParaODia(d);
-            apresentacao.conferirDeMadrugada();
+            apresentacao.manterEmDia();
             LocalDate dia = d;
             assertThat(agendaDaClinica()).as("remarcada à frente em %s", d)
                     .filteredOn(a -> "REMARCADA".equals(a.getStatus()) && !a.getDataAgendamento().isBefore(dia))
                     .hasSize(1)
                     .allSatisfy(a -> assertThat(a.getDataOriginal()).isEqualTo(a.getDataAgendamento().minusDays(1)));
         }
+    }
+
+    @Test
+    void aAgendaNaoPoeOPacienteEmCimaDeUmaConsultaQueAEquipeMarcou() {
+        apresentacao.preparar(); // horizonte da agenda: 10/11
+        Fisioterapeuta mariana = profissional("mariana");
+        Paciente rodrigo = paciente("Rodrigo Tavares Mendes"); // terça e sexta às 8h, com a Mariana
+        // A equipe marca, além do horizonte, um paciente novo às 8h30 da sexta 13/11:
+        // pela duração (50 min), ele cobre o horário do Rodrigo.
+        LocalDate sexta = LocalDate.of(2026, 11, 13);
+        novoAgendamento(novoPaciente(mariana), mariana, sexta, LocalTime.of(8, 30));
+
+        irParaODia(LocalDate.of(2026, 10, 24)); // a agenda passa a ir até 14/11
+        apresentacao.manterEmDia();
+
+        assertThat(agendaDe(rodrigo)).extracting(Agendamento::getDataAgendamento).doesNotContain(sexta)
+                .contains(LocalDate.of(2026, 11, 10));
+    }
+
+    @Test
+    void mesmoComOAvisoDeConflitoDesligadoNuncaDuasConsultasNoMesmoHorario() {
+        apresentacao.preparar();
+        com.rehabit.model.Configuracao daClinica = configuracoes
+                .findByTipoUsuarioAndIdUsuario("CLINICA", clinica().getId()).orElseThrow();
+        daClinica.setAvisarConflito(false);
+        configuracoes.save(daClinica);
+        Fisioterapeuta mariana = profissional("mariana");
+        LocalDate sexta = LocalDate.of(2026, 11, 13);
+        novoAgendamento(novoPaciente(mariana), mariana, sexta, LocalTime.of(8, 0));
+
+        irParaODia(LocalDate.of(2026, 10, 24));
+        apresentacao.manterEmDia();
+
+        assertThat(agendamentos.findByIdFisioterapeutaAndDataAgendamento(mariana.getId(), sexta))
+                .filteredOn(a -> LocalTime.of(8, 0).equals(a.getHoraAgendamento())).hasSize(1);
+        assertThat(agendaDe(paciente("Rodrigo Tavares Mendes"))).extracting(Agendamento::getDataAgendamento)
+                .doesNotContain(sexta);
+    }
+
+    @Test
+    void aRemarcadaNuncaEhUmaConsultaQueAEquipeMarcou() {
+        apresentacao.preparar();
+        // Rodrigo (terça e sexta às 8h): a remarcada do roteiro é a de 27/10.
+        Paciente rodrigo = paciente("Rodrigo Tavares Mendes");
+        Fisioterapeuta mariana = profissional("mariana");
+        // A equipe marca uma consulta extra dele na sexta 30/10 às 7h, com anotação própria:
+        // é a primeira consulta dele que a regra da remarcada alcançaria em 28/10 (de 30/10 em
+        // diante), antes da regular das 8h do mesmo dia.
+        Agendamento daEquipe = novoAgendamento(rodrigo, mariana, LocalDate.of(2026, 10, 30), LocalTime.of(7, 0));
+        daEquipe.setObservacao("Trazer a ressonância nova");
+        agendamentos.save(daEquipe);
+
+        // Em 28/10 a remarcada de 27/10 já passou: é preciso outra à frente.
+        for (LocalDate d = HOJE.plusDays(1); !d.isAfter(LocalDate.of(2026, 10, 28)); d = d.plusDays(1)) {
+            irParaODia(d);
+            apresentacao.manterEmDia();
+        }
+
+        Agendamento depois = agendamentos.findById(daEquipe.getId()).orElseThrow();
+        assertThat(depois.getStatus()).isEqualTo("AGENDADA");
+        assertThat(depois.getObservacao()).isEqualTo("Trazer a ressonância nova");
+        assertThat(agendaDaClinica()).filteredOn(a -> "REMARCADA".equals(a.getStatus())
+                        && a.getDataAgendamento().isAfter(LocalDate.of(2026, 10, 28)))
+                .singleElement()
+                .satisfies(a -> assertThat(a.getHoraAgendamento()).isEqualTo(LocalTime.of(8, 0)));
+    }
+
+    @Test
+    void madrugadasSeguidasNaoAcumulamAvisosNaoLidos() {
+        apresentacao.preparar();
+
+        for (LocalDate d = HOJE.plusDays(1); !d.isAfter(BANCA); d = d.plusDays(1)) {
+            irParaODia(d);
+            apresentacao.manterEmDia();
+        }
+
+        List<Notificacao> doSino = notificacoes.findByIdClinicaOrderByCriadaEmDesc(clinica().getId());
+        assertThat(doSino).filteredOn(n -> "NOVA_SESSAO".equals(n.getTipo()) && !n.isLida()).hasSize(3)
+                .allSatisfy(n -> assertThat(n.getCriadaEm().toLocalDate()).isEqualTo(BANCA.minusDays(1)));
     }
 
     @Test
@@ -592,7 +696,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
                 (a, b) -> a.getDataSessao().isAfter(b.getDataSessao()) ? a : b));
 
         irParaODia(BANCA);
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         List<Sessao> novas = sessoesDaClinica().stream().filter(s -> !s.getDataSessao().isBefore(HOJE)).toList();
         assertThat(novas).isNotEmpty().allSatisfy(s -> {
@@ -618,7 +722,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         // Uma semana de atendimentos de uma vez: dezenas de sessões novas.
         irParaODia(BANCA);
-        apresentacao.conferirDeMadrugada();
+        apresentacao.manterEmDia();
 
         List<Notificacao> novas = notificacoes.findByIdClinicaOrderByCriadaEmDesc(clinica().getId()).stream()
                 .filter(n -> !n.getCriadaEm().toLocalDate().isBefore(HOJE)).toList();
@@ -639,18 +743,21 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         for (LocalDate d = HOJE.plusDays(1); !d.isAfter(BANCA); d = d.plusDays(1)) {
             irParaODia(d);
-            apresentacao.conferirDeMadrugada();
+            apresentacao.manterEmDia();
         }
 
         // A regra do alerta: as três medições mais recentes caindo duas vezes seguidas.
+        int conferidos = 0;
         for (Paciente p : pacientes.findByIdClinica(clinica().getId())) {
             List<Sessao> doPaciente = sessoesDe(p);
             if (doPaciente.isEmpty() || doPaciente.get(0).getDataSessao().isBefore(HOJE)) continue;
+            conferidos++;
             List<java.math.BigDecimal> ultimas = doPaciente.stream().limit(3)
                     .map(s -> medicoes.findByIdSessao(s.getId()).getAmplitudeMedia()).toList();
             assertThat(ultimas.get(0).compareTo(ultimas.get(1)) < 0 && ultimas.get(1).compareTo(ultimas.get(2)) < 0)
                     .as("regressão inventada para %s: %s", p.getNome(), ultimas).isFalse();
         }
+        assertThat(conferidos).as("pacientes com sessões novas").isGreaterThanOrEqualTo(8);
     }
 
     @Test
