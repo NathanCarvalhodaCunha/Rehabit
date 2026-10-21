@@ -62,12 +62,26 @@ public class GeradorDeClinica {
     private static final LocalTime FECHAMENTO = LocalTime.of(19, 0);
     private static final int DURACAO_PADRAO = 50;
 
+    /**
+     * "foto" é o caminho de uma imagem dentro do jar (ex.:
+     * "apresentacao/clinica.png"), ou null para ficar sem foto. Quem a põe
+     * na conta é a {@link ManutencaoDaClinica}, fora da transação da montagem.
+     */
     public record DadosDaClinica(String nome, String email, String cnpj, String telefone, String endereco,
-                                 String subtitulo, String descricao, String localidade) {
+                                 String subtitulo, String descricao, String localidade, String foto) {
+        public DadosDaClinica(String nome, String email, String cnpj, String telefone, String endereco,
+                              String subtitulo, String descricao, String localidade) {
+            this(nome, email, cnpj, telefone, endereco, subtitulo, descricao, localidade, null);
+        }
     }
 
+    /** "foto" como em {@link DadosDaClinica}. */
     public record Profissional(String nome, String email, String coffito, String especialidade,
-                               String telefone, String descricao) {
+                               String telefone, String descricao, String foto) {
+        public Profissional(String nome, String email, String coffito, String especialidade,
+                            String telefone, String descricao) {
+            this(nome, email, coffito, especialidade, telefone, descricao, null);
+        }
     }
 
     /**
@@ -109,9 +123,9 @@ public class GeradorDeClinica {
                     "Programa domiciliar revisado; paciente executa os exercícios sem ajuda."));
 
     /** O que ainda está por vir na agenda; FALTOU é passado por definição. */
-    private static final List<String> STATUS_A_VIR = List.of("AGENDADA", "REMARCADA");
+    static final List<String> STATUS_A_VIR = List.of("AGENDADA", "REMARCADA");
 
-    private static final List<String> OBSERVACOES_AGENDA = List.of(
+    static final List<String> OBSERVACOES_AGENDA = List.of(
             "Sessão de rotina", "Reavaliação com o goniômetro", "Fortalecimento",
             "Trazer os exames de imagem", "Sessão de rotina", "Treino funcional");
 
@@ -174,6 +188,12 @@ public class GeradorDeClinica {
             clinicas.flush();
             log.info("{}: a primeira consulta por vir era {}; refazendo com as datas de hoje.",
                     roteiro.clinica().nome(), primeiraAVir.map(LocalDate::toString).orElse("nenhuma"));
+            // Só apaga se conseguir montar de novo: se outra clínica ficou com o
+            // CNPJ, a exceção desfaz a exclusão e a conta antiga continua.
+            if (!criarSeNaoExistir(roteiro, senha)) {
+                throw new IllegalStateException(roteiro.clinica().nome() + " não pôde ser montada de novo.");
+            }
+            return true;
         }
         return criarSeNaoExistir(roteiro, senha);
     }
@@ -197,8 +217,11 @@ public class GeradorDeClinica {
     @Transactional
     public boolean criarSeNaoExistir(Roteiro roteiro, String senha) {
         DadosDaClinica dados = roteiro.clinica();
-        if (clinicas.existsByEmail(dados.email())) {
-            log.info("{} já existe ({}); nada a fazer.", dados.nome(), dados.email());
+        // Pelo CNPJ também: numa conta que aceita alterações a clínica pode ter
+        // trocado o e-mail, e criar de novo esbarraria no CNPJ (coluna única).
+        if (clinicas.existsByEmail(dados.email()) || clinicas.existsByCnpj(dados.cnpj())) {
+            log.info("{} já existe (e-mail {} ou CNPJ {} já cadastrado); nada a fazer.",
+                    dados.nome(), dados.email(), dados.cnpj());
             return false;
         }
         LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)).withNano(0);
@@ -357,7 +380,7 @@ public class GeradorDeClinica {
         return criadas;
     }
 
-    private static String prontuario(int k, double t) {
+    static String prontuario(int k, double t) {
         if (k == 0) {
             return "Avaliação inicial. Amplitude limitada pela dor; orientados exercícios domiciliares.";
         }
@@ -409,7 +432,7 @@ public class GeradorDeClinica {
         }
     }
 
-    private static Agendamento novoAgendamento(Paciente paciente, LocalDate dia, LocalTime hora, String obs) {
+    static Agendamento novoAgendamento(Paciente paciente, LocalDate dia, LocalTime hora, String obs) {
         Agendamento a = new Agendamento();
         a.setIdPaciente(paciente.getId());
         a.setIdFisioterapeuta(paciente.getIdFisioterapeuta());

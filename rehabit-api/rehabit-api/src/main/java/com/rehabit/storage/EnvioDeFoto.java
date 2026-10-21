@@ -53,7 +53,17 @@ public class EnvioDeFoto {
         } catch (IOException ex) {
             throw new AuthException("Não foi possível ler o arquivo enviado.", HttpStatus.BAD_REQUEST);
         }
+        return salvar(conteudo);
+    }
 
+    /**
+     * O mesmo caminho para uma imagem que não veio de um envio do site — as
+     * fotos que a própria API põe nas contas de exemplo, lidas de dentro do
+     * jar. Passa pelas mesmas conferências e entra na mesma lista: se o
+     * cadastro que ia usá-la não chegar a ser gravado, a LimpezaDeEnvios a
+     * apaga.
+     */
+    public String salvar(byte[] conteudo) {
         TipoDeImagem tipo = TipoDeImagem.detectar(conteudo)
                 .orElseThrow(() -> new AuthException(
                         "Envie uma foto em JPG, PNG, GIF ou WEBP.", HttpStatus.BAD_REQUEST));

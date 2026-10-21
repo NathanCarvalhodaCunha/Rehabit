@@ -13,6 +13,8 @@ public interface ClinicaRepository extends JpaRepository<Clinica, Integer> {
 
     boolean existsByCnpj(String cnpj);
 
+    Optional<Clinica> findByCnpj(String cnpj);
+
     /** Alguém ainda usa este arquivo? Veja FotosEmUso: só apaga o que ninguém usa. */
     boolean existsByFoto(String foto);
 }

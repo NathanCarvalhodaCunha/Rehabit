@@ -117,7 +117,7 @@ sessões, faltas, uma consulta remarcada, altas e um inativo, e a agenda cobre
 as próximas três semanas, com boa parte deles marcada às terças, de manhã e à
 tarde. Ela é montada pelo mesmo gerador da demonstração
 ([`GeradorDeClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/GeradorDeClinica.java)),
-mas tem três diferenças:
+mas tem quatro diferenças:
 
 - **aceita alterações**: dá para editar, cadastrar, excluir e registrar sessão
   com o goniômetro, e nenhuma tela fala em demonstração. O goniômetro é o de
@@ -130,7 +130,19 @@ mas tem três diferenças:
   normalmente, mas não cria a conta e avisa no log;
 - **os e-mails existem**: são apelidos do `tccrehabit@gmail.com`. O Gmail
   entrega na mesma caixa tudo o que tem `+algo` antes do `@`, então o e-mail
-  de recuperação de senha de qualquer uma das contas chega à equipe.
+  de recuperação de senha de qualquer uma das contas chega à equipe;
+- **segue atendendo sozinha**: em vez de ser refeita como a demonstração (o
+  que apagaria o que a equipe fez e o goniômetro pareado), ela é mantida pela
+  [`ManutencaoDaClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/ManutencaoDaClinica.java)
+  na subida da API e todo dia às 3h40 (horário de Brasília). A consulta de um
+  paciente do roteiro que passou ainda marcada vira *realizada*, com a sessão,
+  a medição e o aviso no sino; e a agenda de quem está em tratamento anda, para
+  ter sempre três semanas pela frente — só com dias novos, então uma consulta
+  que a equipe cancelou não volta, e um paciente reativado não ganha consultas
+  do tempo em que estava de alta. No dia da banca, o histórico chega até a
+  véspera sem recriar nada. O que a equipe marcou, cancelou, remarcou ou
+  registrou pela tela fica como está, e paciente cadastrado por ela não entra
+  nisso.
 
 | Conta | E-mail |
 |---|---|
@@ -142,18 +154,37 @@ mas tem três diferenças:
 
 No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
 `REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
-mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente e,
-ao contrário da demonstração, a conta não se refaz sozinha: nunca apaga o que
-a equipe mudou.
+mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente: se o e-mail
+ou o CNPJ da clínica já estão cadastrados, nada é criado, e a conta nunca é
+apagada nem refeita pela API.
 
-As datas contam a partir do dia em que a conta é criada: o histórico termina na
-véspera e a agenda começa no dia seguinte. Se a conta for criada bem antes da
-apresentação, os dias que passarem até lá ficam sem sessão, como se ninguém
-tivesse sido atendido. Para chegar à banca com tudo em dia, recrie a conta em
-26/10: entre como a clínica, vá em *Configurações → Excluir conta* e faça um
-*Manual Deploy*. A conta volta com o histórico até 25/10 e a agenda a partir
-de 27/10. A exclusão leva junto o goniômetro pareado, então pareie de novo em
-*Dispositivo* depois de recriar.
+**A senha é a da variável, nas cinco contas.** Quando `REHABIT_APRESENTACAO_SENHA`
+muda (ou na primeira subida com esta versão), a API aplica a senha à clínica e
+aos quatro profissionais e encerra as sessões abertas deles; a tabela
+`tb14_conta_do_roteiro` guarda só o BCrypt da última senha aplicada. Com a mesma
+variável, nada acontece — uma senha trocada pela tela, até como reação a um
+vazamento, fica valendo. A mesma tabela fixa qual é a clínica: na primeira vez,
+só vale a que tem o e-mail **e** o CNPJ do roteiro (o CNPJ está neste
+repositório público; o e-mail exige o código mandado à caixa da equipe), e daí
+em diante a manutenção segue o id dela, mesmo que a equipe troque o e-mail ou
+o CNPJ pela tela. Só os profissionais dessa clínica são tocados: um e-mail do
+roteiro que outra conta venha a usar fica de fora. A senha não vai para o repositório nem para o PR: a equipe a guarda num
+PDF à parte.
+
+**Fotos.** A clínica tem um logo (o sol nascendo sobre a Pedra Grande) e cada
+profissional, um retrato ilustrado — não são rostos de pessoas reais: estilo
+Avataaars, de Pablo Stanley (livre para uso pessoal e comercial), gerado com a
+biblioteca [DiceBear](https://www.dicebear.com). As imagens ficam em
+`src/main/resources/apresentacao/` e entram na conta pelo mesmo caminho das
+fotos enviadas pelo site (tipo conferido, metadados removidos, gravação no
+Cloudinary ou no disco). A subida põe a foto só onde falta: a que a equipe
+trocou pela tela fica, e uma que sumiu do disco (servidor recriado sem
+Cloudinary) volta. Depois do deploy, saia e entre de novo nas contas: o avatar
+do cabeçalho vem do login.
+
+As datas contam a partir do dia em que a conta é criada, e daí em diante ela
+segue atendendo (veja acima): não é preciso recriá-la antes da banca, nem
+parear o goniômetro de novo.
 
 Os pacientes são fictícios, porque dado de saúde de pessoas reais não pode ir
 para um repositório público. Os telefones também são inventados. Para mostrar o

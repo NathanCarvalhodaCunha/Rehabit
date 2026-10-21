@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -30,13 +31,24 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * da demonstração, é uma conta comum: dá para editar, cadastrar, excluir e
  * registrar sessão com o goniômetro, e nenhuma tela fala em demonstração.
  *
- * Liga com REHABIT_APRESENTACAO=true e roda na subida da API, como a
- * demonstração (veja {@link GeradorDeClinica}). É idempotente: se o e-mail
- * da clínica já existe, não faz nada — nem apaga o que a equipe mudou.
+ * Liga com REHABIT_APRESENTACAO=true e roda na subida da API e toda
+ * madrugada. Cria a conta se o e-mail da clínica ainda não existe (veja
+ * {@link GeradorDeClinica}) e, existindo, nunca a apaga nem a refaz: quem a
+ * mantém em dia é a {@link ManutencaoDaClinica}, que completa as fotos que
+ * faltam e faz a clínica seguir atendendo — as consultas que passaram viram
+ * sessões, e a agenda anda. Assim, no dia da banca o histórico chega até a
+ * véspera sem recriar nada (nem parear o goniômetro de novo).
  *
  * A senha vem de REHABIT_APRESENTACAO_SENHA, sem valor padrão: o repositório
  * é público, e uma conta que aceita alterações não pode ter a senha nele.
- * Sem senha (ou com uma que a política recusaria), nada é criado.
+ * Sem senha (ou com uma que a política recusaria), nada é criado. É a mesma
+ * para a clínica e os profissionais, e a variável manda: se mudar, a próxima
+ * subida troca a senha das cinco contas (e encerra as sessões abertas delas).
+ *
+ * As fotos dos profissionais são retratos ilustrados, não rostos de gente de
+ * verdade: estilo Avataaars, de Pablo Stanley (livre para uso pessoal e
+ * comercial), gerados com a biblioteca DiceBear. O logo da clínica foi
+ * desenhado para o projeto. Ficam em src/main/resources/apresentacao.
  *
  * Os e-mails são apelidos do tccrehabit@gmail.com — o Gmail entrega na mesma
  * caixa tudo o que tem "+algo" antes do @ —, então a recuperação de senha
@@ -64,21 +76,25 @@ public class ContaDeApresentacao implements ApplicationRunner {
             "Rua José Alvim, 812 — Centro, Atibaia — SP", "Fisioterapia e reabilitação",
             "Clínica de fisioterapia em Atibaia, com atendimento ortopédico, esportivo, neurológico e "
                     + "para idosos, e acompanhamento da amplitude de movimento por goniômetro digital.",
-            "Atibaia — SP");
+            "Atibaia — SP", "apresentacao/clinica.png");
 
     private static final List<Profissional> PROFISSIONAIS = List.of(
             new Profissional("Mariana Costa Bertolini", "tccrehabit+mariana@gmail.com", "CREFITO-3/198374-F",
                     "Ortopedia e traumatologia", "(11) 98142-6630",
-                    "Fisioterapeuta há nove anos, com foco em reabilitação pós-operatória de joelho, ombro e cotovelo."),
+                    "Fisioterapeuta há nove anos, com foco em reabilitação pós-operatória de joelho, ombro e cotovelo.",
+                    "apresentacao/mariana.png"),
             new Profissional("Lucas Henrique Prado", "tccrehabit+lucas@gmail.com", "CREFITO-3/256819-F",
                     "Fisioterapia esportiva", "(11) 97503-2194",
-                    "Atende corredores, lutadores e jogadores de futebol amador em lesões de joelho, tornozelo e ombro."),
+                    "Atende corredores, lutadores e jogadores de futebol amador em lesões de joelho, tornozelo e ombro.",
+                    "apresentacao/lucas.png"),
             new Profissional("Patrícia Yamamoto Reis", "tccrehabit+patricia@gmail.com", "CREFITO-3/172045-F",
                     "Fisioterapia neurofuncional", "(11) 99627-4018",
-                    "Reabilitação de pacientes pós-AVC, com Parkinson e com lesões de nervos periféricos."),
+                    "Reabilitação de pacientes pós-AVC, com Parkinson e com lesões de nervos periféricos.",
+                    "apresentacao/patricia.png"),
             new Profissional("Renato Aguiar Fonseca", "tccrehabit+renato@gmail.com", "CREFITO-3/224908-F",
                     "Fisioterapia gerontológica", "(11) 98830-5172",
-                    "Cuida de idosos: prevenção de quedas e reabilitação depois de fraturas e próteses."));
+                    "Cuida de idosos: prevenção de quedas e reabilitação depois de fraturas e próteses.",
+                    "apresentacao/renato.png"));
 
     private static final List<PacienteFicticio> PACIENTES = List.of(
             // --- Mariana Costa Bertolini, ortopedia ---
@@ -184,16 +200,56 @@ public class ContaDeApresentacao implements ApplicationRunner {
     private static final Roteiro ROTEIRO = new Roteiro(CLINICA, PROFISSIONAIS, PACIENTES, 3);
 
     private final GeradorDeClinica gerador;
+    private final ManutencaoDaClinica manutencao;
     private final String senha;
 
-    public ContaDeApresentacao(GeradorDeClinica gerador, @Value("${rehabit.apresentacao.senha:}") String senha) {
+    public ContaDeApresentacao(GeradorDeClinica gerador, ManutencaoDaClinica manutencao,
+                               @Value("${rehabit.apresentacao.senha:}") String senha) {
         this.gerador = gerador;
+        this.manutencao = manutencao;
         this.senha = senha;
     }
 
+    /**
+     * Não derruba a subida da API se algo der errado aqui: o site inteiro
+     * sairia do ar por causa de uma conta. Cada passo tem a própria transação,
+     * então o que falhar fica como estava, e a madrugada tenta de novo.
+     */
     @Override
     public void run(ApplicationArguments args) {
+        try {
+            preparar();
+        } catch (RuntimeException e) {
+            log.error("Conta da apresentação não preparada; segue como estava.", e);
+        }
+    }
+
+    /** Toda madrugada às 3h40 de Brasília, dez minutos depois da conferência da demonstração. */
+    @Scheduled(cron = "0 40 3 * * *", zone = "America/Sao_Paulo")
+    public void conferirDeMadrugada() {
+        try {
+            manterEmDia();
+        } catch (RuntimeException e) {
+            log.error("Conta da apresentação não atualizada; segue como estava.", e);
+        }
+    }
+
+    /**
+     * Na subida: cria a conta se ela ainda não existe, alinha a senha com a
+     * variável e põe as fotos e os atendimentos em dia.
+     */
+    public void preparar() {
         criarSeNaoExistir();
+        if (PoliticaDeSenha.problema(senha) == null) {
+            manutencao.alinharSenhas(ROTEIRO, senha);
+        }
+        manterEmDia();
+    }
+
+    /** Fotos que faltam e atendimentos até ontem; nada é apagado. */
+    public void manterEmDia() {
+        manutencao.completarFotos(ROTEIRO);
+        manutencao.seguirAtendendo(ROTEIRO);
     }
 
     /**

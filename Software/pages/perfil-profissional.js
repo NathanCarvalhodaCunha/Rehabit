@@ -14,6 +14,9 @@
   const idAlvo = somenteLeitura ? idParam : sessao.id;
 
   if (somenteLeitura) {
+    // O script.js pintou neste círculo a foto de quem está logado (a clínica);
+    // aqui o perfil é do profissional, cuja foto chega com /fisioterapeutas.
+    aplicarFoto(header.querySelector(".avatar"), null);
     document.querySelector(".mobile-bottomnav")?.remove();
     document.querySelectorAll('.sidebar .nav a[href="./dispositivo.html"], .sidebar .nav a[href="./configuracoes.html"]')
       .forEach((el) => el.remove());

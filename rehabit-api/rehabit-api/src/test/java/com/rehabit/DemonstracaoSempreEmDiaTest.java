@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.TestPropertySource;
@@ -244,7 +243,7 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
         clinicas.save(outra);
 
         irParaODia(HOJE);
-        assertThatThrownBy(() -> demonstracao.manterEmDia()).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> demonstracao.manterEmDia()).isInstanceOf(IllegalStateException.class);
         assertThatCode(() -> demonstracao.run(null)).doesNotThrowAnyException();
 
         // A transação desfez a exclusão: a conta antiga continua lá, inteira.
