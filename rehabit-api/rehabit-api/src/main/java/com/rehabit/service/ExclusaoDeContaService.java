@@ -10,6 +10,7 @@ import com.rehabit.repository.AgendamentoRepository;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.CodigoPareamentoRepository;
 import com.rehabit.repository.ConfiguracaoRepository;
+import com.rehabit.repository.ContaDoRoteiroRepository;
 import com.rehabit.repository.DispositivoRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.GoniometroRepository;
@@ -61,6 +62,7 @@ public class ExclusaoDeContaService {
     private final DispositivoRepository dispositivoRepository;
     private final GoniometroRepository goniometroRepository;
     private final CodigoPareamentoRepository codigoPareamentoRepository;
+    private final ContaDoRoteiroRepository contaDoRoteiroRepository;
     private final PasswordEncoder passwordEncoder;
     private final FotosEmUso fotosEmUso;
 
@@ -77,6 +79,7 @@ public class ExclusaoDeContaService {
                                   DispositivoRepository dispositivoRepository,
                                   GoniometroRepository goniometroRepository,
                                   CodigoPareamentoRepository codigoPareamentoRepository,
+                                  ContaDoRoteiroRepository contaDoRoteiroRepository,
                                   PasswordEncoder passwordEncoder,
                                   FotosEmUso fotosEmUso) {
         this.clinicaRepository = clinicaRepository;
@@ -92,6 +95,7 @@ public class ExclusaoDeContaService {
         this.dispositivoRepository = dispositivoRepository;
         this.goniometroRepository = goniometroRepository;
         this.codigoPareamentoRepository = codigoPareamentoRepository;
+        this.contaDoRoteiroRepository = contaDoRoteiroRepository;
         this.passwordEncoder = passwordEncoder;
         this.fotosEmUso = fotosEmUso;
     }
@@ -180,6 +184,9 @@ public class ExclusaoDeContaService {
         dispositivoRepository.deleteByIdClinica(idClinica);
         goniometroRepository.deleteByIdClinica(idClinica);
         codigoPareamentoRepository.deleteByIdClinica(idClinica);
+        // Se era a conta da apresentação, a marca dela sai junto: recriada,
+        // a conta nova é reconhecida do zero (veja ManutencaoDaClinica).
+        contaDoRoteiroRepository.deleteByIdClinica(idClinica);
         clinicaRepository.delete(clinica);
 
         // As fotos saem só depois que o banco confirma, e sem poder desfazê-lo.

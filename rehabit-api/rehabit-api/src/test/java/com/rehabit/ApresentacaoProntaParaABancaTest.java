@@ -487,6 +487,89 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     }
 
     @Test
+    void pacienteReativadoNaoGanhaConsultasDoTempoEmQueEstavaDeAlta() {
+        apresentacao.preparar();
+        Paciente simone = paciente("Simone Aparecida Brito"); // de alta, atendida às quartas
+        LocalDate ultimaSessao = sessoesDe(simone).get(0).getDataSessao();
+        simone.setStatus("Ativo");
+        pacientes.save(simone);
+
+        irParaODia(LocalDate.of(2026, 10, 23));
+        apresentacao.conferirDeMadrugada();
+
+        // Nada entre a alta e hoje: nem consulta, nem sessão inventada.
+        assertThat(sessoesDe(simone)).extracting(Sessao::getDataSessao)
+                .allSatisfy(d -> assertThat(d).isBeforeOrEqualTo(ultimaSessao));
+        assertThat(agendaDe(simone)).extracting(Agendamento::getDataAgendamento)
+                .allSatisfy(d -> assertThat(d).satisfiesAnyOf(
+                        x -> assertThat(x).isBeforeOrEqualTo(ultimaSessao),
+                        x -> assertThat(x).isAfter(HOJE.plusWeeks(3))));
+    }
+
+    @Test
+    void consultasQueAEquipeCancelouNaoVoltam() {
+        apresentacao.preparar();
+        // Osvaldo (segunda e quarta, 10h): todas as consultas futuras canceladas.
+        Paciente osvaldo = paciente("Osvaldo Rezende");
+        agendaDe(osvaldo).stream().filter(a -> !a.getDataAgendamento().isBefore(HOJE)).forEach(agendamentos::delete);
+        // Felipe (terça e quinta, 10h): só a última consulta cancelada.
+        Paciente felipe = paciente("Felipe Augusto Rangel");
+        List<Agendamento> doFelipe = agendaDe(felipe);
+        LocalDate ultimaDoFelipe = doFelipe.get(doFelipe.size() - 1).getDataAgendamento();
+        agendamentos.delete(doFelipe.get(doFelipe.size() - 1));
+
+        for (LocalDate d = HOJE.plusDays(1); !d.isAfter(LocalDate.of(2026, 10, 24)); d = d.plusDays(1)) {
+            irParaODia(d);
+            apresentacao.conferirDeMadrugada();
+        }
+
+        assertThat(agendaDe(osvaldo)).extracting(Agendamento::getDataAgendamento)
+                .noneSatisfy(d -> assertThat(d).isBetween(HOJE, HOJE.plusWeeks(3)));
+        assertThat(sessoesDe(osvaldo)).extracting(Sessao::getDataSessao)
+                .allSatisfy(d -> assertThat(d).isBefore(HOJE));
+        assertThat(agendaDe(felipe)).extracting(Agendamento::getDataAgendamento).doesNotContain(ultimaDoFelipe);
+    }
+
+    @Test
+    void clinicaDeTerceiroComOCnpjDoRoteiroNaoEhTocada() throws Exception {
+        // A Alvorada ainda não existe, e alguém cadastra uma clínica com o CNPJ
+        // dela, que está no repositório público.
+        Clinica deTerceiro = novaClinica();
+        deTerceiro.setCnpj("20.239.361/0001-00");
+        clinicas.save(deTerceiro);
+
+        apresentacao.preparar();
+
+        Clinica depois = clinicas.findById(deTerceiro.getId()).orElseThrow();
+        assertThat(passwordEncoder.matches(SENHA, depois.getSenha())).isTrue();
+        assertThat(depois.getCredenciaisAlteradasEm()).isNull();
+        assertThat(depois.getFoto()).isNull();
+        assertThat(clinicas.findByEmail(ContaDeApresentacao.EMAIL_CLINICA)).isEmpty();
+    }
+
+    @Test
+    void contaExcluidaECriadaDeNovoEhReconhecidaDoZero() throws Exception {
+        apresentacao.preparar();
+        Integer antiga = clinica().getId();
+        mvc.perform(post("/api/clinicas/" + antiga + "/exclusao").header("Authorization", tokenDe(clinica()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senha\":\"" + SENHA_DA_BANCA + "\"}"))
+                .andExpect(status().is2xxSuccessful());
+
+        irParaODia(LocalDate.of(2026, 10, 22));
+        apresentacao.preparar();
+
+        assertThat(clinica().getId()).isNotEqualTo(antiga);
+        assertThat(fotosPorEmail().values()).hasSize(5).doesNotContainNull();
+        for (String email : EMAILS) {
+            assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(200);
+        }
+        irParaODia(LocalDate.of(2026, 10, 24));
+        apresentacao.conferirDeMadrugada();
+        assertThat(sessoesDaClinica()).extracting(Sessao::getDataSessao).contains(LocalDate.of(2026, 10, 23));
+    }
+
+    @Test
     void asSessoesNovasSeguemACurvaDoPaciente() {
         apresentacao.preparar();
         Map<Integer, Sessao> ultimaAntes = sessoesDaClinica().stream().collect(Collectors.toMap(

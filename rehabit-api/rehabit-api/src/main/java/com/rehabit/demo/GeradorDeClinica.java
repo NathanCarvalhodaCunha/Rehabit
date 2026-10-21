@@ -220,7 +220,8 @@ public class GeradorDeClinica {
         // Pelo CNPJ também: numa conta que aceita alterações a clínica pode ter
         // trocado o e-mail, e criar de novo esbarraria no CNPJ (coluna única).
         if (clinicas.existsByEmail(dados.email()) || clinicas.existsByCnpj(dados.cnpj())) {
-            log.info("{} já existe ({}); nada a fazer.", dados.nome(), dados.email());
+            log.info("{} já existe (e-mail {} ou CNPJ {} já cadastrado); nada a fazer.",
+                    dados.nome(), dados.email(), dados.cnpj());
             return false;
         }
         LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)).withNano(0);

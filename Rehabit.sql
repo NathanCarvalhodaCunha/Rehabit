@@ -292,14 +292,17 @@ CREATE TABLE IF NOT EXISTS `tb13_arquivo_enviado` (
   UNIQUE KEY `tb13_url` (`tb13_url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Copiando estrutura para tabela rehabit.tb14_senha_aplicada
--- A última senha de configuração aplicada às contas da apresentação (só o
--- BCrypt): a API só a aplica de novo quando a variável muda.
-CREATE TABLE IF NOT EXISTS `tb14_senha_aplicada` (
-  `tb14_cnpj` varchar(18) NOT NULL,
-  `tb14_impressao` varchar(100) NOT NULL,
-  `tb14_aplicada_em` datetime NOT NULL,
-  PRIMARY KEY (`tb14_cnpj`)
+-- Copiando estrutura para tabela rehabit.tb14_conta_do_roteiro
+-- Qual clínica é a da conta da apresentação (fixada na primeira vez pelo
+-- e-mail e pelo CNPJ), o BCrypt da última senha de configuração aplicada a
+-- ela e até onde a agenda dos pacientes do roteiro já foi estendida.
+CREATE TABLE IF NOT EXISTS `tb14_conta_do_roteiro` (
+  `tb14_cnpj_roteiro` varchar(18) NOT NULL,
+  `tb14_id_clinica` int(11) NOT NULL,
+  `tb14_senha_aplicada` varchar(100) DEFAULT NULL,
+  `tb14_senha_aplicada_em` datetime DEFAULT NULL,
+  `tb14_agenda_ate` date DEFAULT NULL,
+  PRIMARY KEY (`tb14_cnpj_roteiro`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;

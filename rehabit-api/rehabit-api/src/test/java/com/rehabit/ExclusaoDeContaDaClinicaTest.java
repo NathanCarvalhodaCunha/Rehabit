@@ -3,6 +3,7 @@ package com.rehabit;
 import com.rehabit.model.Clinica;
 import com.rehabit.model.CodigoPareamento;
 import com.rehabit.model.Configuracao;
+import com.rehabit.model.ContaDoRoteiro;
 import com.rehabit.model.Dispositivo;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Goniometro;
@@ -12,6 +13,7 @@ import com.rehabit.model.RecuperacaoSenha;
 import com.rehabit.model.VerificacaoEmail;
 import com.rehabit.repository.CodigoPareamentoRepository;
 import com.rehabit.repository.ConfiguracaoRepository;
+import com.rehabit.repository.ContaDoRoteiroRepository;
 import com.rehabit.repository.DispositivoRepository;
 import com.rehabit.repository.GoniometroRepository;
 import com.rehabit.repository.NotificacaoRepository;
@@ -60,7 +62,7 @@ class ExclusaoDeContaDaClinicaTest extends TesteDeIntegracao {
     // ArquivoEnviado não pertence a clínica: é a lista de fotos recém-enviadas
     // que a LimpezaDeEnvios apaga se ninguém passar a usar.
     private static final Set<String> ENTIDADES_CONHECIDAS = Set.of(
-            "Agendamento", "ArquivoEnviado", "Clinica", "CodigoPareamento", "Configuracao", "Dispositivo",
+            "Agendamento", "ArquivoEnviado", "Clinica", "CodigoPareamento", "Configuracao", "ContaDoRoteiro", "Dispositivo",
             "Fisioterapeuta", "Goniometro", "Medicao", "Notificacao", "Paciente",
             "RecuperacaoSenha", "Sessao", "VerificacaoEmail");
 
@@ -72,6 +74,7 @@ class ExclusaoDeContaDaClinicaTest extends TesteDeIntegracao {
     @Autowired private DispositivoRepository dispositivos;
     @Autowired private GoniometroRepository goniometros;
     @Autowired private CodigoPareamentoRepository codigosDePareamento;
+    @Autowired private ContaDoRoteiroRepository contasDoRoteiro;
 
     @Value("${app.upload-dir}")
     private String pastaDeUploads;
@@ -143,6 +146,9 @@ class ExclusaoDeContaDaClinicaTest extends TesteDeIntegracao {
         c.setCodigo(String.format("%06d", proximo()));
         c.setExpiraEm(LocalDateTime.now().plusMinutes(10));
         codigosDePareamento.save(c);
+
+        // Como se fosse a conta da apresentação: a marca que a manutenção guarda.
+        contasDoRoteiro.save(new ContaDoRoteiro(String.format("%014d", proximo()), clinica.getId()));
 
         // Carlos sai antes da clínica: a linha dele fica, marcada como excluída.
         mvc.perform(delete("/api/fisioterapeutas/{id}", carlos.getId())

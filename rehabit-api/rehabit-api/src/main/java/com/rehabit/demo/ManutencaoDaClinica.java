@@ -7,20 +7,20 @@ import com.rehabit.demo.GeradorDeClinica.Profissional;
 import com.rehabit.demo.GeradorDeClinica.Roteiro;
 import com.rehabit.model.Agendamento;
 import com.rehabit.model.Clinica;
+import com.rehabit.model.ContaDoRoteiro;
 import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Medicao;
 import com.rehabit.model.Notificacao;
 import com.rehabit.model.Paciente;
-import com.rehabit.model.SenhaAplicada;
 import com.rehabit.model.Sessao;
 import com.rehabit.repository.AgendamentoRepository;
 import com.rehabit.repository.ClinicaRepository;
+import com.rehabit.repository.ContaDoRoteiroRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.MedicaoRepository;
 import com.rehabit.repository.NotificacaoRepository;
 import com.rehabit.repository.PacienteRepository;
 import com.rehabit.repository.RecuperacaoSenhaRepository;
-import com.rehabit.repository.SenhaAplicadaRepository;
 import com.rehabit.repository.SessaoRepository;
 import com.rehabit.security.Limite;
 import com.rehabit.security.LimiteDeTentativas;
@@ -91,7 +91,7 @@ public class ManutencaoDaClinica {
     private final AgendamentoService agendamentoService;
     private final NotificacaoRepository notificacoes;
     private final RecuperacaoSenhaRepository recuperacoes;
-    private final SenhaAplicadaRepository senhasAplicadas;
+    private final ContaDoRoteiroRepository contasDoRoteiro;
     private final PasswordEncoder passwordEncoder;
     private final LimiteDeTentativas limites;
     private final EnvioDeFoto envioDeFoto;
@@ -103,7 +103,7 @@ public class ManutencaoDaClinica {
                                PacienteRepository pacientes, SessaoRepository sessoes, MedicaoRepository medicoes,
                                AgendamentoRepository agendamentos, AgendamentoService agendamentoService,
                                NotificacaoRepository notificacoes,
-                               RecuperacaoSenhaRepository recuperacoes, SenhaAplicadaRepository senhasAplicadas,
+                               RecuperacaoSenhaRepository recuperacoes, ContaDoRoteiroRepository contasDoRoteiro,
                                PasswordEncoder passwordEncoder,
                                LimiteDeTentativas limites, EnvioDeFoto envioDeFoto, FotosEmUso fotosEmUso,
                                FileStorageService armazenamento, Clock relogio) {
@@ -116,7 +116,7 @@ public class ManutencaoDaClinica {
         this.agendamentoService = agendamentoService;
         this.notificacoes = notificacoes;
         this.recuperacoes = recuperacoes;
-        this.senhasAplicadas = senhasAplicadas;
+        this.contasDoRoteiro = contasDoRoteiro;
         this.passwordEncoder = passwordEncoder;
         this.limites = limites;
         this.envioDeFoto = envioDeFoto;
@@ -126,12 +126,34 @@ public class ManutencaoDaClinica {
     }
 
     /**
-     * A clínica do roteiro é a que tem o CNPJ dele (coluna única). Não pelo
-     * e-mail: se a equipe trocar o da clínica pela tela, outra clínica pode
-     * adotar o antigo e passaria a receber a senha e as fotos.
+     * A clínica do roteiro, pelo id guardado em ContaDoRoteiro. Na primeira
+     * vez (ou depois que a conta foi excluída e criada de novo), só vale a
+     * clínica com o e-mail E o CNPJ do roteiro — a que o gerador criou. Nunca
+     * uma que só tenha um dos dois: o CNPJ está num repositório público, e o
+     * e-mail, se a equipe o trocar pela tela, pode ser adotado por outra conta.
      */
     private Clinica clinicaDo(Roteiro roteiro) {
-        return clinicas.findByCnpj(roteiro.clinica().cnpj()).orElse(null);
+        DadosDaClinica dados = roteiro.clinica();
+        ContaDoRoteiro conta = contasDoRoteiro.findById(dados.cnpj()).orElse(null);
+        if (conta != null) {
+            Clinica fixada = clinicas.findById(conta.getIdClinica()).orElse(null);
+            if (fixada != null) return fixada;
+        }
+        Clinica criada = clinicas.findByEmail(dados.email())
+                .filter(c -> dados.cnpj().equals(c.getCnpj()))
+                .orElse(null);
+        if (criada == null) return null;
+        if (conta == null) {
+            conta = new ContaDoRoteiro(dados.cnpj(), criada.getId());
+        } else {
+            conta.fixarEm(criada.getId());
+        }
+        contasDoRoteiro.save(conta);
+        return criada;
+    }
+
+    private ContaDoRoteiro contaDo(Roteiro roteiro) {
+        return contasDoRoteiro.findById(roteiro.clinica().cnpj()).orElseThrow();
     }
 
     /**
@@ -227,8 +249,8 @@ public class ManutencaoDaClinica {
     public int alinharSenhas(Roteiro roteiro, String senha) {
         Clinica clinica = clinicaDo(roteiro);
         if (clinica == null) return 0;
-        SenhaAplicada ultima = senhasAplicadas.findById(roteiro.clinica().cnpj()).orElse(null);
-        if (ultima != null && passwordEncoder.matches(senha, ultima.getImpressao())) return 0;
+        ContaDoRoteiro conta = contaDo(roteiro);
+        if (conta.getSenhaAplicada() != null && passwordEncoder.matches(senha, conta.getSenhaAplicada())) return 0;
 
         int trocadas = 0;
         if (!passwordEncoder.matches(senha, clinica.getSenha())) {
@@ -245,8 +267,8 @@ public class ManutencaoDaClinica {
             depoisDaTroca(f.getEmail());
             trocadas++;
         }
-        senhasAplicadas.save(new SenhaAplicada(roteiro.clinica().cnpj(), passwordEncoder.encode(senha),
-                relogio.instant()));
+        conta.registrarSenha(passwordEncoder.encode(senha), relogio.instant());
+        contasDoRoteiro.save(conta);
         if (trocadas > 0) {
             log.info("{}: senha alinhada com a configuração em {} conta(s).", roteiro.clinica().nome(), trocadas);
         }
@@ -272,12 +294,17 @@ public class ManutencaoDaClinica {
     public int seguirAtendendo(Roteiro roteiro) {
         Clinica clinica = clinicaDo(roteiro);
         if (clinica == null) return 0;
+        ContaDoRoteiro conta = contaDo(roteiro);
         LocalDate hoje = LocalDate.now(relogio.withZone(RelogioConfig.FUSO));
+        LocalDate ate = hoje.plusWeeks(roteiro.semanasDeAgenda());
         Map<String, PacienteFicticio> doRoteiro = roteiro.pacientes().stream()
                 .collect(Collectors.toMap(PacienteFicticio::cpf, Function.identity()));
+        List<Paciente> daClinica = pacientes.findByIdClinica(clinica.getId());
+        LocalDate agendaAte = conta.getAgendaAte() != null ? conta.getAgendaAte()
+                : horizonteDaAgenda(daClinica, doRoteiro, hoje);
 
         List<Sessao> registradas = new ArrayList<>();
-        for (Paciente paciente : pacientes.findByIdClinica(clinica.getId())) {
+        for (Paciente paciente : daClinica) {
             PacienteFicticio ficticio = doRoteiro.get(paciente.getCpf());
             // Paciente da equipe, de alta, inativo ou sem profissional: fica como está.
             if (ficticio == null || !"Ativo".equals(paciente.getStatus())) continue;
@@ -287,9 +314,12 @@ public class ManutencaoDaClinica {
 
             List<Agendamento> agenda = new ArrayList<>(
                     agendamentos.findByIdPacienteOrderByDataAgendamentoAscHoraAgendamentoAsc(paciente.getId()));
-            estenderAgenda(ficticio, paciente, roteiro.pacientes().indexOf(ficticio), agenda, hoje,
-                    roteiro.semanasDeAgenda());
+            estenderAgenda(ficticio, paciente, roteiro.pacientes().indexOf(ficticio), agenda, agendaAte, ate);
             registradas.addAll(atenderOQuePassou(ficticio, paciente, agenda, hoje));
+        }
+        if (ate.isAfter(agendaAte)) {
+            conta.setAgendaAte(ate);
+            contasDoRoteiro.save(conta);
         }
         avisar(clinica, registradas);
         if (!registradas.isEmpty()) {
@@ -300,20 +330,40 @@ public class ManutencaoDaClinica {
     }
 
     /**
-     * Da última consulta do paciente até "semanas" à frente, nos dias e no
-     * horário dele. Pula o dia em que o profissional já tem alguém nesse
-     * horário (uma consulta que a equipe marcou). Depois de dias sem rodar,
-     * também cria os dias que ficaram para trás — e atenderOQuePassou os
-     * atende em seguida.
+     * Até onde a agenda dos pacientes do roteiro já chega, para uma conta que
+     * ainda não tem o horizonte guardado (criada agora ou por uma versão
+     * anterior): a consulta mais distante, pela data atual ou pela original
+     * de uma remarcada.
+     */
+    private LocalDate horizonteDaAgenda(List<Paciente> daClinica, Map<String, PacienteFicticio> doRoteiro,
+                                        LocalDate hoje) {
+        List<Integer> ids = daClinica.stream().filter(p -> doRoteiro.containsKey(p.getCpf()))
+                .map(Paciente::getId).toList();
+        LocalDate horizonte = hoje;
+        for (Integer id : ids) {
+            for (Agendamento a : agendamentos.findByIdPacienteOrderByDataAgendamentoAscHoraAgendamentoAsc(id)) {
+                if (a.getDataAgendamento().isAfter(horizonte)) horizonte = a.getDataAgendamento();
+                if (a.getDataOriginal() != null && a.getDataOriginal().isAfter(horizonte)) {
+                    horizonte = a.getDataOriginal();
+                }
+            }
+        }
+        return horizonte;
+    }
+
+    /**
+     * Os dias depois do horizonte da agenda (agendaAte) até "ate", nos dias e
+     * no horário do paciente. Só depois do horizonte: o que a equipe cancelou
+     * antes dele não volta, e um paciente reativado não ganha consultas no
+     * tempo em que estava de alta. Pula o dia em que o profissional já tem
+     * alguém nesse horário. Depois de dias sem rodar, o horizonte pode estar
+     * no passado: esses dias entram e atenderOQuePassou os atende em seguida.
      */
     private void estenderAgenda(PacienteFicticio ficticio, Paciente paciente, int indice, List<Agendamento> agenda,
-                                LocalDate hoje, int semanas) {
-        if (agenda.isEmpty()) return; // sem nenhuma consulta: a equipe tirou o paciente da agenda
-        LocalDate ultima = agenda.get(agenda.size() - 1).getDataAgendamento();
-        LocalDate ate = hoje.plusWeeks(semanas);
+                                LocalDate agendaAte, LocalDate ate) {
         int n = agenda.size();
         List<Agendamento> novas = new ArrayList<>();
-        for (LocalDate dia = ultima.plusDays(1); !dia.isAfter(ate); dia = dia.plusDays(1)) {
+        for (LocalDate dia = agendaAte.plusDays(1); !dia.isAfter(ate); dia = dia.plusDays(1)) {
             if (!ficticio.dias().contains(dia.getDayOfWeek())) continue;
             if (horarioOcupado(paciente.getIdFisioterapeuta(), dia, ficticio.horario())) continue;
             Agendamento a = GeradorDeClinica.novoAgendamento(paciente, dia, ficticio.horario(),
@@ -322,6 +372,8 @@ public class ManutencaoDaClinica {
             n++;
         }
         agenda.addAll(novas);
+        agenda.sort(java.util.Comparator.comparing(Agendamento::getDataAgendamento)
+                .thenComparing(Agendamento::getHoraAgendamento));
     }
 
     /**

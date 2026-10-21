@@ -137,7 +137,9 @@ mas tem quatro diferenças:
   na subida da API e todo dia às 3h40 (horário de Brasília). A consulta de um
   paciente do roteiro que passou ainda marcada vira *realizada*, com a sessão,
   a medição e o aviso no sino; e a agenda de quem está em tratamento anda, para
-  ter sempre três semanas pela frente. No dia da banca, o histórico chega até a
+  ter sempre três semanas pela frente — só com dias novos, então uma consulta
+  que a equipe cancelou não volta, e um paciente reativado não ganha consultas
+  do tempo em que estava de alta. No dia da banca, o histórico chega até a
   véspera sem recriar nada. O que a equipe marcou, cancelou, remarcou ou
   registrou pela tela fica como está, e paciente cadastrado por ela não entra
   nisso.
@@ -152,17 +154,21 @@ mas tem quatro diferenças:
 
 No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
 `REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
-mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente: a conta
-é reconhecida pelo CNPJ (ou pelo e-mail) da clínica e nunca é apagada nem refeita.
+mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente: se o e-mail
+ou o CNPJ da clínica já estão cadastrados, nada é criado, e a conta nunca é
+apagada nem refeita pela API.
 
 **A senha é a da variável, nas cinco contas.** Quando `REHABIT_APRESENTACAO_SENHA`
 muda (ou na primeira subida com esta versão), a API aplica a senha à clínica e
 aos quatro profissionais e encerra as sessões abertas deles; a tabela
-`tb14_senha_aplicada` guarda só o BCrypt da última senha aplicada. Com a mesma
+`tb14_conta_do_roteiro` guarda só o BCrypt da última senha aplicada. Com a mesma
 variável, nada acontece — uma senha trocada pela tela, até como reação a um
-vazamento, fica valendo. Só são tocadas a clínica com o CNPJ do roteiro e os
-profissionais dela: um e-mail do roteiro que outra conta venha a usar fica de
-fora. A senha não vai para o repositório nem para o PR: a equipe a guarda num
+vazamento, fica valendo. A mesma tabela fixa qual é a clínica: na primeira vez,
+só vale a que tem o e-mail **e** o CNPJ do roteiro (o CNPJ está neste
+repositório público; o e-mail exige o código mandado à caixa da equipe), e daí
+em diante a manutenção segue o id dela, mesmo que a equipe troque o e-mail ou
+o CNPJ pela tela. Só os profissionais dessa clínica são tocados: um e-mail do
+roteiro que outra conta venha a usar fica de fora. A senha não vai para o repositório nem para o PR: a equipe a guarda num
 PDF à parte.
 
 **Fotos.** A clínica tem um logo (o sol nascendo sobre a Pedra Grande) e cada
