@@ -3,6 +3,7 @@ package com.rehabit;
 import com.rehabit.demo.ContaDeApresentacao;
 import com.rehabit.demo.ContaDeDemonstracao;
 import com.rehabit.demo.GeradorDeClinica;
+import com.rehabit.demo.ManutencaoDaClinica;
 import com.rehabit.email.ValidadorEmailService;
 import com.rehabit.model.Agendamento;
 import com.rehabit.model.Clinica;
@@ -51,6 +52,7 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     @Autowired ContaDeApresentacao apresentacao;
     @Autowired GeradorDeClinica gerador;
+    @Autowired ManutencaoDaClinica manutencao;
     @Autowired ValidadorEmailService validadorEmail;
 
     @Test
@@ -66,8 +68,8 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     @Test
     void semSenhaOuComSenhaFracaNaoCriaNada() {
-        assertThat(new ContaDeApresentacao(gerador, "").criarSeNaoExistir()).isFalse();
-        assertThat(new ContaDeApresentacao(gerador, "123456").criarSeNaoExistir()).isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "").criarSeNaoExistir()).isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "123456").criarSeNaoExistir()).isFalse();
 
         assertThat(clinicas.count()).isZero();
     }

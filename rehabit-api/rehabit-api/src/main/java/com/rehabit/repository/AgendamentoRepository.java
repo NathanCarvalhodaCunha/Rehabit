@@ -31,6 +31,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Intege
 
     long countByIdPacienteIn(Collection<Integer> idsPacientes);
 
+    List<Agendamento> findByIdPacienteOrderByDataAgendamentoAscHoraAgendamentoAsc(Integer idPaciente);
+
     /** A primeira consulta ainda por vir (pelo status) desses pacientes. */
     Optional<Agendamento> findFirstByIdPacienteInAndStatusInOrderByDataAgendamentoAsc(
             Collection<Integer> idsPacientes, Collection<String> status);
