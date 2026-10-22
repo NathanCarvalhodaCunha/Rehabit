@@ -213,38 +213,92 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
         assertThat(demonstracao.manterEmDia()).isTrue();
     }
 
+    /**
+     * Leva o relógio ao dia, deixa a conta em dia (como a madrugada e a subida
+     * da API fazem) e confere a semana da Ana, de segunda a domingo.
+     *
+     * @return as consultas da semana
+     */
+    private List<Agendamento> conferirASemanaDaAna(LocalDate hoje) throws Exception {
+        irParaODia(hoje);
+        demonstracao.manterEmDia();
+        LocalDate segunda = hoje.with(DayOfWeek.MONDAY);
+
+        List<Agendamento> semana = agendamentos
+                .findByIdFisioterapeutaInAndDataAgendamentoBetweenOrderByDataAgendamentoAscHoraAgendamentoAsc(
+                        List.of(ana().getId()), segunda, segunda.plusDays(6));
+        // O que já passou foi realizado; de hoje em diante, está marcado.
+        assertThat(semana).as("semana da Ana em %s", hoje)
+                .hasSizeGreaterThanOrEqualTo(15)
+                .allSatisfy(a -> assertThat(a.getStatus()).isIn(a.getDataAgendamento().isBefore(hoje)
+                        ? List.of("REALIZADA", "FALTOU") : A_VIR));
+        if (hoje.getDayOfWeek().getValue() <= 5) {
+            assertThat(semana).as("consultas de hoje, %s", hoje)
+                    .filteredOn(a -> a.getDataAgendamento().equals(hoje))
+                    .hasSizeGreaterThanOrEqualTo(3);
+        }
+        // É o número que o início da Ana mostra.
+        mvc.perform(get("/api/estatisticas").header("Authorization", tokenDe(ana())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].rotulo").value("Consultas esta semana"))
+                .andExpect(jsonPath("$[0].valor").value(String.valueOf(semana.size())));
+        return semana;
+    }
+
+    private static long realizadas(List<Agendamento> semana, LocalDate hoje) {
+        return semana.stream().filter(a -> a.getDataAgendamento().isBefore(hoje)).count();
+    }
+
     @Test
     void aSemanaDaAnaTemVariasConsultasRealizadasEMarcadasTodoDia() throws Exception {
         LocalDate segunda = LocalDate.of(2026, 10, 19);
-        LocalDate domingo = segunda.plusDays(6);
-        for (LocalDate dia = segunda; !dia.isAfter(domingo); dia = dia.plusDays(1)) {
-            LocalDate hoje = dia;
-            irParaODia(hoje);
-            demonstracao.manterEmDia();
-
-            List<Agendamento> semana = agendamentos
-                    .findByIdFisioterapeutaInAndDataAgendamentoBetweenOrderByDataAgendamentoAscHoraAgendamentoAsc(
-                            List.of(ana().getId()), segunda, domingo);
-            // O que já passou foi realizado; de hoje em diante, está marcado.
-            assertThat(semana).as("semana da Ana em %s", hoje)
-                    .hasSizeGreaterThanOrEqualTo(15)
-                    .allSatisfy(a -> assertThat(a.getStatus()).isIn(a.getDataAgendamento().isBefore(hoje)
-                            ? List.of("REALIZADA", "FALTOU") : A_VIR));
-            if (hoje.getDayOfWeek().getValue() <= 5) {
-                assertThat(semana).as("consultas de hoje, %s", hoje)
-                        .filteredOn(a -> a.getDataAgendamento().equals(hoje))
-                        .hasSizeGreaterThanOrEqualTo(3);
+        for (LocalDate dia = segunda; dia.isBefore(segunda.plusWeeks(1)); dia = dia.plusDays(1)) {
+            List<Agendamento> semana = conferirASemanaDaAna(dia);
+            if (dia.getDayOfWeek() == DayOfWeek.THURSDAY) {
+                assertThat(realizadas(semana, dia)).isGreaterThanOrEqualTo(8);
+                assertThat(semana.size() - realizadas(semana, dia)).isGreaterThanOrEqualTo(6);
             }
-            if (hoje.getDayOfWeek() == DayOfWeek.THURSDAY) {
-                assertThat(semana).filteredOn(a -> a.getDataAgendamento().isBefore(hoje)).hasSizeGreaterThanOrEqualTo(8);
-                assertThat(semana).filteredOn(a -> !a.getDataAgendamento().isBefore(hoje)).hasSizeGreaterThanOrEqualTo(6);
-            }
-            // É o número que o início da Ana mostra.
-            mvc.perform(get("/api/estatisticas").header("Authorization", tokenDe(ana())))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].rotulo").value("Consultas esta semana"))
-                    .andExpect(jsonPath("$[0].valor").value(String.valueOf(semana.size())));
         }
+    }
+
+    @Test
+    void naSemanaDaBancaDe26A30TambemHaRealizadasEMarcadas() throws Exception {
+        // Do sábado antes da banca à sexta depois dela, um dia de cada vez.
+        LocalDate segunda = LocalDate.of(2026, 10, 26);
+        for (LocalDate dia = segunda.minusDays(2); !dia.isAfter(segunda.plusDays(4)); dia = dia.plusDays(1)) {
+            List<Agendamento> semana = conferirASemanaDaAna(dia);
+            if (dia.isBefore(segunda)) continue;
+            List<LocalDate> dias = semana.stream().map(Agendamento::getDataAgendamento).distinct().toList();
+            assertThat(dias).as("dias com consulta em %s", dia).containsAll(segunda.datesUntil(segunda.plusDays(5)).toList());
+            if (dia.equals(segunda)) {
+                assertThat(realizadas(semana, dia)).as("segunda: a semana começa").isZero();
+            } else {
+                assertThat(realizadas(semana, dia)).as("realizadas em %s", dia).isGreaterThanOrEqualTo(4);
+                assertThat(semana.size() - realizadas(semana, dia)).as("marcadas em %s", dia).isGreaterThanOrEqualTo(3);
+            }
+        }
+    }
+
+    @Test
+    void aNoiteEmBrasiliaAindaEhHojeNaAgendaENosCartoes() throws Exception {
+        // Quinta, 15/10, 21h30 em Brasília: no servidor, em UTC, já é sexta.
+        relogio.irPara(Instant.parse("2026-10-16T00:30:00Z"));
+        demonstracao.manterEmDia();
+        String idDaAna = ana().getId().toString();
+        String token = tokenDe(ana());
+
+        mvc.perform(get("/api/agendamentos").param("idFisioterapeuta", idDaAna).header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].data").value("2026-10-15"));
+        mvc.perform(get("/api/agendamentos/historico").param("idFisioterapeuta", idDaAna)
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].data").value("2026-10-14"));
+        // A semana ainda é a de 12 a 18/10, com as consultas de quinta e sexta por vir.
+        mvc.perform(get("/api/estatisticas").header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].valor").value("18"))
+                .andExpect(jsonPath("$[0].detalhe").value("7 ainda por vir"));
     }
 
     @Test

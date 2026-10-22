@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.EstatisticaCardDTO;
 import com.rehabit.exception.AuthException;
 import com.rehabit.model.Fisioterapeuta;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,17 +31,28 @@ public class EstatisticasService {
     private final PacienteRepository pacienteRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final MedicaoRepository medicaoRepository;
+    private final Clock relogio;
 
     public EstatisticasService(AgendamentoRepository agendamentoRepository,
                                 SessaoRepository sessaoRepository,
                                 PacienteRepository pacienteRepository,
                                 FisioterapeutaRepository fisioterapeutaRepository,
-                                MedicaoRepository medicaoRepository) {
+                                MedicaoRepository medicaoRepository,
+                                Clock relogio) {
         this.agendamentoRepository = agendamentoRepository;
         this.sessaoRepository = sessaoRepository;
         this.pacienteRepository = pacienteRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.medicaoRepository = medicaoRepository;
+        this.relogio = relogio;
+    }
+
+    /**
+     * Hoje em Brasília. O servidor roda em UTC: com LocalDate.now(), das 21h
+     * à meia-noite a semana e o mês dos cartões já eram os do dia seguinte.
+     */
+    private LocalDate hoje() {
+        return LocalDate.now(relogio.withZone(RelogioConfig.FUSO));
     }
 
     public List<EstatisticaCardDTO> resumo(Integer usuarioId, String usuarioTipo) {
@@ -81,7 +94,7 @@ public class EstatisticasService {
         if (ids.isEmpty()) {
             return new EstatisticaCardDTO("Consultas esta semana", "0", "nenhuma agendada");
         }
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = hoje();
         LocalDate segunda = hoje.with(DayOfWeek.MONDAY);
         LocalDate domingo = hoje.with(DayOfWeek.SUNDAY);
         long total = agendamentoRepository
@@ -100,7 +113,7 @@ public class EstatisticasService {
         if (ids.isEmpty()) {
             return new EstatisticaCardDTO("Sessões no mês", "0", "nenhuma registrada");
         }
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = hoje();
         LocalDate inicioMes = hoje.withDayOfMonth(1);
         int totalMes = sessaoRepository.findByIdFisioterapeutaInAndDataSessaoBetween(ids, inicioMes, hoje).size();
 
@@ -120,7 +133,7 @@ public class EstatisticasService {
      * anterior — é o indicador que mostra se os pacientes estão evoluindo.
      */
     private EstatisticaCardDTO cardAmplitude(List<Integer> ids) {
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = hoje();
         LocalDate inicioMes = hoje.withDayOfMonth(1);
         BigDecimal mediaAtual = mediaAmplitude(ids, inicioMes, hoje);
         if (mediaAtual == null) {

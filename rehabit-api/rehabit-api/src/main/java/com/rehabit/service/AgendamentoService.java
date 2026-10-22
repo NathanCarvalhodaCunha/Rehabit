@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.AgendamentoCreateDTO;
 import com.rehabit.dto.AgendamentoDTO;
 import com.rehabit.dto.ConfiguracaoDTO;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -37,19 +39,31 @@ public class AgendamentoService {
     private final PacienteService pacienteService;
     private final ConfiguracaoService configuracaoService;
     private final SessaoRepository sessaoRepository;
+    private final Clock relogio;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository,
                                FisioterapeutaRepository fisioterapeutaRepository,
                                PacienteRepository pacienteRepository,
                                PacienteService pacienteService,
                                ConfiguracaoService configuracaoService,
-                               SessaoRepository sessaoRepository) {
+                               SessaoRepository sessaoRepository,
+                               Clock relogio) {
         this.agendamentoRepository = agendamentoRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.pacienteRepository = pacienteRepository;
         this.pacienteService = pacienteService;
         this.configuracaoService = configuracaoService;
         this.sessaoRepository = sessaoRepository;
+        this.relogio = relogio;
+    }
+
+    /**
+     * Hoje em Brasília, onde a agenda vira o dia. O servidor roda em UTC: com
+     * LocalDate.now(), das 21h à meia-noite as consultas do dia já iam para
+     * as realizadas.
+     */
+    private LocalDate hoje() {
+        return LocalDate.now(relogio.withZone(RelogioConfig.FUSO));
     }
 
     @Transactional
@@ -126,7 +140,7 @@ public class AgendamentoService {
 
         return agendamentoRepository
                 .findByIdFisioterapeutaAndDataAgendamentoGreaterThanEqualOrderByDataAgendamentoAscHoraAgendamentoAsc(
-                        idFisioterapeuta, LocalDate.now())
+                        idFisioterapeuta, hoje())
                 .stream()
                 .map(a -> paraDTO(a, nomeDoPaciente(a.getIdPaciente())))
                 .collect(Collectors.toList());
@@ -143,7 +157,7 @@ public class AgendamentoService {
 
         return agendamentoRepository
                 .findByIdFisioterapeutaAndDataAgendamentoLessThanOrderByDataAgendamentoDescHoraAgendamentoDesc(
-                        idFisioterapeuta, LocalDate.now())
+                        idFisioterapeuta, hoje())
                 .stream()
                 .map(a -> paraDTO(a, nomeDoPaciente(a.getIdPaciente())))
                 .collect(Collectors.toList());
@@ -169,7 +183,7 @@ public class AgendamentoService {
         List<Agendamento> agendamentos = apenasFuturos
                 ? agendamentoRepository
                         .findByIdFisioterapeutaInAndDataAgendamentoBetweenOrderByDataAgendamentoAscHoraAgendamentoAsc(
-                                ids, LocalDate.now(), LocalDate.now().plusYears(5))
+                                ids, hoje(), hoje().plusYears(5))
                 : agendamentoRepository.findByIdFisioterapeutaInOrderByDataAgendamentoDescHoraAgendamentoDesc(ids);
 
         return agendamentos.stream()

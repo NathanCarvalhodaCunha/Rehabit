@@ -36,8 +36,29 @@ public class RelogioDeTeste extends Clock {
         return ZoneOffset.UTC;
     }
 
+    /**
+     * O mesmo relógio visto de outro fuso, e que continua obedecendo ao teste.
+     * Devolver "this" deixava em UTC quem pede o dia de Brasília: às 21h30 de
+     * lá, o dia já seria o seguinte.
+     */
     @Override
     public Clock withZone(ZoneId zone) {
-        return this;
+        RelogioDeTeste origem = this;
+        return new Clock() {
+            @Override
+            public ZoneId getZone() {
+                return zone;
+            }
+
+            @Override
+            public Clock withZone(ZoneId outro) {
+                return origem.withZone(outro);
+            }
+
+            @Override
+            public Instant instant() {
+                return origem.instant();
+            }
+        };
     }
 }
