@@ -60,7 +60,7 @@ class ContaDeDemonstracaoTest extends TesteDeIntegracao {
 
         assertThat(clinicas.count()).isEqualTo(1);
         assertThat(fisioterapeutas.count()).isEqualTo(5);
-        assertThat(pacientes.count()).isEqualTo(pacientesAntes).isEqualTo(16);
+        assertThat(pacientes.count()).isEqualTo(pacientesAntes).isEqualTo(21);
     }
 
     @Test
@@ -110,9 +110,13 @@ class ContaDeDemonstracaoTest extends TesteDeIntegracao {
             if ("REALIZADA".equals(a.getStatus()) || "FALTOU".equals(a.getStatus())) {
                 assertThat(a.getDataAgendamento()).isBefore(HOJE);
             } else {
-                assertThat(a.getDataAgendamento()).isAfter(HOJE);
+                // A agenda começa hoje: as consultas do dia estão marcadas.
+                assertThat(a.getDataAgendamento()).isAfterOrEqualTo(HOJE);
             }
         }
+        assertThat(agenda).filteredOn(a -> a.getDataAgendamento().equals(HOJE))
+                .isNotEmpty()
+                .allSatisfy(a -> assertThat(a.getStatus()).isIn("AGENDADA", "REMARCADA"));
     }
 
     @Test
