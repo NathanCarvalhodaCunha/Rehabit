@@ -142,6 +142,39 @@
         </div>
       </div>
 
+      <h2 style="margin-top: 32px; font-size: 18px">Dentro da página</h2>
+      <p class="lead">
+        O mesmo pump, compacto, para o que carrega dentro de uma lista, tabela,
+        janela, menu ou campo.
+      </p>
+      <div class="demos">
+        <div class="card">
+          <h2>Bloco (RehabitLoader.inline) e no meio do texto</h2>
+          <div class="rh-carregando" role="status">
+            <span class="rh-biceps" aria-hidden="true"></span>
+            <span>Buscando<span class="rh-dots"></span></span>
+          </div>
+          <p style="margin: 0 16px 18px; font-size: 13px; color: #5f6c7b">
+            <span class="rh-biceps" aria-hidden="true"></span>Carregando horário
+            de atendimento...
+          </p>
+        </div>
+
+        <div class="card card--dark">
+          <h2>Tema escuro</h2>
+          <div class="dark">
+            <div class="rh-carregando" role="status">
+              <span class="rh-biceps" aria-hidden="true"></span>
+              <span>Buscando<span class="rh-dots"></span></span>
+            </div>
+            <p style="margin: 0 16px 18px; font-size: 13px; color: #92a3bf">
+              <span class="rh-biceps" aria-hidden="true"></span>Carregando
+              horário de atendimento...
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="btns">
         <button type="button" data-demo="tela-cheia">
           Mostrar em tela cheia
@@ -171,7 +204,12 @@ RehabitLoader.hide();
 RehabitLoader.during(fetch('/api/x'), 'Buscando');
 
 &lt;!-- tema escuro: classe rh-loader--dark + rehabit-icon-dark.png --&gt;
-&lt;!-- dentro de um card: adicione rh-loader--inline --&gt;</pre>
+&lt;!-- dentro de um card: adicione rh-loader--inline --&gt;
+
+&lt;!-- dentro da página (lista, tabela, menu, janela): o bíceps compacto --&gt;
+lista.innerHTML = RehabitLoader.inline('Buscando');
+&lt;!-- no meio de um texto (tema escuro pelo body.dark) --&gt;
+&lt;p&gt;&lt;span class="rh-biceps" aria-hidden="true"&gt;&lt;/span&gt;Carregando...&lt;/p&gt;</pre>
     </div>
 
     <script src="loader.js" defer></script>

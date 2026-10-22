@@ -238,7 +238,7 @@
     if (!secao || !corpo || profissionais.length < 2) return;
 
     secao.hidden = false;
-    corpo.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="5">' + RehabitLoader.inline() + "</td></tr>";
 
     Promise.all(
       profissionais.map((p) =>

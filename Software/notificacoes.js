@@ -91,7 +91,7 @@
     var dropdown = document.createElement("div");
     dropdown.className = "notif-dropdown is-hidden";
     dropdown.setAttribute("data-notif-dropdown", "");
-    dropdown.innerHTML = montarCabecalho(0) + '<div class="notif-vazio"><p>Carregando...</p></div>';
+    dropdown.innerHTML = montarCabecalho(0) + RehabitLoader.inline();
 
     var wrap = document.createElement("div");
     wrap.style.position = "relative";

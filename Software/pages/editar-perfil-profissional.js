@@ -73,6 +73,9 @@
     submitBtn.disabled = true;
     const textoOriginal = submitBtn.textContent;
     submitBtn.textContent = "Salvando...";
+    // O loader cobre também o envio da foto, que não passa pelo apiPut; o
+    // apiPut, chamado com ele já de pé, mantém o "Salvando".
+    RehabitLoader.show("Salvando");
 
     try {
       // O seletor de foto (script.js) guarda o arquivo escolhido em
@@ -138,6 +141,7 @@
     } catch (err) {
       RehabitToast.erro(err.message);
     } finally {
+      RehabitLoader.hide();
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;
     }

@@ -4,12 +4,18 @@
   "use strict";
 
   var ATRASO_MS = 250;
+  // Resposta mais lenta que isto (a API acordando, rede ruim) troca a lista
+  // pelo bíceps; as rápidas chegam antes e ele nem aparece.
+  var ESPERA_BICEPS_MS = 200;
   var overlay = null;
   var campo = null;
   var listaEl = null;
   var resultados = [];
   var indice = 0;
   var timer = null;
+  // Número da busca mais recente: a resposta de uma anterior que chegue
+  // depois não pode tirar o bíceps nem pôr resultados de outro termo.
+  var pedido = 0;
 
   /**
    * A API já devolve só o que a conta enxerga: uma clínica acha profissionais
@@ -97,11 +103,17 @@
 
   function buscar() {
     var termo = campo.value.trim();
+    var este = ++pedido;
     if (termo.length < 2) {
       resultados = [];
       vazio("Digite ao menos 2 letras para buscar.");
       return;
     }
+    var espera = setTimeout(function () {
+      if (este !== pedido) return;
+      resultados = [];
+      listaEl.innerHTML = RehabitLoader.inline("Buscando");
+    }, ESPERA_BICEPS_MS);
     // fetch direto: o overlay de carregamento em tela cheia atrapalharia
     // a digitação a cada tecla.
     fetch(API_BASE_URL + "/busca?q=" + encodeURIComponent(termo), {
@@ -109,11 +121,15 @@
     })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (dados) {
+        clearTimeout(espera);
+        if (este !== pedido) return;
         resultados = dados;
         indice = 0;
         desenhar();
       })
       .catch(function () {
+        clearTimeout(espera);
+        if (este !== pedido) return;
         vazio("Não foi possível buscar agora.");
       });
   }
@@ -150,6 +166,7 @@
     overlay.classList.remove("is-hidden");
     campo.value = "";
     resultados = [];
+    pedido++;
     vazio("Digite ao menos 2 letras para buscar.");
     campo.focus();
   }
