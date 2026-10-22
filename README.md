@@ -58,9 +58,9 @@ dela (`JwtAuthenticationFilter`), e as telas mostram um aviso no topo. As
 outras contas da Alvorada são comuns e têm outra senha. Se trocar
 `REHABIT_DEMO_SENHA` no Render, troque também no `demonstracao.js`.
 
-Com `REHABIT_DEMO=true`, a API cria na subida a conta da apresentação (onde
-está a Mariana) e a **Clínica Movimento Fisioterapia**, a demonstração de
-antes: cinco fisioterapeutas de especialidades diferentes e dezesseis
+A conta da apresentação, onde está a Mariana, sobe sempre. Com
+`REHABIT_DEMO=true`, a API cria também a **Clínica Movimento Fisioterapia**, a
+demonstração de antes: cinco fisioterapeutas de especialidades diferentes e dezesseis
 pacientes com anamnese, metas, meses de sessões com a evolução da amplitude e
 da dor (cada uma com a consulta em que o paciente compareceu, que a aba
 *Realizadas* da agenda lista), faltas, uma consulta remarcada e a agenda das
@@ -132,8 +132,8 @@ mas:
   profissionais, *Dispositivo → Parear novo dispositivo* mostra o código para
   digitar no portal do aparelho (revogar fica só com a clínica). A quarta, a
   Mariana, é a demonstração da página inicial (acima): só de leitura;
-- **sobe com a demonstração**: com `REHABIT_DEMO=true`, ela já é criada; a
-  variável `REHABIT_APRESENTACAO` (`true` ou `false`) liga ou desliga à parte;
+- **sobe sempre**: sem variável nenhuma no Render, porque o botão da página
+  inicial depende da Mariana; só `REHABIT_APRESENTACAO=false` a desliga;
 - **a senha é fixa**: a que a equipe escolheu para a banca, padrão de
   `rehabit.apresentacao.senha` no `application.properties`, na clínica e nos
   três profissionais (a Mariana entra com a da demonstração). Ela está neste
@@ -212,6 +212,23 @@ a raiz do repositório como site estático (preset *Other*, sem build), e o
 [`.vercelignore`](.vercelignore) tira dela o que não é página. A API continua
 no Render: o front escolhe a API pelo endereço (`localhost` usa a local,
 qualquer outro usa a do Render), então trocar de hospedagem não muda código.
+
+**A API não vai para o ar junto com o site.** A Vercel publica o merge em
+segundos; a API depende do deploy do Render, que leva alguns minutos — e pode
+não acontecer. De 14 a 21/10/2026 nenhum deploy do Render foi ao ar: o site
+passou a mandar o botão da demonstração para a conta da Mariana, que a API
+antiga não tinha, e o login dava "E-mail ou senha inválidos". Para conferir
+qual commit da API está no ar, abra
+`https://rehabit-api-4tex.onrender.com/api/health`: o campo `versao` é o
+commit (vem de `RENDER_GIT_COMMIT`), e `uptimeSegundos` pequeno quer dizer que
+ela acabou de subir. O workflow
+[`manter-api-acordada.yml`](.github/workflows/manter-api-acordada.yml) faz essa
+conta sozinho: uma hora depois do último merge, se a API no ar não tiver o
+último commit dela, ele falha, e o GitHub manda e-mail. O que fazer: no painel
+do Render, serviço da API → *Events* (o deploy aparece como falho, cancelado
+ou nem aparece) → *Manual Deploy → Deploy latest commit*; se o deploy falhar,
+o motivo está no log dele. Confira também, em *Settings*, se o *Auto-Deploy*
+está em *On Commit*.
 
 O domínio foi registrado no [registro.br](https://registro.br) e usa o DNS de
 lá, no modo avançado, com dois registros:

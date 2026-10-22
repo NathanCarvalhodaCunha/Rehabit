@@ -35,9 +35,9 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * demonstração" da página inicial abre: entra com a senha da demonstração
  * (que está no site) e é só de leitura (veja JwtAuthenticationFilter).
  *
- * Sobe junto com a demonstração (REHABIT_DEMO=true), ou à parte com
- * REHABIT_APRESENTACAO. Roda na subida da API e toda madrugada. Cria a conta
- * se nem o e-mail nem o CNPJ da clínica existem (veja {@link GeradorDeClinica})
+ * Sobe sempre (REHABIT_APRESENTACAO=false a desliga): o botão da página
+ * inicial depende da Mariana. Roda na subida da API e toda madrugada. Cria a
+ * conta se nem o e-mail nem o CNPJ da clínica existem (veja {@link GeradorDeClinica})
  * e, existindo, nunca a apaga nem a refaz: quem a mantém em dia é a
  * {@link ManutencaoDaClinica}, que completa as fotos que faltam e faz a
  * clínica seguir atendendo — as consultas que passaram viram sessões, e a
