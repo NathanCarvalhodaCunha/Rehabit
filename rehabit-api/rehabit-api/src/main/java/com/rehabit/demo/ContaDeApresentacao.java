@@ -28,15 +28,12 @@ import static java.time.DayOfWeek.WEDNESDAY;
 
 /**
  * Conta da apresentação do TCC: a Clínica Alvorada, de Atibaia, com quatro
- * fisioterapeutas e catorze pacientes com meses de atendimento. A clínica e
- * três dos profissionais são contas comuns: dá para editar, cadastrar, excluir
- * e registrar sessão com o goniômetro, e nenhuma tela delas fala em
- * demonstração. A quarta, a Mariana, é a conta que o botão "Entrar na
- * demonstração" da página inicial abre: entra com a senha da demonstração
- * (que está no site) e é só de leitura (veja JwtAuthenticationFilter).
+ * fisioterapeutas e catorze pacientes com meses de atendimento. Ao contrário
+ * da demonstração, são contas comuns: dá para editar, cadastrar, excluir e
+ * registrar sessão com o goniômetro, e nenhuma tela fala em demonstração.
  *
- * Sobe sempre (REHABIT_APRESENTACAO=false a desliga): o botão da página
- * inicial depende da Mariana. Roda na subida da API e toda madrugada. Cria a
+ * Sobe sempre, sem variável nenhuma no Render (REHABIT_APRESENTACAO=false a
+ * desliga). Roda na subida da API e toda madrugada. Cria a
  * conta se nem o e-mail nem o CNPJ da clínica existem (veja {@link GeradorDeClinica})
  * e, existindo, nunca a apaga nem a refaz: quem a mantém em dia é a
  * {@link ManutencaoDaClinica}, que completa as fotos que faltam e faz a
@@ -44,7 +41,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * agenda anda. Assim, no dia da banca o histórico chega até a véspera sem
  * recriar nada (nem parear o goniômetro de novo).
  *
- * A senha da clínica e dos três profissionais é a de
+ * A senha da clínica e dos quatro profissionais é a de
  * REHABIT_APRESENTACAO_SENHA; o padrão, no application.properties, é a que a
  * equipe escolheu para a banca. Ela vale sempre: se alguém a trocar pela
  * tela, a próxima subida ou madrugada a põe de volta. Para uma senha que não
@@ -75,12 +72,6 @@ import static java.time.DayOfWeek.WEDNESDAY;
 public class ContaDeApresentacao implements ApplicationRunner {
 
     public static final String EMAIL_CLINICA = "contato@alvorada.example";
-    /**
-     * A profissional que a página inicial abre como demonstração
-     * (Login/demonstracao.js): entra com a senha da demonstração e é só de
-     * leitura.
-     */
-    public static final String EMAIL_DEMONSTRACAO = "mariana.bertolini@alvorada.example";
 
     private static final Logger log = LoggerFactory.getLogger(ContaDeApresentacao.class);
 
@@ -92,7 +83,7 @@ public class ContaDeApresentacao implements ApplicationRunner {
             "Atibaia — SP", "apresentacao/clinica.png");
 
     private static final List<Profissional> PROFISSIONAIS = List.of(
-            new Profissional("Mariana Costa Bertolini", EMAIL_DEMONSTRACAO, "CREFITO-3/198374-F",
+            new Profissional("Mariana Costa Bertolini", "mariana.bertolini@alvorada.example", "CREFITO-3/198374-F",
                     "Ortopedia e traumatologia", "(11) 98142-6630",
                     "Fisioterapeuta há nove anos, com foco em reabilitação pós-operatória de joelho, ombro e cotovelo.",
                     "apresentacao/mariana.png"),
@@ -215,7 +206,7 @@ public class ContaDeApresentacao implements ApplicationRunner {
     /** Os e-mails da primeira versão, e os que ficam no lugar deles. */
     private static final Map<String, String> EMAILS_ANTERIORES = Map.of(
             "tccrehabit+clinica@gmail.com", EMAIL_CLINICA,
-            "tccrehabit+mariana@gmail.com", EMAIL_DEMONSTRACAO,
+            "tccrehabit+mariana@gmail.com", "mariana.bertolini@alvorada.example",
             "tccrehabit+lucas@gmail.com", "lucas.prado@alvorada.example",
             "tccrehabit+patricia@gmail.com", "patricia.reis@alvorada.example",
             "tccrehabit+renato@gmail.com", "renato.fonseca@alvorada.example");
@@ -223,15 +214,12 @@ public class ContaDeApresentacao implements ApplicationRunner {
     private final GeradorDeClinica gerador;
     private final ManutencaoDaClinica manutencao;
     private final String senha;
-    private final Map<String, String> senhasProprias;
 
     public ContaDeApresentacao(GeradorDeClinica gerador, ManutencaoDaClinica manutencao,
-                               @Value("${rehabit.apresentacao.senha:}") String senha,
-                               @Value("${rehabit.demo.senha:}") String senhaDaDemonstracao) {
+                               @Value("${rehabit.apresentacao.senha:}") String senha) {
         this.gerador = gerador;
         this.manutencao = manutencao;
         this.senha = senha;
-        this.senhasProprias = senhasProprias(senhaDaDemonstracao);
     }
 
     /**
@@ -271,7 +259,7 @@ public class ContaDeApresentacao implements ApplicationRunner {
         manutencao.trocarEmailsAntigos(ROTEIRO, EMAILS_ANTERIORES);
         criarSeNaoExistir();
         if (PoliticaDeSenha.problema(senha) == null) {
-            manutencao.alinharSenhas(ROTEIRO, senha, senhasProprias);
+            manutencao.alinharSenhas(ROTEIRO, senha);
         }
         manterEmDia();
     }
@@ -294,18 +282,6 @@ public class ContaDeApresentacao implements ApplicationRunner {
             log.warn("Conta da apresentação não criada: defina REHABIT_APRESENTACAO_SENHA. {}", problema);
             return false;
         }
-        return gerador.criarSeNaoExistir(ROTEIRO, senha, senhasProprias);
-    }
-
-    /**
-     * A Mariana entra com a senha da demonstração, que o botão da página
-     * inicial preenche. Se ela não servir, a Mariana fica com a das outras.
-     */
-    private static Map<String, String> senhasProprias(String senhaDaDemonstracao) {
-        if (PoliticaDeSenha.problema(senhaDaDemonstracao) != null) {
-            log.warn("Senha da demonstração inválida (REHABIT_DEMO_SENHA): a Mariana fica com a da apresentação.");
-            return Map.of();
-        }
-        return Map.of(EMAIL_DEMONSTRACAO, senhaDaDemonstracao);
+        return gerador.criarSeNaoExistir(ROTEIRO, senha);
     }
 }

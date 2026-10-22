@@ -5,8 +5,8 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 /**
- * Qual clínica é a de um roteiro (a conta da apresentação), e até onde a
- * agenda dela já foi estendida.
+ * Qual clínica é a de um roteiro (a conta da apresentação ou a da
+ * demonstração), e até onde a agenda dela já foi estendida.
  *
  * O id fixa a identidade: na primeira vez, a clínica só é aceita se tiver o
  * e-mail E o CNPJ do roteiro — o e-mail é do domínio reservado .example, que

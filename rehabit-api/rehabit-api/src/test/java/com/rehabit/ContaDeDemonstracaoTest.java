@@ -2,6 +2,7 @@ package com.rehabit;
 
 import com.rehabit.demo.ContaDeDemonstracao;
 import com.rehabit.model.Agendamento;
+import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.model.Paciente;
 import com.rehabit.model.Sessao;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,11 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,6 +136,22 @@ class ContaDeDemonstracaoTest extends TesteDeIntegracao {
                         // A sessão é registrada ao fim da consulta.
                         assertThat(a.getHoraAgendamento()).isBefore(s.getHoraSessao());
                     });
+        }
+    }
+
+    @Test
+    void quemMelhoraNoRoteiroNaoApareceComoInstavel() throws Exception {
+        demonstracao.criarSeNaoExistir();
+
+        // O selo da lista de pacientes compara as duas últimas medições, e
+        // todo paciente do roteiro termina melhor do que começou: a oscilação
+        // do dia a dia não pode deixá-lo vermelho.
+        for (Fisioterapeuta f : fisioterapeutas.findAll()) {
+            mvc.perform(get("/api/pacientes").param("idFisioterapeuta", f.getId().toString())
+                            .header("Authorization", tokenDe(f)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(greaterThan(0))))
+                    .andExpect(jsonPath("$[*].selo", everyItem(is("Evoluindo"))));
         }
     }
 }

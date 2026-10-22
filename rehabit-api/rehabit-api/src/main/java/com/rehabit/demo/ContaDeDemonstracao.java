@@ -30,12 +30,19 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * dados que se parecem com os de uma clínica de verdade. Quem monta a
  * clínica é o {@link GeradorDeClinica}; aqui fica só quem ela é.
  *
- * Liga com REHABIT_DEMO=true e roda na subida da API e toda madrugada. As
- * datas são as do dia em que a conta é montada; quando a agenda dela vira
- * passado, a conta é refeita com as datas do dia (veja
- * GeradorDeClinica.refazerSeVencida). Em dia, nada acontece — então a
- * variável pode ficar ligada. Como a conta é só de leitura, refazê-la não
- * apaga nada que alguém tenha feito nela.
+ * A Ana Paula Ribeiro é a conta que o botão "Entrar na demonstração" da
+ * página inicial abre (Login/demonstracao.js), e as telas da página inicial
+ * são dela. Ela tem foto — um retrato ilustrado, como os da conta da
+ * apresentação (Avataaars, de Pablo Stanley, gerado com a DiceBear), em
+ * src/main/resources/demonstracao —, posta pela {@link ManutencaoDaClinica}
+ * depois de cada montagem: apagar a clínica leva as fotos junto.
+ *
+ * Sobe sempre (REHABIT_DEMO=false a desliga) e roda na subida da API e toda
+ * madrugada. As datas são as do dia em que a conta é montada; quando a agenda
+ * dela vira passado, a conta é refeita com as datas do dia (veja
+ * GeradorDeClinica.refazerSeVencida), então a semana e o mês sempre têm
+ * consultas, sessões e amplitude. Em dia, nada acontece. Como a conta é só de
+ * leitura, refazê-la não apaga nada que alguém tenha feito nela.
  *
  * Os e-mails usam o domínio .example, reservado para exemplos (RFC 2606):
  * uma recuperação de senha nunca vai parar na caixa de alguém de verdade.
@@ -59,7 +66,8 @@ public class ContaDeDemonstracao implements ApplicationRunner {
     private static final List<Profissional> PROFISSIONAIS = List.of(
             new Profissional("Ana Paula Ribeiro", "ana.ribeiro@movimento.example", "CREFITO-3/123456-F",
                     "Ortopedia e traumatologia", "(11) 98765-4321",
-                    "Fisioterapeuta há 12 anos, com foco em reabilitação pós-operatória de joelho e ombro."),
+                    "Fisioterapeuta há 12 anos, com foco em reabilitação pós-operatória de joelho e ombro.",
+                    "demonstracao/ana.png"),
             new Profissional("Rafael Moura", "rafael.moura@movimento.example", "CREFITO-3/234567-F",
                     "Fisioterapia esportiva", "(11) 97654-3210",
                     "Atende atletas amadores e profissionais em lesões de joelho, tornozelo e punho."),
@@ -194,10 +202,13 @@ public class ContaDeDemonstracao implements ApplicationRunner {
     private static final Roteiro ROTEIRO = new Roteiro(CLINICA, PROFISSIONAIS, PACIENTES, 2);
 
     private final GeradorDeClinica gerador;
+    private final ManutencaoDaClinica manutencao;
     private final String senha;
 
-    public ContaDeDemonstracao(GeradorDeClinica gerador, @Value("${rehabit.demo.senha}") String senha) {
+    public ContaDeDemonstracao(GeradorDeClinica gerador, ManutencaoDaClinica manutencao,
+                               @Value("${rehabit.demo.senha}") String senha) {
         this.gerador = gerador;
+        this.manutencao = manutencao;
         this.senha = senha;
     }
 
@@ -224,9 +235,16 @@ public class ContaDeDemonstracao implements ApplicationRunner {
         manterEmDia();
     }
 
-    /** @return true se criou ou refez a conta; false se ela já estava em dia. */
+    /**
+     * Refaz a conta se as datas dela ficaram para trás e põe a foto da Ana
+     * onde ela falta — numa conta refeita, sempre.
+     *
+     * @return true se criou ou refez a conta; false se ela já estava em dia.
+     */
     public boolean manterEmDia() {
-        return gerador.refazerSeVencida(ROTEIRO, senha);
+        boolean refeita = gerador.refazerSeVencida(ROTEIRO, senha);
+        manutencao.completarFotos(ROTEIRO);
+        return refeita;
     }
 
     /** @return true se criou; false se a conta já existia, em dia ou não. */
