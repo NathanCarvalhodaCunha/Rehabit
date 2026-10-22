@@ -8,13 +8,17 @@
 # encontrava a API dormindo e saía verde mesmo assim, porque o 200 acabava
 # chegando; a falha passou dias escondida atrás de um aviso que ninguém lê.
 #
-# Agora ele tem dois papéis:
+# Agora ele tem três papéis:
 #
 #  - Acordar a instância se ela parar por algum motivo que o auto-ping não
 #    cobre (ele não roda com o processo parado).
 #  - FALHAR, com e-mail do GitHub, quando encontrar sinal de que o auto-ping
 #    não está segurando a instância. Com o auto-ping funcionando, nenhuma
 #    execução deveria encontrar a API dormindo.
+#  - FALHAR também quando a API no ar não tiver o último commit dela no main:
+#    o site (Vercel) publica cada merge sozinho, mas a API depende do deploy
+#    do Render, que de 14 a 21/10/2026 não aconteceu — e o site passou a pedir
+#    contas que a API velha não tinha, sem nada avisar.
 #
 # Se a conta do Render tiver outro web service gratuito e o auto-ping for
 # desligado (REHABIT_KEEPALIVE_ATIVO=false), desative este workflow também
@@ -35,8 +39,10 @@ on:
   # minutos antes de uma apresentação.
   workflow_dispatch:
 
-# Só faz um curl na API pública: o token do GitHub não precisa de permissão nenhuma.
-permissions: {}
+# Um curl na API pública e duas consultas de leitura à API do GitHub (o último
+# commit da API no main): o token só precisa ler o conteúdo do repositório.
+permissions:
+  contents: read
 
 concurrency:
   group: manter-api-acordada
@@ -95,3 +101,47 @@ jobs:
           fi
 
           exit $falhou
+
+      - name: Conferir se o Render publicou o último commit da API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # O /api/health diz o commit no ar (RENDER_GIT_COMMIT). Ele tem de
+          # conter o último commit que mexeu na API. Uma hora depois do último
+          # merge no main sobra tempo para o build e o deploy do Render; antes
+          # disso, um deploy em andamento não é falha. Problema na consulta ao
+          # GitHub vira só aviso: este passo não acusa o que não conseguiu ver.
+          gh_api() {
+            curl -sS --max-time 30 -H "Authorization: Bearer $GH_TOKEN" \
+                 -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/$1"
+          }
+          versao=$(jq -r '.versao // ""' resposta.json)
+          main_quando=$(gh_api "commits/main" | jq -r '.commit.committer.date // empty') || main_quando=""
+          ultimo=$(gh_api "commits?sha=main&path=rehabit-api/rehabit-api&per_page=1" | jq -r '.[0].sha // empty') || ultimo=""
+          if [ -z "$main_quando" ] || [ -z "$ultimo" ]; then
+            echo "::warning::Não consegui consultar o GitHub agora; o deploy fica para a próxima execução."
+            exit 0
+          fi
+          echo "Último commit da API no main: ${ultimo:0:7}. No ar: ${versao:-(não informado)}."
+
+          idade=$(( $(date +%s) - $(date -d "$main_quando" +%s) ))
+          if [ "$idade" -lt 3600 ]; then
+            echo "O main mudou há $((idade / 60)) min: o deploy do Render pode estar em andamento."
+            exit 0
+          fi
+
+          if [ -z "$versao" ]; then
+            echo "::error::A API no ar não informa o commit: ela é de antes de ${ultimo:0:7}. O Render não publicou o último merge — no painel do Render, veja Events e faça Manual Deploy → Deploy latest commit."
+            exit 1
+          fi
+          situacao=$(gh_api "compare/$ultimo...$versao" | jq -r '.status // empty') || situacao=""
+          case "$situacao" in
+            identical|ahead)
+              echo "A API no ar tem o último commit dela." ;;
+            "")
+              echo "::warning::Não consegui comparar ${ultimo:0:7} com ${versao:0:7} no GitHub agora." ;;
+            *)
+              echo "::error::A API no ar (${versao:0:7}) não tem o commit ${ultimo:0:7}: o Render não publicou o último merge. No painel do Render, veja Events e faça Manual Deploy → Deploy latest commit."
+              exit 1 ;;
+          esac

@@ -1,6 +1,7 @@
 package com.rehabit.controller;
 
 import com.rehabit.service.ManterApiAcordada;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,13 @@ import java.util.Map;
  * e ultimoAutoPingSegundosAtras acima de ~300 quer dizer que o auto-ping parou
  * de voltar. Da primeira vez faltou justamente isso — o ping falhava havia
  * dias e nada na resposta mostrava.
+ *
+ * "versao" é o commit no ar (RENDER_GIT_COMMIT). O site, na Vercel, publica
+ * cada merge em segundos; a API depende do deploy do Render, que de 14 a
+ * 21/10/2026 não aconteceu — e uma conta nova não entrava no site sem que
+ * nada dissesse por quê. O workflow compara este commit com o último da API
+ * no main. O repositório é público, então dizer qual commit roda não revela
+ * nada que o código já não mostre.
  */
 @RestController
 @RequestMapping("/api/health")
@@ -36,9 +44,11 @@ import java.util.Map;
 public class HealthController {
 
     private final ManterApiAcordada manterApiAcordada;
+    private final String versao;
 
-    public HealthController(ManterApiAcordada manterApiAcordada) {
+    public HealthController(ManterApiAcordada manterApiAcordada, @Value("${rehabit.versao:}") String versao) {
         this.manterApiAcordada = manterApiAcordada;
+        this.versao = versao == null || versao.isBlank() ? null : versao.trim();
     }
 
     @GetMapping
@@ -50,6 +60,7 @@ public class HealthController {
         Instant ultimo = manterApiAcordada.ultimoOk();
         corpo.put("ultimoAutoPingSegundosAtras",
                 ultimo == null ? null : Duration.between(ultimo, Instant.now()).toSeconds());
+        corpo.put("versao", versao);
         return ResponseEntity.ok(corpo);
     }
 }

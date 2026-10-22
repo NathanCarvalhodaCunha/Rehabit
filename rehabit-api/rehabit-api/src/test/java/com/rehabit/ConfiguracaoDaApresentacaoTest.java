@@ -13,9 +13,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * O application.properties de produção: no Render a demonstração já está
- * ligada (REHABIT_DEMO=true), e a conta da apresentação — onde está a Mariana,
- * a demonstração da página inicial — tem de subir com ela, sem variável nova.
+ * O application.properties de produção: a conta da apresentação — onde está a
+ * Mariana, a demonstração da página inicial — tem de subir sem variável
+ * nenhuma no Render, e com a senha que a equipe escolheu.
  */
 class ConfiguracaoDaApresentacaoTest {
 
@@ -28,13 +28,19 @@ class ConfiguracaoDaApresentacaoTest {
     }
 
     @Test
-    void aApresentacaoSobeJuntoComADemonstracao() throws IOException {
-        assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_DEMO", "true"))).isEqualTo("true");
-        assertThat(resolver("rehabit.apresentacao.ativar", Map.of())).isEqualTo("false");
-        // A variável própria manda nos dois sentidos.
-        assertThat(resolver("rehabit.apresentacao.ativar",
-                Map.of("REHABIT_DEMO", "true", "REHABIT_APRESENTACAO", "false"))).isEqualTo("false");
-        assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_APRESENTACAO", "true"))).isEqualTo("true");
+    void aApresentacaoSobeSemVariavelNenhuma() throws IOException {
+        assertThat(resolver("rehabit.apresentacao.ativar", Map.of())).isEqualTo("true");
+        // Nem depende da demonstração: o botão da página inicial precisa da Mariana.
+        assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_DEMO", "false"))).isEqualTo("true");
+        // Só a variável própria a desliga.
+        assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_APRESENTACAO", "false"))).isEqualTo("false");
+    }
+
+    @Test
+    void oCommitNoArVemDoRender() throws IOException {
+        assertThat(resolver("rehabit.versao", Map.of("RENDER_GIT_COMMIT", "276664bfa2f8fd4dc5b26c023d447c1946ec4609")))
+                .isEqualTo("276664bfa2f8fd4dc5b26c023d447c1946ec4609");
+        assertThat(resolver("rehabit.versao", Map.of())).isEmpty();
     }
 
     @Test
