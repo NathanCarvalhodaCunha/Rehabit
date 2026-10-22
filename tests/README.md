@@ -38,8 +38,9 @@ Sobe o jar em `localhost:8080` (banco e fotos numa pasta temporária) e o site
 em `localhost:8090`, e percorre: cadastro com foto e código por e-mail, foto
 sem GPS, upload sem login recusado, troca de foto apagando a antiga,
 profissional com foto, SSE do goniômetro por ingresso, troca de senha com
-token novo, "esqueci minha senha" pelo link (token fora da URL), limite de
-login. O navegador não resolve nenhum host além de
+token novo, "esqueci minha senha" pelo link (token fora da URL), a entrada
+pelo botão da demonstração (a Mariana, só de leitura, com o goniômetro
+simulado) e limite de login. O navegador não resolve nenhum host além de
 `localhost`.
 
 Os dois precisam de Node 18+ e Playwright (`npm i -D playwright`, ou aponte

@@ -34,6 +34,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -216,6 +217,15 @@ public class GeradorDeClinica {
      */
     @Transactional
     public boolean criarSeNaoExistir(Roteiro roteiro, String senha) {
+        return criarSeNaoExistir(roteiro, senha, Map.of());
+    }
+
+    /**
+     * Como {@link #criarSeNaoExistir(Roteiro, String)}, mas os profissionais
+     * cujo e-mail está em "senhasProprias" entram com a senha dali.
+     */
+    @Transactional
+    public boolean criarSeNaoExistir(Roteiro roteiro, String senha, Map<String, String> senhasProprias) {
         DadosDaClinica dados = roteiro.clinica();
         // Pelo CNPJ também: numa conta que aceita alterações a clínica pode ter
         // trocado o e-mail, e criar de novo esbarraria no CNPJ (coluna única).
@@ -230,7 +240,9 @@ public class GeradorDeClinica {
         Clinica clinica = criarClinica(dados, senhaCifrada);
         List<Fisioterapeuta> equipe = new ArrayList<>();
         for (Profissional p : roteiro.profissionais()) {
-            equipe.add(criarProfissional(p, clinica, dados.localidade(), senhaCifrada));
+            String propria = senhasProprias.get(p.email());
+            equipe.add(criarProfissional(p, clinica, dados.localidade(),
+                    propria == null ? senhaCifrada : passwordEncoder.encode(propria)));
         }
 
         List<Sessao> recentes = new ArrayList<>();

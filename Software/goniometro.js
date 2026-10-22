@@ -224,7 +224,7 @@
   /* --------------------------------------------------------------------
      Goniômetro simulado da demonstração pública.
 
-     A senha da Clínica Movimento está na página inicial, então ela não
+     A senha da conta de demonstração está na página inicial, então ela não
      pareia aparelho nenhum: com um goniômetro de verdade ali, qualquer
      visitante mandaria Zerar ou Reiniciar para ele. Para a tela não ficar
      parada à espera de um aparelho que nunca vem, o aparelho é simulado aqui

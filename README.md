@@ -47,15 +47,27 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 
 ### Conta de demonstração
 
-Com `REHABIT_DEMO=true`, a API cria na subida uma clínica completa para
-apresentar e testar o sistema: a **Clínica Movimento Fisioterapia**, com cinco
-fisioterapeutas de especialidades diferentes e dezesseis pacientes com
-anamnese, metas, meses de sessões com a evolução da amplitude e da dor (cada
-uma com a consulta em que o paciente compareceu, que a aba *Realizadas* da
-agenda lista), faltas, uma consulta remarcada e a agenda das próximas duas
-semanas.
+O botão **Entrar na demonstração** da página inicial abre
+`Login/login.html?demo` com a conta da **Mariana Costa Bertolini** já
+preenchida ([`Login/demonstracao.js`](Login/demonstracao.js)): fisioterapeuta
+de ortopedia da Clínica Alvorada — a conta da apresentação, abaixo —, com
+quatro pacientes, meses de sessões e a agenda das próximas semanas. Ela entra
+com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`), que é pública, e
+por isso é **só de leitura**: a API recusa com 403 qualquer alteração vinda
+dela (`JwtAuthenticationFilter`), e as telas mostram um aviso no topo. As
+outras contas da Alvorada são comuns e têm outra senha. Se trocar
+`REHABIT_DEMO_SENHA` no Render, troque também no `demonstracao.js`.
 
-**A conta fica sempre em dia.** As datas são relativas ao dia em que ela é
+Com `REHABIT_DEMO=true`, a API cria na subida a conta da apresentação (onde
+está a Mariana) e a **Clínica Movimento Fisioterapia**, a demonstração de
+antes: cinco fisioterapeutas de especialidades diferentes e dezesseis
+pacientes com anamnese, metas, meses de sessões com a evolução da amplitude e
+da dor (cada uma com a consulta em que o paciente compareceu, que a aba
+*Realizadas* da agenda lista), faltas, uma consulta remarcada e a agenda das
+próximas duas semanas. A Movimento inteira entra com a mesma senha da
+demonstração e também é só de leitura.
+
+**A Movimento fica sempre em dia.** As datas são relativas ao dia em que ela é
 montada: o histórico termina na véspera e a agenda começa no dia seguinte.
 Como ninguém altera a conta, essas datas iam ficando para trás — semanas
 depois, o histórico parava no dia da montagem e as consultas "marcadas" eram
@@ -69,7 +81,8 @@ leitura, refazê-la não apaga nada que alguém tenha feito nela. Quem estiver
 logado na hora em que ela é refeita precisa entrar de novo (a senha é a
 mesma). Se refazer falhar, nada se perde: a API sobe assim mesmo, com a conta
 que já existia, avisa no log e tenta de novo na madrugada seguinte (ou na
-próxima subida).
+próxima subida). A Mariana não passa por isso: a Alvorada segue atendendo
+sozinha (veja abaixo).
 
 | Conta | E-mail |
 |---|---|
@@ -80,16 +93,8 @@ próxima subida).
 | Carlos Eduardo Tanaka (reumatologia) | `carlos.tanaka@movimento.example` |
 | Fernanda Oliveira Lima (gerontologia) | `fernanda.lima@movimento.example` |
 
-Todas entram com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`), e
-essa senha é pública: o botão "Entrar na demonstração" da página inicial abre
-`Login/login.html?demo` com a conta da Ana Paula já preenchida
-([`Login/demonstracao.js`](Login/demonstracao.js)). Por isso a conta é **só de
-leitura**: a API recusa com 403 qualquer alteração vinda da clínica de
-demonstração ou de um profissional dela (`JwtAuthenticationFilter`), e as telas
-mostram um aviso no topo. Se trocar `REHABIT_DEMO_SENHA` no Render, troque
-também no `demonstracao.js`. Os e-mails usam o domínio
-reservado `.example`, e os telefones são fictícios: para testar o lembrete no
-WhatsApp de verdade, use uma conta comum.
+Os e-mails usam o domínio reservado `.example`, e os telefones são fictícios:
+para testar o lembrete no WhatsApp de verdade, use uma conta comum.
 
 **O goniômetro da demonstração é simulado.** Como a senha é pública, a conta
 não pareia aparelho nenhum: com um goniômetro de verdade ali, qualquer
@@ -98,7 +103,8 @@ registro de sessão não ficarem parados, o `Software/goniometro.js` simula o
 aparelho no navegador (um movimento de abdução do ombro, no formato e no ritmo
 do aparelho real), e os botões Zerar, Identificar, captura e Reiniciar agem
 sobre a simulação. As telas avisam que é uma simulação. Para mostrar o aparelho
-de verdade, use a conta da apresentação (abaixo) ou uma conta comum.
+de verdade, use a clínica ou um dos outros profissionais da conta da
+apresentação (abaixo), ou uma conta comum.
 
 ```bash
 # local
@@ -110,27 +116,38 @@ No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
 
 ### Conta da apresentação
 
-Para a banca do TCC (27/10/2026) há uma segunda clínica, que funciona como
-uma conta comum: a **Clínica Alvorada Fisioterapia**, de Atibaia, com quatro
-fisioterapeutas e catorze pacientes. Os pacientes têm anamnese, metas, meses de
-sessões, faltas, uma consulta remarcada, altas e um inativo, e a agenda cobre
-as próximas três semanas, com boa parte deles marcada às terças, de manhã e à
-tarde. Ela é montada pelo mesmo gerador da demonstração
+Para a banca do TCC (27/10/2026) há uma segunda clínica: a **Clínica Alvorada
+Fisioterapia**, de Atibaia, com quatro fisioterapeutas e catorze pacientes. Os
+pacientes têm anamnese, metas, meses de sessões, faltas, uma consulta
+remarcada, altas e um inativo, e a agenda cobre as próximas três semanas, com
+boa parte deles marcada às terças, de manhã e à tarde. Ela é montada pelo
+mesmo gerador da demonstração
 ([`GeradorDeClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/GeradorDeClinica.java)),
-mas tem quatro diferenças:
+mas:
 
-- **aceita alterações**: dá para editar, cadastrar, excluir e registrar sessão
-  com o goniômetro, e nenhuma tela fala em demonstração. O goniômetro é o de
-  verdade: entrando como a clínica ou como um dos profissionais, *Dispositivo →
-  Parear novo dispositivo* mostra o código para digitar no portal do aparelho
-  (revogar fica só com a clínica);
-- **a senha não está no repositório**: ela vem de `REHABIT_APRESENTACAO_SENHA`,
-  que não tem valor padrão e precisa passar na política de senha (mínimo de 8
-  caracteres e fora da lista das senhas comuns). Sem ela, a API sobe
-  normalmente, mas não cria a conta e avisa no log;
-- **os e-mails existem**: são apelidos do `tccrehabit@gmail.com`. O Gmail
-  entrega na mesma caixa tudo o que tem `+algo` antes do `@`, então o e-mail
-  de recuperação de senha de qualquer uma das contas chega à equipe;
+- **aceita alterações**: a clínica e três dos profissionais (Lucas, Patrícia
+  e Renato) são contas comuns — dá para editar, cadastrar, excluir e registrar
+  sessão com o goniômetro, e nenhuma tela delas fala em demonstração. O
+  goniômetro é o de verdade: entrando como a clínica ou como um desses
+  profissionais, *Dispositivo → Parear novo dispositivo* mostra o código para
+  digitar no portal do aparelho (revogar fica só com a clínica). A quarta, a
+  Mariana, é a demonstração da página inicial (acima): só de leitura;
+- **sobe com a demonstração**: com `REHABIT_DEMO=true`, ela já é criada; a
+  variável `REHABIT_APRESENTACAO` (`true` ou `false`) liga ou desliga à parte;
+- **a senha é fixa**: a que a equipe escolheu para a banca, padrão de
+  `rehabit.apresentacao.senha` no `application.properties`, na clínica e nos
+  três profissionais (a Mariana entra com a da demonstração). Ela está neste
+  repositório, que é público: para uma senha só da equipe, defina
+  `REHABIT_APRESENTACAO_SENHA` no Render (mínimo de 8
+  caracteres e fora da lista das senhas comuns). E ela volta sozinha: na
+  subida e toda madrugada, uma conta que esteja com outra senha — trocada pela
+  tela, por exemplo — volta para a da configuração, e só ela tem as sessões
+  encerradas;
+- **os e-mails não recebem nada**: são do domínio reservado `.example`, como
+  os da demonstração, então não há recuperação de senha por e-mail (é por
+  isso que a senha volta sozinha). A primeira versão usava apelidos do Gmail
+  da equipe (`tccrehabit+...@gmail.com`); uma conta criada com eles passa para
+  os e-mails novos no lugar, com tudo o que tem;
 - **segue atendendo sozinha**: em vez de ser refeita como a demonstração (o
   que apagaria o que a equipe fez e o goniômetro pareado), ela é mantida pela
   [`ManutencaoDaClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/ManutencaoDaClinica.java)
@@ -146,30 +163,24 @@ mas tem quatro diferenças:
 
 | Conta | E-mail |
 |---|---|
-| Clínica | `tccrehabit+clinica@gmail.com` |
-| Mariana Costa Bertolini (ortopedia) | `tccrehabit+mariana@gmail.com` |
-| Lucas Henrique Prado (esportiva) | `tccrehabit+lucas@gmail.com` |
-| Patrícia Yamamoto Reis (neurofuncional) | `tccrehabit+patricia@gmail.com` |
-| Renato Aguiar Fonseca (gerontologia) | `tccrehabit+renato@gmail.com` |
+| Clínica | `contato@alvorada.example` |
+| Mariana Costa Bertolini (ortopedia) — a demonstração | `mariana.bertolini@alvorada.example` |
+| Lucas Henrique Prado (esportiva) | `lucas.prado@alvorada.example` |
+| Patrícia Yamamoto Reis (neurofuncional) | `patricia.reis@alvorada.example` |
+| Renato Aguiar Fonseca (gerontologia) | `renato.fonseca@alvorada.example` |
 
-No Render, *Environment*: `REHABIT_APRESENTACAO` = `true` e
-`REHABIT_APRESENTACAO_SENHA` = a senha da equipe, depois *Manual Deploy*. O log
-mostra `Clínica Alvorada Fisioterapia criada`. A criação é idempotente: se o e-mail
-ou o CNPJ da clínica já estão cadastrados, nada é criado, e a conta nunca é
-apagada nem refeita pela API.
+A equipe tem os acessos num PDF à parte, fora do repositório.
 
-**A senha é a da variável, nas cinco contas.** Quando `REHABIT_APRESENTACAO_SENHA`
-muda (ou na primeira subida com esta versão), a API aplica a senha à clínica e
-aos quatro profissionais e encerra as sessões abertas deles; a tabela
-`tb14_conta_do_roteiro` guarda só o BCrypt da última senha aplicada. Com a mesma
-variável, nada acontece — uma senha trocada pela tela, até como reação a um
-vazamento, fica valendo. A mesma tabela fixa qual é a clínica: na primeira vez,
-só vale a que tem o e-mail **e** o CNPJ do roteiro (o CNPJ está neste
-repositório público; o e-mail exige o código mandado à caixa da equipe), e daí
-em diante a manutenção segue o id dela, mesmo que a equipe troque o e-mail ou
-o CNPJ pela tela. Só os profissionais dessa clínica são tocados: um e-mail do
-roteiro que outra conta venha a usar fica de fora. A senha não vai para o repositório nem para o PR: a equipe a guarda num
-PDF à parte.
+O log da subida mostra `Clínica Alvorada Fisioterapia criada`. A criação é
+idempotente: se o e-mail ou o CNPJ da clínica já estão cadastrados, nada é
+criado, e a conta nunca é apagada nem refeita pela API — mas, se alguém a
+excluir pela tela, a madrugada seguinte (ou a próxima subida) a cria de novo.
+A tabela `tb14_conta_do_roteiro` fixa qual é a clínica: na primeira vez, só
+vale a que tem o e-mail **e** o CNPJ do roteiro (o CNPJ está neste repositório
+público; o e-mail é `.example`, que o cadastro pela tela não aceita), e daí em
+diante a manutenção segue o id dela, mesmo que a equipe troque o e-mail ou o
+CNPJ pela tela. Só os profissionais dessa clínica são tocados: um e-mail do
+roteiro que outra conta venha a usar fica de fora.
 
 **Fotos.** A clínica tem um logo (o sol nascendo sobre a Pedra Grande) e cada
 profissional, um retrato ilustrado — não são rostos de pessoas reais: estilo
