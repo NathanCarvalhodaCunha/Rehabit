@@ -146,7 +146,7 @@
       return;
     }
 
-    lista.innerHTML = '<li style="padding:18px;color:var(--ink-muted);">Carregando...</li>';
+    lista.innerHTML = "<li>" + RehabitLoader.inline() + "</li>";
     marcarCalendario();
     const caminho =
       aba === "agendadas"

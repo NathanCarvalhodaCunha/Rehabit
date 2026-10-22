@@ -141,7 +141,7 @@
 
   function gerarCodigo() {
     campoCodigo.textContent = "······";
-    campoValidade.textContent = "Gerando...";
+    campoValidade.innerHTML = '<span class="rh-biceps" aria-hidden="true"></span>Gerando...';
     clinica()
       .then((id) => apiPost(`/dispositivos/pareamento?idClinica=${id}`, {}))
       .then((dados) => {

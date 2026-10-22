@@ -25,6 +25,9 @@
     submitBtn.disabled = true;
     const textoOriginal = submitBtn.textContent;
     submitBtn.textContent = "Cadastrando...";
+    // O loader cobre também o envio da foto, que não passa pelo apiPost; o
+    // apiPost, chamado com ele já de pé, mantém o "Cadastrando".
+    RehabitLoader.show("Cadastrando");
 
     try {
       let foto = null;
@@ -63,6 +66,7 @@
     } catch (err) {
       RehabitToast.erro(err.message);
     } finally {
+      RehabitLoader.hide();
       submitBtn.disabled = false;
       submitBtn.textContent = textoOriginal;
     }

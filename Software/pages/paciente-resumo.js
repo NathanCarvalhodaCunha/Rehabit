@@ -139,7 +139,7 @@ window.RehabitPacienteResumo = (function () {
       return;
     }
 
-    corpo.innerHTML = '<p class="resumo-carregando">Carregando informações...</p>';
+    corpo.innerHTML = RehabitLoader.inline("Carregando informações");
     var idPedido = idAberto;
 
     Promise.all([apiGet("/pacientes/" + idPedido), apiGet("/pacientes/" + idPedido + "/sessoes").catch(function () {

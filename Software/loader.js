@@ -3,7 +3,10 @@
      RehabitLoader.show("Carregando")  -> exibe (cria o overlay se não existir)
      RehabitLoader.hide()              -> esconde
      RehabitLoader.during(promise)     -> exibe enquanto a promise roda
+     RehabitLoader.inline("Buscando")  -> HTML do bíceps compacto, para pôr
+                                          dentro de uma lista, tabela, menu...
    Marcação opcional já no HTML: <div class="rh-loader" data-rh-loader> ... </div>
+   No meio de um texto: <span class="rh-biceps" aria-hidden="true"></span>
    Atributos no <body> (opcional):
      data-rh-loader-dark="true"        -> força tema escuro
      data-rh-loader-icon="assets/..."  -> caminho do ícone
@@ -43,6 +46,13 @@
     dots.className = "rh-dots";
     label.textContent = text;
     label.appendChild(dots);
+  }
+
+  // Mesma regra para o inline(), que devolve HTML.
+  function escapar(text) {
+    return String(text).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
   }
 
   // Nasce escondido (display: none) e não no primeiro show(): o <img> do
@@ -258,6 +268,17 @@
       return Promise.resolve(promise).finally(function () {
         self.hide();
       });
+    },
+    // Para o que carrega dentro da página sem o overlay de tela cheia (ou
+    // atrás dele): o mesmo bíceps, compacto, no lugar dos dados. Quem chama
+    // troca o conteúdo quando a resposta chega.
+    inline: function (text) {
+      return (
+        '<div class="rh-carregando" role="status">' +
+        '<span class="rh-biceps" aria-hidden="true"></span>' +
+        "<span>" + escapar(text || "Carregando") + '<span class="rh-dots"></span></span>' +
+        "</div>"
+      );
     },
   };
 

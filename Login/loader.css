@@ -241,6 +241,96 @@
   }
 }
 
+/* ---------- bíceps dentro da página ----------
+   O mesmo pump para o que carrega dentro de uma lista, tabela, janela, menu
+   ou campo: a busca e as notificações, que não abrem o overlay, e os
+   "Carregando..." que ficavam parados no lugar dos dados. Só CSS (o ícone
+   vem de fundo), então a marcação é um <span class="rh-biceps"> que cabe no
+   meio de uma frase e acompanha o tamanho da fonte dela.
+   RehabitLoader.inline("Buscando") monta o bloco centralizado. */
+.rh-biceps {
+  --rh-anel: rgba(21, 101, 216, 0.35);
+  position: relative;
+  display: inline-block;
+  width: 1.75em;
+  height: 1.75em;
+  margin-right: 0.4em;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: rgba(21, 101, 216, 0.07);
+  /* o segundo anel do overlay, aqui uma onda de sombra meio ciclo atrás */
+  animation: rh-onda 1.6s ease-out -0.8s infinite;
+}
+
+.rh-biceps::before,
+.rh-biceps::after {
+  content: "";
+  position: absolute;
+}
+
+/* o ícone, um pouco maior no anel que no overlay: pequeno, o traço fino
+   dele empalidecia */
+.rh-biceps::before {
+  inset: 17% 20%;
+  background: url("assets/rehabit-icon.png") center / contain no-repeat;
+  transform-origin: 22% 78%;
+  animation: rh-pump 1.6s ease-in-out infinite;
+}
+
+.rh-biceps::after {
+  inset: 0;
+  border: 1.5px solid var(--rh-anel);
+  border-radius: 50%;
+  animation: rh-pulse 1.6s ease-out infinite;
+}
+
+@keyframes rh-onda {
+  0% {
+    box-shadow: 0 0 0 0 var(--rh-anel);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.3em transparent;
+  }
+}
+
+.dark .rh-biceps,
+.rh-loader--dark .rh-biceps {
+  --rh-anel: rgba(47, 128, 255, 0.45);
+  background-color: rgba(47, 128, 255, 0.12);
+}
+
+.dark .rh-biceps::before,
+.rh-loader--dark .rh-biceps::before {
+  background-image: url("assets/rehabit-icon-dark.png");
+}
+
+/* bloco: o bíceps maior, centralizado, com o texto e as reticências embaixo */
+.rh-carregando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 12px;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--ink-muted, #5f6c7b);
+}
+
+.rh-carregando .rh-biceps {
+  margin: 0;
+  font-size: 30px;
+}
+
+.dark .rh-carregando,
+.rh-loader--dark .rh-carregando {
+  color: var(--ink-muted, #92a3bf);
+}
+
 /* ---------- responsividade padrão do projeto ---------- */
 @media (max-width: 991px) {
   .rh-loader__ring {
@@ -280,7 +370,10 @@
   .rh-loader__ring::before,
   .rh-loader__ring::after,
   .rh-loader__hint,
-  .rh-dots::after {
+  .rh-dots::after,
+  .rh-biceps,
+  .rh-biceps::before,
+  .rh-biceps::after {
     animation: none;
   }
   .rh-dots::after {

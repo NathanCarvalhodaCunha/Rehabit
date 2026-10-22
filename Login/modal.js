@@ -181,6 +181,9 @@
 
   /** A API diz se este ambiente exige o código (depende de ter SMTP configurado). */
   async function confirmacaoObrigatoria() {
+    // É a primeira chamada do cadastro: com a API acordando, a espera longa
+    // cai aqui, e só o "Aguarde..." do botão parecia travado.
+    RehabitLoader.show('Aguarde');
     try {
       var res = await fetch(base() + '/auth/verificar-email/obrigatorio');
       if (!res.ok) return false;
@@ -189,6 +192,8 @@
       // Sem resposta, segue direto para o cadastro: quem barra de verdade é a
       // API, que recusa o /register sem e-mail confirmado.
       return false;
+    } finally {
+      RehabitLoader.hide();
     }
   }
 

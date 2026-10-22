@@ -135,7 +135,7 @@ window.RehabitCurva = (function () {
 
   function abrir(idPaciente, idSessao, rotulo) {
     if (!overlay) montar();
-    corpo.innerHTML = '<p class="resumo-carregando">Carregando a curva…</p>';
+    corpo.innerHTML = RehabitLoader.inline("Carregando a curva");
     overlay.classList.remove("is-hidden");
     document.body.style.overflow = "hidden";
 
