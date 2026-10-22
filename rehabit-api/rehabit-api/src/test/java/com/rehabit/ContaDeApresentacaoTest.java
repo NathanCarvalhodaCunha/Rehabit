@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {"rehabit.apresentacao.ativar=true",
-        "rehabit.apresentacao.senha=senha-da-apresentacao"})
+        "rehabit.apresentacao.senha=senha-da-apresentacao", "rehabit.demo.senha=senha-da-demonstracao"})
 class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     /** Terça-feira, 13/10/2026, 10h em Brasília: duas semanas antes da apresentação. */
@@ -68,8 +68,10 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     @Test
     void semSenhaOuComSenhaFracaNaoCriaNada() {
-        assertThat(new ContaDeApresentacao(gerador, manutencao, "").criarSeNaoExistir()).isFalse();
-        assertThat(new ContaDeApresentacao(gerador, manutencao, "123456").criarSeNaoExistir()).isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "", "senha-da-demonstracao").criarSeNaoExistir())
+                .isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "123456", "senha-da-demonstracao").criarSeNaoExistir())
+                .isFalse();
 
         assertThat(clinicas.count()).isZero();
     }
@@ -84,21 +86,27 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tipo").value("CLINICA"));
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"tccrehabit+mariana@gmail.com\",\"senha\":\"senha-da-apresentacao\"}"))
+                        .content("{\"email\":\"lucas.prado@alvorada.example\",\"senha\":\"senha-da-apresentacao\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tipo").value("FISIOTERAPEUTA"));
+        // A Mariana é a demonstração da página inicial: entra com a senha dela.
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + ContaDeApresentacao.EMAIL_DEMONSTRACAO
+                                + "\",\"senha\":\"senha-da-demonstracao\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Mariana Costa Bertolini"));
     }
 
     @Test
-    void naoEhSoDeLeituraComoADemonstracao() throws Exception {
+    void foraAMarianaNaoEhSoDeLeituraComoADemonstracao() throws Exception {
         apresentacao.criarSeNaoExistir();
-        Fisioterapeuta mariana = fisioterapeutas.findByEmail("tccrehabit+mariana@gmail.com").orElseThrow();
+        Fisioterapeuta lucas = fisioterapeutas.findByEmail("lucas.prado@alvorada.example").orElseThrow();
         Paciente paciente = pacientes.findAll().stream()
-                .filter(p -> p.getIdFisioterapeuta().equals(mariana.getId()))
+                .filter(p -> p.getIdFisioterapeuta().equals(lucas.getId()))
                 .findFirst().orElseThrow();
 
         mvc.perform(put("/api/pacientes/" + paciente.getId())
-                        .header("Authorization", tokenDe(mariana))
+                        .header("Authorization", tokenDe(lucas))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nome\":\"Nome alterado na apresentação\"}"))
                 .andExpect(status().isOk());
@@ -108,16 +116,17 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
     }
 
     @Test
-    void osEmailsDaEquipeChegamNaCaixaDoTcc() {
+    void osEmailsSaoDoDominioReservadoSemOMais() {
         apresentacao.criarSeNaoExistir();
 
         List<String> emails = Stream.concat(
                 clinicas.findAll().stream().map(Clinica::getEmail),
                 fisioterapeutas.findAll().stream().map(Fisioterapeuta::getEmail)).toList();
         assertThat(emails).hasSize(5).doesNotHaveDuplicates().allSatisfy(email -> {
-            assertThat(email).matches("tccrehabit\\+[a-z]+@gmail\\.com");
+            // Como os da demonstração: .example não entrega e-mail a ninguém.
+            assertThat(email).matches("[a-z]+(\\.[a-z]+)?@alvorada\\.example");
             // O mesmo endereço que o login monta a partir do que se digita.
-            assertThat(validadorEmail.validarENormalizar(email)).isEqualTo(email);
+            assertThat(validadorEmail.normalizar(email)).isEqualTo(email);
         });
     }
 

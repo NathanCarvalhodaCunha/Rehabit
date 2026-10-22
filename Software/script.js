@@ -19,13 +19,16 @@ function getSessao() {
   }
 }
 
-/* A conta de demonstração pública (Clínica Movimento, entrada pela página
-   inicial): todos os e-mails dela são do domínio reservado .example. A API
-   recusa qualquer alteração dela; aqui serve para as telas avisarem e para o
-   goniômetro dela ser simulado (veja goniometro.js). */
+/* A conta de demonstração pública, a que o botão da página inicial abre: a
+   Mariana, profissional da Clínica Alvorada (as outras contas da Alvorada são
+   comuns). Também conta a Clínica Movimento inteira, a demonstração de antes,
+   que entra com a mesma senha. A API recusa qualquer alteração delas
+   (JwtAuthenticationFilter); aqui serve para as telas avisarem e para o
+   goniômetro ser simulado (veja goniometro.js). */
 function ehContaDeDemonstracao(sessao) {
   const s = sessao === undefined ? getSessao() : sessao;
-  return !!(s && /@movimento\.example$/i.test(s.email || ""));
+  const email = String((s && s.email) || "").toLowerCase();
+  return email === "mariana.bertolini@alvorada.example" || /@movimento\.example$/.test(email);
 }
 
 // Resolve o nome de um arquivo interno para a variante do tema atual

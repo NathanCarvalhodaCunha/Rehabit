@@ -294,13 +294,11 @@ CREATE TABLE IF NOT EXISTS `tb13_arquivo_enviado` (
 
 -- Copiando estrutura para tabela rehabit.tb14_conta_do_roteiro
 -- Qual clínica é a da conta da apresentação (fixada na primeira vez pelo
--- e-mail e pelo CNPJ), o BCrypt da última senha de configuração aplicada a
--- ela e até onde a agenda dos pacientes do roteiro já foi estendida.
+-- e-mail e pelo CNPJ) e até onde a agenda dos pacientes do roteiro já foi
+-- estendida.
 CREATE TABLE IF NOT EXISTS `tb14_conta_do_roteiro` (
   `tb14_cnpj_roteiro` varchar(18) NOT NULL,
   `tb14_id_clinica` int(11) NOT NULL,
-  `tb14_senha_aplicada` varchar(100) DEFAULT NULL,
-  `tb14_senha_aplicada_em` datetime DEFAULT NULL,
   `tb14_agenda_ate` date DEFAULT NULL,
   PRIMARY KEY (`tb14_cnpj_roteiro`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

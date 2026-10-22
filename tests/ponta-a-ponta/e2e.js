@@ -100,7 +100,10 @@ async function subirApi() {
     "--rehabit.email.confirmar-cadastro=true",
     "--rehabit.app.url-login=" + SITE + "/Login",
     "--rehabit.keepalive.ativo=false",
-    "--rehabit.demo.ativar=false"], { env, stdio: ["ignore", log, log] });
+    "--rehabit.demo.ativar=false",
+    // A conta da apresentação, onde está a Mariana — a demonstração da página
+    // inicial —, com as senhas padrão do application.properties.
+    "--rehabit.apresentacao.ativar=true"], { env, stdio: ["ignore", log, log] });
   for (let i = 0; i < 120; i++) {
     try {
       const r = await fetch(API + "/api/health");
@@ -272,7 +275,42 @@ async function main() {
       body: JSON.stringify({ email, senha: "Senha-Pelo-Link-E2E-3" }) });
     conferir("senha nova pelo link funciona", entrou.status === 200, String(entrou.status));
 
-    /* 10. Cabeçalho do limite: 429 com mensagem */
+    /* 10. "Entrar na demonstração": a Mariana, só de leitura; a clínica dela aceita alterações */
+    const loginApi = (e, s) => fetch(API + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: e, senha: s }) });
+    for (let i = 0; i < 60 && (await loginApi("contato@alvorada.example", "Rehabit1234@")).status !== 200; i++) {
+      await new Promise((ok) => setTimeout(ok, 1000)); // a conta é criada logo depois da subida
+    }
+    await pagina.evaluate(() => localStorage.clear());
+    await pagina.goto(SITE + "/index.html");
+    await pagina.locator('a[href="Login/login.html?demo"]').first().click();
+    await pagina.waitForURL(/Login\/login\.html\?demo/, { timeout: 15000 });
+    const preenchido = await pagina.inputValue("#email");
+    conferir("botão da demonstração preenche a Mariana", preenchido === "mariana.bertolini@alvorada.example", preenchido);
+    await pagina.click("#loginForm button[type=submit]");
+    await pagina.waitForURL(/Software\/profissional/, { timeout: 15000 });
+    const daMariana = await pagina.evaluate(() => JSON.parse(localStorage.getItem("rehabit_usuario")));
+    await pagina.waitForSelector(".aviso-demo", { timeout: 10000 });
+    conferir("entrou como a Mariana, com o aviso de demonstração", daMariana.nome === "Mariana Costa Bertolini");
+    const comToken = (t) => ({ Authorization: "Bearer " + t, "Content-Type": "application/json" });
+    const seus = await (await fetch(API + "/api/pacientes?idFisioterapeuta=" + daMariana.id, { headers: comToken(daMariana.token) })).json();
+    const alvo = seus[0];
+    const recusa = await fetch(API + "/api/pacientes/" + alvo.id, { method: "PUT", headers: comToken(daMariana.token),
+      body: JSON.stringify({ nome: "Nome trocado por um visitante" }) });
+    const motivo = (await recusa.json().catch(() => ({}))).mensagem || "";
+    conferir("a demonstração não altera nada (403)", recusa.status === 403 && /demonstração/.test(motivo), recusa.status + " " + motivo);
+    urls.length = 0;
+    await pagina.goto(SITE + "/Software/dispositivo.html");
+    await pagina.waitForTimeout(2500);
+    const simulado = await pagina.evaluate(() => window.RehabitGoniometro && window.RehabitGoniometro.simulado());
+    conferir("goniômetro simulado, sem abrir o stream da clínica",
+      simulado === true && !urls.some((u) => u.includes("/api/goniometro/stream")), String(simulado));
+    const daClinica = await (await loginApi("contato@alvorada.example", "Rehabit1234@")).json();
+    const aceita = await fetch(API + "/api/pacientes/" + alvo.id, { method: "PUT", headers: comToken(daClinica.token),
+      body: JSON.stringify({ nome: alvo.nome }) });
+    conferir("a clínica da Mariana entra com Rehabit1234@ e altera", !!daClinica.token && aceita.status === 200, String(aceita.status));
+
+    /* 11. Cabeçalho do limite: 429 com mensagem */
     let ultimo;
     for (let i = 0; i < 12; i++) {
       ultimo = await fetch(API + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" },

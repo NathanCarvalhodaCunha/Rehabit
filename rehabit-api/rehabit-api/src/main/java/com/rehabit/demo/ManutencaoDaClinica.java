@@ -24,6 +24,7 @@ import com.rehabit.repository.RecuperacaoSenhaRepository;
 import com.rehabit.repository.SessaoRepository;
 import com.rehabit.security.Limite;
 import com.rehabit.security.LimiteDeTentativas;
+import com.rehabit.security.PoliticaDeSenha;
 import com.rehabit.service.AgendamentoService;
 import com.rehabit.storage.EnvioDeFoto;
 import com.rehabit.storage.FileStorageService;
@@ -48,6 +49,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -58,9 +60,11 @@ import java.util.stream.Collectors;
  *
  * - fotos: põe as do roteiro onde falta foto; a que a equipe trocou pela tela
  *   fica;
- * - senha: aplica a senha configurada às contas do roteiro quando a
- *   configuração muda (a troca derruba as sessões abertas, como qualquer
- *   troca); uma senha trocada pela tela fica até a configuração mudar;
+ * - senha: põe a senha configurada de volta em cada conta do roteiro que
+ *   estiver com outra (a troca derruba as sessões abertas dela, como
+ *   qualquer troca); quem já está com ela não é deslogado;
+ * - e-mail: uma conta criada com um e-mail de uma versão anterior do roteiro
+ *   passa para o de agora, no lugar;
  * - atendimento: a clínica segue atendendo. A consulta de um paciente do
  *   roteiro que passou sem ninguém mexer nela (ainda marcada) vira realizada,
  *   com a sessão, a medição e o aviso no sino, e a agenda de quem está em
@@ -167,6 +171,60 @@ public class ManutencaoDaClinica {
                 .orElse(null);
     }
 
+    // --------------------------------------------------------------- e-mails
+
+    /**
+     * Passa para os e-mails do roteiro as contas que ainda estão com um e-mail
+     * de uma versão anterior dele ("novoPorAntigo"), no lugar: a clínica e os
+     * profissionais seguem os mesmos, com o histórico e o que a equipe fez.
+     * A clínica é a fixada em ContaDoRoteiro ou, antes de fixada, a que tem o
+     * CNPJ do roteiro e um desses e-mails. Só muda o e-mail de quem ainda está
+     * com o antigo — um que a equipe trocou pela tela fica — e só se o novo
+     * estiver livre.
+     *
+     * @return quantas contas mudaram de e-mail
+     */
+    @Transactional
+    public int trocarEmailsAntigos(Roteiro roteiro, Map<String, String> novoPorAntigo) {
+        DadosDaClinica dados = roteiro.clinica();
+        Clinica clinica = clinicaDo(roteiro);
+        if (clinica == null) {
+            clinica = novoPorAntigo.keySet().stream()
+                    .map(clinicas::findByEmail)
+                    .flatMap(Optional::stream)
+                    .filter(c -> dados.cnpj().equals(c.getCnpj()))
+                    .findFirst().orElse(null);
+            if (clinica == null) return 0;
+        }
+
+        int trocados = 0;
+        String novoDaClinica = novoPorAntigo.get(clinica.getEmail());
+        if (novoDaClinica != null && emailLivre(novoDaClinica)) {
+            recuperacoes.deleteByEmail(clinica.getEmail());
+            clinica.setEmail(novoDaClinica);
+            clinicas.save(clinica);
+            trocados++;
+        }
+        for (Fisioterapeuta f : fisioterapeutas.findByIdClinicaOrderByNomeAsc(clinica.getId())) {
+            String novo = novoPorAntigo.get(f.getEmail());
+            if (novo == null || f.isExcluido() || !emailLivre(novo)) continue;
+            recuperacoes.deleteByEmail(f.getEmail());
+            f.setEmail(novo);
+            fisioterapeutas.save(f);
+            trocados++;
+        }
+        if (trocados > 0) {
+            clinicas.flush();
+            clinicaDo(roteiro); // fixa a clínica, agora achada pelo e-mail novo
+            log.info("{}: {} conta(s) passaram para os e-mails novos.", dados.nome(), trocados);
+        }
+        return trocados;
+    }
+
+    private boolean emailLivre(String email) {
+        return !clinicas.existsByEmail(email) && !fisioterapeutas.existsByEmail(email);
+    }
+
     // ---------------------------------------------------------------- fotos
 
     /**
@@ -234,45 +292,50 @@ public class ManutencaoDaClinica {
     // ---------------------------------------------------------------- senha
 
     /**
-     * Aplica a senha configurada à clínica e aos profissionais do roteiro —
-     * mas só quando a configuração muda (ou na primeira vez). Uma senha
-     * trocada pela tela, às vezes justamente porque a da variável vazou, fica
-     * valendo nas subidas seguintes; para aplicar de novo, muda-se a variável.
+     * Põe a senha configurada na clínica e nos profissionais do roteiro — a de
+     * "senhasProprias" (pelo e-mail do roteiro) para quem tem uma. Vale sempre:
+     * uma senha trocada pela tela volta na rodada seguinte. Os e-mails do
+     * roteiro não chegam a caixa nenhuma, então essa é a recuperação de senha
+     * da conta; e, para uma senha que não esteja no repositório, muda-se a
+     * variável.
      *
-     * Entre as contas, só troca a de quem está com outra senha: a troca derruba
-     * as sessões abertas daquela conta. Como na redefinição por e-mail, zera o
-     * limite de tentativas de login e invalida links de recuperação pendentes.
+     * Só troca a de quem está com outra senha: a troca derruba as sessões
+     * abertas daquela conta. Como na redefinição por e-mail, zera o limite de
+     * tentativas de login e invalida links de recuperação pendentes. Senha que
+     * a política recusaria não é aplicada.
      *
      * @return quantas contas tiveram a senha trocada
      */
     @Transactional
-    public int alinharSenhas(Roteiro roteiro, String senha) {
+    public int alinharSenhas(Roteiro roteiro, String senha, Map<String, String> senhasProprias) {
         Clinica clinica = clinicaDo(roteiro);
         if (clinica == null) return 0;
-        ContaDoRoteiro conta = contaDo(roteiro);
-        if (conta.getSenhaAplicada() != null && passwordEncoder.matches(senha, conta.getSenhaAplicada())) return 0;
 
         int trocadas = 0;
-        if (!passwordEncoder.matches(senha, clinica.getSenha())) {
-            clinica.trocarSenha(passwordEncoder.encode(senha));
+        String daClinica = senhasProprias.getOrDefault(roteiro.clinica().email(), senha);
+        if (serve(daClinica) && !passwordEncoder.matches(daClinica, clinica.getSenha())) {
+            clinica.trocarSenha(passwordEncoder.encode(daClinica));
             clinicas.save(clinica);
             depoisDaTroca(clinica.getEmail());
             trocadas++;
         }
         for (Profissional p : roteiro.profissionais()) {
             Fisioterapeuta f = profissionalDo(clinica, p);
-            if (f == null || passwordEncoder.matches(senha, f.getSenha())) continue;
-            f.trocarSenha(passwordEncoder.encode(senha));
+            String dele = senhasProprias.getOrDefault(p.email(), senha);
+            if (f == null || !serve(dele) || passwordEncoder.matches(dele, f.getSenha())) continue;
+            f.trocarSenha(passwordEncoder.encode(dele));
             fisioterapeutas.save(f);
             depoisDaTroca(f.getEmail());
             trocadas++;
         }
-        conta.registrarSenha(passwordEncoder.encode(senha), relogio.instant());
-        contasDoRoteiro.save(conta);
         if (trocadas > 0) {
-            log.info("{}: senha alinhada com a configuração em {} conta(s).", roteiro.clinica().nome(), trocadas);
+            log.info("{}: senha da configuração aplicada em {} conta(s).", roteiro.clinica().nome(), trocadas);
         }
         return trocadas;
+    }
+
+    private static boolean serve(String senha) {
+        return PoliticaDeSenha.problema(senha) == null;
     }
 
     private void depoisDaTroca(String email) {
