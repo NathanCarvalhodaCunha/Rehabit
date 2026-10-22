@@ -26,7 +26,8 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(3px);
   opacity: 1;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  /* entra rápido, porque é a resposta a um clique; sai com calma (abaixo) */
+  transition: opacity 0.2s ease-out;
 }
 
 .rh-loader--dark {
@@ -38,6 +39,13 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+/* fora de cena depois do fade (loader.js): as animações infinitas param de
+   rodar escondidas e recomeçam do início quando ele volta */
+.rh-loader[hidden] {
+  display: none;
 }
 
 /* inline: usa o loader dentro de um card em vez de tela cheia */
@@ -51,6 +59,7 @@
 }
 
 .rh-loader__box {
+  position: relative; /* referência do aviso de espera longa */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,8 +92,11 @@
   animation: rh-pulse 1.6s ease-out infinite;
 }
 
+/* Atraso negativo: o segundo anel já nasce no meio do ciclo. Com atraso
+   positivo ele ficava parado, no tamanho cheio, nos primeiros 0,8 s — tempo
+   em que a maioria das esperas já acabou — e depois pulava para dentro. */
 .rh-loader__ring::after {
-  animation-delay: 0.8s;
+  animation-delay: -0.8s;
 }
 
 .rh-loader--dark .rh-loader__ring::before,
@@ -112,7 +124,11 @@
   width: 72px;
   height: auto;
   transform-origin: 22% 78%; /* base do braço: gira/contrai a partir do ombro */
-  animation: rh-pump 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  /* ease-in-out em cada trecho: o braço desacelera ao chegar a cada pose e
+     sai dela devagar. A curva de mola de antes (que passa do ponto) começava
+     cada um dos quatro trechos num tranco, e o bíceps tremia em vez de
+     contrair. */
+  animation: rh-pump 1.6s ease-in-out infinite;
   will-change: transform;
 }
 
@@ -148,23 +164,30 @@
   color: #e6ecf8;
 }
 
+/* As três reticências estão sempre lá e o recorte revela uma por vez. A
+   largura não muda, então a palavra centralizada fica parada; trocando o
+   content, cada ponto novo a empurrava para a esquerda e ela voltava num
+   salto quando os pontos zeravam. */
 .rh-dots::after {
-  content: "";
+  content: "...";
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
   animation: rh-dots 1.2s steps(1, end) infinite;
 }
 
 @keyframes rh-dots {
   0% {
-    content: "";
+    clip-path: inset(0 100% 0 0);
   }
   25% {
-    content: ".";
+    clip-path: inset(0 67% 0 0);
   }
   50% {
-    content: "..";
+    clip-path: inset(0 34% 0 0);
   }
-  75% {
-    content: "...";
+  75%,
+  100% {
+    clip-path: inset(0);
   }
 }
 
@@ -172,10 +195,18 @@
    Entra por baixo do texto quando a espera passa do normal, para explicar
    que a instância gratuita da API está religando (veja loader.js). Só a
    opacidade é animada, sem deslocamento: é uma mensagem que aparece, não
-   algo que precisa chamar atenção se movendo. */
+   algo que precisa chamar atenção se movendo. Fica fora do fluxo, pendurado
+   abaixo do texto: no fluxo, a caixa centralizada crescia e o anel e o texto
+   pulavam ~24 px para cima quando o aviso aparecia (e de novo na troca pelo
+   aviso longo). */
 .rh-loader__hint {
-  margin: -8px 0 0;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: max-content;
   max-width: 32ch;
+  margin: 10px 0 0;
+  transform: translateX(-50%);
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -253,6 +284,6 @@
     animation: none;
   }
   .rh-dots::after {
-    content: "...";
+    clip-path: none;
   }
 }
