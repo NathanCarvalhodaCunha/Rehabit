@@ -13,9 +13,10 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * O application.properties de produção: a conta da apresentação — onde está a
- * Mariana, a demonstração da página inicial — tem de subir sem variável
- * nenhuma no Render, e com a senha que a equipe escolheu.
+ * O application.properties de produção: a conta da demonstração — a da Ana,
+ * que o botão da página inicial abre — e a da apresentação têm de subir sem
+ * variável nenhuma no Render, a da apresentação com a senha que a equipe
+ * escolheu.
  */
 class ConfiguracaoDaApresentacaoTest {
 
@@ -28,11 +29,20 @@ class ConfiguracaoDaApresentacaoTest {
     }
 
     @Test
+    void aDemonstracaoSobeSemVariavelNenhuma() throws IOException {
+        assertThat(resolver("rehabit.demo.ativar", Map.of())).isEqualTo("true");
+        // Quem já tinha REHABIT_DEMO=true no Render segue igual.
+        assertThat(resolver("rehabit.demo.ativar", Map.of("REHABIT_DEMO", "true"))).isEqualTo("true");
+        assertThat(resolver("rehabit.demo.ativar", Map.of("REHABIT_DEMO", "false"))).isEqualTo("false");
+        // A senha é a que o botão da página inicial preenche.
+        assertThat(resolver("rehabit.demo.senha", Map.of())).isEqualTo("Rehabit@2026");
+    }
+
+    @Test
     void aApresentacaoSobeSemVariavelNenhuma() throws IOException {
         assertThat(resolver("rehabit.apresentacao.ativar", Map.of())).isEqualTo("true");
-        // Nem depende da demonstração: o botão da página inicial precisa da Mariana.
+        // Nem depende da demonstração: cada uma tem a sua variável.
         assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_DEMO", "false"))).isEqualTo("true");
-        // Só a variável própria a desliga.
         assertThat(resolver("rehabit.apresentacao.ativar", Map.of("REHABIT_APRESENTACAO", "false"))).isEqualTo("false");
     }
 

@@ -48,53 +48,58 @@ E abra `Login/login.html` diretamente no navegador (o frontend é servido como a
 ### Conta de demonstração
 
 O botão **Entrar na demonstração** da página inicial abre
-`Login/login.html?demo` com a conta da **Mariana Costa Bertolini** já
-preenchida ([`Login/demonstracao.js`](Login/demonstracao.js)): fisioterapeuta
-de ortopedia da Clínica Alvorada — a conta da apresentação, abaixo —, com
-quatro pacientes, meses de sessões e a agenda das próximas semanas. Ela entra
-com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`), que é pública, e
-por isso é **só de leitura**: a API recusa com 403 qualquer alteração vinda
-dela (`JwtAuthenticationFilter`), e as telas mostram um aviso no topo. As
-outras contas da Alvorada são comuns e têm outra senha. Se trocar
-`REHABIT_DEMO_SENHA` no Render, troque também no `demonstracao.js`.
+`Login/login.html?demo` com a conta da **Ana Paula Ribeiro** já preenchida
+([`Login/demonstracao.js`](Login/demonstracao.js)): fisioterapeuta de
+ortopedia da **Clínica Movimento Fisioterapia**, uma clínica completa para
+apresentar e testar o sistema, com cinco fisioterapeutas de especialidades
+diferentes e dezesseis pacientes com anamnese, metas, meses de sessões com a
+evolução da amplitude e da dor (cada uma com a consulta em que o paciente
+compareceu, que a aba *Realizadas* da agenda lista), faltas, uma consulta
+remarcada e a agenda das próximas duas semanas. As telas da página inicial são
+as da Ana.
 
-A conta da apresentação, onde está a Mariana, sobe sempre. Com
-`REHABIT_DEMO=true`, a API cria também a **Clínica Movimento Fisioterapia**, a
-demonstração de antes: cinco fisioterapeutas de especialidades diferentes e dezesseis
-pacientes com anamnese, metas, meses de sessões com a evolução da amplitude e
-da dor (cada uma com a consulta em que o paciente compareceu, que a aba
-*Realizadas* da agenda lista), faltas, uma consulta remarcada e a agenda das
-próximas duas semanas. A Movimento inteira entra com a mesma senha da
-demonstração e também é só de leitura.
+A conta **sobe sempre**, sem variável nenhuma no Render (só
+`REHABIT_DEMO=false` a desliga; quem já tinha `REHABIT_DEMO=true` segue igual).
+A Ana tem foto: um retrato ilustrado, como os da conta da apresentação (veja
+*Fotos*, abaixo), em `src/main/resources/demonstracao/`, posto depois de cada
+montagem pelo mesmo caminho das fotos enviadas pelo site.
 
-**A Movimento fica sempre em dia.** As datas são relativas ao dia em que ela é
+**A conta fica sempre em dia.** As datas são relativas ao dia em que ela é
 montada: o histórico termina na véspera e a agenda começa no dia seguinte.
 Como ninguém altera a conta, essas datas iam ficando para trás — semanas
-depois, o histórico parava no dia da montagem e as consultas "marcadas" eram
-de dias que já tinham passado. Agora, na subida da API e todo dia às 3h30
-(horário de Brasília), a API confere a agenda dela: se a primeira consulta por
-vir já é de hoje ou de antes, a clínica é apagada e montada de novo com as
-datas do dia (`GeradorDeClinica.refazerSeVencida`). Montada numa sexta, a
-agenda só começa na segunda, então a conta vale o fim de semana inteiro. Em
-dia, nada acontece, então a variável pode ficar ligada; como a conta é só de
-leitura, refazê-la não apaga nada que alguém tenha feito nela. Quem estiver
-logado na hora em que ela é refeita precisa entrar de novo (a senha é a
-mesma). Se refazer falhar, nada se perde: a API sobe assim mesmo, com a conta
-que já existia, avisa no log e tenta de novo na madrugada seguinte (ou na
-próxima subida). A Mariana não passa por isso: a Alvorada segue atendendo
-sozinha (veja abaixo).
+depois, o histórico parava no dia da montagem, as consultas "marcadas" eram
+de dias que já tinham passado e o início mostrava a semana sem consultas e o
+mês sem sessões nem amplitude média. Por isso, na subida da API e todo dia às
+3h30 (horário de Brasília), a API confere a agenda dela: se a primeira
+consulta por vir já é de hoje ou de antes, a clínica é apagada (com as fotos)
+e montada de novo com as datas do dia (`GeradorDeClinica.refazerSeVencida`).
+Assim a semana tem consultas e o mês tem sessões e amplitude média — menos nos
+primeiros dias do mês, antes da primeira sessão dele, como numa clínica de
+verdade. Montada numa sexta, a agenda só começa na segunda, então a conta vale
+o fim de semana inteiro. Em dia, nada acontece; como a conta é só de leitura,
+refazê-la não apaga nada que alguém tenha feito nela. Quem estiver logado na
+hora em que ela é refeita precisa entrar de novo (a senha é a mesma). Se
+refazer falhar, nada se perde: a API sobe assim mesmo, com a conta que já
+existia, avisa no log e tenta de novo na madrugada seguinte (ou na próxima
+subida).
 
 | Conta | E-mail |
 |---|---|
 | Clínica | `contato@movimento.example` |
-| Ana Paula Ribeiro (ortopedia) | `ana.ribeiro@movimento.example` |
+| Ana Paula Ribeiro (ortopedia) — a do botão | `ana.ribeiro@movimento.example` |
 | Rafael Moura (esportiva) | `rafael.moura@movimento.example` |
 | Juliana Castro (neurofuncional) | `juliana.castro@movimento.example` |
 | Carlos Eduardo Tanaka (reumatologia) | `carlos.tanaka@movimento.example` |
 | Fernanda Oliveira Lima (gerontologia) | `fernanda.lima@movimento.example` |
 
-Os e-mails usam o domínio reservado `.example`, e os telefones são fictícios:
-para testar o lembrete no WhatsApp de verdade, use uma conta comum.
+Todas entram com a senha de `REHABIT_DEMO_SENHA` (padrão: `Rehabit@2026`), e
+essa senha é pública, porque o botão a preenche. Por isso a conta é **só de
+leitura**: a API recusa com 403 qualquer alteração vinda da clínica de
+demonstração ou de um profissional dela (`JwtAuthenticationFilter`), e as telas
+mostram um aviso no topo. Se trocar `REHABIT_DEMO_SENHA` no Render, troque
+também no `demonstracao.js`. Os e-mails usam o domínio
+reservado `.example`, e os telefones são fictícios: para testar o lembrete no
+WhatsApp de verdade, use uma conta comum.
 
 **O goniômetro da demonstração é simulado.** Como a senha é pública, a conta
 não pareia aparelho nenhum: com um goniômetro de verdade ali, qualquer
@@ -103,16 +108,7 @@ registro de sessão não ficarem parados, o `Software/goniometro.js` simula o
 aparelho no navegador (um movimento de abdução do ombro, no formato e no ritmo
 do aparelho real), e os botões Zerar, Identificar, captura e Reiniciar agem
 sobre a simulação. As telas avisam que é uma simulação. Para mostrar o aparelho
-de verdade, use a clínica ou um dos outros profissionais da conta da
-apresentação (abaixo), ou uma conta comum.
-
-```bash
-# local
-java -DREHABIT_DEMO=true -jar target/rehabit-api-1.0.0.jar
-```
-
-No Render: *Environment → Add Environment Variable* `REHABIT_DEMO` = `true`
-(e, se quiser outra senha, `REHABIT_DEMO_SENHA`), depois *Manual Deploy*.
+de verdade, use a conta da apresentação (abaixo) ou uma conta comum.
 
 ### Conta da apresentação
 
@@ -125,18 +121,17 @@ mesmo gerador da demonstração
 ([`GeradorDeClinica`](rehabit-api/rehabit-api/src/main/java/com/rehabit/demo/GeradorDeClinica.java)),
 mas:
 
-- **aceita alterações**: a clínica e três dos profissionais (Lucas, Patrícia
-  e Renato) são contas comuns — dá para editar, cadastrar, excluir e registrar
-  sessão com o goniômetro, e nenhuma tela delas fala em demonstração. O
-  goniômetro é o de verdade: entrando como a clínica ou como um desses
-  profissionais, *Dispositivo → Parear novo dispositivo* mostra o código para
-  digitar no portal do aparelho (revogar fica só com a clínica). A quarta, a
-  Mariana, é a demonstração da página inicial (acima): só de leitura;
-- **sobe sempre**: sem variável nenhuma no Render, porque o botão da página
-  inicial depende da Mariana; só `REHABIT_APRESENTACAO=false` a desliga;
+- **aceita alterações**: a clínica e os quatro profissionais são contas
+  comuns — dá para editar, cadastrar, excluir e registrar sessão com o
+  goniômetro, e nenhuma tela fala em demonstração. O goniômetro é o de
+  verdade: entrando como a clínica ou como um dos profissionais, *Dispositivo →
+  Parear novo dispositivo* mostra o código para digitar no portal do aparelho
+  (revogar fica só com a clínica);
+- **sobe sempre**: sem variável nenhuma no Render, para estar pronta na banca
+  mesmo que ninguém mexa no painel; só `REHABIT_APRESENTACAO=false` a desliga;
 - **a senha é fixa**: a que a equipe escolheu para a banca, padrão de
   `rehabit.apresentacao.senha` no `application.properties`, na clínica e nos
-  três profissionais (a Mariana entra com a da demonstração). Ela está neste
+  quatro profissionais. Ela está neste
   repositório, que é público: para uma senha só da equipe, defina
   `REHABIT_APRESENTACAO_SENHA` no Render (mínimo de 8
   caracteres e fora da lista das senhas comuns). E ela volta sozinha: na
@@ -164,7 +159,7 @@ mas:
 | Conta | E-mail |
 |---|---|
 | Clínica | `contato@alvorada.example` |
-| Mariana Costa Bertolini (ortopedia) — a demonstração | `mariana.bertolini@alvorada.example` |
+| Mariana Costa Bertolini (ortopedia) | `mariana.bertolini@alvorada.example` |
 | Lucas Henrique Prado (esportiva) | `lucas.prado@alvorada.example` |
 | Patrícia Yamamoto Reis (neurofuncional) | `patricia.reis@alvorada.example` |
 | Renato Aguiar Fonseca (gerontologia) | `renato.fonseca@alvorada.example` |
@@ -215,9 +210,11 @@ qualquer outro usa a do Render), então trocar de hospedagem não muda código.
 
 **A API não vai para o ar junto com o site.** A Vercel publica o merge em
 segundos; a API depende do deploy do Render, que leva alguns minutos — e pode
-não acontecer. De 14 a 21/10/2026 nenhum deploy do Render foi ao ar: o site
-passou a mandar o botão da demonstração para a conta da Mariana, que a API
-antiga não tinha, e o login dava "E-mail ou senha inválidos". Para conferir
+não acontecer. Depois de 14/10/2026 nenhum deploy do Render foi ao ar: em
+21/10 o site passou a mandar o botão da demonstração para uma conta que a API
+antiga não tinha, e o login dava "E-mail ou senha inválidos"; e a conta da Ana,
+sem a rotina que a renova, ficou com a semana sem consultas e o mês sem
+sessões. Para conferir
 qual commit da API está no ar, abra
 `https://rehabit-api-4tex.onrender.com/api/health`: o campo `versao` é o
 commit (vem de `RENDER_GIT_COMMIT`), e `uptimeSegundos` pequeno quer dizer que

@@ -100,9 +100,10 @@ async function subirApi() {
     "--rehabit.email.confirmar-cadastro=true",
     "--rehabit.app.url-login=" + SITE + "/Login",
     "--rehabit.keepalive.ativo=false",
-    "--rehabit.demo.ativar=false",
-    // A conta da apresentação, onde está a Mariana — a demonstração da página
-    // inicial —, com as senhas padrão do application.properties.
+    // As duas contas de exemplo, como no Render: a da demonstração (a Ana, do
+    // botão da página inicial) e a da apresentação, com as senhas padrão do
+    // application.properties.
+    "--rehabit.demo.ativar=true",
     "--rehabit.apresentacao.ativar=true"], { env, stdio: ["ignore", log, log] });
   for (let i = 0; i < 120; i++) {
     try {
@@ -275,27 +276,39 @@ async function main() {
       body: JSON.stringify({ email, senha: "Senha-Pelo-Link-E2E-3" }) });
     conferir("senha nova pelo link funciona", entrou.status === 200, String(entrou.status));
 
-    /* 10. "Entrar na demonstração": a Mariana, só de leitura; a clínica dela aceita alterações */
+    /* 10. "Entrar na demonstração": a Ana, com foto e o mês em dia, só de leitura; a Alvorada aceita alterações */
     const loginApi = (e, s) => fetch(API + "/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: e, senha: s }) });
-    for (let i = 0; i < 60 && (await loginApi("contato@alvorada.example", "Rehabit1234@")).status !== 200; i++) {
-      await new Promise((ok) => setTimeout(ok, 1000)); // a conta é criada logo depois da subida
+    for (let i = 0; i < 30 && (await loginApi("ana.ribeiro@movimento.example", "Rehabit@2026")).status !== 200; i++) {
+      await new Promise((ok) => setTimeout(ok, 2000)); // a conta é criada logo depois da subida
     }
     await pagina.evaluate(() => localStorage.clear());
     await pagina.goto(SITE + "/index.html");
     await pagina.locator('a[href="Login/login.html?demo"]').first().click();
     await pagina.waitForURL(/Login\/login\.html\?demo/, { timeout: 15000 });
     const preenchido = await pagina.inputValue("#email");
-    conferir("botão da demonstração preenche a Mariana", preenchido === "mariana.bertolini@alvorada.example", preenchido);
+    conferir("botão da demonstração preenche a Ana", preenchido === "ana.ribeiro@movimento.example", preenchido);
     await pagina.click("#loginForm button[type=submit]");
     await pagina.waitForURL(/Software\/profissional/, { timeout: 15000 });
-    const daMariana = await pagina.evaluate(() => JSON.parse(localStorage.getItem("rehabit_usuario")));
+    const daAna = await pagina.evaluate(() => JSON.parse(localStorage.getItem("rehabit_usuario")));
     await pagina.waitForSelector(".aviso-demo", { timeout: 10000 });
-    conferir("entrou como a Mariana, com o aviso de demonstração", daMariana.nome === "Mariana Costa Bertolini");
+    conferir("entrou como a Ana, com o aviso de demonstração", daAna.nome === "Ana Paula Ribeiro");
+    const foto = daAna.foto ? await fetch(API + daAna.foto) : null;
+    conferir("a Ana tem foto, servida pela API",
+      /^\/uploads\/[0-9a-f-]{36}\.png$/.test(daAna.foto || "") && foto.status === 200
+        && /^image\/png/.test(foto.headers.get("content-type") || ""), daAna.foto + " " + (foto && foto.status));
     const comToken = (t) => ({ Authorization: "Bearer " + t, "Content-Type": "application/json" });
-    const seus = await (await fetch(API + "/api/pacientes?idFisioterapeuta=" + daMariana.id, { headers: comToken(daMariana.token) })).json();
-    const alvo = seus[0];
-    const recusa = await fetch(API + "/api/pacientes/" + alvo.id, { method: "PUT", headers: comToken(daMariana.token),
+    // Os cartões do início: a semana sempre tem consulta; e, havendo sessão no
+    // mês (nos primeiros dias dele pode ainda não haver), há amplitude média.
+    const cartoes = await (await fetch(API + "/api/estatisticas", { headers: comToken(daAna.token) })).json();
+    const cartao = (r) => (cartoes.find((c) => c.rotulo === r) || {}).valor;
+    conferir("a Ana tem consultas na semana e amplitude no mês",
+      Number(cartao("Consultas esta semana")) > 0
+        && (Number(cartao("Sessões no mês")) === 0 || /^\d+°$/.test(cartao("Amplitude média") || "")),
+      JSON.stringify(cartoes.map((c) => c.rotulo + "=" + c.valor)));
+    await pagina.waitForSelector(".kpi-card", { timeout: 10000 });
+    const seus = await (await fetch(API + "/api/pacientes?idFisioterapeuta=" + daAna.id, { headers: comToken(daAna.token) })).json();
+    const recusa = await fetch(API + "/api/pacientes/" + seus[0].id, { method: "PUT", headers: comToken(daAna.token),
       body: JSON.stringify({ nome: "Nome trocado por um visitante" }) });
     const motivo = (await recusa.json().catch(() => ({}))).mensagem || "";
     conferir("a demonstração não altera nada (403)", recusa.status === 403 && /demonstração/.test(motivo), recusa.status + " " + motivo);
@@ -305,10 +318,12 @@ async function main() {
     const simulado = await pagina.evaluate(() => window.RehabitGoniometro && window.RehabitGoniometro.simulado());
     conferir("goniômetro simulado, sem abrir o stream da clínica",
       simulado === true && !urls.some((u) => u.includes("/api/goniometro/stream")), String(simulado));
-    const daClinica = await (await loginApi("contato@alvorada.example", "Rehabit1234@")).json();
-    const aceita = await fetch(API + "/api/pacientes/" + alvo.id, { method: "PUT", headers: comToken(daClinica.token),
-      body: JSON.stringify({ nome: alvo.nome }) });
-    conferir("a clínica da Mariana entra com Rehabit1234@ e altera", !!daClinica.token && aceita.status === 200, String(aceita.status));
+    const daMariana = await (await loginApi("mariana.bertolini@alvorada.example", "Rehabit1234@")).json();
+    const dela = daMariana.token ? await (await fetch(API + "/api/pacientes?idFisioterapeuta=" + daMariana.id,
+      { headers: comToken(daMariana.token) })).json() : [];
+    const aceita = dela.length ? await fetch(API + "/api/pacientes/" + dela[0].id, { method: "PUT",
+      headers: comToken(daMariana.token), body: JSON.stringify({ nome: dela[0].nome }) }) : { status: 0 };
+    conferir("a Mariana, da Alvorada, entra com Rehabit1234@ e altera", aceita.status === 200, String(aceita.status));
 
     /* 11. Cabeçalho do limite: 429 com mensagem */
     let ultimo;

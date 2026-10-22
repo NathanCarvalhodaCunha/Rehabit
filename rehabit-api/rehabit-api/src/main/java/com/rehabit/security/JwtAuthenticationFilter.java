@@ -1,8 +1,8 @@
 package com.rehabit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rehabit.demo.ContaDeApresentacao;
 import com.rehabit.demo.ContaDeDemonstracao;
+import com.rehabit.model.Fisioterapeuta;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import jakarta.servlet.FilterChain;
@@ -145,30 +145,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * A senha da conta de demonstração está publicada na página inicial, então
-     * ela é só de leitura: consulta tudo, mas qualquer alteração — inclusive
-     * excluir a conta ou trocar a senha — é recusada aqui, antes de chegar aos
-     * controllers. Só roda em requisição que altera dados, então a consulta a
-     * mais não pesa na navegação.
+     * ela é só de leitura: a clínica e os profissionais dela consultam tudo,
+     * mas qualquer alteração — inclusive excluir a conta ou trocar a senha —
+     * é recusada aqui, antes de chegar aos controllers. Só roda em requisição
+     * que altera dados, então a consulta a mais não pesa na navegação.
      *
-     * A demonstração é a Mariana, profissional da Clínica Alvorada (a conta da
-     * apresentação, cujas outras contas aceitam alterações), e toda a Clínica
-     * Movimento, que era a demonstração antes dela e entra com a mesma senha.
-     *
-     * Token de dispositivo fica de fora: um goniômetro pareado com uma dessas
-     * clínicas pode mandar leituras normalmente.
+     * Token de dispositivo fica de fora: um goniômetro pareado com a clínica
+     * de demonstração pode mandar leituras normalmente.
      */
     private boolean ehDaDemonstracao(JwtService.TokenDados dados) {
-        return switch (dados.tipo()) {
-            case "CLINICA" -> ehClinicaDaDemonstracao(dados.id());
+        Integer idClinica = switch (dados.tipo()) {
+            case "CLINICA" -> dados.id();
             case "FISIOTERAPEUTA" -> fisioterapeutaRepository.findById(dados.id())
-                    .map(f -> ContaDeApresentacao.EMAIL_DEMONSTRACAO.equalsIgnoreCase(f.getEmail())
-                            || ehClinicaDaDemonstracao(f.getIdClinica()))
-                    .orElse(false);
-            default -> false;
+                    .map(Fisioterapeuta::getIdClinica)
+                    .orElse(null);
+            default -> null;
         };
-    }
-
-    private boolean ehClinicaDaDemonstracao(Integer idClinica) {
         return idClinica != null && clinicaRepository.findById(idClinica)
                 .map(c -> ContaDeDemonstracao.EMAIL_CLINICA.equalsIgnoreCase(c.getEmail()))
                 .orElse(false);

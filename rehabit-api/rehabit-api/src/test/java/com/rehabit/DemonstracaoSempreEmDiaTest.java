@@ -10,6 +10,7 @@ import com.rehabit.model.Sessao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -59,6 +62,7 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
     @Autowired private ContaDeDemonstracao demonstracao;
     @Autowired private ContaDeApresentacao apresentacao;
     @Autowired private RelogioDeTeste relogio;
+    @Value("${app.upload-dir}") private String pastaDeUploads;
 
     @BeforeEach
     void voltarParaTerca() {
@@ -84,6 +88,14 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
 
     private void irParaODia(LocalDate dia) {
         relogio.irPara(Instant.parse(dia + "T13:00:00Z"));
+    }
+
+    private Fisioterapeuta ana() {
+        return fisioterapeutas.findByEmail("ana.ribeiro@movimento.example").orElseThrow();
+    }
+
+    private Path arquivoDe(String url) {
+        return Path.of(pastaDeUploads, url.substring("/uploads/".length()));
     }
 
     @Test
@@ -250,6 +262,32 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
         assertThat(demo().getId()).isEqualTo(antiga.getId());
         assertThat(pacientes.findByIdClinica(antiga.getId())).hasSize(16);
         assertThat(sessoesDe(antiga)).hasSize((int) sessoesDaAntiga);
+    }
+
+    @Test
+    void aAnaTemFotoTambemNaContaRefeitaEAAntigaSaiDoDisco() throws Exception {
+        demonstracao.manterEmDia();
+        String primeira = ana().getFoto();
+        assertThat(primeira).matches("/uploads/[0-9a-f-]{36}\\.png");
+        assertThat(arquivoDe(primeira)).exists();
+
+        irParaODia(HOJE.plusDays(1));
+        assertThat(demonstracao.manterEmDia()).isTrue();
+
+        // Apagar a clínica levou a foto junto; a conta nova ganhou a dela.
+        String segunda = ana().getFoto();
+        assertThat(segunda).isNotEqualTo(primeira).matches("/uploads/[0-9a-f-]{36}\\.png");
+        assertThat(arquivoDe(segunda)).exists();
+        assertThat(arquivoDe(primeira)).doesNotExist();
+        // Em dia, nada sobe de novo.
+        assertThat(demonstracao.manterEmDia()).isFalse();
+        assertThat(ana().getFoto()).isEqualTo(segunda);
+        // O login devolve a foto: é ela que vai para o topo das telas.
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"ana.ribeiro@movimento.example\",\"senha\":\"senha-da-demo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.foto").value(segunda));
+        mvc.perform(get(segunda)).andExpect(status().isOk());
     }
 
     @Test

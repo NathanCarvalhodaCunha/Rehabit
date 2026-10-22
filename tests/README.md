@@ -39,8 +39,9 @@ em `localhost:8090`, e percorre: cadastro com foto e código por e-mail, foto
 sem GPS, upload sem login recusado, troca de foto apagando a antiga,
 profissional com foto, SSE do goniômetro por ingresso, troca de senha com
 token novo, "esqueci minha senha" pelo link (token fora da URL), a entrada
-pelo botão da demonstração (a Mariana, só de leitura, com o goniômetro
-simulado) e limite de login. O navegador não resolve nenhum host além de
+pelo botão da demonstração (a Ana, com foto e consultas na semana, só de
+leitura, com o goniômetro simulado), a conta da apresentação aceitando
+alterações e limite de login. O navegador não resolve nenhum host além de
 `localhost`.
 
 Os dois precisam de Node 18+ e Playwright (`npm i -D playwright`, ou aponte

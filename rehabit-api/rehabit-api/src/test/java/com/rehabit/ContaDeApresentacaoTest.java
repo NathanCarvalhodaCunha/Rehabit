@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {"rehabit.apresentacao.ativar=true",
-        "rehabit.apresentacao.senha=senha-da-apresentacao", "rehabit.demo.senha=senha-da-demonstracao"})
+        "rehabit.apresentacao.senha=senha-da-apresentacao"})
 class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     /** Terça-feira, 13/10/2026, 10h em Brasília: duas semanas antes da apresentação. */
@@ -68,10 +68,8 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
 
     @Test
     void semSenhaOuComSenhaFracaNaoCriaNada() {
-        assertThat(new ContaDeApresentacao(gerador, manutencao, "", "senha-da-demonstracao").criarSeNaoExistir())
-                .isFalse();
-        assertThat(new ContaDeApresentacao(gerador, manutencao, "123456", "senha-da-demonstracao").criarSeNaoExistir())
-                .isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "").criarSeNaoExistir()).isFalse();
+        assertThat(new ContaDeApresentacao(gerador, manutencao, "123456").criarSeNaoExistir()).isFalse();
 
         assertThat(clinicas.count()).isZero();
     }
@@ -86,27 +84,22 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tipo").value("CLINICA"));
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"lucas.prado@alvorada.example\",\"senha\":\"senha-da-apresentacao\"}"))
+                        .content("{\"email\":\"mariana.bertolini@alvorada.example\",\"senha\":\"senha-da-apresentacao\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tipo").value("FISIOTERAPEUTA"));
-        // A Mariana é a demonstração da página inicial: entra com a senha dela.
-        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + ContaDeApresentacao.EMAIL_DEMONSTRACAO
-                                + "\",\"senha\":\"senha-da-demonstracao\"}"))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipo").value("FISIOTERAPEUTA"))
                 .andExpect(jsonPath("$.nome").value("Mariana Costa Bertolini"));
     }
 
     @Test
-    void foraAMarianaNaoEhSoDeLeituraComoADemonstracao() throws Exception {
+    void naoEhSoDeLeituraComoADemonstracao() throws Exception {
         apresentacao.criarSeNaoExistir();
-        Fisioterapeuta lucas = fisioterapeutas.findByEmail("lucas.prado@alvorada.example").orElseThrow();
+        Fisioterapeuta mariana = fisioterapeutas.findByEmail("mariana.bertolini@alvorada.example").orElseThrow();
         Paciente paciente = pacientes.findAll().stream()
-                .filter(p -> p.getIdFisioterapeuta().equals(lucas.getId()))
+                .filter(p -> p.getIdFisioterapeuta().equals(mariana.getId()))
                 .findFirst().orElseThrow();
 
         mvc.perform(put("/api/pacientes/" + paciente.getId())
-                        .header("Authorization", tokenDe(lucas))
+                        .header("Authorization", tokenDe(mariana))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nome\":\"Nome alterado na apresentação\"}"))
                 .andExpect(status().isOk());
@@ -161,7 +154,7 @@ class ContaDeApresentacaoTest extends TesteDeIntegracao {
         // No Render as duas podem estar ligadas: CPF, CNPJ, CREFITO e e-mail
         // são únicos no banco, e uma colisão faria a segunda subida falhar.
         apresentacao.criarSeNaoExistir();
-        assertThat(new ContaDeDemonstracao(gerador, "senha-da-demo").criarSeNaoExistir()).isTrue();
+        assertThat(new ContaDeDemonstracao(gerador, manutencao, "senha-da-demo").criarSeNaoExistir()).isTrue();
 
         assertThat(clinicas.count()).isEqualTo(2);
     }

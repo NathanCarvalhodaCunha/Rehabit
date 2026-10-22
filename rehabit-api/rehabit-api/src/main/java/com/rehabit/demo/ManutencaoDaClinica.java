@@ -292,9 +292,8 @@ public class ManutencaoDaClinica {
     // ---------------------------------------------------------------- senha
 
     /**
-     * Põe a senha configurada na clínica e nos profissionais do roteiro — a de
-     * "senhasProprias" (pelo e-mail do roteiro) para quem tem uma. Vale sempre:
-     * uma senha trocada pela tela volta na rodada seguinte. Os e-mails do
+     * Põe a senha configurada na clínica e nos profissionais do roteiro. Vale
+     * sempre: uma senha trocada pela tela volta na rodada seguinte. Os e-mails do
      * roteiro não chegam a caixa nenhuma, então essa é a recuperação de senha
      * da conta; e, para uma senha que não esteja no repositório, muda-se a
      * variável.
@@ -307,23 +306,21 @@ public class ManutencaoDaClinica {
      * @return quantas contas tiveram a senha trocada
      */
     @Transactional
-    public int alinharSenhas(Roteiro roteiro, String senha, Map<String, String> senhasProprias) {
+    public int alinharSenhas(Roteiro roteiro, String senha) {
         Clinica clinica = clinicaDo(roteiro);
-        if (clinica == null) return 0;
+        if (clinica == null || !serve(senha)) return 0;
 
         int trocadas = 0;
-        String daClinica = senhasProprias.getOrDefault(roteiro.clinica().email(), senha);
-        if (serve(daClinica) && !passwordEncoder.matches(daClinica, clinica.getSenha())) {
-            clinica.trocarSenha(passwordEncoder.encode(daClinica));
+        if (!passwordEncoder.matches(senha, clinica.getSenha())) {
+            clinica.trocarSenha(passwordEncoder.encode(senha));
             clinicas.save(clinica);
             depoisDaTroca(clinica.getEmail());
             trocadas++;
         }
         for (Profissional p : roteiro.profissionais()) {
             Fisioterapeuta f = profissionalDo(clinica, p);
-            String dele = senhasProprias.getOrDefault(p.email(), senha);
-            if (f == null || !serve(dele) || passwordEncoder.matches(dele, f.getSenha())) continue;
-            f.trocarSenha(passwordEncoder.encode(dele));
+            if (f == null || passwordEncoder.matches(senha, f.getSenha())) continue;
+            f.trocarSenha(passwordEncoder.encode(senha));
             fisioterapeutas.save(f);
             depoisDaTroca(f.getEmail());
             trocadas++;

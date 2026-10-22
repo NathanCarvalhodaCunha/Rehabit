@@ -34,7 +34,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -217,15 +216,6 @@ public class GeradorDeClinica {
      */
     @Transactional
     public boolean criarSeNaoExistir(Roteiro roteiro, String senha) {
-        return criarSeNaoExistir(roteiro, senha, Map.of());
-    }
-
-    /**
-     * Como {@link #criarSeNaoExistir(Roteiro, String)}, mas os profissionais
-     * cujo e-mail está em "senhasProprias" entram com a senha dali.
-     */
-    @Transactional
-    public boolean criarSeNaoExistir(Roteiro roteiro, String senha, Map<String, String> senhasProprias) {
         DadosDaClinica dados = roteiro.clinica();
         // Pelo CNPJ também: numa conta que aceita alterações a clínica pode ter
         // trocado o e-mail, e criar de novo esbarraria no CNPJ (coluna única).
@@ -240,9 +230,7 @@ public class GeradorDeClinica {
         Clinica clinica = criarClinica(dados, senhaCifrada);
         List<Fisioterapeuta> equipe = new ArrayList<>();
         for (Profissional p : roteiro.profissionais()) {
-            String propria = senhasProprias.get(p.email());
-            equipe.add(criarProfissional(p, clinica, dados.localidade(),
-                    propria == null ? senhaCifrada : passwordEncoder.encode(propria)));
+            equipe.add(criarProfissional(p, clinica, dados.localidade(), senhaCifrada));
         }
 
         List<Sessao> recentes = new ArrayList<>();
@@ -360,10 +348,15 @@ public class GeradorDeClinica {
         for (int k = 0; k < n; k++) {
             double t = n == 1 ? 1 : (double) k / (n - 1);
             // Ganho rápido no começo e platô no fim, com a oscilação normal de
-            // um dia para o outro — nenhuma evolução real é uma reta.
+            // um dia para o outro — nenhuma evolução real é uma reta. Na
+            // penúltima, ela só puxa para baixo: o selo da lista de pacientes
+            // compara as duas últimas medições, e no platô uma oscilação para
+            // cima passaria da última e marcaria "Instável" quem está melhorando.
             double progresso = 1 - Math.pow(1 - t, 1.6);
+            double oscilacao = k == 0 || k == n - 1 ? 0 : Math.sin(k * 1.7) * 1.8;
+            if (k == n - 2) oscilacao = Math.min(0, oscilacao);
             double amplitude = ficticio.ampInicial() + (ficticio.ampFinal() - ficticio.ampInicial()) * progresso
-                    + (k == 0 || k == n - 1 ? 0 : Math.sin(k * 1.7) * 1.8);
+                    + oscilacao;
             int dor = (int) Math.round(ficticio.dorInicial() + (ficticio.dorFinal() - ficticio.dorInicial()) * t
                     + (k % 5 == 3 ? 1 : 0));
             int duracao = ficticio.duracao() + (k % 3 == 1 ? 5 : k % 3 == 2 ? -5 : 0);

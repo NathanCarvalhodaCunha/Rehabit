@@ -59,29 +59,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * A conta da apresentação no dia da banca: com as fotos da clínica e dos
- * profissionais, a clínica e três profissionais entrando com a senha da
- * variável e a Mariana — a demonstração da página inicial — com a da
- * demonstração, só de leitura; e com o histórico chegando até a véspera sem
- * precisar recriar nada, inclusive quando a equipe já mexeu nela pela tela.
+ * profissionais, as cinco contas entrando com a senha da variável, e com o
+ * histórico chegando até a véspera sem precisar recriar nada — inclusive
+ * quando a equipe já mexeu nela pela tela.
  */
 @TestPropertySource(properties = {"rehabit.apresentacao.ativar=true",
-        "rehabit.apresentacao.senha=" + ApresentacaoProntaParaABancaTest.SENHA_DA_BANCA,
-        "rehabit.demo.senha=" + ApresentacaoProntaParaABancaTest.SENHA_DA_DEMO})
+        "rehabit.apresentacao.senha=" + ApresentacaoProntaParaABancaTest.SENHA_DA_BANCA})
 class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
     static final String SENHA_DA_BANCA = "Banca-do-TCC-2026";
-    static final String SENHA_DA_DEMO = "Senha-da-Demo-2026";
 
     /** Terça-feira, 20/10/2026, 10h em Brasília: uma semana antes da banca. */
     private static final Instant TERCA = Instant.parse("2026-10-20T13:00:00Z");
     private static final LocalDate HOJE = LocalDate.of(2026, 10, 20);
     private static final LocalDate BANCA = LocalDate.of(2026, 10, 27);
-    private static final String MARIANA = ContaDeApresentacao.EMAIL_DEMONSTRACAO;
+    private static final String MARIANA = "mariana.bertolini@alvorada.example";
     private static final String LUCAS = "lucas.prado@alvorada.example";
     private static final Map<String, String> EMAIL_DE = Map.of("mariana", MARIANA, "lucas", LUCAS,
             "patricia", "patricia.reis@alvorada.example", "renato", "renato.fonseca@alvorada.example");
-    /** As contas que entram com a senha da variável: todas menos a Mariana. */
-    private static final List<String> EMAILS_COMUNS = List.of(ContaDeApresentacao.EMAIL_CLINICA, LUCAS,
+    private static final List<String> EMAILS = List.of(ContaDeApresentacao.EMAIL_CLINICA, MARIANA, LUCAS,
             "patricia.reis@alvorada.example", "renato.fonseca@alvorada.example");
     private static final String SENHA_ANTIGA = "Senha-Da-Primeira-Versao-1";
 
@@ -124,7 +120,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     }
 
     private ContaDeApresentacao comSenha(String senha) {
-        return new ContaDeApresentacao(gerador, manutencao, senha, SENHA_DA_DEMO);
+        return new ContaDeApresentacao(gerador, manutencao, senha);
     }
 
     private List<Fisioterapeuta> equipe() {
@@ -201,7 +197,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_PNG));
         // O login devolve a foto: é ela que vai para o cabeçalho e o topo do celular.
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + MARIANA + "\",\"senha\":\"" + SENHA_DA_DEMO + "\"}"))
+                        .content("{\"email\":\"" + MARIANA + "\",\"senha\":\"" + SENHA_DA_BANCA + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.foto")
                         .value(profissional("mariana").getFoto()));
@@ -277,52 +273,36 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     // ------------------------------------------------------------------ senha
 
     @Test
-    void aClinicaETresProfissionaisEntramComASenhaDaVariavelEAMarianaComADaDemonstracao() throws Exception {
+    void asCincoContasEntramComASenhaDaVariavel() throws Exception {
         apresentacao.preparar();
 
-        for (String email : EMAILS_COMUNS) {
+        for (String email : EMAILS) {
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(200);
-            // A senha da demonstração, que está no site, não abre as contas comuns.
-            assertThat(login(email, SENHA_DA_DEMO)).as(email).isEqualTo(401);
         }
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
-        assertThat(login(MARIANA, SENHA_DA_BANCA)).isEqualTo(401);
     }
 
     @Test
-    void aMarianaEhADemonstracaoSoDeLeituraEAsOutrasContasNao() throws Exception {
+    void nenhumaContaDaAlvoradaEhSoDeLeituraComoADemonstracao() throws Exception {
         apresentacao.preparar();
         Paciente rodrigo = paciente("Rodrigo Tavares Mendes"); // paciente da Mariana
-        String daMariana = tokenDe(profissional("mariana"));
+        Paciente bruno = paciente("Bruno Cezar Oliveira"); // paciente do Lucas
 
-        // Vê tudo...
-        mvc.perform(get("/api/pacientes/" + rodrigo.getId()).header("Authorization", daMariana))
-                .andExpect(status().isOk());
-        // ...mas nada muda: nem o paciente, nem a própria senha.
-        mvc.perform(put("/api/pacientes/" + rodrigo.getId()).header("Authorization", daMariana)
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Nome trocado por um visitante\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.mensagem").value(org.hamcrest.Matchers.containsString("demonstração")));
-        mvc.perform(put("/api/configuracoes/senha").header("Authorization", daMariana)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"senhaAtual\":\"" + SENHA_DA_DEMO + "\",\"novaSenha\":\"Senha-De-Um-Visitante-1\"}"))
-                .andExpect(status().isForbidden());
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
-
-        // A clínica e os outros profissionais aceitam alterações.
-        mvc.perform(put("/api/pacientes/" + rodrigo.getId()).header("Authorization", tokenDe(clinica()))
+        mvc.perform(put("/api/pacientes/" + rodrigo.getId()).header("Authorization", tokenDe(profissional("mariana")))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Rodrigo T. Mendes\"}"))
                 .andExpect(status().isOk());
-        Paciente bruno = paciente("Bruno Cezar Oliveira"); // paciente do Lucas
         mvc.perform(put("/api/pacientes/" + bruno.getId()).header("Authorization", tokenDe(profissional("lucas")))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Bruno C. Oliveira\"}"))
                 .andExpect(status().isOk());
+        mvc.perform(put("/api/pacientes/" + bruno.getId()).header("Authorization", tokenDe(clinica()))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nome\":\"Bruno Cezar Oliveira\"}"))
+                .andExpect(status().isOk());
+
         assertThat(paciente("Rodrigo T. Mendes")).isNotNull();
-        assertThat(paciente("Bruno C. Oliveira")).isNotNull();
+        assertThat(paciente("Bruno Cezar Oliveira")).isNotNull();
     }
 
     @Test
-    void quandoAVariavelMudaASenhaDasQuatroMudaEAsSessoesAntigasCaem() throws Exception {
+    void quandoAVariavelMudaASenhaDasCincoMudaEAsSessoesAntigasCaem() throws Exception {
         apresentacao.preparar();
         String sessaoDaClinica = tokenDe(clinica());
         String sessaoDoLucas = tokenDe(profissional("lucas"));
@@ -338,7 +318,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         comSenha("Outra-Senha-Da-Banca-9").preparar();
 
-        for (String email : EMAILS_COMUNS) {
+        for (String email : EMAILS) {
             assertThat(login(email, "Outra-Senha-Da-Banca-9")).as(email).isEqualTo(200);
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(401);
         }
@@ -349,11 +329,9 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         mvc.perform(get("/api/fisioterapeutas/" + profissional("lucas").getId())
                         .header("Authorization", sessaoDoLucas))
                 .andExpect(status().isUnauthorized());
-        // A da Mariana é a da demonstração: não mudou, e quem a visita segue lá.
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
         mvc.perform(get("/api/fisioterapeutas/" + profissional("mariana").getId())
                         .header("Authorization", sessaoDaMariana))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -381,21 +359,20 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     }
 
     @Test
-    void aSenhaDaMarianaVoltaSeAClinicaATrocar() throws Exception {
+    void aSenhaQueAClinicaTrocaNoCadastroDeUmProfissionalTambemVolta() throws Exception {
         apresentacao.preparar();
         Fisioterapeuta mariana = profissional("mariana");
-        // A clínica, que aceita alterações, troca a senha da Mariana pelo cadastro dela:
-        // o botão da página inicial pararia de entrar.
+        // A clínica troca a senha da Mariana pelo cadastro dela.
         mvc.perform(put("/api/fisioterapeutas/" + mariana.getId()).header("Authorization", tokenDe(clinica()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nome\":\"" + mariana.getNome() + "\",\"email\":\"" + MARIANA
-                                + "\",\"senhaAtual\":\"" + SENHA_DA_DEMO + "\",\"novaSenha\":\"Outra-Da-Mariana-5\"}"))
+                                + "\",\"senhaAtual\":\"" + SENHA_DA_BANCA + "\",\"novaSenha\":\"Outra-Da-Mariana-5\"}"))
                 .andExpect(status().isOk());
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(401);
+        assertThat(login(MARIANA, SENHA_DA_BANCA)).isEqualTo(401);
 
         apresentacao.conferirDeMadrugada();
 
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
+        assertThat(login(MARIANA, SENHA_DA_BANCA)).isEqualTo(200);
         assertThat(login(MARIANA, "Outra-Da-Mariana-5")).isEqualTo(401);
     }
 
@@ -493,10 +470,9 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         assertThat(equipe()).hasSize(4)
                 .allSatisfy(f -> assertThat(f.getId()).isEqualTo(idsDaEquipe.get(f.getEmail())));
         assertThat(sessoes.count()).isEqualTo(sessoesAntes);
-        for (String email : EMAILS_COMUNS) {
+        for (String email : EMAILS) {
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(200);
         }
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
         assertThat(login("tccrehabit+clinica@gmail.com", SENHA_ANTIGA)).isEqualTo(401);
         assertThat(login("tccrehabit+lucas@gmail.com", SENHA_ANTIGA)).isEqualTo(401);
         assertThat(fotosPorEmail()).containsOnlyKeys(ContaDeApresentacao.EMAIL_CLINICA, MARIANA, LUCAS,
@@ -536,7 +512,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
         // As outras contas passaram para os e-mails novos e entram.
         assertThat(login(ContaDeApresentacao.EMAIL_CLINICA, SENHA_DA_BANCA)).isEqualTo(200);
         assertThat(login(EMAIL_DE.get("renato"), SENHA_DA_BANCA)).isEqualTo(200);
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
+        assertThat(login(MARIANA, SENHA_DA_BANCA)).isEqualTo(200);
     }
 
     @Test
@@ -772,10 +748,9 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
 
         assertThat(clinica().getId()).isNotEqualTo(antiga);
         assertThat(fotosPorEmail().values()).hasSize(5).doesNotContainNull();
-        for (String email : EMAILS_COMUNS) {
+        for (String email : EMAILS) {
             assertThat(login(email, SENHA_DA_BANCA)).as(email).isEqualTo(200);
         }
-        assertThat(login(MARIANA, SENHA_DA_DEMO)).isEqualTo(200);
         irParaODia(LocalDate.of(2026, 10, 24));
         apresentacao.manterEmDia();
         assertThat(sessoesDaClinica()).extracting(Sessao::getDataSessao).contains(LocalDate.of(2026, 10, 23));
@@ -978,7 +953,7 @@ class ApresentacaoProntaParaABancaTest extends TesteDeIntegracao {
     void seAManutencaoFalharAAPISobeMesmoAssim() {
         ManutencaoDaClinica comDefeito = Mockito.mock(ManutencaoDaClinica.class);
         Mockito.when(comDefeito.completarFotos(any())).thenThrow(new IllegalStateException("Cloudinary fora do ar"));
-        ContaDeApresentacao conta = new ContaDeApresentacao(gerador, comDefeito, SENHA_DA_BANCA, SENHA_DA_DEMO);
+        ContaDeApresentacao conta = new ContaDeApresentacao(gerador, comDefeito, SENHA_DA_BANCA);
 
         assertThatCode(() -> conta.run(null)).doesNotThrowAnyException();
         assertThatCode(conta::conferirDeMadrugada).doesNotThrowAnyException();
