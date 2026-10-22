@@ -25,24 +25,28 @@ import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 
 /**
- * Conta de demonstração: uma clínica com cinco profissionais, dezesseis
+ * Conta de demonstração: uma clínica com cinco profissionais, vinte e um
  * pacientes e meses de atendimento, para apresentar e testar o Rehabit com
  * dados que se parecem com os de uma clínica de verdade. Quem monta a
  * clínica é o {@link GeradorDeClinica}; aqui fica só quem ela é.
  *
- * A Ana Paula Ribeiro é a conta que o botão "Entrar na demonstração" da
- * página inicial abre (Login/demonstracao.js), e as telas da página inicial
- * são dela. Ela tem foto — um retrato ilustrado, como os da conta da
+ * A Ana Paula Ribeiro é a conta que o botão "Entrar na demonstração" da página
+ * inicial abre (Login/demonstracao.js), e as telas da página inicial são dela.
+ * Com dez pacientes, ela tem de três a quatro consultas por dia útil: a semana
+ * aparece cheia, com as realizadas antes de hoje e as marcadas de hoje em
+ * diante. Ela tem foto — um retrato ilustrado, como os da conta da
  * apresentação (Avataaars, de Pablo Stanley, gerado com a DiceBear), em
  * src/main/resources/demonstracao —, posta pela {@link ManutencaoDaClinica}
  * depois de cada montagem: apagar a clínica leva as fotos junto.
  *
  * Sobe sempre (REHABIT_DEMO=false a desliga) e roda na subida da API e toda
- * madrugada. As datas são as do dia em que a conta é montada; quando a agenda
- * dela vira passado, a conta é refeita com as datas do dia (veja
- * GeradorDeClinica.refazerSeVencida), então a semana e o mês sempre têm
- * consultas, sessões e amplitude. Em dia, nada acontece. Como a conta é só de
- * leitura, refazê-la não apaga nada que alguém tenha feito nela.
+ * madrugada. As datas são as do dia em que a conta é montada: o histórico vai
+ * até a véspera e a agenda começa no próprio dia, com as consultas de hoje
+ * marcadas. Quando sobra consulta marcada para um dia que já passou, a conta é
+ * refeita com as datas do dia (veja GeradorDeClinica.refazerSeVencida), então
+ * a semana e o mês sempre têm consultas, sessões e amplitude. Em dia, nada
+ * acontece. Como a conta é só de leitura, refazê-la não apaga nada que alguém
+ * tenha feito nela.
  *
  * Os e-mails usam o domínio .example, reservado para exemplos (RFC 2606):
  * uma recuperação de senha nunca vai parar na caixa de alguém de verdade.
@@ -117,6 +121,41 @@ public class ContaDeDemonstracao implements ApplicationRunner {
                     "Nadadora amadora, treina quatro vezes por semana.",
                     "Nenhum.", "Nenhuma.",
                     "Alta", Set.of(TUESDAY), LocalTime.of(16, 0), 10, 3, 128, 172, 170, 5, 0, 45),
+            new PacienteFicticio(0, "Gabriel Souza Teixeira", "594.203.330-78", "Masculino", LocalDate.of(1999, 2, 11),
+                    "(11) 95384-2107", "gabriel.teixeira@email.example", "Entorse de tornozelo direito grau II",
+                    "Dor e inchaço no tornozelo direito ao correr e ao descer escadas.",
+                    "Torceu o tornozelo jogando futsal há cinco semanas. Radiografia sem fratura.",
+                    "Nenhum.",
+                    "Evitar saltos e mudanças bruscas de direção até a liberação.",
+                    "Ativo", Set.of(TUESDAY, THURSDAY), LocalTime.of(7, 0), 9, 0, 8, 18, 20, 6, 1, 45),
+            new PacienteFicticio(0, "Vera Lúcia Prado", "820.334.913-74", "Feminino", LocalDate.of(1957, 7, 22),
+                    "(11) 96271-5843", "vera.prado@email.example", "Pós-operatório de prótese de joelho esquerdo",
+                    "Joelho esquerdo rígido; dificuldade para levantar da cadeira e para caminhar sem andador.",
+                    "Artroplastia total do joelho esquerdo por artrose há seis semanas. Hipertensa.",
+                    "Losartana 50 mg; paracetamol 750 mg se houver dor.",
+                    "Não ajoelhar nem agachar; não girar o corpo sobre a perna operada.",
+                    "Ativo", Set.of(MONDAY, WEDNESDAY, FRIDAY), LocalTime.of(15, 0), 15, 0, 65, 104, 115, 7, 3, 50),
+            new PacienteFicticio(0, "Thiago Ramos Ferraz", "281.397.091-31", "Masculino", LocalDate.of(1991, 12, 3),
+                    "(11) 98832-0461", "thiago.ferraz@email.example", "Fratura do rádio distal (punho direito)",
+                    "Punho direito duro depois do gesso; não consegue apoiar a mão na mesa para levantar.",
+                    "Queda de bicicleta; seis semanas de imobilização gessada, sem cirurgia.",
+                    "Nenhum.",
+                    "Sem carga sobre o punho direito até a consolidação completa.",
+                    "Ativo", Set.of(MONDAY, WEDNESDAY), LocalTime.of(17, 0), 10, 0, 25, 55, 65, 6, 2, 45),
+            new PacienteFicticio(0, "Beatriz Nogueira Lima", "529.570.022-48", "Feminino", LocalDate.of(1983, 5, 19),
+                    "(11) 97705-3928", "beatriz.lima@email.example", "Reparo do manguito rotador (ombro direito)",
+                    "Não alcança a prateleira de cima nem prende o cabelo com o braço direito.",
+                    "Reparo artroscópico do supraespinhal há dez semanas, após queda na escada. Professora.",
+                    "Dipirona 1 g se houver dor.",
+                    "Sem fortalecimento contra resistência antes da 12ª semana.",
+                    "Ativo", Set.of(TUESDAY, THURSDAY), LocalTime.of(14, 0), 12, 0, 70, 118, 160, 7, 3, 50),
+            new PacienteFicticio(0, "Antônio Carlos Pereira", "711.938.851-75", "Masculino", LocalDate.of(1966, 9, 30),
+                    "(11) 99140-6617", "antonio.pereira@email.example", "Fratura do olécrano (cotovelo esquerdo)",
+                    "Não consegue esticar o cotovelo esquerdo por completo nem levar a mão à boca sem dor.",
+                    "Fixação com banda de tensão há oito semanas, após queda de escada no trabalho. Eletricista.",
+                    "Paracetamol 750 mg se houver dor.",
+                    "Sem carga acima de 2 kg no braço esquerdo até a liberação do ortopedista.",
+                    "Ativo", Set.of(TUESDAY, FRIDAY), LocalTime.of(11, 0), 11, 0, 80, 124, 140, 5, 1, 45),
 
             // --- Rafael Moura, esportiva ---
             new PacienteFicticio(1, "Gustavo Lima Pereira", "839.261.574-37", "Masculino", LocalDate.of(1990, 3, 14),
@@ -199,7 +238,7 @@ public class ContaDeDemonstracao implements ApplicationRunner {
                     "Sem carga no membro superior direito até a consolidação completa.",
                     "Ativo", Set.of(TUESDAY, FRIDAY), LocalTime.of(8, 0), 10, 0, 60, 98, 130, 5, 3, 45));
 
-    private static final Roteiro ROTEIRO = new Roteiro(CLINICA, PROFISSIONAIS, PACIENTES, 2);
+    private static final Roteiro ROTEIRO = new Roteiro(CLINICA, PROFISSIONAIS, PACIENTES, 2, true);
 
     private final GeradorDeClinica gerador;
     private final ManutencaoDaClinica manutencao;

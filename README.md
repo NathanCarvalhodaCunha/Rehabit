@@ -52,11 +52,13 @@ O botão **Entrar na demonstração** da página inicial abre
 ([`Login/demonstracao.js`](Login/demonstracao.js)): fisioterapeuta de
 ortopedia da **Clínica Movimento Fisioterapia**, uma clínica completa para
 apresentar e testar o sistema, com cinco fisioterapeutas de especialidades
-diferentes e dezesseis pacientes com anamnese, metas, meses de sessões com a
+diferentes e vinte e um pacientes com anamnese, metas, meses de sessões com a
 evolução da amplitude e da dor (cada uma com a consulta em que o paciente
 compareceu, que a aba *Realizadas* da agenda lista), faltas, uma consulta
-remarcada e a agenda das próximas duas semanas. As telas da página inicial são
-as da Ana.
+remarcada e a agenda de hoje e das próximas duas semanas. As telas da página
+inicial são as da Ana, que tem dez desses pacientes: de três a quatro
+consultas por dia útil, então a semana dela aparece cheia — realizadas antes de
+hoje, marcadas de hoje em diante.
 
 A conta **sobe sempre**, sem variável nenhuma no Render (só
 `REHABIT_DEMO=false` a desliga; quem já tinha `REHABIT_DEMO=true` segue igual).
@@ -65,23 +67,23 @@ A Ana tem foto: um retrato ilustrado, como os da conta da apresentação (veja
 montagem pelo mesmo caminho das fotos enviadas pelo site.
 
 **A conta fica sempre em dia.** As datas são relativas ao dia em que ela é
-montada: o histórico termina na véspera e a agenda começa no dia seguinte.
-Como ninguém altera a conta, essas datas iam ficando para trás — semanas
-depois, o histórico parava no dia da montagem, as consultas "marcadas" eram
-de dias que já tinham passado e o início mostrava a semana sem consultas e o
-mês sem sessões nem amplitude média. Por isso, na subida da API e todo dia às
-3h30 (horário de Brasília), a API confere a agenda dela: se a primeira
-consulta por vir já é de hoje ou de antes, a clínica é apagada (com as fotos)
-e montada de novo com as datas do dia (`GeradorDeClinica.refazerSeVencida`).
-Assim a semana tem consultas e o mês tem sessões e amplitude média — menos nos
-primeiros dias do mês, antes da primeira sessão dele, como numa clínica de
-verdade. Montada numa sexta, a agenda só começa na segunda, então a conta vale
-o fim de semana inteiro. Em dia, nada acontece; como a conta é só de leitura,
-refazê-la não apaga nada que alguém tenha feito nela. Quem estiver logado na
-hora em que ela é refeita precisa entrar de novo (a senha é a mesma). Se
-refazer falhar, nada se perde: a API sobe assim mesmo, com a conta que já
-existia, avisa no log e tenta de novo na madrugada seguinte (ou na próxima
-subida).
+montada: o histórico termina na véspera, e a agenda começa no próprio dia, com
+as consultas de hoje marcadas. Como ninguém altera a conta, essas datas iam
+ficando para trás — semanas depois, o histórico parava no dia da montagem, as
+consultas "marcadas" eram de dias que já tinham passado e o início mostrava a
+semana sem consultas e o mês sem sessões nem amplitude média. Por isso, na
+subida da API e todo dia às 3h30 (horário de Brasília), a API confere a agenda
+dela: se sobrou consulta marcada para um dia que já passou, a clínica é
+apagada (com as fotos) e montada de novo com as datas do dia
+(`GeradorDeClinica.refazerSeVencida`). Assim a semana tem consultas e o mês
+tem sessões e amplitude média — menos nos primeiros dias do mês, antes da
+primeira sessão dele, como numa clínica de verdade. Sem consulta no fim de
+semana, a montada no sábado vale até segunda. Em dia, nada acontece — nem se a
+API reiniciar no meio do dia; como a conta é só de leitura, refazê-la não
+apaga nada que alguém tenha feito nela. Quem estiver logado na hora em que ela
+é refeita precisa entrar de novo (a senha é a mesma). Se refazer falhar, nada
+se perde: a API sobe assim mesmo, com a conta que já existia, avisa no log e
+tenta de novo na madrugada seguinte (ou na próxima subida).
 
 | Conta | E-mail |
 |---|---|

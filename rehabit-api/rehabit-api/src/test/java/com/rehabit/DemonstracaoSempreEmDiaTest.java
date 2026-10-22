@@ -19,6 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.file.Path;
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -123,7 +124,7 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
         assertThat(nova.getId()).isNotEqualTo(antiga);
         assertThat(clinicas.findById(antiga)).isEmpty();
         assertThat(fisioterapeutas.findByIdClinicaOrderByNomeAsc(nova.getId())).hasSize(5);
-        assertThat(pacientes.findByIdClinica(nova.getId())).hasSize(16);
+        assertThat(pacientes.findByIdClinica(nova.getId())).hasSize(21);
 
         // Sessões até ontem, com o mês corrente no histórico.
         List<Sessao> historico = sessoesDe(nova);
@@ -131,11 +132,12 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
         assertThat(historico).extracting(Sessao::getDataSessao)
                 .contains(HOJE.minusDays(1))
                 .anySatisfy(d -> assertThat(d).isBetween(LocalDate.of(2026, 10, 1), HOJE.minusDays(1)));
-        // Consultas a partir de amanhã, cobrindo o resto do mês.
+        // Consultas a partir de hoje, com as do dia marcadas, cobrindo o resto do mês.
         List<Agendamento> agenda = agendaDe(nova);
         assertThat(agenda).filteredOn(a -> A_VIR.contains(a.getStatus()))
                 .isNotEmpty()
-                .allSatisfy(a -> assertThat(a.getDataAgendamento()).isAfter(HOJE));
+                .allSatisfy(a -> assertThat(a.getDataAgendamento()).isAfterOrEqualTo(HOJE))
+                .anySatisfy(a -> assertThat(a.getDataAgendamento()).isEqualTo(HOJE));
         assertThat(agenda).extracting(Agendamento::getDataAgendamento)
                 .anySatisfy(d -> assertThat(d).isBetween(LocalDate.of(2026, 10, 26), LocalDate.of(2026, 10, 31)));
         assertThat(agenda).extracting(Agendamento::getStatus).contains("AGENDADA", "REALIZADA", "FALTOU", "REMARCADA");
@@ -181,25 +183,68 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
 
         assertThat(sessoesDe(demo())).extracting(Sessao::getDataSessao).contains(HOJE);
         assertThat(agendaDe(demo())).filteredOn(a -> A_VIR.contains(a.getStatus()))
-                .allSatisfy(a -> assertThat(a.getDataAgendamento()).isAfter(HOJE.plusDays(1)));
+                .allSatisfy(a -> assertThat(a.getDataAgendamento()).isAfterOrEqualTo(HOJE.plusDays(1)));
     }
 
     @Test
-    void aMontadaNaSextaValeAteSegunda() {
+    void aMontadaNoSabadoValeAteSegunda() {
         LocalDate sexta = LocalDate.of(2026, 10, 23);
+        LocalDate segunda = sexta.plusDays(3);
         irParaODia(sexta);
         demonstracao.manterEmDia();
+
+        // As consultas de sexta ficaram marcadas: no sábado, a conta é refeita.
+        irParaODia(sexta.plusDays(1));
+        assertThat(demonstracao.manterEmDia()).isTrue();
         Integer id = demo().getId();
 
-        // A agenda montada na sexta começa na segunda: sábado e domingo ela segue.
-        irParaODia(sexta.plusDays(1));
-        assertThat(demonstracao.manterEmDia()).isFalse();
+        // Sem consulta no fim de semana, ela segue até segunda, que já
+        // amanhece com as consultas do dia marcadas.
         irParaODia(sexta.plusDays(2));
         assertThat(demonstracao.manterEmDia()).isFalse();
+        irParaODia(segunda);
+        assertThat(demonstracao.manterEmDia()).isFalse();
         assertThat(demo().getId()).isEqualTo(id);
+        assertThat(agendaDe(demo())).filteredOn(a -> a.getDataAgendamento().equals(segunda))
+                .isNotEmpty()
+                .allSatisfy(a -> assertThat(a.getStatus()).isIn(A_VIR));
 
-        irParaODia(sexta.plusDays(3));
+        irParaODia(segunda.plusDays(1));
         assertThat(demonstracao.manterEmDia()).isTrue();
+    }
+
+    @Test
+    void aSemanaDaAnaTemVariasConsultasRealizadasEMarcadasTodoDia() throws Exception {
+        LocalDate segunda = LocalDate.of(2026, 10, 19);
+        LocalDate domingo = segunda.plusDays(6);
+        for (LocalDate dia = segunda; !dia.isAfter(domingo); dia = dia.plusDays(1)) {
+            LocalDate hoje = dia;
+            irParaODia(hoje);
+            demonstracao.manterEmDia();
+
+            List<Agendamento> semana = agendamentos
+                    .findByIdFisioterapeutaInAndDataAgendamentoBetweenOrderByDataAgendamentoAscHoraAgendamentoAsc(
+                            List.of(ana().getId()), segunda, domingo);
+            // O que já passou foi realizado; de hoje em diante, está marcado.
+            assertThat(semana).as("semana da Ana em %s", hoje)
+                    .hasSizeGreaterThanOrEqualTo(15)
+                    .allSatisfy(a -> assertThat(a.getStatus()).isIn(a.getDataAgendamento().isBefore(hoje)
+                            ? List.of("REALIZADA", "FALTOU") : A_VIR));
+            if (hoje.getDayOfWeek().getValue() <= 5) {
+                assertThat(semana).as("consultas de hoje, %s", hoje)
+                        .filteredOn(a -> a.getDataAgendamento().equals(hoje))
+                        .hasSizeGreaterThanOrEqualTo(3);
+            }
+            if (hoje.getDayOfWeek() == DayOfWeek.THURSDAY) {
+                assertThat(semana).filteredOn(a -> a.getDataAgendamento().isBefore(hoje)).hasSizeGreaterThanOrEqualTo(8);
+                assertThat(semana).filteredOn(a -> !a.getDataAgendamento().isBefore(hoje)).hasSizeGreaterThanOrEqualTo(6);
+            }
+            // É o número que o início da Ana mostra.
+            mvc.perform(get("/api/estatisticas").header("Authorization", tokenDe(ana())))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].rotulo").value("Consultas esta semana"))
+                    .andExpect(jsonPath("$[0].valor").value(String.valueOf(semana.size())));
+        }
     }
 
     @Test
@@ -260,7 +305,7 @@ class DemonstracaoSempreEmDiaTest extends TesteDeIntegracao {
 
         // A transação desfez a exclusão: a conta antiga continua lá, inteira.
         assertThat(demo().getId()).isEqualTo(antiga.getId());
-        assertThat(pacientes.findByIdClinica(antiga.getId())).hasSize(16);
+        assertThat(pacientes.findByIdClinica(antiga.getId())).hasSize(21);
         assertThat(sessoesDe(antiga)).hasSize((int) sessoesDaAntiga);
     }
 
