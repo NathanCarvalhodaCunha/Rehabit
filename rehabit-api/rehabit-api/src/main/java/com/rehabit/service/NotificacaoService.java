@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.NotificacaoDTO;
 import com.rehabit.model.Notificacao;
 import com.rehabit.repository.NotificacaoRepository;
@@ -7,6 +8,7 @@ import com.rehabit.security.PosseChecker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +17,11 @@ import java.util.stream.Collectors;
 public class NotificacaoService {
 
     private final NotificacaoRepository notificacaoRepository;
+    private final Clock relogio;
 
-    public NotificacaoService(NotificacaoRepository notificacaoRepository) {
+    public NotificacaoService(NotificacaoRepository notificacaoRepository, Clock relogio) {
         this.notificacaoRepository = notificacaoRepository;
+        this.relogio = relogio;
     }
 
     @Transactional
@@ -27,7 +31,9 @@ public class NotificacaoService {
         notificacao.setTipo(tipo);
         notificacao.setMensagem(mensagem);
         notificacao.setLida(false);
-        notificacao.setCriadaEm(LocalDateTime.now());
+        // Hora de Brasília: o sino lê o carimbo como hora local de quem olha,
+        // e com a do servidor (UTC) toda notificação ficava "agora" por três horas.
+        notificacao.setCriadaEm(LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)));
         notificacaoRepository.save(notificacao);
     }
 

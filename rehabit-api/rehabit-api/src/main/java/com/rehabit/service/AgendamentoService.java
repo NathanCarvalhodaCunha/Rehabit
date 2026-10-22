@@ -266,9 +266,12 @@ public class AgendamentoService {
      * Barra o "voltar no tempo": uma consulta só pode ser marcada para daqui
      * para frente. Sem isso dava para encher a agenda de datas passadas, que
      * nunca apareciam na lista de próximos e ainda assim ocupavam horário.
+     * "Agora" é o de Brasília: na hora do servidor (UTC), três horas na
+     * frente, às 20h30 uma consulta para as 21h do mesmo dia já tinha passado.
      */
     private void exigirDataFutura(LocalDate data, LocalTime hora) {
-        if (LocalDateTime.of(data, hora).isBefore(LocalDateTime.now())) {
+        LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO));
+        if (LocalDateTime.of(data, hora).isBefore(agora)) {
             throw new AuthException(
                     "Não é possível agendar em uma data ou horário que já passou. Escolha um horário futuro.",
                     HttpStatus.BAD_REQUEST);

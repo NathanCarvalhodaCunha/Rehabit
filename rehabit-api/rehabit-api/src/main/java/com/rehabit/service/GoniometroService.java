@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.GoniometroAmostraDTO;
 import com.rehabit.dto.GoniometroCapturaDTO;
 import com.rehabit.dto.GoniometroComandoRespostaDTO;
@@ -19,11 +20,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
@@ -157,14 +157,17 @@ public class GoniometroService {
     private final GoniometroRepository goniometroRepository;
     private final FisioterapeutaRepository fisioterapeutaRepository;
     private final GoniometroStream stream;
+    private final Clock relogio;
     private final Map<Integer, EstadoVivo> estados = new ConcurrentHashMap<>();
 
     public GoniometroService(GoniometroRepository goniometroRepository,
                               FisioterapeutaRepository fisioterapeutaRepository,
-                              GoniometroStream stream) {
+                              GoniometroStream stream,
+                              Clock relogio) {
         this.goniometroRepository = goniometroRepository;
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.stream = stream;
+        this.relogio = relogio;
     }
 
     // ------------------------------------------------------------------
@@ -336,11 +339,21 @@ public class GoniometroService {
         if (estado.ip != null) alvo.setIp(estado.ip);
         alvo.setUltimoContato(LocalDateTime.ofInstant(agora, ZoneId.systemDefault()).withNano(0));
         if (alvo.getDataSincronizacao() == null) {
-            alvo.setDataSincronizacao(LocalDate.now());
-            alvo.setHoraSincronizacao(LocalTime.now().withNano(0));
+            carimbarSincronizacao(alvo);
         }
         goniometroRepository.save(alvo);
         estado.ultimaPersistencia = agora;
+    }
+
+    /**
+     * Data e hora de Brasília, tiradas do mesmo instante. Com as do servidor
+     * (UTC), a hora saía três horas adiantada e, depois das 21h, a data já era
+     * a do dia seguinte.
+     */
+    private void carimbarSincronizacao(Goniometro goniometro) {
+        LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO)).withNano(0);
+        goniometro.setDataSincronizacao(agora.toLocalDate());
+        goniometro.setHoraSincronizacao(agora.toLocalTime());
     }
 
     private Goniometro localizarCadastro(Integer idClinica, String numeroSerie) {
@@ -515,8 +528,7 @@ public class GoniometroService {
                         LocalDateTime.ofInstant(estado.ultimoContato, ZoneId.systemDefault()).withNano(0));
             }
         }
-        goniometro.setDataSincronizacao(LocalDate.now());
-        goniometro.setHoraSincronizacao(LocalTime.now().withNano(0));
+        carimbarSincronizacao(goniometro);
         Goniometro salvo = goniometroRepository.save(goniometro);
         EstadoVivo paraCarimbar = estados.computeIfAbsent(idClinica, k -> new EstadoVivo());
         paraCarimbar.cadastroCarregado = true;

@@ -1,5 +1,6 @@
 package com.rehabit.service;
 
+import com.rehabit.config.RelogioConfig;
 import com.rehabit.dto.AuthResponseDTO;
 import com.rehabit.dto.ExclusaoProfissionalDTO;
 import com.rehabit.dto.FisioterapeutaCreateDTO;
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -51,6 +52,7 @@ public class FisioterapeutaService {
     private final AgendamentoService agendamentoService;
     private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
     private final FotosEmUso fotos;
+    private final Clock relogio;
 
     public FisioterapeutaService(FisioterapeutaRepository fisioterapeutaRepository,
                                   ClinicaRepository clinicaRepository,
@@ -62,7 +64,8 @@ public class FisioterapeutaService {
                                   AgendamentoRepository agendamentoRepository,
                                   AgendamentoService agendamentoService,
                                   RecuperacaoSenhaRepository recuperacaoSenhaRepository,
-                                  FotosEmUso fotos) {
+                                  FotosEmUso fotos,
+                                  Clock relogio) {
         this.fisioterapeutaRepository = fisioterapeutaRepository;
         this.clinicaRepository = clinicaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -74,6 +77,7 @@ public class FisioterapeutaService {
         this.agendamentoService = agendamentoService;
         this.recuperacaoSenhaRepository = recuperacaoSenhaRepository;
         this.fotos = fotos;
+        this.relogio = relogio;
     }
 
     @Transactional
@@ -195,10 +199,13 @@ public class FisioterapeutaService {
                 .orElseThrow(() -> new AuthException("Profissional não encontrado.", HttpStatus.NOT_FOUND));
         PosseChecker.exigirClinicaDona(excluido.getIdClinica(), usuarioId, usuarioTipo);
 
+        // Hoje é o de Brasília: no dia do servidor (UTC), depois das 21h as
+        // consultas do dia ficavam para trás, na agenda de quem saiu.
+        LocalDateTime agora = LocalDateTime.now(relogio.withZone(RelogioConfig.FUSO));
         List<Paciente> seusPacientes = pacienteRepository.findByIdFisioterapeutaOrderByNomeAsc(id);
         List<Agendamento> agendaFutura = agendamentoRepository
                 .findByIdFisioterapeutaAndDataAgendamentoGreaterThanEqualOrderByDataAgendamentoAscHoraAgendamentoAsc(
-                        id, LocalDate.now());
+                        id, agora.toLocalDate());
 
         int colisoes = 0;
         if (!seusPacientes.isEmpty() || !agendaFutura.isEmpty()) {
@@ -222,7 +229,7 @@ public class FisioterapeutaService {
         // única ligação entre o pedido e a conta.
         recuperacaoSenhaRepository.deleteByEmail(excluido.getEmail());
 
-        excluido.setExcluidoEm(LocalDateTime.now());
+        excluido.setExcluidoEm(agora);
         excluido.setEmail("excluido-" + excluido.getId() + "@rehabit.invalid");
         excluido.setCoffito(null);
         excluido.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
