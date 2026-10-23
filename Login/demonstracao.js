@@ -3,7 +3,7 @@
 // O botão "Entrar na demonstração" da página inicial abre login.html?demo.
 // Aqui os campos já chegam preenchidos com uma profissional da Clínica
 // Movimento (fictícia, que a API cria e mantém em dia sozinha; veja
-// ContaDeDemonstracao): o visitante só resolve a verificação anti-robô e
+// ContaDeDemonstracao): o visitante só resolve a verificação antirrobô e
 // clica em Entrar. A senha pode ficar
 // pública porque a API deixa essa conta só de leitura
 // (JwtAuthenticationFilter.ehDaDemonstracao).

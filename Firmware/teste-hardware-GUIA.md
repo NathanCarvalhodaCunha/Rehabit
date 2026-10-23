@@ -267,7 +267,7 @@ Se a placa ficou reiniciando:
 **Para ver quantas vezes ela reiniciou:** desligue a chave, ligue o USB e
 abra o Monitor Serial. A seção `5. Alimentacao` mostra quantas quedas de
 tensão aconteceram enquanto ela estava na bateria. A contagem fica guardada
-na memória. Uma só pode acontecer ao ligar a chave. Várias é problema. Envie
+na memória. Uma só pode acontecer ao ligar a chave. Várias indicam problema. Envie
 `c` para zerar a contagem.
 
 ---

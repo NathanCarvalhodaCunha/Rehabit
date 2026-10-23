@@ -1,4 +1,4 @@
-/* Rehabit — verificação anti-robô (Cloudflare Turnstile)
+/* Rehabit — verificação antirrobô (Cloudflare Turnstile)
    API global:
      RehabitTurnstile.cabecalho()  -> Promise com { "X-Turnstile-Token": token },
                                       ou {} quando não há verificação nesta página
