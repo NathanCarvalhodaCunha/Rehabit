@@ -1969,7 +1969,9 @@ button.form-avatar {
   justify-content: space-between;
   margin-bottom: 14px;
 }
-.cal-mes { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); text-transform: capitalize; }
+.cal-mes { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink-strong); }
+/* Só a inicial: "capitalize" deixava "Outubro De 2026". */
+.cal-mes::first-letter { text-transform: uppercase; }
 .cal-nav { display: flex; gap: 6px; }
 .cal-nav button {
   width: 32px; height: 32px;

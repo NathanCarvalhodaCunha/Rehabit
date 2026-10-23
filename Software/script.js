@@ -545,7 +545,7 @@ if (cadastrarProfissionalForm) {
   });
 }
 
-// Configurações — o checkbox "Tema Escuro" navega para a variante
+// Configurações — o checkbox "Tema escuro" navega para a variante
 // clara/escura da própria tela de configurações (o projeto usa páginas
 // HTML estáticas separadas por tema, sem alternância dinâmica).
 (function configurarToggleTema() {

@@ -682,7 +682,7 @@ window.RehabitRelatorio = (function () {
 
       folha.tituloSecao("Identificação");
       folha.fichaDeDados([
-        ["Idade", p.idade != null ? p.idade + " anos" : "—"],
+        ["Idade", p.idade != null ? p.idade + (p.idade === 1 ? " ano" : " anos") : "—"],
         ["Sexo", p.sexo],
         ["Telefone", p.telefone],
         ["E-mail", p.email],

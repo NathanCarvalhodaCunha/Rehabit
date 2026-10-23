@@ -178,7 +178,7 @@
     cartao = document.createElement("div");
     cartao.className = "rh-turnstile";
     cartao.setAttribute("role", "region");
-    cartao.setAttribute("aria-label", "Verificação anti-robô");
+    cartao.setAttribute("aria-label", "Verificação antirrobô");
     cartao.innerHTML = '<p aria-live="polite"></p><div></div>';
     document.body.appendChild(cartao);
     return cartao.lastChild;

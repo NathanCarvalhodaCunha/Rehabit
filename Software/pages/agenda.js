@@ -80,7 +80,7 @@
     const fim = somarMinutos(hora, expediente.duracao);
     if (hora < abertura || fim === null || fim > fechamento) {
       return (
-        `Fora do horário de atendimento (${abertura} às ${fechamento}). ` +
+        `Fora do horário de atendimento (das ${abertura} às ${fechamento}). ` +
         `Uma sessão de ${expediente.duracao} min precisa começar e terminar dentro desse intervalo.`
       );
     }

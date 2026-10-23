@@ -33,7 +33,7 @@ public class SessaoCreateDTO {
     @Digits(integer = 3, fraction = 2, message = "A amplitude aceita até duas casas decimais.")
     private BigDecimal amplitudeMedia;
 
-    @Size(max = 5000, message = "As observações pode ter no máximo 5000 caracteres.")
+    @Size(max = 5000, message = "As observações podem ter no máximo 5000 caracteres.")
     private String observacoes;
 
     /** Escala de dor 0–10 relatada pelo paciente. */

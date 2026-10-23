@@ -36,7 +36,7 @@
       '<p class="rh-sub">As informações podem ser adicionadas após o cadastro</p>' +
       '<div class="rh-avatar-wrap">' +
         '<button type="button" class="rh-avatar" aria-label="Escolher foto de perfil"></button>' +
-        '<button type="button" class="rh-avatar-label">Foto de Perfil' + PENCIL + '</button>' +
+        '<button type="button" class="rh-avatar-label">Foto de perfil' + PENCIL + '</button>' +
         '<input type="file" accept="image/*" hidden />' +
       '</div>' +
       '<form class="rh-fields" novalidate></form>' +

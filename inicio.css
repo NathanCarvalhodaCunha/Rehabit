@@ -299,7 +299,7 @@ cite { font-style: normal; white-space: nowrap; }
   .page-grid { grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
 }
 
-/* Gráfico "Amplitude de Movimento" em SVG: só no celular, no lugar do print. */
+/* Gráfico "Amplitude de movimento" em SVG: só no celular, no lugar do print. */
 .grafico-demo { display: none; }
 .grafico-contexto { color: var(--ink-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
 .grafico-sub { color: var(--ink-muted); font-size: 14px; font-weight: 600; }
