@@ -8,6 +8,8 @@ Dois panfletos A4 retrato, prontos para imprimir, com o QR code do site
 | [`panfleto-rehabit-qrcode.pdf`](panfleto-rehabit-qrcode.pdf) | QR code e domínio, com o aviso para passar o panfleto à próxima pessoa depois de escanear. |
 | [`panfleto-rehabit-qrcode-e-nfc.pdf`](panfleto-rehabit-qrcode-e-nfc.pdf) | QR code e domínio, com a alternativa do cartão por aproximação (NFC): encostado na parte de trás ou na frente do celular, ele abre o site. |
 
+Os dois têm, no canto de cima, o selo "Aproveite o adesivo de brinde!".
+
 **Para imprimir:** tamanho real (100%), sem "ajustar à página", para o QR
 code sair na medida certa (6,4 cm no primeiro, 5,4 cm no segundo). Nada
 encosta na borda da folha, então funciona em impressora comum.

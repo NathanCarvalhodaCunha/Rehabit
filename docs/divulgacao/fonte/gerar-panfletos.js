@@ -3,6 +3,7 @@
 //    o panfleto à próxima pessoa depois de escanear;
 //  - panfleto-rehabit-qrcode-e-nfc.pdf: o mesmo panfleto, com a alternativa
 //    do cartão por aproximação (NFC).
+// Os dois levam o selo "Aproveite o adesivo de brinde!" no canto de cima.
 //
 //   node docs/divulgacao/fonte/gerar-panfletos.js
 //
@@ -21,6 +22,8 @@ const RAIZ_REPO = path.join(__dirname, "..", "..", "..");
 
 // Menos que isso de folga e os blocos encostam um no outro na folha.
 const SOBRA_MINIMA_MM = 8;
+// Distância mínima do selo até a borda: impressora comum não imprime colado nela.
+const BORDA_MINIMA_SELO_MM = 5;
 
 function carregarPlaywright() {
   const candidatos = [process.env.PLAYWRIGHT_MODULO, "playwright", "/opt/node-tools/node_modules/playwright"];
@@ -70,6 +73,7 @@ body {
 }
 /* Nada encosta na borda: impressora comum não imprime até o fim da folha. */
 .folha {
+  position: relative;
   width: 210mm;
   height: 297mm;
   padding: 16mm 15mm 12mm;
@@ -120,6 +124,27 @@ h1 { margin: 8mm 0 0; font-size: 30pt; line-height: 1.12; font-weight: 800; lett
 .aviso-titulo { margin: 0; font-size: 15pt; line-height: 1.2; font-weight: 800; }
 .aviso-texto { margin: 2mm 0 0; font-size: 12.5pt; line-height: 1.4; color: var(--texto); }
 .aviso-texto strong { color: var(--tinta); }
+
+/* Selo do adesivo de brinde, no canto de cima, ao lado do logo. */
+.selo {
+  position: absolute;
+  top: 6mm;
+  right: 13mm;
+  width: 34mm;
+  height: 34mm;
+  transform: rotate(10deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #FFFFFF;
+}
+.selo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.selo span { position: relative; display: block; line-height: 1.05; }
+.selo .s1 { font-size: 8.5pt; font-weight: 600; }
+.selo .s2 { margin: 0.6mm 0; font-size: 12pt; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+.selo .s3 { font-size: 10.5pt; font-weight: 700; }
 
 h1, .sub, .apoio, .aviso-texto { text-wrap: balance; }
 .rodape {
@@ -175,6 +200,28 @@ const ILUSTRACAO_NFC = `<svg viewBox="0 0 150 100" aria-hidden="true">
   </g>
 </svg>`;
 
+/** Estrela de pontas suaves (o fundo do selo), num quadro de 100 x 100. */
+function estrela(pontas, raioFora, raioDentro) {
+  const vertices = [];
+  for (let i = 0; i < pontas * 2; i++) {
+    const raio = i % 2 ? raioDentro : raioFora;
+    const angulo = (Math.PI * i) / pontas - Math.PI / 2;
+    vertices.push(`${(50 + raio * Math.cos(angulo)).toFixed(2)},${(50 + raio * Math.sin(angulo)).toFixed(2)}`);
+  }
+  return vertices.join(" ");
+}
+
+// O tracejado lembra o recorte de um adesivo.
+const SELO = `<div class="selo">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="${estrela(20, 48, 42)}" fill="#1565D8" stroke="#1565D8" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="50" cy="50" r="39" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="2.6 2.6" opacity="0.75"/>
+    </svg>
+    <span class="s1">Aproveite o</span>
+    <span class="s2">adesivo</span>
+    <span class="s3">de brinde!</span>
+  </div>`;
+
 const AVISOS = {
   passar: `
     <section class="aviso">
@@ -216,6 +263,8 @@ function pagina({ titulo, aviso, ladoQrMm }) {
 </head>
 <body>
 <main class="folha">
+  ${SELO}
+
   <header class="topo">
     <img class="logo" src="${LOGO}" alt="Rehabit">
     <h1>A evolução do paciente,<br>medida em graus.</h1>
@@ -251,11 +300,38 @@ async function principal() {
         const folha = document.querySelector(".folha");
         const estilo = getComputedStyle(folha);
         const util = folha.clientHeight - parseFloat(estilo.paddingTop) - parseFloat(estilo.paddingBottom);
-        const ocupado = [...folha.children].reduce((soma, el) => soma + el.getBoundingClientRect().height, 0);
+        const ocupado = [...folha.children]
+          .filter((el) => getComputedStyle(el).position !== "absolute") // o selo fica por cima
+          .reduce((soma, el) => soma + el.getBoundingClientRect().height, 0);
         return Math.round(((util - ocupado) * 25.4) / 96);
       });
       if (sobraMm < SOBRA_MINIMA_MM) {
         throw new Error(`${panfleto.arquivo}: o conteúdo não cabe na folha (sobram ${sobraMm} mm; o mínimo é ${SOBRA_MINIMA_MM})`);
+      }
+      // O selo fica por cima do layout: não pode cobrir o logo nem o título,
+      // nem chegar perto demais da borda.
+      const selo = await aba.evaluate(() => {
+        // O selo é redondo: confere o círculo dele, que não muda com a inclinação.
+        const el = document.querySelector(".selo");
+        const s = el.getBoundingClientRect();
+        const cx = (s.left + s.right) / 2;
+        const cy = (s.top + s.bottom) / 2;
+        const raio = el.offsetWidth / 2;
+        const cobre = [".logo", "h1", ".sub"].filter((seletor) => {
+          const r = document.querySelector(seletor).getBoundingClientRect();
+          const dx = cx - Math.max(r.left, Math.min(cx, r.right));
+          const dy = cy - Math.max(r.top, Math.min(cy, r.bottom));
+          return dx * dx + dy * dy < raio * raio;
+        });
+        const folha = document.querySelector(".folha").getBoundingClientRect();
+        const bordaMm = (Math.min(cy - raio - folha.top, folha.right - cx - raio) * 25.4) / 96;
+        return { cobre, bordaMm: Math.round(bordaMm * 10) / 10 };
+      });
+      if (selo.cobre.length) {
+        throw new Error(`${panfleto.arquivo}: o selo do brinde cobre ${selo.cobre.join(", ")}`);
+      }
+      if (selo.bordaMm < BORDA_MINIMA_SELO_MM) {
+        throw new Error(`${panfleto.arquivo}: o selo do brinde está a ${selo.bordaMm} mm da borda (o mínimo é ${BORDA_MINIMA_SELO_MM})`);
       }
       await aba.pdf({ path: path.join(SAIDA, panfleto.arquivo), format: "A4", printBackground: true, preferCSSPageSize: true });
       console.log(`ok   ${panfleto.arquivo} (sobram ${sobraMm} mm na folha)`);
