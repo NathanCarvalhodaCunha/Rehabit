@@ -36,7 +36,7 @@ window.RehabitRemarcar = (function () {
       "</div>" +
       '<p class="field-hint" data-limite></p>' +
       '<div class="field"><label for="rm-obs">Observação</label>' +
-      '<input id="rm-obs" type="text" placeholder="Ex: paciente pediu para adiar" /></div>' +
+      '<input id="rm-obs" type="text" placeholder="Ex.: paciente pediu para adiar" /></div>' +
       '<p class="remarcar-erro" data-erro hidden></p>' +
       '<div class="remarcar-acoes">' +
       '<button type="button" class="btn-outline" data-cancelar>Voltar</button>' +

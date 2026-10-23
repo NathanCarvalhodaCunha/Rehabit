@@ -83,7 +83,7 @@ window.RehabitPacienteResumo = (function () {
     var dados =
       linhaDado("Telefone", paciente.telefone) +
       linhaDado("E-mail", paciente.email) +
-      linhaDado("Idade", paciente.idade != null ? paciente.idade + " anos" : null) +
+      linhaDado("Idade", paciente.idade != null ? paciente.idade + (paciente.idade === 1 ? " ano" : " anos") : null) +
       linhaDado("Sexo", paciente.sexo) +
       linhaDado("Início do tratamento", formatarData(paciente.dataInicioTratamento)) +
       linhaDado("Profissional", paciente.nomeFisioterapeuta) +

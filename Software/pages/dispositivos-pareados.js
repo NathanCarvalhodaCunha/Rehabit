@@ -57,7 +57,8 @@
     if (diffMin < 60) return `visto há ${diffMin} min`;
     const horas = Math.round(diffMin / 60);
     if (horas < 24) return `visto há ${horas}h`;
-    return `visto há ${Math.round(horas / 24)} dias`;
+    const dias = Math.round(horas / 24);
+    return dias === 1 ? "visto há 1 dia" : `visto há ${dias} dias`;
   }
 
   /** Considera "online" quem enviou leitura nos últimos 2 minutos. */

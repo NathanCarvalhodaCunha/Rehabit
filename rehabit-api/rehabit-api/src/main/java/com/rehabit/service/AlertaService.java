@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public class AlertaService {
 
     private static final int DIAS_SEM_SESSAO = 21;
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final PacienteRepository pacienteRepository;
     private final SessaoRepository sessaoRepository;
@@ -79,7 +81,7 @@ public class AlertaService {
 
         if (ultima == null) {
             return java.util.Optional.of(new AlertaDTO("ATENCAO", "Sem nenhuma sessão",
-                    p.getNome() + " está cadastrado mas ainda não teve nenhuma sessão registrada.",
+                    p.getNome() + " ainda não teve nenhuma sessão registrada desde o cadastro.",
                     p.getId(), p.getNome()));
         }
         long dias = ChronoUnit.DAYS.between(ultima, LocalDate.now());
@@ -109,7 +111,8 @@ public class AlertaService {
             return java.util.Optional.empty();
         }
         return java.util.Optional.of(new AlertaDTO("ATENCAO", "Regressão na amplitude",
-                p.getNome() + " caiu de " + ultimas.get(2) + "° para " + ultimas.get(0) + "° nas últimas medições.",
+                "A amplitude de " + p.getNome() + " caiu de " + graus(ultimas.get(2)) + " para "
+                        + graus(ultimas.get(0)) + " nas últimas medições.",
                 p.getId(), p.getNome()));
     }
 
@@ -128,14 +131,19 @@ public class AlertaService {
         }
         if (atual.compareTo(p.getMetaAmplitude()) >= 0) {
             return java.util.Optional.of(new AlertaDTO("BOM", "Meta atingida",
-                    p.getNome() + " alcançou " + atual + "°, a meta era " + p.getMetaAmplitude() + "°.",
+                    p.getNome() + " alcançou " + graus(atual) + ", a meta era " + graus(p.getMetaAmplitude()) + ".",
                     p.getId(), p.getNome()));
         }
         if (p.getMetaData() != null && LocalDate.now().isAfter(p.getMetaData())) {
             return java.util.Optional.of(new AlertaDTO("ATENCAO", "Meta vencida",
-                    p.getNome() + " está em " + atual + "° e a meta de " + p.getMetaAmplitude()
-                            + "° venceu em " + p.getMetaData() + ".", p.getId(), p.getNome()));
+                    p.getNome() + " está em " + graus(atual) + " e a meta de " + graus(p.getMetaAmplitude())
+                            + " venceu em " + p.getMetaData().format(DATA_BR) + ".", p.getId(), p.getNome()));
         }
         return java.util.Optional.empty();
+    }
+
+    /** O banco devolve 95.00 e 92.50; no texto vão "95°" e "92,5°". */
+    private static String graus(BigDecimal valor) {
+        return valor.stripTrailingZeros().toPlainString().replace('.', ',') + "°";
     }
 }

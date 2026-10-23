@@ -255,7 +255,8 @@ function formatarDataLonga(dataIso) {
 
   Promise.all([apiGet(`/pacientes/${idPaciente}`), apiGet(`/pacientes/${idPaciente}/sessoes`)])
     .then(([paciente, sessoes]) => {
-      const idadeTexto = paciente.idade != null ? `${paciente.idade} anos` : "Idade não informada";
+      const idadeTexto =
+        paciente.idade != null ? `${paciente.idade} ${paciente.idade === 1 ? "ano" : "anos"}` : "Idade não informada";
       const sexoTexto = paciente.sexo || "Não informado";
       const situacaoTexto = paciente.situacao || "Sem situação registrada";
       const inicioTexto = paciente.dataInicioTratamento ? formatarDataLonga(paciente.dataInicioTratamento) : "-";
@@ -266,7 +267,7 @@ function formatarDataLonga(dataIso) {
       header.querySelector("h1").textContent = paciente.nome;
       header.querySelector(".patient-meta.desktop-only").innerHTML =
         `${escaparHtml(idadeTexto)} – ${escaparHtml(sexoTexto)} – ${escaparHtml(situacaoTexto)}<br/>` +
-        `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapia <strong>${escaparHtml(
+        `Início do tratamento: <strong>${escaparHtml(inicioTexto)}</strong> – Fisioterapeuta: <strong>${escaparHtml(
           fisioTexto
         )}</strong>`;
       header.querySelector(".patient-meta.mobile-only").innerHTML =
@@ -311,8 +312,9 @@ function formatarDataLonga(dataIso) {
       if (cartoes[1]) {
         const ultima = pontosDuracao.length ? pontosDuracao[pontosDuracao.length - 1].valor : null;
         cartoes[1].querySelector(".big-num").textContent = ultima != null ? `${ultima} min` : "-";
-        cartoes[1].querySelector(".delta").textContent = pontosDuracao.length
-          ? `${pontosDuracao.length} sessões recentes`
+        const recentes = pontosDuracao.length;
+        cartoes[1].querySelector(".delta").textContent = recentes
+          ? `${recentes} ${recentes === 1 ? "sessão recente" : "sessões recentes"}`
           : "Sem histórico ainda";
         construirGraficoBarras(cartoes[1], pontosDuracao);
       }

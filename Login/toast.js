@@ -115,7 +115,7 @@
 
   function mostrar(mensagem, cor) {
     if (typeof Toastify === "function" && temCssDoToastify()) {
-      Toastify({
+      var aviso = Toastify({
         text: mensagem,
         // Texto puro, nunca HTML: a mensagem costuma vir da API. É o padrão
         // da versão fixada no HTML, mas fica explícito para não depender dele.
@@ -132,6 +132,9 @@
           boxShadow: "0 8px 24px rgba(0,0,0,.18)",
         },
       }).showToast();
+      // O Toastify rotula o botão de fechar em inglês ("Close").
+      var fechar = aviso.toastElement && aviso.toastElement.querySelector(".toast-close");
+      if (fechar) fechar.setAttribute("aria-label", "Fechar");
       return;
     }
     mostrarLocal(mensagem, cor);

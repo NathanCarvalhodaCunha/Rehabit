@@ -294,7 +294,7 @@ public class AgendamentoService {
 
         if (!cabe) {
             throw new AuthException(
-                    "Fora do horário de atendimento (" + abertura.format(HORA_BR) + " às "
+                    "Fora do horário de atendimento (das " + abertura.format(HORA_BR) + " às "
                             + fechamento.format(HORA_BR) + "). Uma sessão de " + duracao
                             + " min precisa começar e terminar dentro desse intervalo.",
                     HttpStatus.BAD_REQUEST);
