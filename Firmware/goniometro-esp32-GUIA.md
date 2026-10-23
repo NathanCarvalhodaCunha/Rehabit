@@ -85,7 +85,7 @@ pose que você marca com o botão Zerar (veja a Parte 3).
 
 ## 4. Selecionar a porta e gravar
 
-1. Conecte o ESP32 no PC via USB.
+1. Conecte o ESP32 ao PC via USB.
 2. **Ferramentas → Porta**, escolha a porta COM que apareceu ao conectar o
    cabo (no Gerenciador de Dispositivos do Windows costuma aparecer como
    "Silicon Labs CP210x" ou "CH340").
@@ -117,7 +117,7 @@ desligado: a senha dela está no site, e o goniômetro de lá é simulado.)
 1. Ligue o aparelho. Sem configuração, ele cria um Wi-Fi chamado
    **Rehabit-Goniometro** (senha `rehabit123`) — dá para saber que esse
    Wi-Fi está no ar pela luz, que fica "respirando": acende e apaga suave.
-2. Conecte o celular nesse Wi-Fi.
+2. Conecte o celular a esse Wi-Fi.
 3. O portal costuma abrir sozinho. **Se não abrir, digite `http://192.168.4.1`
    no navegador** — com o `http://` na frente, senão o navegador procura no
    Google em vez de abrir a página.
@@ -136,8 +136,8 @@ Faltou luz? Ele volta sozinho: rede, senha e token ficam guardados.
 
 **Só trocou a rede ou a senha do Wi-Fi?** Ligue o aparelho e espere a luz
 piscar devagar (sem Wi-Fi). Segure o botão **BOOT** até a luz passar a
-respirar e solte — pode levar até uns 17 segundos, porque entre uma tentativa
-de entrar no Wi-Fi e outra o aparelho não lê o botão. O portal fica aberto por
+respirar e solte — pode levar até uns 17 segundos, porque o aparelho só lê o
+botão entre uma tentativa de entrar no Wi-Fi e outra. O portal fica aberto por
 3 minutos, contados da abertura. Escolha a rede nova,
 digite a senha e deixe o código em branco — o pareamento e a tara continuam
 guardados. Se os 3 minutos passarem sem configuração, o portal fecha e o
@@ -147,7 +147,7 @@ aparelho volta a tentar a rede salva; é só segurar o BOOT de novo.
 > rede salva falhar uma vez (o roteador reiniciando, ou alguém derrubando o
 > Wi-Fi de propósito) para o portal abrir e ficar aberto, com a senha
 > `rehabit123`, que está publicada. Qualquer pessoa por perto podia então
-> trocar a rede do aparelho e parear ele com outra clínica. Agora, com a rede
+> trocar a rede do aparelho e pareá-lo com outra clínica. Agora, com a rede
 > já salva, o portal só abre com o botão — com o aparelho na mão.
 
 **Mudou de clínica?** Com o aparelho ligado, segure o botão **BOOT** até a
@@ -155,7 +155,7 @@ luz ficar fraca e parada e solte. Costuma levar uns 5 segundos; com a internet
 fora do ar pode levar até meio minuto, porque o botão só é lido entre um envio
 e outro. Ele apaga a configuração — inclusive o pareamento e a tara — e volta
 ao portal, onde vai o código da clínica nova. (Se a rede antiga não existe
-no lugar novo, o aparelho fica piscando devagar, sem Wi-Fi: segure o BOOT por
+no lugar novo, o aparelho fica piscando devagar, sem Wi-Fi: segure o BOOT
 até a luz respirar para abrir o portal e preencha a rede nova **e** o código novo.)
 Confira na lista **Goniômetros
 pareados** da clínica nova que ele aparece como **Online**. Se não aparecer,
@@ -232,7 +232,7 @@ refaça a tara ao trocar de paciente ou se remontar o aparelho no braço.
 ## O que essa medida é (e o que não é)
 
 A conta é o **ângulo entre a gravidade de agora e a gravidade na hora da
-tara**. Duas consequências que valem saber:
+tara**. Duas consequências que vale saber:
 
 - **O número é sempre positivo (0 a 180).** Ele diz o quanto a articulação
   abriu, não para que lado. Uma hiperextensão de 10° aparece como 10°, igual
@@ -280,7 +280,7 @@ Depois abra a tela **Dispositivo** logado como a clínica: o selo deve virar
 | Pisca muito rápido por 4 s (uns 6 por segundo) | Alguém clicou em "Identificar aparelho" no site |
 | Aceso fixo | Gravando uma captura |
 | "Respirando": acende e apaga suave, num ciclo de 3 s | Portal de configuração aberto — o Wi-Fi "Rehabit-Goniometro" está no ar para o celular (aparelho sem configuração, depois do BOOT 5 s, ou do BOOT 2 s enquanto ele não consegue entrar na rede salva; nesse último caso o portal fecha sozinho em 3 minutos) |
-| Fraca e parada logo depois de ligar (uns 2,5 s) | Calibrando o giroscópio: deixe o aparelho parado |
+| Fraco e parado logo depois de ligar (uns 2,5 s) | Calibrando o giroscópio: deixe o aparelho parado |
 | Pisca rápido sem parar desde o boot (uns 3 por segundo) | MPU6050 não foi encontrado — confira a fiação |
 | Apagado | Sem energia: bateria descarregada ou chave desligada |
 
@@ -327,8 +327,8 @@ rápido para ninguém.
 |---|---|
 | `MPU6050 nao encontrado!` | Fiação: confira VCC/GND/SDA/SCL. |
 | `Pareamento falhou (status=400)` | Código expirado ou já usado — gere outro na tela Dispositivo. |
-| `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5s). |
-| `Token recusado` (401) | Configuração antiga. Segure BOOT por 5s e refaça. |
+| `Este aparelho foi revogado pela clinica` | Alguém clicou em Revogar. Pareie de novo (BOOT 5 s). |
+| `Token recusado` (401) | Configuração antiga. Segure BOOT por 5 s e refaça. |
 | `Envio falhou, status=-1` | Problema de rede/TLS, não da aplicação. Confira o sinal do Wi-Fi e se o aparelho tem internet de verdade. Se a internet está boa e o erro não passa, o certificado da API pode ter vindo de uma autoridade fora da lista (veja "Segurança da conexão"). |
 | `Nao consegui entrar na rede salva; tento de novo em instantes.` | A rede salva não respondeu. Se ela mudou, segure o BOOT até a luz respirar para abrir o portal (fecha sozinho em 3 minutos). |
 | Demora na primeira leitura | Normal: o servidor gratuito hiberna e leva alguns segundos para acordar. Passando de 10 s, a luz faz a piscada dupla até ele responder. |
@@ -386,7 +386,7 @@ A resposta é o canal de volta:
 ```
 
 `comando` vem como `"NENHUM"` quando não há nada pendente. `intervaloMs` é o
-ritmo que o servidor pede a partir de agora. `emUso` diz se tem alguém com a
+ritmo que o servidor pede a partir de agora. `emUso` diz se há alguém com a
 tela aberta. `capturando` diz se há captura aberta no servidor: é por ele que
 o aparelho fica sabendo que uma gravação foi fechada enquanto estava sem
 conexão (o `PARAR_CAPTURA` não tem como chegar nesse caso).

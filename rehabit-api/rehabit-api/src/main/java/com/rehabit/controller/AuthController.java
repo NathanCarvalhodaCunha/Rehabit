@@ -47,7 +47,7 @@ public class AuthController {
         this.envioDeFoto = envioDeFoto;
     }
 
-    // As rotas que recebem o token anti-robô (TurnstileService) são as que um
+    // As rotas que recebem o token antirrobô (TurnstileService) são as que um
     // robô teria interesse em martelar: o login, para adivinhar senha, e as
     // duas que mandam e-mail. O /register depende: com o código por e-mail
     // ligado, quem chega a ele já passou pela verificação ao pedir o código;

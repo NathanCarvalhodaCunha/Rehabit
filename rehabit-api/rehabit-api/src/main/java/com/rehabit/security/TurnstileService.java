@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Verificação anti-robô do Cloudflare Turnstile.
+ * Verificação antirrobô do Cloudflare Turnstile.
  *
  * O site gera um token no navegador (o widget da Cloudflare, quase sempre
  * invisível) e manda no cabeçalho {@value #CABECALHO}. Aqui o token é
@@ -76,10 +76,10 @@ public class TurnstileService {
                 .build();
 
         if (isAtivo()) {
-            log.info("Verificação anti-robô (Cloudflare Turnstile) ligada no login, no código de "
+            log.info("Verificação antirrobô (Cloudflare Turnstile) ligada no login, no código de "
                     + "cadastro e na recuperação de senha.");
         } else {
-            log.warn("Verificação anti-robô (Cloudflare Turnstile) desligada: sem TURNSTILE_SECRET_KEY.");
+            log.warn("Verificação antirrobô (Cloudflare Turnstile) desligada: sem TURNSTILE_SECRET_KEY.");
         }
     }
 
@@ -108,7 +108,7 @@ public class TurnstileService {
         List<String> codigos = new ArrayList<>();
         resposta.path("error-codes").forEach(codigo -> codigos.add(codigo.asText()));
         if (codigos.stream().anyMatch(FALHAS_FORA_DO_TOKEN::contains)) {
-            log.error("A Cloudflare não conseguiu conferir o token anti-robô {}. Se aparecer "
+            log.error("A Cloudflare não conseguiu conferir o token antirrobô {}. Se aparecer "
                     + "invalid-input-secret, a TURNSTILE_SECRET_KEY está errada. Deixando passar.", codigos);
             return;
         }
@@ -129,14 +129,14 @@ public class TurnstileService {
             HttpResponse<String> resposta =
                     http.send(requisicao, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (resposta.statusCode() / 100 != 2) {
-                log.warn("A Cloudflare respondeu {} ao conferir o token anti-robô. Deixando passar.",
+                log.warn("A Cloudflare respondeu {} ao conferir o token antirrobô. Deixando passar.",
                         resposta.statusCode());
                 return null;
             }
             return json.readTree(resposta.body());
         } catch (IOException ex) {
             // Inclui o tempo esgotado e a resposta que não é JSON.
-            log.warn("Não consegui conferir o token anti-robô com a Cloudflare ({}). Deixando passar.",
+            log.warn("Não consegui conferir o token antirrobô com a Cloudflare ({}). Deixando passar.",
                     ex.toString());
             return null;
         } catch (InterruptedException ex) {

@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * As rotas de entrada com a verificação anti-robô ligada, contra uma
+ * As rotas de entrada com a verificação antirrobô ligada, contra uma
  * Cloudflare falsa que só aprova o token "token-bom".
  *
  * Os outros testes rodam sem TURNSTILE_SECRET_KEY e por isso entram sem

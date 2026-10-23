@@ -33,7 +33,7 @@ Pré-requisito: JDK 17+ instalado.
 iniciar-rehabit.bat
 ```
 
-O script compila o backend (Maven Wrapper, não precisa Maven instalado), sobe a API em `http://localhost:8080` e abre a tela de login no navegador padrão.
+O script compila o backend (Maven Wrapper, não precisa de Maven instalado), sobe a API em `http://localhost:8080` e abre a tela de login no navegador padrão.
 
 Para rodar manualmente:
 
@@ -249,7 +249,7 @@ O `CNAME` está no `.vercelignore`, então não vira endereço no site.
 Ao pôr o site em um endereço novo, dois ajustes fora do repositório:
 
 1. Cadastre o hostname no widget do Turnstile (veja
-   [Verificação anti-robô](#verificação-anti-robô-cloudflare-turnstile)).
+   [Verificação antirrobô](#verificação-antirrobô-cloudflare-turnstile)).
    Sem isso, todo login naquele endereço recebe 403. Por isso as prévias
    `*.vercel.app` não fazem login: teste o login em `localhost`.
 2. No Render, aponte `REHABIT_APP_URL` para a pasta `Login/` do endereço novo
@@ -338,7 +338,7 @@ Outros pontos:
 
 - Cadastro e login de clínicas e fisioterapeutas, com confirmação do e-mail por código de 6 dígitos no cadastro.
 - Recuperação de senha por e-mail: código de 6 dígitos (e link direto, quando o site tem endereço público).
-- Verificação anti-robô (Cloudflare Turnstile) no login e nas telas que mandam e-mail.
+- Verificação antirrobô (Cloudflare Turnstile) no login e nas telas que mandam e-mail.
 - Cadastro de pacientes e vínculo com profissionais.
 - Registro de sessões de fisioterapia e histórico de evolução por paciente.
 - Goniômetro digital integrado, em tempo real (veja abaixo).
@@ -361,7 +361,7 @@ cliente cai sozinho para polling e continua funcionando.
 
 O aparelho não guarda credencial nenhuma: ele se pareia com a clínica por um
 código de 6 dígitos e passa a usar um token só dele, que a clínica pode
-revogar a qualquer momento. A telemetria por isso não carrega a clínica no
+revogar a qualquer momento. A telemetria, por isso, não carrega a clínica no
 corpo — ela sai do token, e é o que impede um goniômetro de escrever na
 clínica de outro.
 
@@ -484,7 +484,7 @@ que aparecem na configuração inicial:
 | No log | O que é |
 | --- | --- |
 | `Brevo respondeu 401: Key not found` | A chave não é reconhecida. Ou é a **chave de SMTP** (`xsmtpsib-`), que só vale para o relay SMTP, ou é a versão **mascarada** — o Brevo mostra a chave inteira uma única vez, e o que aparece na tela depois não funciona. Nos dois casos, gere uma chave de API v3 nova. |
-| `Brevo respondeu 401: unrecognised IP address` | A chave está certa; a conta do Brevo tem [restrição de IP](https://app.brevo.com/security/authorised_ips) ligada. Hospedado no Render o IP de saída vem de uma [faixa compartilhada](https://render.com/docs/outbound-ip-addresses) e muda, então autorizar o IP que aparece na mensagem resolve só até a próxima troca — o caminho estável é desligar a restrição. |
+| `Brevo respondeu 401: unrecognised IP address` | A chave está certa; a conta do Brevo tem [restrição de IP](https://app.brevo.com/security/authorised_ips) ligada. Com a API hospedada no Render, o IP de saída vem de uma [faixa compartilhada](https://render.com/docs/outbound-ip-addresses) e muda, então autorizar o IP que aparece na mensagem resolve só até a próxima troca — o caminho estável é desligar a restrição. |
 | `Brevo respondeu 400: sender is not valid` | O endereço em `MAIL_FROM` não está verificado na conta do Brevo. |
 | `Brevo respondeu 402` ou `429` | Passou dos 300 e-mails do dia. |
 | `MailConnectException: Couldn't connect to host` (por SMTP) | O bloqueio de portas do Render. Use o Brevo. |
@@ -504,9 +504,9 @@ cadastrar.
 4. **Código por e-mail** — a prova final: sem abrir a caixa de entrada e
    digitar os 6 dígitos, a conta não é criada.
 
-## Verificação anti-robô (Cloudflare Turnstile)
+## Verificação antirrobô (Cloudflare Turnstile)
 
-Três rotas da API recebem um token anti-robô da Cloudflare: o **login**
+Três rotas da API recebem um token antirrobô da Cloudflare: o **login**
 (onde um robô tentaria adivinhar senha), o **envio do código de cadastro** e
 o **e-mail de recuperação de senha** — essas duas gastam da cota de 300
 e-mails por dia do Brevo, e um robô martelando qualquer uma delas esgotaria a
@@ -569,7 +569,7 @@ publicado sem a site key, ninguém consegue entrar.
 3. Abra o site publicado e faça um login: no console do navegador não pode
    aparecer nenhum aviso `[Turnstile]`.
 4. Confira que o Render já está com a versão nova da API — no *Logs* dele
-   aparece `Verificação anti-robô (Cloudflare Turnstile) desligada`. Merge na
+   aparece `Verificação antirrobô (Cloudflare Turnstile) desligada`. Merge na
    `main` não garante que ele publicou (já levou dias); se a linha não
    aparecer, rode *Manual Deploy → Deploy latest commit*.
 5. Só então, em *Environment* no Render, defina `TURNSTILE_SECRET_KEY` com a
@@ -587,7 +587,7 @@ Para desligar de volta, basta apagar a variável no Render.
 | Console: `[Turnstile] erro 110200` | Hostname não autorizado: cadastre o endereço do site no widget. |
 | Console: `[Turnstile] erro 110100` ou `110110` | Site key inválida — confira o que foi copiado para `Login/turnstile.js`. |
 | Log da API: `invalid-input-secret` | A `TURNSTILE_SECRET_KEY` está errada. Enquanto isso todo pedido passa — a verificação está ligada só no nome. |
-| Log da API: `Não consegui conferir o token anti-robô com a Cloudflare` | A Cloudflare não respondeu a tempo; o pedido passou. Se for constante, é rede do Render. |
+| Log da API: `Não consegui conferir o token antirrobô com a Cloudflare` | A Cloudflare não respondeu a tempo; o pedido passou. Se for constante, é rede do Render. |
 
 ## A hibernação da API no Render
 

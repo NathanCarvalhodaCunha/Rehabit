@@ -46,7 +46,7 @@ Correções no `main` pelo PR #30 (merge `2280783`, de 13/10/2026), sobre a base
 | SEC-07 | Média | API: `/api/uploads` | Upload público e sem limite (abuso de armazenamento/cota). | Exige login; foto do cadastro por rota própria que exige e-mail confirmado; limites por IP e por e-mail. | `EnvioDeFotosTest`, `FotoDoCadastroTest` |
 | SEC-08 | Alta | API: telemetria | `"angulo": 1e999999999` fazia o `setScale` montar um número de um bilhão de dígitos: um pacote de 16 bytes travava um núcleo da CPU. | Faixa e dígitos conferidos antes de qualquer conta (DTO + serviço). | `AnguloDoGoniometroTest` |
 | SEC-09 | Alta | Site: `vercel.json` | Sem CSP, HSTS nem Permissions-Policy; token no localStorage sem nenhuma contenção. | CSP sem script inline (o do tema por hash), HSTS, Permissions-Policy, frame-ancestors. | `tests/seguranca-front` (estatico, csp) |
-| SEC-10 | Alta | API: login, cadastro, e-mail, códigos | Sem limite de tentativas; anti-robô opcional. | Limites por IP, por conta e por destinatário; IP só do proxy de confiança. | `LimitesDeTentativasTest` |
+| SEC-10 | Alta | API: login, cadastro, e-mail, códigos | Sem limite de tentativas; antirrobô opcional. | Limites por IP, por conta e por destinatário; IP só do proxy de confiança. | `LimitesDeTentativasTest` |
 | SEC-11 | Alta | Firmware | `setInsecure()`: HTTPS sem conferir certificado; na mesma rede, dava para se passar pela API e ler o token do aparelho. | Certificado conferido contra 7 raízes embutidas. | Compilação nos núcleos 2.0.9 e 3.3.2; conferência do bloco PEM |
 | SEC-12 | Média | API: exclusão de conta | Apagava qualquer arquivo citado nas linhas da conta: bastava pôr a URL da foto de outra clínica e excluir a conta. | Só apaga arquivo que nenhum cadastro usa mais. | `CampoFotoTest` |
 | SEC-13 | Média | API: fotos de pacientes | Foto trocada nunca era apagada; metadados (GPS) publicados junto. | Foto trocada apagada; EXIF/GPS removidos no envio. Endereço continua público, mas impossível de adivinhar. | `CampoFotoTest`, `EnvioDeFotosTest` |
@@ -70,7 +70,7 @@ Correções no `main` pelo PR #30 (merge `2280783`, de 13/10/2026), sobre a base
 | SEC-31 | Baixa | API | `metaAmplitude` com escala absurda → 500. | `@Digits`/faixa → 400. | `AnguloDoGoniometroTest` |
 | SEC-32 | Baixa | API | Upload > 5 MB → 500 com stack trace. | 413 com mensagem. | `EnvioDeFotosTest` |
 | SEC-33 | Baixa | API local | H2 com `AUTO_SERVER` (TCP aberto, sa sem senha). | Removido. | Revisão de configuração |
-| SEC-34 | Info | API: validação de e-mail | Consulta DNS de domínio escolhido pelo usuário. | Limites e anti-robô no cadastro; resto documentado. | — |
+| SEC-34 | Info | API: validação de e-mail | Consulta DNS de domínio escolhido pelo usuário. | Limites e antirrobô no cadastro; resto documentado. | — |
 | SEC-35 | Info | Vercel | README (detalhes de operação) publicado no site. | `.vercelignore` exclui README e `tests/`. | Revisão de configuração |
 | SEC-36 | Info | `Rehabit.sql` | Linha com hash de senha e e-mail pessoal. | Removida (continua no histórico do git). | — |
 
