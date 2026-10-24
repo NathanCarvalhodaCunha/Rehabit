@@ -231,15 +231,6 @@
     definirInfo("ip", estado.ip || "–");
     definirInfo("contato", textoContato(estado.segundosDesdeContato));
 
-    const bateria = estado.bateria;
-    document.querySelectorAll(".battery-num").forEach((el) => {
-      el.textContent = bateria != null ? `${bateria}%` : "–";
-    });
-    document.querySelectorAll(".battery-fill").forEach((el) => {
-      el.style.width = `${bateria != null ? bateria : 0}%`;
-      el.style.background = bateria == null ? "#9CA3AF" : bateria <= 15 ? "#DC2626" : bateria <= 40 ? "#F59E0B" : "#22C55E";
-    });
-
     document.querySelectorAll("[data-device-name]").forEach((el) => {
       if (estado.simulado) {
         el.textContent = estado.conectado ? "Goniômetro simulado" : "Goniômetro simulado reiniciando";
