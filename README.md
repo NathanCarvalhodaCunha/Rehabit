@@ -374,7 +374,7 @@ captura, reiniciar) e é assim que o servidor dita o ritmo de amostragem —
 Na prática, dentro do sistema:
 
 - **Tela Dispositivo** — ângulo ao vivo em um mostrador, gráfico dos últimos
-  60 segundos, mínimo/máximo/amplitude, bateria, sinal Wi-Fi, número de série,
+  60 segundos, mínimo/máximo/amplitude, sinal Wi-Fi, número de série,
   firmware, IP e há quanto tempo chegou o último pacote, além da lista de
   aparelhos pareados e do código de pareamento.
 - **Cadastrar sessão** — o mesmo canal aparece embutido no formulário: dá para

@@ -83,7 +83,6 @@ body.dark .device-sub { color: var(--ink-muted); }
 body.dark .info-row { border-color: #1B2647; }
 body.dark .info-row .k { color: var(--ink-muted); }
 body.dark .info-row .v { color: #fff; }
-body.dark .battery-icon { border-color: #3A4675; }
 body.dark .btn-outline {
   background: transparent;
   border-color: #2A3564;

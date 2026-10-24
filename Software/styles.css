@@ -563,19 +563,6 @@ button { font-family: inherit; cursor: pointer; }
 .info-row .k { color: var(--ink-strong); font-weight: 600; }
 .info-row .v { color: var(--ink-strong); font-weight: 600; }
 
-.battery { display: inline-flex; align-items: center; gap: 8px; }
-.battery-num { font-weight: 700; }
-.battery-icon {
-  position: relative; display: inline-block;
-  width: 28px; height: 14px; border: 1.5px solid var(--ink-strong);
-  border-radius: 3px; padding: 1px;
-}
-.battery-icon::after {
-  content: ""; position: absolute; right: -4px; top: 3px;
-  width: 3px; height: 6px; background: var(--ink-strong); border-radius: 0 2px 2px 0;
-}
-.battery-fill { display: block; height: 100%; background: #22C55E; border-radius: 1px; }
-
 /* Tip card */
 .tip-card { margin-top: 22px; padding: 20px 22px; }
 .tip-t { margin: 0 0 6px; font-weight: 700; color: var(--ink-strong); font-size: 15px; }

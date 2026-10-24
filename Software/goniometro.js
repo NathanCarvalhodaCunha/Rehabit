@@ -249,7 +249,6 @@
     var captura = null;
     var desligadoAte = 0;
     var calibrandoAte = 0;
-    var bateria = 87;
     var ultimoAviso = 0;
 
     function suave(x) {
@@ -288,7 +287,6 @@
         captura.minimo = captura.minimo == null ? angulo : Math.min(captura.minimo, angulo);
         captura.maximo = captura.maximo == null ? angulo : Math.max(captura.maximo, angulo);
       }
-      bateria = Math.max(20, bateria - 0.0005);
     }
 
     function retratoDaCaptura(agora) {
@@ -314,7 +312,6 @@
         conectado: ligado,
         angulo: ligado && ultimo ? ultimo.angulo : null,
         anguloBruto: ligado ? arredondar(brutoAtual) : null,
-        bateria: Math.round(bateria),
         rssi: -51 - Math.round(3 + 3 * Math.sin(agora / 9000)),
         numeroSerie: "SIMULADO",
         firmware: "2.4",
