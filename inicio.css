@@ -875,7 +875,7 @@ cite { font-style: normal; white-space: nowrap; }
   .page-grid { grid-template-columns: 1fr; }
 }
 
-/* ---------- Patrocínio (Topia Invest) ---------- */
+/* ---------- Patrocínio (Topia Invest e Ederson Ribas Sauter) ---------- */
 /* O logo da Topia é branco: fica sempre sobre o azul-marinho da marca. */
 .topia-logo { display: grid; place-items: center; background: #001326; border: 1px solid var(--hairline); border-radius: 10px; }
 .topia-logo img { width: 72%; max-width: 180px; height: auto; }
@@ -888,6 +888,12 @@ cite { font-style: normal; white-space: nowrap; }
 .patrocinio-selo { background: var(--brand-suave); color: var(--brand-texto); }
 .patrocinador-texto p { margin-top: 8px; color: var(--ink-muted); font-size: 15px; line-height: 1.6; max-width: 62ch; }
 .patrocinador-texto .btn-edit { margin-top: 18px; }
+.patrocinador + .patrocinador { margin-top: 16px; }
+/* O cachorro em pixel art (Ederson) fica sem fundo, direto sobre o cartão. A arte
+   tem 64 px: em 128 e 192 px, sem suavizar, cada pixel sai nítido. */
+.patrocinador-logo { display: grid; place-items: center; }
+.patrocinador-logo img { width: 128px; height: auto; image-rendering: pixelated; }
+@media (min-width: 1100px) { .patrocinador-logo img { width: 192px; } }
 .ico-externo { width: 16px; height: 16px; }
 
 /* Cartão compacto no Início, que leva à seção. */
@@ -895,6 +901,11 @@ cite { font-style: normal; white-space: nowrap; }
 .patrocinio-mini:hover { border-color: var(--brand); }
 .topia-logo-mini { flex: none; width: 84px; height: 52px; padding: 8px 10px; }
 .topia-logo-mini img { width: 100%; }
+.patrocinio-mini-logos { flex: none; display: flex; align-items: center; gap: 6px; }
+.ederson-logo-mini { width: 52px; height: 52px; }
+/* No celular, com as duas logos o texto ficaria espremido ao lado: as logos
+   vão para cima e o texto ocupa a largura toda embaixo. */
+@media (max-width: 479px) { .patrocinio-mini { flex-direction: column; align-items: flex-start; gap: 10px; } }
 .patrocinio-mini .t { display: block; font-weight: 700; color: var(--ink-strong); font-size: 14.5px; line-height: 1.35; }
 .patrocinio-mini .s { display: block; margin-top: 2px; color: var(--brand-texto); font-size: 13.5px; font-weight: 600; }
 
