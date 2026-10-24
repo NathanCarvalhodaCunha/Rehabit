@@ -49,7 +49,6 @@
   --hover-bg: #F3F4F6;
   --suave: #F9FAFB;
   --avatar-bg: #D1D5DB;
-  --avatar-ink: #374151;
   --shadow-card: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 1px rgba(16, 24, 40, .03);
   /* Luz de status do goniômetro: as cores do tutorial (Software/styles.css). */
   --led-aceso: #2F80FF;
@@ -83,7 +82,6 @@
   --hover-bg: rgba(255, 255, 255, .06);
   --suave: #0B1430;
   --avatar-bg: #1F2A50;
-  --avatar-ink: #E6EAF5;
   --shadow-card: none;
   /* Luz de status: as cores do tutorial no escuro (Software/dark.css). */
   --led-apagado: #2A3563;
@@ -256,7 +254,6 @@ cite { font-style: normal; white-space: nowrap; }
 .pro-user { display: flex; align-items: center; gap: 14px; }
 .pro-user strong { display: block; color: var(--ink-strong); font-size: 15px; text-wrap: balance; }
 .pro-user div span { display: block; color: var(--ink-muted); font-size: 14px; font-weight: 600; text-wrap: balance; }
-.pro-user .avatar-iniciais { width: 62px; height: 62px; font-size: 15px; }
 /* A logo do braço, sempre sobre branco (inclusive no tema escuro): é a
    mesma arte do ícone do site. O aro fino separa o círculo do fundo claro. */
 .avatar-logo {
@@ -265,12 +262,7 @@ cite { font-style: normal; white-space: nowrap; }
 }
 @media (max-width: 1099px) { .pro-header { grid-template-columns: 1fr; } }
 
-.avatar-iniciais {
-  display: grid; place-items: center; flex: none;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: var(--avatar-bg); color: var(--avatar-ink); font-size: 14px; font-weight: 800;
-}
-/* Foto no lugar das iniciais, no mesmo círculo; o fundo aparece enquanto carrega. */
+/* Foto dos orientadores, em círculo; o fundo aparece enquanto carrega. */
 .avatar-foto {
   display: block; flex: none; width: 52px; height: 52px; border-radius: 50%;
   background: var(--avatar-bg); object-fit: cover;
@@ -700,6 +692,29 @@ cite { font-style: normal; white-space: nowrap; }
 .lista-equipe .papel { padding: 4px 12px; border-radius: 999px; background: var(--brand-suave); color: var(--brand-texto); font-size: 13px; font-weight: 700; }
 .lista-equipe .orientacao { margin-top: 22px; }
 
+/* Integrantes: foto do rosto até a logo da camisa, em colunas que seguem a
+   largura do cartão (2, 3 ou 5 por linha; a última linha fica centralizada). */
+.lista-equipe { container: equipe / inline-size; }
+.lista-equipe .integrantes {
+  --colunas: 2; --vao: 16px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 22px var(--vao); margin-top: 14px;
+}
+.lista-equipe .integrantes li {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  flex: 0 0 calc((100% - (var(--colunas) - 1) * var(--vao)) / var(--colunas)); max-width: 200px;
+  padding: 0; border-bottom: 0; text-align: center;
+}
+.integrante-foto {
+  display: block; width: 100%; height: auto; aspect-ratio: 5 / 8; margin-bottom: 4px;
+  border-radius: 14px; background: var(--avatar-bg); object-fit: cover;
+}
+.lista-equipe .integrantes .nome { font-size: 14px; line-height: 1.3; text-wrap: balance; }
+/* O selo fica no pé de cada integrante, na mesma altura com nome de uma, duas ou três linhas. */
+.lista-equipe .integrantes .papel { margin-top: auto; }
+@container equipe (min-width: 400px) { .lista-equipe .integrantes { --colunas: 3; } }
+@container equipe (min-width: 640px) { .lista-equipe .integrantes { --colunas: 5; --vao: 20px; } }
+@container equipe (min-width: 860px) { .lista-equipe .integrantes .nome { font-size: 15px; } }
+
 /* Rodapé */
 .rodape {
   margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--hairline);
@@ -787,7 +802,6 @@ cite { font-style: normal; white-space: nowrap; }
   .main { padding: 22px 18px calc(96px + env(safe-area-inset-bottom)); }
   .pro-greeting h1 { font-size: 24px; }
   .pro-header { grid-template-columns: 1fr; margin-bottom: 20px; gap: 16px; }
-  .pro-user .avatar-iniciais { width: 48px; height: 48px; font-size: 13px; }
   .avatar-logo { width: 48px; height: 48px; }
 
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
@@ -812,7 +826,6 @@ cite { font-style: normal; white-space: nowrap; }
   .rodape nav a { display: inline-flex; align-items: center; min-height: 44px; }
 
   .lista-equipe li { grid-template-columns: 44px minmax(0, 1fr); }
-  .lista-equipe .avatar-iniciais { width: 44px; height: 44px; font-size: 13px; }
   .lista-equipe .avatar-foto { width: 44px; height: 44px; }
   .lista-equipe .papel { grid-column: 2; justify-self: start; margin-top: -6px; }
 
@@ -864,7 +877,7 @@ cite { font-style: normal; white-space: nowrap; }
     --bg: #fff; --card-bg: #fff; --suave: #F9FAFB; --sidebar-bg: #fff;
     --ink: #1F2937; --ink-strong: #111827; --ink-muted: #4B5563;
     --hairline: #D1D5DB; --card-border: #D1D5DB; --brand-texto: #1565D8;
-    --avatar-bg: #E5E7EB; --avatar-ink: #374151; --shadow-card: none;
+    --avatar-bg: #E5E7EB; --shadow-card: none;
   }
   .sidebar, .mobile-topbar, .mobile-bottomnav, .pular, .ampliada, .sim-rodape button,
   .col-side, .grafico-demo .link { display: none !important; }
