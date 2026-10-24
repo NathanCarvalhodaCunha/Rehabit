@@ -262,12 +262,6 @@ cite { font-style: normal; white-space: nowrap; }
 }
 @media (max-width: 1099px) { .pro-header { grid-template-columns: 1fr; } }
 
-/* Foto dos orientadores, em círculo; o fundo aparece enquanto carrega. */
-.avatar-foto {
-  display: block; flex: none; width: 52px; height: 52px; border-radius: 50%;
-  background: var(--avatar-bg); object-fit: cover;
-}
-
 /* ---------- Indicadores (Home do sistema) ---------- */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .kpi-card { padding: 18px 20px; }
@@ -681,39 +675,31 @@ cite { font-style: normal; white-space: nowrap; }
 .lista-links span { color: var(--ink-muted); font-size: 14px; }
 .referencias ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-muted); font-size: 14px; }
 
-/* Equipe (no formato da "Lista de pacientes") */
-.lista-equipe ul { list-style: none; margin: 6px 0 0; padding: 0; }
-.lista-equipe li {
-  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 16px;
-  padding: 12px 0; border-bottom: 1px solid var(--hairline);
-}
-.lista-equipe li:last-child { border-bottom: 0; }
-.lista-equipe .nome { color: var(--brand-texto); font-weight: 600; font-size: 16px; }
-.lista-equipe .papel { padding: 4px 12px; border-radius: 999px; background: var(--brand-suave); color: var(--brand-texto); font-size: 13px; font-weight: 700; }
-.lista-equipe .orientacao { margin-top: 22px; }
-
-/* Integrantes: foto do rosto até a logo da camisa, em colunas que seguem a
+/* Equipe: integrantes e orientadores em cartões com foto de retrato (nos
+   integrantes, do rosto até a logo da camisa), em colunas que seguem a
    largura do cartão (2, 3 ou 5 por linha; a última linha fica centralizada). */
 .lista-equipe { container: equipe / inline-size; }
-.lista-equipe .integrantes {
+.lista-equipe ul {
   --colunas: 2; --vao: 16px;
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 22px var(--vao); margin-top: 14px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 22px var(--vao);
+  list-style: none; margin: 14px 0 0; padding: 0;
 }
-.lista-equipe .integrantes li {
+.lista-equipe li {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   flex: 0 0 calc((100% - (var(--colunas) - 1) * var(--vao)) / var(--colunas)); max-width: 200px;
-  padding: 0; border-bottom: 0; text-align: center;
+  text-align: center;
 }
-.integrante-foto {
+.equipe-foto {
   display: block; width: 100%; height: auto; aspect-ratio: 5 / 8; margin-bottom: 4px;
   border-radius: 14px; background: var(--avatar-bg); object-fit: cover;
 }
-.lista-equipe .integrantes .nome { font-size: 14px; line-height: 1.3; text-wrap: balance; }
-/* O selo fica no pé de cada integrante, na mesma altura com nome de uma, duas ou três linhas. */
-.lista-equipe .integrantes .papel { margin-top: auto; }
-@container equipe (min-width: 400px) { .lista-equipe .integrantes { --colunas: 3; } }
-@container equipe (min-width: 640px) { .lista-equipe .integrantes { --colunas: 5; --vao: 20px; } }
-@container equipe (min-width: 860px) { .lista-equipe .integrantes .nome { font-size: 15px; } }
+.lista-equipe .nome { color: var(--brand-texto); font-weight: 600; font-size: 14px; line-height: 1.3; text-wrap: balance; }
+/* O selo fica no pé de cada cartão, na mesma altura com nome de uma, duas ou três linhas. */
+.lista-equipe .papel { margin-top: auto; padding: 4px 12px; border-radius: 999px; background: var(--brand-suave); color: var(--brand-texto); font-size: 13px; font-weight: 700; }
+.lista-equipe .orientacao { margin-top: 28px; }
+@container equipe (min-width: 400px) { .lista-equipe ul { --colunas: 3; } }
+@container equipe (min-width: 640px) { .lista-equipe ul { --colunas: 5; --vao: 20px; } }
+@container equipe (min-width: 860px) { .lista-equipe .nome { font-size: 15px; } }
 
 /* Rodapé */
 .rodape {
@@ -824,10 +810,6 @@ cite { font-style: normal; white-space: nowrap; }
   .rodape { gap: 4px 24px; }
   .rodape nav { gap: 0 20px; }
   .rodape nav a { display: inline-flex; align-items: center; min-height: 44px; }
-
-  .lista-equipe li { grid-template-columns: 44px minmax(0, 1fr); }
-  .lista-equipe .avatar-foto { width: 44px; height: 44px; }
-  .lista-equipe .papel { grid-column: 2; justify-self: start; margin-top: -6px; }
 
   .mobile-bottomnav {
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
