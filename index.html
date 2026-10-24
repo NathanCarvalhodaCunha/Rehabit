@@ -72,12 +72,15 @@
           "name": "Etec Prof. Carmine Biagio Tundisi",
           "address": { "@type": "PostalAddress", "addressLocality": "Atibaia", "addressRegion": "SP", "addressCountry": "BR" }
         },
-        "sponsor": {
-          "@type": "Organization",
-          "name": "Topia Invest",
-          "url": "https://www.topiainvest.com.br",
-          "logo": "https://rehabit.com.br/assets/inicio/topia-invest.png"
-        }
+        "sponsor": [
+          {
+            "@type": "Organization",
+            "name": "Topia Invest",
+            "url": "https://www.topiainvest.com.br",
+            "logo": "https://rehabit.com.br/assets/inicio/topia-invest.png"
+          },
+          { "@type": "Person", "name": "Ederson Ribas Sauter" }
+        ]
       }
     ]
   }
@@ -293,15 +296,18 @@
             <a class="link" href="#funcionando">Ver o goniômetro funcionando</a>
           </article>
 
-          <!-- Faixa do patrocinador, logo abaixo do print (leva à seção Patrocínio). -->
+          <!-- Faixa dos patrocinadores, logo abaixo do print (leva à seção Patrocínio). -->
           <a class="card patrocinio-mini" href="#patrocinio">
-            <span class="topia-logo topia-logo-mini" aria-hidden="true">
-              <img src="assets/inicio/topia-invest-128.png" srcset="assets/inicio/topia-invest-128.png 128w, assets/inicio/topia-invest-200.png 200w"
-                   sizes="64px" width="499" height="202" alt="" loading="lazy" />
+            <span class="patrocinio-mini-logos" aria-hidden="true">
+              <span class="topia-logo topia-logo-mini">
+                <img src="assets/inicio/topia-invest-128.png" srcset="assets/inicio/topia-invest-128.png 128w, assets/inicio/topia-invest-200.png 200w"
+                     sizes="64px" width="499" height="202" alt="" loading="lazy" />
+              </span>
+              <img class="ederson-logo-mini" src="assets/inicio/patrocinador-ederson-128.png" width="128" height="128" alt="" loading="lazy" />
             </span>
             <span>
-              <span class="t">Projeto apoiado pela Topia Invest</span>
-              <span class="s">Conheça nosso patrocinador</span>
+              <span class="t">Projeto apoiado pela Topia Invest e por Ederson Ribas Sauter</span>
+              <span class="s">Conheça nossos patrocinadores</span>
             </span>
           </a>
           </div>
@@ -963,7 +969,7 @@
       <section class="secao" id="patrocinio" aria-labelledby="patrocinio-titulo">
         <header class="titulo-secao">
           <h2 id="patrocinio-titulo">Patrocínio</h2>
-          <p>O desenvolvimento do Rehabit tem o apoio da Topia Invest.</p>
+          <p>O desenvolvimento do Rehabit tem o apoio da Topia Invest e de Ederson Ribas Sauter, o soldador do projeto.</p>
         </header>
         <div class="card patrocinador">
           <!-- Logo branco da marca: fica sobre o azul-marinho da Topia nos dois temas. -->
@@ -981,12 +987,26 @@
             </a>
           </div>
         </div>
+        <div class="card patrocinador">
+          <!-- Sem fundo: o cachorro em pixel art fica direto sobre o cartão, nos dois temas. -->
+          <div class="patrocinador-logo">
+            <img src="assets/inicio/patrocinador-ederson.png" width="384" height="384" loading="lazy"
+                 alt="Logo do patrocinador: um cachorro em pixel art, com coleira vermelha" />
+          </div>
+          <div class="patrocinador-texto">
+            <span class="badge-status patrocinio-selo">Patrocinador</span>
+            <h3 class="card-titulo">Ederson Ribas Sauter</h3>
+            <p>Ederson foi o soldador do Rehabit. Foi ele quem soldou o circuito do goniômetro, na passagem do protótipo na protoboard para a placa com bateria, que funciona sem cabo.</p>
+            <p>Assim como nós, ele é aluno do Técnico em Desenvolvimento de Sistemas da Etec Prof. Carmine Biagio Tundisi. No trabalho de conclusão de curso, desenvolve com o seu grupo o Roaming, um jogo digital educativo em que o jogador vive a jornada de um cachorro abandonado, para conscientizar sobre o abandono e os maus-tratos aos animais e incentivar a adoção responsável e o apoio às ONGs de proteção animal.</p>
+          </div>
+        </div>
       </section>
 
       <footer class="rodape">
         <p>© 2026 Equipe Rehabit · TCC da Etec Prof. Carmine Biagio Tundisi · Atibaia</p>
         <nav aria-label="Links do rodapé">
           <a href="https://www.topiainvest.com.br" target="_blank" rel="sponsored noopener">Patrocínio: Topia Invest<span class="sr-only"> (abre em nova aba)</span></a>
+          <a href="#patrocinio">Patrocínio: Ederson Ribas Sauter</a>
           <a href="mailto:tccrehabit@gmail.com">tccrehabit@gmail.com</a>
           <a href="https://github.com/NathanCarvalhodaCunha/Rehabit">GitHub</a>
           <a href="https://github.com/NathanCarvalhodaCunha/Rehabit/blob/main/LICENSE">Licença MIT</a>
