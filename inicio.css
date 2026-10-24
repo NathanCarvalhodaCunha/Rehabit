@@ -549,6 +549,12 @@ cite { font-style: normal; white-space: nowrap; }
 /* Entre 700 e 1099 px, duas colunas teriam ~350 px: o esquema ficaria
    miúdo e sobraria um vão embaixo dele e da foto. Ali vai uma coluna só. */
 @media (min-width: 700px) and (max-width: 1099px) { .grade.gonio { grid-template-columns: minmax(0, 1fr); } }
+/* Na coluna única, a foto quadrada da case ocuparia a largura toda (~670 px
+   de altura): fica limitada e centralizada, com a legenda embaixo dela. */
+@media (min-width: 700px) and (max-width: 1099px) {
+  .gonio-foto img { max-width: min(100%, 440px); margin-inline: auto; }
+  .gonio-foto figcaption { text-align: center; }
+}
 
 /* Peças, em dois grupos: o do sensor e o da energia. Com o cartão largo
    (uma coluna só, no tablet), os grupos ficam lado a lado. */
