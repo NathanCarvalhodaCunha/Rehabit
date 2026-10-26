@@ -4,6 +4,8 @@ import com.rehabit.exception.AuthException;
 import com.rehabit.repository.ClinicaRepository;
 import com.rehabit.repository.FisioterapeutaRepository;
 import com.rehabit.repository.PacienteRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -31,6 +33,8 @@ import java.util.Set;
  */
 @Component
 public class FotosEmUso {
+
+    private static final Logger log = LoggerFactory.getLogger(FotosEmUso.class);
 
     private final FileStorageService armazenamento;
     private final ClinicaRepository clinicaRepository;
@@ -100,10 +104,20 @@ public class FotosEmUso {
                 || pacienteRepository.existsByFoto(foto);
     }
 
+    /**
+     * Roda depois do commit, com o cadastro já salvo com a foto nova. Uma
+     * falha aqui (banco ou armazenamento) subia até a resposta e virava "Erro
+     * interno no servidor" para uma troca de foto que tinha dado certo; agora
+     * fica no log, e a foto antiga só sobra no armazenamento.
+     */
     private void apagarAsQueSobraram(Set<String> fotos) {
         for (String foto : fotos) {
-            if (!emUso(foto)) {
-                armazenamento.excluir(foto);
+            try {
+                if (!emUso(foto)) {
+                    armazenamento.excluir(foto);
+                }
+            } catch (RuntimeException ex) {
+                log.warn("Não consegui apagar a foto que deixou de ser usada: {}", foto, ex);
             }
         }
     }

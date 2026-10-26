@@ -384,7 +384,7 @@ let arquivoFotoProfissional = null;
     (el) => el.classList.contains("form-avatar") || el.classList.contains("avatar-lg")
   );
 
-  inputFoto.addEventListener("change", () => {
+  inputFoto.addEventListener("change", async () => {
     const arquivo = inputFoto.files && inputFoto.files[0];
     if (!arquivo) return;
     arquivoFotoProfissional = arquivo;
@@ -394,8 +394,73 @@ let arquivoFotoProfissional = null;
       el.style.backgroundSize = "cover";
       el.style.backgroundPosition = "center";
     });
+    const preparado = await reduzirFotoGrande(arquivo);
+    // Outra foto escolhida enquanto esta era reduzida: fica a mais nova.
+    if (arquivoFotoProfissional === arquivo) arquivoFotoProfissional = preparado;
   });
 })();
+
+// Foto grande demais para o armazenamento: o plano gratuito do Cloudinary
+// recusa imagem acima de 25 megapixels — um logo exportado em 8000 × 8000 px
+// pesa pouco e passa disso — e a API recusa arquivo acima de 5 MB. A que passa de um dos dois é
+// reduzida aqui, antes de subir; a que está dentro vai como foi escolhida. GIF
+// fica como está, para não perder a animação. Se o navegador não abrir a
+// imagem, vai a original, e a API diz o que houve.
+const FOTO_LADO_MAXIMO = 2048;
+const FOTO_BYTES_MAXIMO = 4 * 1024 * 1024;
+
+async function reduzirFotoGrande(arquivo) {
+  if (arquivo.type === "image/gif") return arquivo;
+  let imagem;
+  try {
+    imagem = await abrirImagem(arquivo);
+  } catch (err) {
+    return arquivo;
+  }
+  const largura = imagem.naturalWidth;
+  const altura = imagem.naturalHeight;
+  const escala = Math.min(1, FOTO_LADO_MAXIMO / Math.max(largura, altura));
+  if (escala === 1 && arquivo.size <= FOTO_BYTES_MAXIMO) return arquivo;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(largura * escala));
+  canvas.height = Math.max(1, Math.round(altura * escala));
+  const contexto = canvas.getContext("2d");
+  // PNG e WEBP podem ter fundo transparente (logo): ficam PNG enquanto
+  // couberem; o resto, e o PNG que ainda passar do tamanho, vira JPEG.
+  if (arquivo.type === "image/png" || arquivo.type === "image/webp") {
+    contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+    const png = await canvasParaArquivo(canvas, "image/png", "foto.png");
+    if (png && png.size <= FOTO_BYTES_MAXIMO) return png;
+    contexto.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  contexto.fillStyle = "#fff";
+  contexto.fillRect(0, 0, canvas.width, canvas.height);
+  contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+  return (await canvasParaArquivo(canvas, "image/jpeg", "foto.jpg", 0.9)) || arquivo;
+}
+
+function abrirImagem(arquivo) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(arquivo);
+    const imagem = new Image();
+    imagem.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(imagem);
+    };
+    imagem.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Imagem que o navegador não abre."));
+    };
+    imagem.src = url;
+  });
+}
+
+function canvasParaArquivo(canvas, tipo, nome, qualidade) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob ? new File([blob], nome, { type: blob.type }) : null), tipo, qualidade);
+  });
+}
 
 // Small interactive stubs — mirrors what buttons would do in the app
 document.addEventListener("click", (e) => {
