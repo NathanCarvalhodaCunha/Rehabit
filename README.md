@@ -292,7 +292,12 @@ Outros pontos:
   câmera) saem antes de gravar. O campo `foto` dos cadastros só aceita URL que
   a própria API devolveu, e foto trocada é apagada quando ninguém mais a usa.
   As fotos continuam num endereço público, mas impossível de adivinhar (UUID
-  ou id do Cloudinary).
+  ou id do Cloudinary). O site reduz antes de enviar a imagem com mais de
+  2048 px de lado ou mais de 4 MB (o plano gratuito do Cloudinary recusa
+  acima de 25 megapixels). Se o Cloudinary recusar um envio, a tela mostra o
+  motivo e o log do Render traz a resposta dele numa linha "Cloudinary
+  recusou...": HTTP 400 é a imagem; 401/403 é a `CLOUDINARY_URL`; 420 é o
+  limite de envios da conta.
 - **Endereço da API no site.** A CSP do `vercel.json` só deixa o site falar
   com `https://rehabit-api-4tex.onrender.com` (e mostrar imagens dele e do
   Cloudinary). Mudou o endereço da API? Troque também em `connect-src` e

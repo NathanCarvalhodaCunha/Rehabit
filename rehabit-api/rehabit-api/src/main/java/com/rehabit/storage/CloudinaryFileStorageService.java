@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -28,7 +29,12 @@ public class CloudinaryFileStorageService implements FileStorageService {
         // O construtor sem argumentos lê a variável de ambiente
         // CLOUDINARY_URL sozinho (formato
         // cloudinary://<api_key>:<api_secret>@<cloud_name>).
-        this.cloudinary = new Cloudinary();
+        this(new Cloudinary());
+    }
+
+    /** Para os testes, que apontam o upload_prefix para um servidor falso. */
+    CloudinaryFileStorageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
         if (cloudinary.config.apiKey == null) {
             throw new IllegalStateException(
                     "Variável de ambiente CLOUDINARY_URL não configurada (formato cloudinary://<api_key>:<api_secret>@<cloud_name>).");
@@ -37,21 +43,84 @@ public class CloudinaryFileStorageService implements FileStorageService {
 
     @Override
     public String salvar(byte[] conteudo, TipoDeImagem tipo) {
+        Map<?, ?> resultado;
         try {
             // O Cloudinary confere o formato de novo do lado dele: só imagem,
             // e só os formatos que a API aceita (SVG, por exemplo, não).
-            Map<?, ?> resultado = cloudinary.uploader().upload(conteudo, ObjectUtils.asMap(
+            //
+            // Com return_error, a recusa do Cloudinary volta no mapa, com o
+            // código HTTP. Sem ela, o SDK lança RuntimeException só com o
+            // texto em inglês, que caía no GlobalExceptionHandler como "Erro
+            // interno no servidor" — era o que a tela mostrava ao trocar a
+            // foto, sem dizer se o problema era a imagem ou a conta.
+            resultado = cloudinary.uploader().upload(conteudo, ObjectUtils.asMap(
                     "resource_type", "image",
-                    "allowed_formats", "jpg,png,gif,webp"));
-            String url = (String) resultado.get("secure_url");
-            if (url == null) {
-                throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            return url;
+                    "allowed_formats", "jpg,png,gif,webp",
+                    "return_error", true));
         } catch (IOException ex) {
-            logger.warn("Falha ao enviar arquivo para o Cloudinary", ex);
-            throw new AuthException("Falha ao salvar o arquivo.", HttpStatus.INTERNAL_SERVER_ERROR);
+            logger.warn("Sem resposta do Cloudinary ao enviar uma foto", ex);
+            throw indisponivel();
+        } catch (RuntimeException ex) {
+            // Configuração quebrada (CLOUDINARY_URL sem a api_secret, por
+            // exemplo): o SDK recusa antes de mandar.
+            logger.error("Falha ao enviar foto ao Cloudinary; confira a CLOUDINARY_URL", ex);
+            throw indisponivel();
         }
+
+        if (resultado.get("error") instanceof Map<?, ?> erro) {
+            int codigo = erro.get("http_code") instanceof Number n ? n.intValue() : 0;
+            String mensagem = String.valueOf(erro.get("message"));
+            if (codigo == 400) {
+                logger.warn("Cloudinary recusou a foto ({}): {}", tipo, mensagem);
+            } else {
+                logger.error("Cloudinary recusou o envio de foto (HTTP {}): {}", codigo, mensagem);
+            }
+            throw recusa(codigo, mensagem);
+        }
+
+        Object url = resultado.get("secure_url");
+        if (!(url instanceof String texto) || texto.isBlank()) {
+            logger.error("Cloudinary respondeu ao envio de foto sem secure_url: {}", resultado);
+            throw indisponivel();
+        }
+        return texto;
+    }
+
+    /**
+     * A recusa do Cloudinary em palavras de quem está na tela. 400 é a
+     * imagem (corrompida, formato, resolução, tamanho); o resto é o serviço
+     * ou a conta (credencial, cota, limite de envios por hora), que a pessoa
+     * não resolve trocando a foto.
+     */
+    static AuthException recusa(int codigo, String mensagem) {
+        String texto = mensagem == null ? "" : mensagem.toLowerCase(Locale.ROOT);
+        if (codigo == 400) {
+            if (texto.contains("megapixel")) {
+                // "Maximum image size is 25 Megapixels. Requested 59.84 Megapixels"
+                return new AuthException("A imagem tem resolução alta demais. Reduza o tamanho dela em pixels e envie de novo.",
+                        HttpStatus.BAD_REQUEST);
+            }
+            if (texto.contains("file size")) {
+                return new AuthException("A foto passa do tamanho permitido. Escolha uma imagem menor.",
+                        HttpStatus.BAD_REQUEST);
+            }
+            if (texto.contains("stale request")) {
+                // Relógio do servidor fora de hora: problema daqui, não da foto.
+                return indisponivel();
+            }
+            return new AuthException("Não foi possível usar esta imagem. Envie uma foto em JPG, PNG, GIF ou WEBP.",
+                    HttpStatus.BAD_REQUEST);
+        }
+        if (codigo == 420 || codigo == 429) {
+            return new AuthException("Muitas fotos enviadas agora. Tente de novo em alguns minutos.",
+                    HttpStatus.SERVICE_UNAVAILABLE);
+        }
+        return indisponivel();
+    }
+
+    private static AuthException indisponivel() {
+        return new AuthException("O envio de fotos está indisponível no momento. Tente de novo mais tarde.",
+                HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @Override
