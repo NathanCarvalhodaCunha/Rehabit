@@ -7,7 +7,7 @@
 // Firmware/teste-hardware-GUIA.md.
 //
 // O que ele testa, em ordem:
-//   1. LED externo (GPIO19) — pisca 3 vezes; confira com os olhos.
+//   1. LED externo (GPIO33) — pisca 3 vezes; confira com os olhos.
 //   2. Barramento I2C — procura o MPU6050 em SDA=21/SCL=22 e, se não achar,
 //      tenta com os fios trocados para dizer se SDA e SCL foram invertidos.
 //   3. MPU6050 — identidade do chip (WHO_AM_I), leituras a 100 kHz e a
@@ -39,7 +39,7 @@
 //   MT3608 VOUT+ -> VIN        MT3608 VOUT- -> GND
 //   MPU6050 VCC  -> 3V3        MPU6050 GND  -> GND
 //   MPU6050 SDA  -> GPIO21     MPU6050 SCL  -> GPIO22
-//   LED azul     -> GPIO19 -> resistor 220 ohm -> LED -> GND
+//   LED azul     -> GPIO33 -> resistor 220 ohm -> LED -> GND
 //   Botão BOOT   -> GPIO0 (já existe na placa)
 
 #include <Wire.h>
@@ -49,7 +49,7 @@
 
 const int PINO_SDA = 21;
 const int PINO_SCL = 22;
-const int PINO_LED_EXTERNO = 19;
+const int PINO_LED_EXTERNO = 33;
 const int PINO_LED_PLACA = 2;
 const int PINO_BOTAO = 0;
 
@@ -200,12 +200,12 @@ void piscar(int pino, int vezes, int msAceso, int msApagado) {
 }
 
 void testarLed() {
-  titulo("1. LED externo (GPIO19)");
+  titulo("1. LED externo (GPIO33)");
   Serial.println("  Piscando 3 vezes agora — olhe para o LED azul externo.");
   piscar(PINO_LED_EXTERNO, 3, 300, 300);
   Serial.println("  Piscou? Entao o LED e o resistor estao certos.");
-  Serial.println("  Nao piscou? LED invertido (perna maior vai no lado do GPIO19),");
-  Serial.println("  solda solta no resistor, ou o fio esta em outro pino que nao o D19.");
+  Serial.println("  Nao piscou? LED invertido (perna maior vai no lado do GPIO33),");
+  Serial.println("  solda solta no resistor, ou o fio esta em outro pino que nao o D33.");
 }
 
 void testarI2c() {

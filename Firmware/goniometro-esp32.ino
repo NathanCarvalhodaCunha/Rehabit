@@ -42,7 +42,7 @@
 //   MPU6050 GND  -> GND
 //   MPU6050 SDA  -> GPIO21
 //   MPU6050 SCL  -> GPIO22
-//   LED de status-> GPIO19 -> resistor 220 ohm -> LED azul -> GND
+//   LED de status-> GPIO33 -> resistor 220 ohm -> LED azul -> GND
 //   Botão BOOT   -> GPIO0 (já existe na placa; segurado sem Wi-Fi abre o portal,
 //                   5 s conectado apaga a configuração)
 //   Bateria      -> divisor 100k/100k -> GPIO34   (opcional; veja PINO_BATERIA)
@@ -120,9 +120,11 @@ const unsigned long ESCUTA_BOTAO_MS = 5000;
 extern const char RAIZES_TLS[];
 
 const int PINO_BOTAO_RESET = 0;  // BOOT na maioria das placas DevKit
-// LED azul externo, o do diagrama de montagem. Numa placa sem ele, ponha 2:
-// é o LED que já vem soldado na maioria das DevKit.
-const int PINO_LED = 19;
+// LED azul externo, o do diagrama de montagem, no D33. Ficava no GPIO19 até
+// esse pino parar de funcionar na placa soldada; não volte para ele. Numa
+// placa sem LED externo, ponha 2: é o LED que já vem soldado na maioria das
+// DevKit.
+const int PINO_LED = 33;
 // Pino do divisor de tensão da bateria. Fica -1 porque o diagrama de
 // montagem não tem o divisor: com o pino solto, a leitura seria ruído, e o
 // Rehabit mostraria um número inventado em vez de simplesmente não mostrar

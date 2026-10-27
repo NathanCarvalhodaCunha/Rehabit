@@ -20,7 +20,7 @@ Ele funciona de dois jeitos ao mesmo tempo:
 | | Principal | Reserva |
 | --- | --- | --- |
 | Alimentação | 18650 + TP4056 + MT3608 + chave | powerbank no USB |
-| Luz de status | LED externo no GPIO19 | LED que já vem na placa (GPIO2) |
+| Luz de status | LED externo no GPIO33 | LED que já vem na placa (GPIO2) |
 | Bibliotecas | Adafruit MPU6050 e WiFiManager | nenhuma |
 | Sensor | só MPU6050 legítimo (WHO_AM_I 0x68) | MPU6050 ou clone (MPU6500, MPU9250...) |
 | Sem internet | não mede | mede pela página do aparelho |
