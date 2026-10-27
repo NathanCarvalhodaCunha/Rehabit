@@ -9,6 +9,10 @@ São duas etapas bem diferentes: gravar o firmware é coisa de quem monta o
 aparelho e acontece uma vez só; conectar à clínica é feito pelo celular, por
 qualquer pessoa, sem computador e sem mexer em código.
 
+> **O aparelho principal não funcionou?** Existe um firmware reserva que roda
+> só com o ESP32, o MPU6050 e um powerbank no USB, e mede até sem internet:
+> veja [`goniometro-reserva-GUIA.md`](goniometro-reserva-GUIA.md).
+
 ---
 
 # Parte 1 — Gravar o firmware (só uma vez, feito por você)
