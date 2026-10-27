@@ -47,7 +47,7 @@ próprias, de propósito, para não depender de mais bibliotecas.
 | GND | GND |
 | SDA | GPIO21 |
 | SCL | GPIO22 |
-| LED de status | GPIO19 → resistor 220 Ω → LED azul → GND |
+| LED de status | GPIO33 → resistor 220 Ω → LED azul → GND |
 | Botão de reconfiguração | GPIO0 — é o BOOT, já existe na placa |
 | Bateria (opcional) | divisor 100 kΩ / 100 kΩ → GPIO34 |
 

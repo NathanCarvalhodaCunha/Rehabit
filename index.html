@@ -692,7 +692,7 @@
               <img src="assets/inicio/circuito-1000.jpg" width="1830" height="1719" loading="lazy"
                    srcset="assets/inicio/circuito-500.jpg 500w, assets/inicio/circuito-1000.jpg 1000w, assets/inicio/circuito.jpg 1830w"
                    sizes="(min-width: 1480px) 508px, (min-width: 1100px) calc(50vw - 232px), (min-width: 768px) and (min-height: 501px) calc(100vw - 350px), (min-width: 1025px) calc(100vw - 350px), calc(100vw - 84px)"
-                   alt="Esquema do circuito: a bateria 18650 passa pelo carregador TP4056, pela chave liga/desliga e pelo conversor MT3608 até o pino VIN do ESP32. O ESP32 alimenta o sensor MPU6050 pelo pino 3V3, conversa com ele pelos pinos D21 e D22 e acende o LED azul de status pelo D19, com um resistor de 220 ohms." />
+                   alt="Esquema do circuito: a bateria 18650 passa pelo carregador TP4056, pela chave liga/desliga e pelo conversor MT3608 até o pino VIN do ESP32. O ESP32 alimenta o sensor MPU6050 pelo pino 3V3, conversa com ele pelos pinos D21 e D22 e acende o LED azul de status pelo D33, com um resistor de 220 ohms." />
             </a>
           </figure>
           <div class="card pecas">
@@ -703,7 +703,7 @@
                 <dl class="lista-info">
                   <div><dt>ESP32 DevKit V1</dt><dd>Lê o sensor, calcula o ângulo e envia pelo Wi-Fi.</dd></div>
                   <div><dt>MPU6050 (GY-521)</dt><dd>Acelerômetro e giroscópio, ligado ao ESP32 por I2C (GPIO21 e GPIO22) e alimentado pelos 3,3 V da placa.</dd></div>
-                  <div><dt>LED azul de 3 mm e resistor de 220 Ω</dt><dd>A luz de status, no GPIO19.</dd></div>
+                  <div><dt>LED azul de 3 mm e resistor de 220 Ω</dt><dd>A luz de status, no GPIO33.</dd></div>
                   <div><dt>Botão BOOT</dt><dd>Já vem na placa (GPIO0): reabre a configuração do Wi-Fi e do pareamento.</dd></div>
                 </dl>
               </div>

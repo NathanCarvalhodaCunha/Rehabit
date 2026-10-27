@@ -34,8 +34,8 @@ placa ESP32 já instalado (Parte 1 do
 Olhe as soldas com boa luz, de preferência com lupa ou com a câmera do
 celular:
 
-- **pontes de solda** entre pinos vizinhos do ESP32, principalmente D21, D19
-  e D22, que ficam lado a lado com outros pinos;
+- **pontes de solda** entre pinos vizinhos do ESP32, principalmente D21 e
+  D22, que ficam lado a lado com outros pinos, e D33, entre o D32 e o D25;
 - **soldas frias**: foscas, em forma de bolinha, ou com o pino "boiando" no
   meio. Uma solda boa é brilhante e tem forma de cone;
 - fios com cobre exposto encostando em outro fio ou em outro pino.
@@ -57,7 +57,7 @@ Coloque o multímetro em **continuidade**.
 | ESP32 **GND** (o pino ao lado do 3V3) | MPU6050 **GND** |
 | ESP32 **D21** | MPU6050 **SDA** |
 | ESP32 **D22** | MPU6050 **SCL** |
-| ESP32 **D19** | uma perna do resistor de 220 Ω |
+| ESP32 **D33** | uma perna do resistor de 220 Ω |
 | perna **curta** do LED (lado chanfrado) | GND |
 
 **A chave:** com ela **ligada**, TP4056 OUT+ ↔ MT3608 VIN+ apita; **desligada**,
@@ -76,6 +76,7 @@ lateral errado da chave.
 | MPU6050 SDA | MPU6050 SCL |
 | MPU6050 SDA ou SCL | GND |
 | ESP32 D21 | D19 (vizinhos) |
+| ESP32 D33 | D32 e D25 (vizinhos) |
 | ESP32 D22 | D23 e TX0 (vizinhos) |
 
 > Um **bip curtinho que para sozinho** é capacitor carregando, e é normal
@@ -157,7 +158,7 @@ de Wi-Fi da clínica, nem do site. Ele testa cada peça e diz qual falhou.
 ==============================================
 Chip ESP32-D0WD-V3 rev 3, 2 nucleos, flash 4 MB
 
---- 1. LED externo (GPIO19) ---
+--- 1. LED externo (GPIO33) ---
   Piscando 3 vezes agora — olhe para o LED azul externo.
   ...
 
@@ -214,7 +215,7 @@ Para repetir os testes, envie `r` no Monitor Serial ou aperte **EN**.
 
 | O que apareceu | Causa provável | O que fazer |
 | --- | --- | --- |
-| LED externo não piscou | LED invertido, solda solta no resistor, ou fio fora do D19 | A perna **longa** do LED vai para o lado do resistor/D19, e a curta para o GND. Confira a continuidade da Fase 1. |
+| LED externo não piscou | LED invertido, solda solta no resistor, ou fio fora do D33 | A perna **longa** do LED vai para o lado do resistor/D33, e a curta para o GND. Confira a continuidade da Fase 1. |
 | LED piscou, mas fraquinho | Normal | LED azul com 220 Ω em 3,3 V passa pouca corrente. Se quiser mais brilho, troque por 100 Ω. |
 | `Nenhum dispositivo I2C encontrado` | MPU sem energia, ou SDA/SCL abertos | O LED do módulo MPU está aceso? Se não, falta 3V3 ou GND. Se está, confira D21↔SDA e D22↔SCL. |
 | `SDA e SCL estao INVERTIDOS` | Fios trocados | Ressolde: SDA → D21, SCL → D22. |
@@ -279,7 +280,7 @@ seguindo o [`goniometro-esp32-GUIA.md`](goniometro-esp32-GUIA.md), sempre
 com a **chave desligada** enquanto o USB estiver ligado. Ele já está
 configurado para este diagrama:
 
-- **LED de status no GPIO19** (o LED externo);
+- **LED de status no GPIO33** (o LED externo);
 - **sem leitura de bateria** (`PINO_BATERIA = -1`), porque o diagrama não tem
   o divisor de tensão. Com o pino solto, o site mostraria um número
   inventado.
